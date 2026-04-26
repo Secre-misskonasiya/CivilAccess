@@ -21,4 +21,4 @@ RUN ./mvnw package -DskipTests
 EXPOSE 8080
 
 # Run the app
-ENTRYPOINT ["java", "-jar", "target/*.jar"]
+ENTRYPOINT ["java", "-jar", "target/*.jar", "--spring.config.location=file:/etc/secrets/application.properties"]
