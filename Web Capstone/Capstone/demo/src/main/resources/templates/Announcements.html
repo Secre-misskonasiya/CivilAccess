@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+
+<style>
+    body { margin: 0; font-family: Arial, sans-serif; }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+    
+    .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    
+
+    .top-header {
+        background-color: #2d4a44;
+        display: flex;
+        border-bottom: 2px solid #FED734;
+    }
+    .top-header-tab {
+        flex: 1;
+        color: white;
+        text-align: center;
+        padding: 16px 20px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .search-bar-area {
+        padding: 16px 20px 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background-color: #f5f5f5;
+    }
+    .search-input-wrap { flex: 1; position: relative; }
+    .search-input-wrap input {
+        width: 100%;
+        padding: 9px 14px 9px 38px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: white;
+        box-sizing: border-box;
+    }
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #aaa;
+    }
+    .filter-btn {
+        padding: 9px 16px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        background: white;
+        font-size: 14px;
+        cursor: pointer;
+        color: #444;
+    }
+    .create-announcement-btn {
+        background-color: #44C375;
+        color: white;
+        border: none;
+        padding: 9px 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .create-announcement-btn:hover { background-color: #2ea05e; }
+
+    .tabbar {
+        display: flex;
+        background-color: white;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0 20px;
+        gap: 4px;
+    }
+    .tab {
+        padding: 12px 18px;
+        color: #666;
+        cursor: pointer;
+        font-size: 14px;
+        border-bottom: 3px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tab.active {
+        background-color: #2d4a44;
+        color: white;
+        border-radius: 6px 6px 0 0;
+        font-weight: bold;
+    }
+
+    .panel {
+        padding: 20px;
+        background-color: #f5f5f5;
+        flex: 1;
+        overflow-y: auto;
+    }
+    .panel-inner {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+    }
+    .panel-header {
+        background-color: #3d5f58;
+        color: white;
+        padding: 14px 20px;
+        font-weight: bold;
+        font-size: 15px;
+    }
+    .panel-content { padding: 20px; }
+
+   
+    .card-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 10px 0;
+        width: 100%;
+    }
+
+    .card {
+        background: rgb(255, 255, 255);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #e0e0e0;
+        padding: 14px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card.pinned {
+        border-color: #FED734;
+        box-shadow: 0 2px 8px rgba(254, 215, 52, 0.3);
+    }
+
+    
+    .card-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-title {
+        font-weight: bold;
+        font-size: 14px;
+        color: #1a1a1a;
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .card-category {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        background-color: #e8f5f0;
+        color: #2d7a5f;
+        border: 1px solid #b8ddd0;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .pin-icon {
+        font-size: 18px;
+        cursor: pointer;
+        color: #ccc;
+        transition: color 0.2s;
+        flex-shrink: 0;
+    }
+    .pin-icon.active { color: #FED734; }
+    .pin-icon:hover { color: #aaa; }
+
+    .card-divider { border: none; border-top: 1px solid #f0f0f0; margin: 0; }
+
+    
+    .card-bottom {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        overflow: hidden;
+    }
+
+    .card-body {
+        font-size: 13px;
+        color: #555;
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .card-date {
+        font-size: 12px;
+        color: #aaa;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .edit-btn {
+        background-color: #f1c40f;
+        color: #30534D;
+        padding: 4px 12px;
+        border: none;
+        border-radius: 5px;
+        font-size: 12px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .edit-btn:hover { background-color: #d4ac0d; }
+
+    .archive-btn {
+        background-color: #e74c3c;
+        color: white;
+        padding: 4px 12px;
+        border: none;
+        border-radius: 4px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+    .archive-btn:hover { background-color: #b93e30; }
+    
+    .view-btn {
+        background-color: #3498db;
+        color: white;
+        padding: 4px 12px;
+        border: none;
+        border-radius: 5px;
+        font-size: 12px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .view-btn:hover { background-color: #2176ae; }
+    
+    .restore-btn {
+        background-color: #44C375;
+        color: white;
+        padding: 4px 12px;
+        border: none;
+        border-radius: 5px;
+        font-size: 12px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .restore-btn:hover { background-color: #2ea05e; }
+
+    .table-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 4px 4px 4px;
+        font-size: 13px;
+        color: #888;
+        margin-top: 10px;
+        border-top: 1px solid #e0e0e0;
+    }
+    .page-item.active .page-link { background-color: #2d4a44; border-color: #2d4a44; }
+    .page-link { color: #2d4a44; }
+    
+/* Modal styles */
+    .modal-content {
+        border-radius: 8px;
+    }
+    .modal-header {
+        background-color: #30534D;
+        color: white;
+        border-bottom: 2px solid #FED734;
+    }
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+    .modal-body label {
+        font-weight: bold;
+        color: #30534D;
+        margin-top: 10px;
+    }
+    .modal-body p {
+        padding: 8px;
+        background-color: #f5f5f5;
+        border-radius: 4px;
+    }
+    .modal-body input, .modal-body select, .modal-body textarea {
+        margin-bottom: 15px;
+    }
+
+    /* View modal - social post style */
+    #viewAnnouncementModal .modal-dialog { max-width: 500px; }
+    #viewAnnouncementModal .modal-content { border-radius: 12px; border: none; overflow: hidden; }
+    #viewAnnouncementModal .modal-header { background-color: #30534D; border-bottom: 2px solid #FED734; padding: 12px 16px; }
+    #viewAnnouncementModal .modal-body { padding: 0; }
+    #viewAnnouncementModal .modal-footer { border-top: 1px solid #f0f0f0; padding: 10px 16px; }
+    .view-post-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px 16px; }
+    .view-post-avatar { width: 42px; height: 42px; border-radius: 50%; background-color: #30534D; display: flex; align-items: center; justify-content: center; color: #FED734; font-size: 18px; flex-shrink: 0; }
+    .view-post-meta { flex: 1; min-width: 0; }
+    .view-post-author { font-weight: bold; font-size: 14px; color: #1a1a1a; }
+    .view-post-date { font-size: 12px; color: #aaa; }
+    .view-post-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background-color: #e8f5f0; color: #2d7a5f; border: 1px solid #b8ddd0; flex-shrink: 0; }
+    .view-post-badge.high { background-color: #fff8e1; color: #b8860b; border-color: #FED734; }
+    .view-post-title { font-weight: bold; font-size: 15px; color: #1a1a1a; padding: 0 16px 8px 16px; }
+    .view-post-content { font-size: 14px; color: #333; padding: 0 16px 14px 16px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+    .view-post-image { width: 100%; max-height: 300px; object-fit: cover; display: block;}
+    .view-post-divider { border: none; border-top: 1px solid #f0f0f0; margin: 0; }
+    .view-post-footer { display: flex; align-items: center; gap: 6px; padding: 10px 16px; font-size: 12px; color: #aaa; }
+    
+    /* Image upload styles */
+    .image-upload-area {
+        border: 2px dashed #d0d5dd;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 15px;
+        background-color: #fafafa;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    .image-upload-area:hover {
+        border-color: #30534D;
+        background-color: #f5f5f5;
+    }
+    .image-upload-area.dragover {
+        border-color: #44C375;
+        background-color: #f0fff4;
+    }
+    .image-upload-area.has-image {
+        padding: 10px;
+    }
+    .upload-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .upload-placeholder i {
+        font-size: 32px;
+        color: #aaa;
+    }
+    .upload-placeholder p {
+        margin: 8px 0 0 0;
+        font-size: 13px;
+        color: #666;
+    }
+    .image-preview-inline {
+        max-width: 100%;
+        max-height: 200px;
+        border-radius: 8px;
+        display: none;
+        object-fit: contain;
+    }
+    .upload-progress {
+        display: none;
+        margin-top: 10px;
+        width: 100%;
+    }
+    .upload-progress .progress-bar {
+        height: 4px;
+        background-color: #44C375;
+        width: 0%;
+        transition: width 0.3s ease;
+        border-radius: 2px;
+    }
+    .remove-image-btn {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        margin-top: 8px;
+        display: none;
+    }
+    .remove-image-btn:hover {
+        background-color: #c0392b;
+    }
+</style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">   
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<title>Announcements</title>
+</head>
+<body>
+
+<div class="layout">
+
+
+<!-- Sidebar -->
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+<!-- Sidebar -->
+
+  <div class="content">
+
+    <!-- Top header -->
+    <div class="top-header">
+      <div class="top-header-tab">Announcements</div>
+    </div>
+
+    <!-- Search bar + Create button -->
+    <div class="search-bar-area">
+      <div class="search-input-wrap">
+        <span class="search-icon"><i class="bi bi-search"></i></span>
+        <input type="text" id="announcement-search" placeholder="Search announcements...">
+      </div>
+      <button class="filter-btn" onclick="window.location.href='/announcements'"><i class="bi bi-funnel"></i> Reset</button>
+      <button class="create-announcement-btn" data-bs-toggle="modal" data-bs-target="#createAnnouncementModal"><i class="bi bi-plus-circle"></i> Create Announcement</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabbar">
+      <div class="tab" th:classappend="${currentTab == 'announcements' ? 'active' : ''}" onclick="window.location.href='/announcements?tab=announcements'">Announcements</div>
+      <div class="tab" th:classappend="${currentTab == 'archived' ? 'active' : ''}" onclick="window.location.href='/announcements?tab=archived'">Archived</div>
+    </div>
+
+    <!-- Panel -->
+    <div class="panel">
+      <div class="panel-inner">
+
+        <!-- Announcements Tab -->
+        <div id="tab-announcements" th:classappend="${currentTab != 'announcements' ? 'd-none' : ''}">
+          <div class="panel-header">Announcements</div>
+          <div class="panel-content">
+            <div class="card-grid" th:if="${not #lists.isEmpty(announcements)}" id="announcementsGrid">
+              <div class="card" th:each="announcement : ${announcements}" th:classappend="${announcement.priority == 'HIGH' ? 'pinned' : ''}">
+
+                
+                <div class="card-top">
+                  <div class="card-title" th:text="${announcement.title}">Free Medical Mission</div>
+                  <span class="card-category" th:text="${announcement.priority != null ? announcement.priority : 'NORMAL'}">NORMAL</span>
+                  <i class="bi bi-pin-angle-fill pin-icon"
+                     th:classappend="${announcement.priority == 'HIGH' ? 'active' : ''}"
+                     th:attr="onclick='togglePin(this, ' + ${announcement.id} + ')'"
+                     title="Pin"></i>
+                </div>
+
+                <hr class="card-divider">
+
+               
+                <div class="card-bottom">
+                  <div class="card-body" th:text="${announcement.content}">Announcement content goes here.</div>
+                  <div class="card-date" th:text="${announcement.datePosted != null ? #temporals.format(announcement.datePosted, 'MMM dd, yyyy') : 'N/A'}">Mar 15, 2026</div>
+                  <div class="d-flex gap-2">
+                    <button class="view-btn" th:attr="onclick='viewAnnouncement(' + ${announcement.id} + ')'">View</button>
+                    <button class="edit-btn" th:attr="onclick='editAnnouncement(' + ${announcement.id} + ')'">Edit</button>
+                    <button class="archive-btn" th:attr="onclick='archiveAnnouncement(' + ${announcement.id} + ')'">Archive</button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+            
+            <div class="text-center p-4" th:if="${#lists.isEmpty(announcements)}">
+              <p class="text-muted">No announcements found</p>
+            </div>
+
+            <div class="table-footer">
+              <span th:text="'Showing ' + ${#lists.size(announcements)} + ' announcements'">Showing 6 announcements</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Archived Tab -->
+        <div id="tab-archived" th:classappend="${currentTab != 'archived' ? 'd-none' : ''}">
+          <div class="panel-header">Archived Announcements</div>
+          <div class="panel-content">
+            <div class="card-grid" th:if="${not #lists.isEmpty(archivedAnnouncements)}">
+              <div class="card" th:each="announcement : ${archivedAnnouncements}">
+
+               
+                <div class="card-top">
+                  <div class="card-title" th:text="${announcement.title}">Dengue Prevention Drive</div>
+                  <span class="card-category" th:text="${announcement.priority != null ? announcement.priority : 'NORMAL'}">NORMAL</span>
+                </div>
+
+                <hr class="card-divider">
+
+               
+                <div class="card-bottom">
+                  <div class="card-body" th:text="${announcement.content}">Archived announcement content goes here.</div>
+                  <div class="card-date" th:text="${announcement.datePosted != null ? #temporals.format(announcement.datePosted, 'MMM dd, yyyy') : 'N/A'}">Feb 20, 2026</div>
+                  <div class="d-flex gap-2">
+                    <button class="view-btn" th:attr="onclick='viewAnnouncement(' + ${announcement.id} + ')'">View</button>
+                    <button class="restore-btn" th:attr="onclick='restoreAnnouncement(' + ${announcement.id} + ')'">Restore</button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+            
+            <div class="text-center p-4" th:if="${#lists.isEmpty(archivedAnnouncements)}">
+              <p class="text-muted">No archived announcements</p>
+            </div>
+
+            <div class="table-footer">
+              <span th:text="'Showing ' + ${#lists.size(archivedAnnouncements)} + ' archived announcements'">Showing 3 archived announcements</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- View Announcement Modal -->
+<div class="modal fade" id="viewAnnouncementModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Announcement</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="viewModalBody">
+        <!-- Filled by JavaScript -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Announcement Modal with Image Upload -->
+<div class="modal fade" id="createAnnouncementModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create New Announcement</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="createAnnouncementForm">
+          <label>Title:</label>
+          <input type="text" class="form-control mb-2" id="title" required>
+          
+          <label>Priority:</label>
+          <select class="form-control mb-2" id="priority">
+            <option value="NORMAL">Normal</option>
+            <option value="HIGH">High (Pinned)</option>
+          </select>
+          
+          <label>Content:</label>
+          <textarea class="form-control mb-2" id="content" rows="5" required></textarea>
+          
+          <label>Image (Upload):</label>
+          <div class="image-upload-area" id="imageUploadArea">
+            <div class="upload-placeholder" id="uploadPlaceholder">
+              <i class="bi bi-cloud-upload"></i>
+              <p>Click or drag & drop an image here</p>
+            </div>
+            <img id="imagePreview" class="image-preview-inline" alt="Preview">
+            <input type="file" id="imageFile" accept="image/*" style="display: none;">
+            <div class="upload-progress" id="uploadProgress">
+              <div class="progress-bar"></div>
+            </div>
+            <button type="button" class="remove-image-btn" id="removeImageBtn">Remove Image</button>
+          </div>
+          <input type="hidden" id="imageUrl" value="">
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="createAnnouncement()">Create</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Announcement Modal with Image Upload -->
+<div class="modal fade" id="editAnnouncementModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Announcement</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editAnnouncementForm">
+          <input type="hidden" id="editId">
+          
+          <label>Title:</label>
+          <input type="text" class="form-control mb-2" id="editTitle" required>
+          
+          <label>Priority:</label>
+          <select class="form-control mb-2" id="editPriority">
+            <option value="NORMAL">Normal</option>
+            <option value="HIGH">High (Pinned)</option>
+          </select>
+          
+          <label>Content:</label>
+          <textarea class="form-control mb-2" id="editContent" rows="5" required></textarea>
+          
+          <label>Image (Upload):</label>
+          <div class="image-upload-area" id="editImageUploadArea">
+            <div class="upload-placeholder" id="editUploadPlaceholder">
+              <i class="bi bi-cloud-upload"></i>
+              <p>Click or drag & drop an image here</p>
+            </div>
+            <img id="editImagePreview" class="image-preview-inline" alt="Preview">
+            <input type="file" id="editImageFile" accept="image/*" style="display: none;">
+            <div class="upload-progress" id="editUploadProgress">
+              <div class="progress-bar"></div>
+            </div>
+            <button type="button" class="remove-image-btn" id="editRemoveImageBtn">Remove Image</button>
+          </div>
+          <input type="hidden" id="editImageUrl" value="">
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="updateAnnouncement()">Update</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Logout Modal -->
+<div th:replace="fragments/logout-modal :: logoutModal"></div>
+
+<!-- Logout modal -->
+    <script src="/js/sidebar.js"></script>
+
+<script>
+  // Supabase configuration - replace with your actual values
+  const SUPABASE_URL = 'https://upfrofppponiqffbssqb.supabase.co';  // Replace with your Supabase URL
+  const SUPABASE_ANON_KEY = 'sb_publishable_tZyxrTJrpd_OD5-TKUkT8Q__DnuY0tj';  // Replace with your Supabase anon key
+  
+  // Supabase client
+  let supabaseClient = null;
+  
+  // Initialize Supabase client
+  function initSupabase() {
+    if (typeof supabase !== 'undefined' && supabase.createClient) {
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } else {
+      console.warn('Supabase library not loaded yet, waiting...');
+      setTimeout(initSupabase, 500);
+    }
+  }
+  
+  // Load Supabase JS library
+  const supabaseScript = document.createElement('script');
+  supabaseScript.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  supabaseScript.onload = initSupabase;
+  document.head.appendChild(supabaseScript);
+  
+  function toggleDropdown(el) {
+    const dropdown = document.getElementById('requests-dropdown');
+    const arrow = el.querySelector('.dropdown-arrow');
+    const isOpen = dropdown.style.display === 'block';
+    dropdown.style.display = isOpen ? 'none' : 'block';
+    arrow.classList.toggle('open', !isOpen);
+  }
+
+  // Upload image to Supabase Storage (same as React Native version)
+  async function uploadImageToSupabase(file) {
+    if (!supabaseClient) {
+      throw new Error('Supabase client not initialized');
+    }
+    
+    // Generate unique filename
+    const timestamp = Date.now();
+    const fileName = `announcement_${timestamp}.jpg`;
+    const filePath = `announcements/${fileName}`;
+    
+    console.log("Uploading to Supabase storage:", filePath);
+    
+    // Convert file to array buffer (similar to React Native's blob/Uint8Array approach)
+    const arrayBuffer = await file.arrayBuffer();
+    const fileData = new Uint8Array(arrayBuffer);
+    
+    // Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+      .from('announcements')
+      .upload(filePath, fileData, { 
+        contentType: file.type || 'image/jpeg', 
+        upsert: true 
+      });
+    
+    if (uploadError) throw uploadError;
+    
+    // Get public URL
+    const { data: urlData } = supabaseClient.storage
+      .from('announcements')
+      .getPublicUrl(uploadData.path);
+    
+    console.log("Upload successful, URL:", urlData.publicUrl);
+    return urlData.publicUrl;
+  }
+  
+  // Setup image upload with Supabase (replacing ImgBB)
+  function setupImageUpload(uploadAreaId, fileInputId, previewId, progressId, urlInputId, removeBtnId, placeholderId) {
+    const uploadArea = document.getElementById(uploadAreaId);
+    const fileInput = document.getElementById(fileInputId);
+    const preview = document.getElementById(previewId);
+    const placeholder = document.getElementById(placeholderId);
+    const progressDiv = document.getElementById(progressId);
+    const progressBar = progressDiv?.querySelector('.progress-bar');
+    const urlInput = document.getElementById(urlInputId);
+    const removeBtn = document.getElementById(removeBtnId);
+    
+    if (!uploadArea || !fileInput) return;
+    
+    function showImage(imageUrl) {
+      preview.src = imageUrl;
+      preview.style.display = 'block';
+      if (placeholder) placeholder.style.display = 'none';
+      uploadArea.classList.add('has-image');
+      if (removeBtn) removeBtn.style.display = 'inline-block';
+    }
+    
+    function hideImage() {
+      preview.style.display = 'none';
+      preview.src = '';
+      if (placeholder) placeholder.style.display = 'flex';
+      uploadArea.classList.remove('has-image');
+      if (removeBtn) removeBtn.style.display = 'none';
+      urlInput.value = '';
+      fileInput.value = '';
+    }
+    
+    // Click to upload
+    uploadArea.addEventListener('click', (e) => {
+      if (e.target === removeBtn || removeBtn?.contains(e.target)) return;
+      fileInput.click();
+    });
+    
+    // Handle file selection
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file && file.type.startsWith('image/')) {
+        await processImageUpload(file, preview, placeholder, progressDiv, progressBar, urlInput, removeBtn, showImage, hideImage);
+      }
+    });
+    
+    // Drag and drop
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        await processImageUpload(file, preview, placeholder, progressDiv, progressBar, urlInput, removeBtn, showImage, hideImage);
+      }
+    });
+    
+    // Remove image
+    if (removeBtn) {
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        hideImage();
+      });
+    }
+    
+    return { showImage, hideImage };
+  }
+  
+  async function processImageUpload(file, preview, placeholder, progressDiv, progressBar, urlInput, removeBtn, showImage, hideImage) {
+    // Show preview immediately
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      showImage(e.target.result);
+    };
+    reader.readAsDataURL(file);
+    
+    // Show progress
+    if (progressDiv) {
+      progressDiv.style.display = 'block';
+      if (progressBar) progressBar.style.width = '50%';
+    }
+    
+    try {
+      // Upload to Supabase instead of ImgBB
+      const imageUrl = await uploadImageToSupabase(file);
+      urlInput.value = imageUrl;
+      if (progressBar) progressBar.style.width = '100%';
+      setTimeout(() => {
+        if (progressDiv) progressDiv.style.display = 'none';
+        if (progressBar) progressBar.style.width = '0%';
+      }, 500);
+      console.log("Supabase upload successful, URL saved:", imageUrl);
+    } catch (error) {
+      console.error('Supabase upload error:', error);
+      alert('Failed to upload image to Supabase: ' + error.message);
+      if (progressDiv) progressDiv.style.display = 'none';
+      if (progressBar) progressBar.style.width = '0%';
+      hideImage();
+    }
+  }
+  
+  // Current priority filter state
+  let currentPriorityFilter = 'all';
+  
+  function isHighPriority(card) {
+    if (card.classList.contains('pinned')) return true;
+    const categorySpan = card.querySelector('.card-category');
+    if (categorySpan) {
+      const priorityText = categorySpan.textContent.toUpperCase().trim();
+      if (priorityText === 'HIGH') return true;
+    }
+    return false;
+  }
+  
+  function filterAndSortAnnouncements() {
+    const grid = document.getElementById('announcementsGrid');
+    if (!grid) return;
+    
+    const allCards = Array.from(grid.querySelectorAll('.card'));
+    if (allCards.length === 0) return;
+    
+    const searchInput = document.getElementById('announcement-search');
+    const searchValue = searchInput ? searchInput.value.toLowerCase() : '';
+
+    allCards.forEach(card => {
+      const highPriority = isHighPriority(card);
+      const matchesSearch = card.textContent.toLowerCase().includes(searchValue);
+      
+      let matchesPriority = true;
+      if (currentPriorityFilter === 'high') {
+        matchesPriority = highPriority;
+      } else if (currentPriorityFilter === 'normal') {
+        matchesPriority = !highPriority;
+      }
+
+      card.style.display = (matchesSearch && matchesPriority) ? '' : 'none';
+    });
+
+    const pinnedCards = allCards.filter(card => isHighPriority(card));
+    const normalCards = allCards.filter(card => !isHighPriority(card));
+    
+    const sortByDate = (a, b) => getCardDate(b) - getCardDate(a);
+    
+    pinnedCards.sort(sortByDate);
+    normalCards.sort(sortByDate);
+    
+    grid.innerHTML = '';
+    pinnedCards.forEach(card => grid.appendChild(card));
+    normalCards.forEach(card => grid.appendChild(card));
+  }
+  
+  function sortArchivedAnnouncements() {
+    const archivedGrid = document.querySelector('#tab-archived .card-grid');
+    if (!archivedGrid) return;
+    
+    const cards = Array.from(archivedGrid.querySelectorAll('.card'));
+    if (cards.length === 0) return;
+    
+    cards.sort((a, b) => getCardDate(b) - getCardDate(a));
+    
+    archivedGrid.innerHTML = '';
+    cards.forEach(card => archivedGrid.appendChild(card));
+  }
+  
+  function getCardDate(card) {
+    const dateElement = card.querySelector('.card-date');
+    if (!dateElement) return 0;
+    const dateText = dateElement.textContent.trim();
+    const parsedDate = new Date(dateText);
+    return isNaN(parsedDate.getTime()) ? 0 : parsedDate.getTime();
+  }
+  
+  function onPriorityFilterChange(value) {
+    currentPriorityFilter = value;
+    filterAndSortAnnouncements();
+  }
+
+  function togglePin(el, id) {
+    const card = el.closest('.card');
+    const wasPinned = el.classList.contains('active');
+    const newPriority = wasPinned ? 'NORMAL' : 'HIGH';
+    
+    el.style.opacity = '0.5';
+    el.style.cursor = 'wait';
+    
+    fetch('/announcements/' + id + '/priority?priority=' + newPriority, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => {
+      if (response.ok) {
+        if (wasPinned) {
+          el.classList.remove('active');
+          card.classList.remove('pinned');
+          el.title = 'Pin';
+        } else {
+          el.classList.add('active');
+          card.classList.add('pinned');
+          el.title = 'Unpin';
+        }
+        const categorySpan = card.querySelector('.card-category');
+        if (categorySpan) categorySpan.textContent = newPriority;
+        
+        setTimeout(() => { filterAndSortAnnouncements(); }, 50);
+      } else {
+        alert('Failed to update pin status.');
+      }
+    })
+    .catch(error => {
+      console.error('Error updating priority:', error);
+    })
+    .finally(() => {
+      el.style.opacity = '';
+      el.style.cursor = '';
+    });
+  }
+
+  function viewAnnouncement(id) {
+    fetch('/announcements/' + id)
+      .then(response => response.json())
+      .then(data => {
+        const priority = data.priority || 'NORMAL';
+        const isHigh = priority === 'HIGH';
+        const dateStr = data.datePosted ? new Date(data.datePosted).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A';
+        const imageHtml = data.image ? `<img src="${data.image}" class="view-post-image" alt="Announcement image" onerror="this.style.display='none'">` : '';
+        const modalBody = document.getElementById('viewModalBody');
+        modalBody.innerHTML = `
+          <div class="view-post-header">
+            <div class="view-post-avatar"><i class="bi bi-megaphone-fill"></i></div>
+            <div class="view-post-meta">
+              <div class="view-post-author">Barangay San Sebastian</div>
+              <div class="view-post-date">${dateStr}</div>
+            </div>
+            <span class="view-post-badge ${isHigh ? 'high' : ''}">${priority}</span>
+          </div>
+          <div class="view-post-title">${escapeHtml(data.title || 'N/A')}</div>
+          <div class="view-post-content">${escapeHtml(data.content || 'N/A')}</div>
+          ${imageHtml}
+          <hr class="view-post-divider">
+          <div class="view-post-footer">
+            <i class="bi bi-info-circle"></i> Status: ${data.status || 'N/A'}
+          </div>
+        `;
+        new bootstrap.Modal(document.getElementById('viewAnnouncementModal')).show();
+      })
+      .catch(error => {
+        console.error('Error viewing announcement:', error);
+      });
+  }
+
+  function createAnnouncement() {
+    const announcement = {
+      title: document.getElementById('title').value,
+      priority: document.getElementById('priority').value,
+      content: document.getElementById('content').value,
+      image: document.getElementById('imageUrl').value
+    };
+
+    if (!announcement.title || !announcement.content) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    fetch('/announcements/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(announcement)
+    })
+    .then(response => {
+      if (response.ok) window.location.reload();
+      else alert('Error creating announcement');
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+  }
+
+  function editAnnouncement(id) {
+    fetch('/announcements/' + id)
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('editId').value = data.id;
+        document.getElementById('editTitle').value = data.title || '';
+        document.getElementById('editPriority').value = data.priority || 'NORMAL';
+        document.getElementById('editContent').value = data.content || '';
+        
+        const imageUrl = data.image || '';
+        document.getElementById('editImageUrl').value = imageUrl;
+        
+        // Show existing image if any
+        if (imageUrl) {
+          const preview = document.getElementById('editImagePreview');
+          const placeholder = document.getElementById('editUploadPlaceholder');
+          const removeBtn = document.getElementById('editRemoveImageBtn');
+          const uploadArea = document.getElementById('editImageUploadArea');
+          
+          preview.src = imageUrl;
+          preview.style.display = 'block';
+          if (placeholder) placeholder.style.display = 'none';
+          if (uploadArea) uploadArea.classList.add('has-image');
+          if (removeBtn) removeBtn.style.display = 'inline-block';
+        }
+        
+        new bootstrap.Modal(document.getElementById('editAnnouncementModal')).show();
+      });
+  }
+
+  function updateAnnouncement() {
+    const id = document.getElementById('editId').value;
+    const announcement = {
+      title: document.getElementById('editTitle').value,
+      priority: document.getElementById('editPriority').value,
+      content: document.getElementById('editContent').value,
+      image: document.getElementById('editImageUrl').value
+    };
+
+    fetch('/announcements/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(announcement)
+    })
+    .then(response => {
+      if (response.ok) window.location.reload();
+      else alert('Error updating announcement');
+    });
+  }
+
+  function archiveAnnouncement(id) {
+    if (confirm('Are you sure you want to archive this announcement?')) {
+      fetch('/announcements/' + id + '/archive', { method: 'PUT' })
+      .then(response => { if (response.ok) window.location.reload(); });
+    }
+  }
+
+  function restoreAnnouncement(id) {
+    if (confirm('Are you sure you want to restore this announcement?')) {
+      fetch('/announcements/' + id + '/restore', { method: 'PUT' })
+      .then(response => { if (response.ok) window.location.reload(); });
+    }
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Search input listener
+  const searchInput = document.getElementById('announcement-search');
+  if (searchInput) {
+    searchInput.addEventListener('keyup', function() {
+      const activeTab = document.querySelector('.tab.active')?.textContent.includes('Archived') ? 'archived' : 'announcements';
+      if (activeTab === 'announcements') {
+        filterAndSortAnnouncements();
+      } else {
+        const searchValue = this.value.toLowerCase();
+        const archivedCards = document.querySelectorAll('#tab-archived .card');
+        archivedCards.forEach(card => {
+          card.style.display = card.textContent.toLowerCase().includes(searchValue) ? '' : 'none';
+        });
+        sortArchivedAnnouncements();
+      }
+    });
+  }
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    // Setup image upload for create modal (now using Supabase)
+    setupImageUpload('imageUploadArea', 'imageFile', 'imagePreview', 'uploadProgress', 'imageUrl', 'removeImageBtn', 'uploadPlaceholder');
+    
+    // Setup image upload for edit modal (now using Supabase)
+    setupImageUpload('editImageUploadArea', 'editImageFile', 'editImagePreview', 'editUploadProgress', 'editImageUrl', 'editRemoveImageBtn', 'editUploadPlaceholder');
+    
+    const resetBtn = document.querySelector('.search-bar-area .filter-btn');
+    if (resetBtn && resetBtn.textContent.includes('Reset')) {
+      const filterBtn = document.createElement('button');
+      filterBtn.id = 'priorityFilterBtn';
+      filterBtn.className = 'filter-btn';
+      filterBtn.innerHTML = '<i class="bi bi-funnel"></i> Filter: All Priorities';
+      
+      const dropdownContainer = document.createElement('div');
+      dropdownContainer.style.position = 'relative';
+      dropdownContainer.style.display = 'inline-block';
+      
+      const dropdownMenu = document.createElement('div');
+      dropdownMenu.className = 'priority-dropdown-menu';
+      dropdownMenu.style.cssText = 'position: absolute; top: 100%; left: 0; margin-top: 4px; background: white; border: 1px solid #d0d5dd; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 1000; min-width: 180px; display: none;';
+      
+      dropdownMenu.innerHTML = `
+        <div class="priority-option" data-value="all" style="padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+          <i class="bi bi-list-ul"></i> All Priorities
+        </div>
+        <div class="priority-option" data-value="high" style="padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+          <i class="bi bi-pin-angle-fill" style="color: #FED734;"></i> High Priority Only
+        </div>
+        <div class="priority-option" data-value="normal" style="padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+          <i class="bi bi-flag"></i> Normal Priority Only
+        </div>
+      `;
+      
+      dropdownMenu.querySelectorAll('.priority-option').forEach(option => {
+        option.addEventListener('mouseenter', () => { option.style.backgroundColor = '#f5f5f5'; });
+        option.addEventListener('mouseleave', () => { option.style.backgroundColor = 'white'; });
+        option.addEventListener('click', () => {
+          const value = option.getAttribute('data-value');
+          if (value === 'all') filterBtn.innerHTML = '<i class="bi bi-funnel"></i> Filter: All Priorities';
+          else if (value === 'high') filterBtn.innerHTML = '<i class="bi bi-pin-angle-fill"></i> Filter: High Priority';
+          else if (value === 'normal') filterBtn.innerHTML = '<i class="bi bi-flag"></i> Filter: Normal Priority';
+          dropdownMenu.style.display = 'none';
+          onPriorityFilterChange(value);
+        });
+      });
+      
+      filterBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+      });
+      
+      document.addEventListener('click', (e) => {
+        if (!dropdownContainer.contains(e.target)) dropdownMenu.style.display = 'none';
+      });
+      
+      dropdownContainer.appendChild(filterBtn);
+      dropdownContainer.appendChild(dropdownMenu);
+      resetBtn.parentNode.replaceChild(dropdownContainer, resetBtn);
+      
+      setTimeout(() => { filterAndSortAnnouncements(); }, 100);
+    }
+    
+    sortArchivedAnnouncements();
+    
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        setTimeout(() => {
+          if (document.querySelector('.tab.active')?.textContent.includes('Archived')) {
+            sortArchivedAnnouncements();
+          }
+        }, 100);
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"></script>
+
+<style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .top-header { background-color: #2d4a44; display: flex; border-bottom: 2px solid #FED734; flex-shrink: 0; }
+    .top-header-tab { flex: 1; color: white; text-align: center; padding: 16px 20px; font-size: 16px; font-weight: bold; }
+    .content-area { padding: 24px; flex: 1; overflow-y: auto; background-color: #f0f2f1; }
+
+    .profile-panel { background: white; border-radius: 12px; border: 1px solid #e0e0e0; overflow: hidden; }
+    .profile-hero { background: #2d4a44; padding: 28px 32px; display: flex; align-items: center; gap: 24px; }
+    
+    .avatar-wrap { position: relative; flex-shrink: 0; }
+    .avatar { width: 88px; height: 88px; border-radius: 50%; background: #1a4d47; border: 3px solid rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar svg { width: 44px; height: 44px; fill: #7dd3c0; }
+    .avatar-edit { position: absolute; bottom: 2px; right: 2px; width: 28px; height: 28px; background: #FED734; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .2s; border: 2px solid #2d4a44; }
+    .avatar-edit:hover { background: #d4ac0d; }
+    .avatar-edit i { font-size: 12px; color: #2d4a44; margin: 0; padding: 0; }
+    .view-mode .avatar-edit { display: none; }
+    
+    .hero-info { flex: 1; }
+    .hero-name { color: white; font-size: 20px; font-weight: bold; margin-bottom: 3px; }
+    .hero-email { color: rgba(255,255,255,0.65); font-size: 13px; margin-bottom: 8px; }
+    .hero-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .role-static { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 3px 12px; font-size: 11px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
+    select.role-select { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 3px 12px; font-size: 11px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; cursor: pointer; }
+    select.role-select option { background: #2d4a44; color: white; }
+    .hero-empid { color: rgba(255,255,255,0.5); font-size: 12px; }
+    .hero-actions { margin-left: auto; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+    .hero-actions button { min-width: 160px; }
+    .btn-save { padding: 9px 20px; background: #44C375; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: background .2s; white-space: nowrap; }
+    .btn-save:hover { background: #2ea05e; }
+    .btn-save:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-edit { padding: 9px 20px; background: #FED734; color: #2d4a44; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .2s; white-space: nowrap; }
+    .btn-edit:hover { background: #d4ac0d; }
+    .btn-cancel-edit { padding: 9px 20px; background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s; white-space: nowrap; }
+    .btn-cancel-edit:hover { background: rgba(255,255,255,0.2); }
+    .btn-pwd { padding: 9px 20px; background: #FED734; color: #2d4a44; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .2s; white-space: nowrap; }
+    .btn-pwd:hover { background: #d4ac0d; }
+
+    .section-header { padding: 16px 32px 0; font-size: 11px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: .5px; }
+    .section-divider { height: 1px; background: #f0f0f0; margin: 8px 32px 0; }
+
+    .fields-grid { padding: 20px 32px 28px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 28px; }
+    .field { display: flex; flex-direction: column; gap: 5px; position: relative; }
+    .field label { font-size: 12px; color: #666; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; }
+    .field input { padding: 9px 34px 9px 11px; border: 1px solid #d0d5dd; border-radius: 7px; font-size: 13px; color: #333; background: #fafafa; transition: border-color .2s, box-shadow .2s; }
+    .field input:focus { outline: none; border-color: #2d4a44; box-shadow: 0 0 0 3px rgba(45,74,68,.1); background: white; }
+    .field input.valid   { border-color: #00c44d; background: #f0fff5; }
+    .field input.invalid { border-color: #e74c3c; }
+    .vicon { position: absolute; right: 10px; bottom: 10px; font-size: 13px; display: none; pointer-events: none; }
+    .vicon.valid    { display: block; color: #00c44d; }
+    .vicon.invalid  { display: block; color: #e74c3c; }
+    .err { display: none; font-size: 11px; color: #e74c3c; margin-top: 2px; }
+    .err.show { display: block; }
+
+    .view-field { display: flex; flex-direction: column; gap: 5px; }
+    .view-field label { font-size: 12px; color: #666; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; }
+    .view-field .view-val { padding: 9px 13px; border: 1px solid #e8e8e8; border-radius: 7px; font-size: 13px; color: #222; background: #f9f9f9; font-weight: 500; min-height: 38px; }
+
+    .locked-field { display: flex; flex-direction: column; gap: 6px; }
+    .locked-label { font-size: 12px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; color: #7d5a00; display: flex; align-items: center; gap: 5px; }
+    .locked-label i { font-size: 12px; color: #b07d1e; }
+    .locked-val { padding: 10px 13px; border-radius: 7px; font-size: 13px; color: #5a3e00; background: #fdf6e3; border: 1px solid #f0d080; cursor: not-allowed; font-weight: 500; }
+    .locked-hint { font-size: 11px; color: #a07828; display: flex; align-items: center; gap: 4px; }
+    .locked-hint i { font-size: 11px; }
+
+    .edit-only { display: none; }
+    .view-only  { display: block; }
+    .edit-mode .edit-only { display: block; }
+    .edit-mode .view-only  { display: none; }
+
+    .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+    .modal.active { display: flex; }
+    .modal-content { background: white; border-radius: 10px; padding: 24px; max-width: 400px; width: 90%; max-height: 85vh; overflow-y: auto; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #e0e0e0; padding-bottom: 12px; }
+    .modal-title { font-size: 16px; font-weight: bold; color: #2d4a44; }
+    .close-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: #999; line-height: 1; }
+    .close-btn:hover { color: #333; }
+    .modal-body { position: relative; }
+    .modal-body .input-wrapper { position: relative; margin-bottom: 12px; }
+    .modal-body input { width: 100%; padding: 10px 36px 10px 12px; border: 1px solid #d0d5dd; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
+    .password-requirements { margin-top: -4px; margin-bottom: 12px; padding: 10px 12px; background: #f9f9f9; border-radius: 6px; font-size: 12px; display: none; border-left: 3px solid #30534D; }
+    .password-requirements.show { display: block; }
+    .requirement-item { color: #666; margin: 5px 0; transition: color .3s; }
+    .requirement-item.met { color: #27ae60; text-decoration: line-through; }
+    .requirement-item::before { content: "○ "; margin-right: 4px; }
+    .requirement-item.met::before { content: "✓ "; }
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; padding-top: 14px; border-top: 1px solid #f0f0f0; }
+    .btn-cancel  { padding: 9px 20px; background: #f5f5f5; color: #666; border: 1px solid #d0d5dd; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    .btn-cancel:hover  { background: #e0e0e0; }
+    .btn-confirm { padding: 9px 20px; background: #2d4a44; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+    .btn-confirm:hover { background: #1a3330; }
+    .btn-confirm:disabled { opacity: .5; cursor: not-allowed; }
+
+    small.file-size-info { color: rgba(255,255,255,0.4); display: block; font-size: 11px; margin-top: 2px; }
+    small.file-error { color: #ffb3b3; display: none; font-size: 11px; margin-top: 4px; }
+    small.file-error.show { display: block; }
+
+    .toast-wrap { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast-msg { background: #2d4a44; color: white; padding: 12px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.2); animation: slideIn .3s ease; }
+    .toast-msg.error { background: #c0392b; }
+    .toast-msg.success { background: #27ae60; }
+    @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div class="layout">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="toast-wrap" id="toastWrap"></div>
+
+    <div class="main-content">
+        <div class="top-header">
+            <div class="top-header-tab">User Profile</div>
+        </div>
+
+        <div class="content-area">
+            <div class="profile-panel view-mode" id="profilePanel">
+
+                <div class="profile-hero">
+                    <form id="profileForm" th:action="@{/register}" method="post" enctype="multipart/form-data"
+                          onsubmit="prepareProfileSubmit(event)" style="display:contents">
+
+                        <input type="hidden" name="id" th:value="${currentAdminNumericId}">
+                        <input type="hidden" name="employeeId" th:value="${currentAdminID}">
+                        <input type="hidden" name="address" id="hiddenAddress" th:value="${currentAdminAddress}">
+                        <input type="hidden" name="gender" th:value="${currentAdminGender}">
+                        <input type="hidden" name="birthDate" id="hiddenBirthDate" th:value="${currentAdminBirthDate}">
+                        <input type="hidden" name="firstName" id="hiddenFirstName">
+                        <input type="hidden" name="lastName" id="hiddenLastName">
+                        <input type="hidden" name="username" id="hiddenUsername" th:value="${currentAdminUsername}">
+                        <input type="hidden" name="email" id="hiddenEmail" th:value="${currentAdminEmail}">
+                        <input type="hidden" name="phoneNumber" id="hiddenPhoneNumber" th:value="${currentAdminPhone}">
+                        <input type="hidden" name="password" value="">
+                        <input type="hidden" name="redirectTo" value="profile">
+                        <input type="hidden" name="profilePictureUrl" id="profilePictureUrlHidden">
+
+                        <input type="hidden" name="role" id="hiddenRole"
+                               th:if="${currentAdminRole != 'ADMIN'}"
+                               th:value="${currentAdminRole}">
+
+                        <div class="avatar-wrap">
+                            <div class="avatar" id="profilePictureDisplay">
+                                <img th:if="${currentAdminProfilePicture != null}" th:src="${currentAdminProfilePicture}" alt="Profile Picture" style="width:100%;height:100%;object-fit:cover;">
+                                <svg th:unless="${currentAdminProfilePicture != null}" viewBox="0 0 24 24">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                            </div>
+                            <div class="avatar-edit edit-only" onclick="document.getElementById('profileImageInput').click()">
+                                <i class="bi bi-pencil-fill"></i>
+                            </div>
+                            <input type="file" id="profileImageInput" name="profilePicture" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+                        </div>
+
+                        <div class="hero-info">
+                            <div class="hero-name view-only" id="viewHeroName" th:text="${currentUser}">Full Name</div>
+                            <div class="hero-name edit-only">
+                                <input type="text" id="editHeroName" style="background:rgba(255,255,255,0.15);border:none;color:white;font-weight:bold;font-size:20px;padding:4px 8px;width:100%;border-radius:4px;" th:value="${currentUser}">
+                            </div>
+                            <div class="hero-email" th:text="${currentAdminEmail}">email@example.com</div>
+                            <div class="hero-meta">
+                                <th:block th:if="${currentAdminRole == 'ADMIN'}">
+                                    <span class="role-static view-only" th:text="${currentAdminRole}">Admin</span>
+                                    <select class="role-select edit-only" id="roleSelect" name="role">
+                                        <option value="ADMIN" th:selected="${currentAdminRole == 'ADMIN'}">Admin</option>
+                                        <option value="BARANGAY-CAPTAIN" th:selected="${currentAdminRole == 'BARANGAY-CAPTAIN'}">Barangay Captain</option>
+                                        <option value="TREASURER" th:selected="${currentAdminRole == 'TREASURER'}">Treasurer</option>
+                                        <option value="SECRETARY" th:selected="${currentAdminRole == 'SECRETARY'}">Secretary</option>
+                                    </select>
+                                </th:block>
+                                <span class="role-static" th:unless="${currentAdminRole == 'ADMIN'}" th:text="${currentAdminRole}">Staff</span>
+                                <span class="hero-empid" th:text="'ID: ' + ${currentAdminID}">ID: —</span>
+                            </div>
+                            <small class="file-error edit-only" id="fileError">File must not exceed 2MB</small>
+                            <small class="file-size-info edit-only">Max photo size: 2MB</small>
+                        </div>
+
+                        <div class="hero-actions">
+                            <button type="button" class="btn-edit view-only" onclick="enterEditMode()"><i class="bi bi-pencil-square"></i> Edit Profile</button>
+                            <button type="button" class="btn-pwd view-only" onclick="openPasswordModal()"><i class="bi bi-key"></i> Change Password</button>
+                            <button type="submit" class="btn-save edit-only" id="saveBtn" disabled><i class="bi bi-check-circle"></i> Save Changes</button>
+                            <button type="button" class="btn-cancel-edit edit-only" onclick="cancelEditMode()"><i class="bi bi-x-circle"></i> Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="view-only">
+                    <div class="section-header">Personal information</div>
+                    <div class="fields-grid">
+                        <div class="view-field"><label>Full name</label><div class="view-val" id="view-fullname" th:text="${currentUser}">—</div></div>
+                        <div class="view-field"><label>Phone number</label><div class="view-val" id="view-phone" th:text="${currentAdminPhone}">—</div></div>
+                        <div class="view-field"><label>Username</label><div class="view-val" id="view-username" th:text="${currentAdminUsername}">—</div></div>
+                        <div class="view-field"><label>Email address</label><div class="view-val" id="view-email" th:text="${currentAdminEmail}">—</div></div>
+                    </div>
+                </div>
+
+                <div class="edit-only">
+                    <div class="section-header">Personal information</div>
+                    <div class="fields-grid">
+                        <div class="field"><label>Full name</label><input type="text" id="fullname" th:value="${currentUser}"><span class="vicon" id="fullname-icon"></span>
+                            <small class="err" id="fullname-error">Name is required</small><small class="err" id="fullname-error2">Only letters and spaces allowed</small><small class="err" id="fullname-error3">Please enter both first and last name</small></div>
+                        <div class="field"><label>Phone number</label><input type="tel" id="phone" th:value="${currentAdminPhone}"><span class="vicon" id="phone-icon"></span>
+                            <small class="err" id="phone-error">Must start with 09 and be 11 digits</small><small class="err" id="phone-taken">This phone number is already in use</small></div>
+                        <div class="field"><label>Username</label><input type="text" id="username" th:value="${currentAdminUsername}"><span class="vicon" id="username-icon"></span>
+                            <small class="err" id="username-error">Username is required (min 3 characters)</small><small class="err" id="username-error2">Only letters, numbers, and hyphens allowed</small><small class="err" id="username-taken">This username is already taken</small></div>
+                        <div class="field"><label>Email address</label><input type="email" id="email" th:value="${currentAdminEmail}"><span class="vicon" id="email-icon"></span>
+                            <small class="err" id="email-error">Valid email is required</small><small class="err" id="email-taken">This email is already in use</small></div>
+                    </div>
+                </div>
+
+                <th:block th:if="${currentAdminRole == 'ADMIN'}">
+                    <div class="section-divider"></div>
+                    <div class="section-header">Additional information</div>
+                    <div class="view-only">
+                        <div class="fields-grid">
+                            <div class="view-field"><label>Birth date</label><div class="view-val" id="view-birthdate" th:text="${currentAdminBirthDate} ?: 'Not on record'">—</div></div>
+                            <div class="view-field"><label>Home address</label><div class="view-val" id="view-address" th:text="${currentAdminAddress} ?: 'Not on record'">—</div></div>
+                        </div>
+                    </div>
+                    <div class="edit-only">
+                        <div class="fields-grid">
+                            <div class="field"><label>Birth date</label><input type="date" id="birthdate" th:value="${currentAdminBirthDate}"><span class="vicon" id="birthdate-icon"></span>
+                                <small class="err" id="birthdate-error">A valid birth date is required</small><small class="err" id="birthdate-error-age">Must be at least 18 years old</small></div>
+                            <div class="field"><label>Home address</label><input type="text" id="address" th:value="${currentAdminAddress}"><span class="vicon" id="address-icon"></span>
+                                <small class="err" id="address-error">Address must be at least 5 characters</small></div>
+                        </div>
+                    </div>
+                </th:block>
+
+                <th:block th:unless="${currentAdminRole == 'ADMIN'}">
+                    <div class="section-divider"></div>
+                    <div class="section-header">Restricted fields</div>
+                    <div class="fields-grid">
+                        <div class="locked-field"><div class="locked-label"><i class="bi bi-lock-fill"></i> Birth date</div><div class="locked-val" th:text="${currentAdminBirthDate} ?: 'Not on record'">Not on record</div><div class="locked-hint"><i class="bi bi-info-circle-fill"></i> Contact Administrator to update</div></div>
+                        <div class="locked-field"><div class="locked-label"><i class="bi bi-lock-fill"></i> Home address</div><div class="locked-val" th:text="${currentAdminAddress} ?: 'Not on record'">Not on record</div><div class="locked-hint"><i class="bi bi-info-circle-fill"></i> Contact Administrator to update</div></div>
+                    </div>
+                </th:block>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="passwordModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3 class="modal-title"><i class="bi bi-key me-2"></i>Change Password</h3><button class="close-btn" onclick="closePasswordModal()">&times;</button></div>
+        <form id="passwordChangeForm" th:action="@{/register}" method="post" onsubmit="preparePasswordSubmit(event)">
+            <input type="hidden" name="id" th:value="${currentAdminNumericId}">
+            <input type="hidden" name="employeeId" th:value="${currentAdminID}">
+            <input type="hidden" name="address" th:value="${currentAdminAddress}">
+            <input type="hidden" name="gender" th:value="${currentAdminGender}">
+            <input type="hidden" name="birthDate" th:value="${currentAdminBirthDate}">
+            <input type="hidden" name="role" th:value="${currentAdminRole}">
+            <input type="hidden" name="firstName" id="pwdHiddenFirstName">
+            <input type="hidden" name="lastName" id="pwdHiddenLastName">
+            <input type="hidden" name="username" id="pwdHiddenUsername" th:value="${currentAdminUsername}">
+            <input type="hidden" name="email" id="pwdHiddenEmail" th:value="${currentAdminEmail}">
+            <input type="hidden" name="phoneNumber" id="pwdHiddenPhoneNumber" th:value="${currentAdminPhone}">
+            <input type="hidden" name="password" id="pwdHiddenPassword" value="">
+            <input type="hidden" name="redirectTo" value="profile">
+            <div class="modal-body">
+                <div style="display:flex;gap:8px;margin-bottom:10px">
+                    <input type="email" id="otpEmail" placeholder="Enter your email to verify" style="flex:1;padding:10px 12px;border:1px solid #d0d5dd;border-radius:6px;" th:value="${currentAdminEmail}">
+                    <button type="button" onclick="sendOtp()" style="padding:10px 14px;background:#30534D;color:white;border:none;border-radius:6px;cursor:pointer;">Send OTP</button>
+                </div>
+                <div class="input-wrapper" style="margin-bottom:10px">
+                    <input type="text" id="otpInput" placeholder="Enter OTP" maxlength="6" style="width:100%;padding:10px 12px;border:1px solid #d0d5dd;border-radius:6px;">
+                    <small id="otp-error" style="color:#e74c3c;font-size:11px;display:none">Invalid OTP</small>
+                    <small id="otp-success" style="color:#27ae60;font-size:11px;display:none">✓ OTP verified</small>
+                </div>
+                <div class="input-wrapper" style="position:relative">
+                    <input type="password" id="newPassword" placeholder="New Password" style="width:100%;padding:10px 40px 10px 12px;border:1px solid #d0d5dd;border-radius:6px;">
+                    <button type="button" onclick="togglePwd('newPassword')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;">👁️</button>
+                </div>
+                <div id="password-requirements" class="password-requirements">
+                    <div class="requirement-item" id="req-length">At least 8 characters</div>
+                    <div class="requirement-item" id="req-uppercase">Contains uppercase letter</div>
+                    <div class="requirement-item" id="req-lowercase">Contains lowercase letter</div>
+                    <div class="requirement-item" id="req-number">Contains number</div>
+                    <div class="requirement-item" id="req-special">Contains special character (!@#$%^&amp;*)</div>
+                </div>
+                <div class="input-wrapper" style="margin-top:8px;position:relative">
+                    <input type="password" id="confirmPassword" placeholder="Confirm New Password" style="width:100%;padding:10px 40px 10px 12px;border:1px solid #d0d5dd;border-radius:6px;">
+                    <button type="button" onclick="togglePwd('confirmPassword')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;">👁️</button>
+                </div>
+                <small class="err" id="confirm-password-error">Passwords do not match</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closePasswordModal()">Cancel</button>
+                <button type="submit" class="btn-confirm" id="changePasswordBtn" disabled>Change Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
+<script src="/js/sidebar.js"></script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const rawUsernames = /*[[${usernameList}]]*/ [];
+    const rawEmails    = /*[[${emailList}]]*/ [];
+    const rawPhones    = /*[[${phoneList}]]*/ [];
+    window.usernameList = (rawUsernames || []).map(u => u.toLowerCase());
+    window.emailList    = (rawEmails    || []).map(e => e.toLowerCase());
+    window.phoneList    = (rawPhones    || []);
+    /*]]>*/
+</script>
+
+<script>
+    // Supabase configuration
+    const SUPABASE_URL = 'https://upfrofppponiqffbssqb.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_tZyxrTJrpd_OD5-TKUkT8Q__DnuY0tj';
+    let supabaseClient = null;
+    let currentImageUrl = null;
+    let otpVerified = false;
+
+    function initSupabase() {
+        if (typeof supabase !== 'undefined' && supabase.createClient) {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log("Supabase client initialized");
+        } else {
+            setTimeout(initSupabase, 500);
+        }
+    }
+    const supabaseScript = document.createElement('script');
+    supabaseScript.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+    supabaseScript.onload = initSupabase;
+    document.head.appendChild(supabaseScript);
+
+    const originalValues = {
+        username: document.getElementById('username')?.value.trim() || '',
+        email: document.getElementById('email')?.value.trim() || '',
+        phone: document.getElementById('phone')?.value.trim() || ''
+    };
+
+    const passwordReqs = {
+        length: { regex: /.{8,}/, element: document.getElementById('req-length') },
+        uppercase: { regex: /[A-Z]/, element: document.getElementById('req-uppercase') },
+        lowercase: { regex: /[a-z]/, element: document.getElementById('req-lowercase') },
+        number: { regex: /[0-9]/, element: document.getElementById('req-number') },
+        special: { regex: /[!@#$%^&*(),.?":{}|<>]/, element: document.getElementById('req-special') }
+    };
+
+    function getMaxBirthdate() {
+        const today = new Date();
+        today.setFullYear(today.getFullYear() - 18);
+        return today.toISOString().split('T')[0];
+    }
+    const birthdateEl = document.getElementById('birthdate');
+    if (birthdateEl) birthdateEl.setAttribute('max', getMaxBirthdate());
+
+    function enterEditMode() {
+        document.getElementById('profilePanel').classList.remove('view-mode');
+        document.getElementById('profilePanel').classList.add('edit-mode');
+        
+        const editHero = document.getElementById('editHeroName');
+        if (editHero) editHero.value = document.getElementById('view-fullname').textContent.trim();
+        document.getElementById('fullname').value = document.getElementById('view-fullname').textContent.trim();
+        document.getElementById('phone').value = document.getElementById('view-phone').textContent.trim();
+        document.getElementById('username').value = document.getElementById('view-username').textContent.trim();
+        document.getElementById('email').value = document.getElementById('view-email').textContent.trim();
+        
+        if (document.getElementById('birthdate')) {
+            let bd = document.getElementById('view-birthdate').textContent.trim();
+            document.getElementById('birthdate').value = (bd === 'Not on record' ? '' : bd);
+        }
+        if (document.getElementById('address')) {
+            let ad = document.getElementById('view-address').textContent.trim();
+            document.getElementById('address').value = (ad === 'Not on record' ? '' : ad);
+        }
+        
+        ['fullname', 'username', 'email', 'phone'].forEach(id => {
+            document.getElementById(id)?.dispatchEvent(new Event('input'));
+        });
+        if (birthdateEl) birthdateEl.dispatchEvent(new Event('input'));
+        if (document.getElementById('address')) document.getElementById('address').dispatchEvent(new Event('input'));
+    }
+
+    function cancelEditMode() {
+        document.getElementById('profilePanel').classList.remove('edit-mode');
+        document.getElementById('profilePanel').classList.add('view-mode');
+        document.querySelectorAll('.vicon').forEach(i => { i.className = 'vicon'; i.textContent = ''; });
+        document.querySelectorAll('.err').forEach(m => m.classList.remove('show'));
+        currentImageUrl = null;
+    }
+
+    async function uploadImageToSupabase(file) {
+        if (!supabaseClient) throw new Error('Supabase client not initialized');
+        const timestamp = Date.now();
+        const randomString = Math.random().toString(36).substring(2, 8);
+        const fileName = `profile_${timestamp}_${randomString}.jpg`;
+        const arrayBuffer = await file.arrayBuffer();
+        const fileData = new Uint8Array(arrayBuffer);
+        const { data: uploadData, error: uploadError } = await supabaseClient.storage
+            .from('admin-documents')
+            .upload(fileName, fileData, { contentType: file.type || 'image/jpeg', upsert: true });
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabaseClient.storage.from('admin-documents').getPublicUrl(uploadData.path);
+        return urlData.publicUrl;
+    }
+
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        const fileError = document.getElementById('fileError');
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+            fileError.classList.add('show');
+            event.target.value = '';
+            return;
+        }
+        fileError.classList.remove('show');
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('profilePictureDisplay').innerHTML = `<img src="${e.target.result}" alt="Profile Picture" style="width:100%;height:100%;object-fit:cover;">`;
+        };
+        reader.readAsDataURL(file);
+        uploadImageToSupabase(file).then(imageUrl => { 
+            currentImageUrl = imageUrl; 
+            console.log("Image uploaded, URL saved:", currentImageUrl);
+            // Also set the hidden input immediately
+            const urlHidden = document.getElementById('profilePictureUrlHidden');
+            if (urlHidden) urlHidden.value = currentImageUrl;
+        }).catch(err => { 
+            console.error(err); 
+            fileError.classList.add('show'); 
+            fileError.textContent = 'Upload failed'; 
+        });
+    }
+
+    function updateFieldValidation(input, iconId, isValid) {
+        const icon = document.getElementById(iconId);
+        if (!input.value.trim()) {
+            input.classList.remove('valid', 'invalid');
+            if (icon) { icon.className = 'vicon'; icon.textContent = ''; }
+            return false;
+        }
+        if (isValid) {
+            input.classList.remove('invalid'); input.classList.add('valid');
+            if (icon) { icon.className = 'vicon valid'; icon.textContent = '✓'; }
+            return true;
+        }
+        input.classList.remove('valid'); input.classList.add('invalid');
+        if (icon) { icon.className = 'vicon invalid'; icon.textContent = '✗'; }
+        return false;
+    }
+
+    function updateSaveButton() {
+        const baseFields = ['fullname', 'username', 'email', 'phone'];
+        const adminFields = document.getElementById('birthdate') ? ['birthdate', 'address'] : [];
+        const allValid = [...baseFields, ...adminFields].every(id => document.getElementById(id)?.classList.contains('valid'));
+        document.getElementById('saveBtn').disabled = !allValid;
+    }
+
+    document.getElementById('fullname')?.addEventListener('input', function() {
+        const value = this.value, trimmed = value.trim();
+        ['fullname-error','fullname-error2','fullname-error3'].forEach(id => document.getElementById(id)?.classList.remove('show'));
+        if (!trimmed) { document.getElementById('fullname-error')?.classList.add('show'); updateFieldValidation(this, 'fullname-icon', false); }
+        else if (!/^[a-zA-Z\s]+$/.test(value)) { document.getElementById('fullname-error2')?.classList.add('show'); updateFieldValidation(this, 'fullname-icon', false); }
+        else if (trimmed.split(/\s+/).filter(p => p.length > 0).length < 2) { document.getElementById('fullname-error3')?.classList.add('show'); updateFieldValidation(this, 'fullname-icon', false); }
+        else { updateFieldValidation(this, 'fullname-icon', true); }
+        const editHero = document.getElementById('editHeroName');
+        if (editHero) editHero.value = this.value;
+        updateSaveButton();
+    });
+
+    document.getElementById('phone')?.addEventListener('input', function() {
+        const clean = this.value.trim().replace(/\s/g, '');
+        ['phone-error','phone-taken'].forEach(id => document.getElementById(id)?.classList.remove('show'));
+        if (!clean) { updateFieldValidation(this, 'phone-icon', false); }
+        else if (!/^09\d{9}$/.test(clean)) { document.getElementById('phone-error')?.classList.add('show'); updateFieldValidation(this, 'phone-icon', false); }
+        else if (clean !== originalValues.phone && window.phoneList?.includes(clean)) { document.getElementById('phone-taken')?.classList.add('show'); updateFieldValidation(this, 'phone-icon', false); }
+        else { updateFieldValidation(this, 'phone-icon', true); }
+        updateSaveButton();
+    });
+
+    document.getElementById('username')?.addEventListener('input', function() {
+        const trimmed = this.value.trim(), lower = trimmed.toLowerCase();
+        ['username-error','username-error2','username-taken'].forEach(id => document.getElementById(id)?.classList.remove('show'));
+        if (trimmed.length < 3) { document.getElementById('username-error')?.classList.add('show'); updateFieldValidation(this, 'username-icon', false); }
+        else if (!/^[a-zA-Z0-9-]+$/.test(trimmed)) { document.getElementById('username-error2')?.classList.add('show'); updateFieldValidation(this, 'username-icon', false); }
+        else if (window.usernameList?.includes(lower) && trimmed !== originalValues.username) { document.getElementById('username-taken')?.classList.add('show'); updateFieldValidation(this, 'username-icon', false); }
+        else { updateFieldValidation(this, 'username-icon', true); }
+        updateSaveButton();
+    });
+
+    document.getElementById('email')?.addEventListener('input', function() {
+        const trimmed = this.value.trim(), lower = trimmed.toLowerCase();
+        ['email-error','email-taken'].forEach(id => document.getElementById(id)?.classList.remove('show'));
+        if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) { document.getElementById('email-error')?.classList.add('show'); updateFieldValidation(this, 'email-icon', false); }
+        else if (window.emailList?.includes(lower) && trimmed !== originalValues.email) { document.getElementById('email-taken')?.classList.add('show'); updateFieldValidation(this, 'email-icon', false); }
+        else { updateFieldValidation(this, 'email-icon', true); }
+        updateSaveButton();
+    });
+
+    if (birthdateEl) {
+        birthdateEl.addEventListener('input', function() {
+            ['birthdate-error','birthdate-error-age'].forEach(id => document.getElementById(id)?.classList.remove('show'));
+            if (!this.value) { updateFieldValidation(this, 'birthdate-icon', true); updateSaveButton(); return; }
+            const birth = new Date(this.value), today = new Date();
+            let age = today.getFullYear() - birth.getFullYear();
+            const m = today.getMonth() - birth.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+            if (age < 18) { document.getElementById('birthdate-error-age')?.classList.add('show'); updateFieldValidation(this, 'birthdate-icon', false); }
+            else { updateFieldValidation(this, 'birthdate-icon', true); }
+            updateSaveButton();
+        });
+    }
+
+    const addressEl = document.getElementById('address');
+    if (addressEl) {
+        addressEl.addEventListener('input', function() {
+            document.getElementById('address-error')?.classList.remove('show');
+            const len = this.value.trim().length;
+            if (len > 0 && len < 5) { document.getElementById('address-error')?.classList.add('show'); updateFieldValidation(this, 'address-icon', false); }
+            else { updateFieldValidation(this, 'address-icon', len >= 5 || len === 0); }
+            updateSaveButton();
+        });
+    }
+
+    function prepareProfileSubmit(event) {
+        const fullname = document.getElementById('fullname').value.trim();
+        const parts = fullname.split(/\s+/);
+        document.getElementById('hiddenFirstName').value = parts[0] || '';
+        document.getElementById('hiddenLastName').value = parts.slice(1).join(' ') || '';
+        document.getElementById('hiddenUsername').value = document.getElementById('username').value.trim();
+        document.getElementById('hiddenEmail').value = document.getElementById('email').value.trim();
+        document.getElementById('hiddenPhoneNumber').value = document.getElementById('phone').value.trim();
+        
+        if (document.getElementById('birthdate')) {
+            document.getElementById('hiddenBirthDate').value = document.getElementById('birthdate').value.trim();
+        }
+        if (document.getElementById('address')) {
+            document.getElementById('hiddenAddress').value = document.getElementById('address').value.trim();
+        }
+        
+        // Set the profile picture URL if uploaded
+        if (currentImageUrl) {
+            document.getElementById('profilePictureUrlHidden').value = currentImageUrl;
+        }
+        
+        return true;
+    }
+
+    function sendOtp() {
+        const email = document.getElementById('otpEmail').value.trim();
+        if (!email) { alert('Enter email'); return; }
+        fetch('/send-otp?email=' + encodeURIComponent(email), { method: 'POST' })
+            .then(r => r.text()).then(msg => alert(msg))
+            .catch(() => alert('Failed to send OTP.'));
+    }
+
+    function verifyOtp() {
+        const otp = document.getElementById('otpInput').value.trim();
+        return fetch('/verify-otp?otp=' + encodeURIComponent(otp), { method: 'POST' })
+            .then(r => {
+                if (r.ok) {
+                    otpVerified = true;
+                    document.getElementById('otp-error').style.display = 'none';
+                    document.getElementById('otp-success').style.display = 'block';
+                    return true;
+                }
+                otpVerified = false;
+                document.getElementById('otp-error').style.display = 'block';
+                document.getElementById('otp-success').style.display = 'none';
+                return false;
+            });
+    }
+
+    function openPasswordModal() { otpVerified = false; document.getElementById('passwordModal').classList.add('active'); document.getElementById('changePasswordBtn').disabled = true; }
+    function closePasswordModal() { document.getElementById('passwordModal').classList.remove('active'); document.getElementById('newPassword').value = ''; document.getElementById('confirmPassword').value = ''; document.getElementById('otpInput').value = ''; document.getElementById('otp-error').style.display = 'none'; document.getElementById('otp-success').style.display = 'none'; otpVerified = false; document.getElementById('password-requirements')?.classList.remove('show'); Object.values(passwordReqs).forEach(r => r.element.classList.remove('met')); }
+
+    document.getElementById('newPassword')?.addEventListener('focus', () => document.getElementById('password-requirements')?.classList.add('show'));
+    document.getElementById('newPassword')?.addEventListener('input', function() {
+        const pwd = this.value;
+        let allMet = true;
+        Object.values(passwordReqs).forEach(req => {
+            req.regex.test(pwd) ? req.element.classList.add('met') : (req.element.classList.remove('met'), allMet = false);
+        });
+        if (allMet && pwd.length > 0) { this.classList.remove('invalid'); this.classList.add('valid'); }
+        else if (pwd.length > 0) { this.classList.remove('valid'); this.classList.add('invalid'); }
+        else { this.classList.remove('valid','invalid'); }
+        updatePasswordModalButton();
+    });
+    document.getElementById('confirmPassword')?.addEventListener('input', function() {
+        const match = this.value.length > 0 && document.getElementById('newPassword').value === this.value;
+        document.getElementById('confirm-password-error').classList.toggle('show', !match && this.value.length > 0);
+        if (match) { this.classList.remove('invalid'); this.classList.add('valid'); }
+        else if (this.value.length > 0) { this.classList.remove('valid'); this.classList.add('invalid'); }
+        else { this.classList.remove('valid','invalid'); }
+        updatePasswordModalButton();
+    });
+    document.getElementById('otpInput')?.addEventListener('input', function() {
+        if (this.value.trim().length === 6) verifyOtp().then(() => updatePasswordModalButton());
+        else { otpVerified = false; updatePasswordModalButton(); }
+    });
+
+    function updatePasswordModalButton() { document.getElementById('changePasswordBtn').disabled = !(otpVerified && document.getElementById('newPassword')?.classList.contains('valid') && document.getElementById('confirmPassword')?.classList.contains('valid')); }
+
+    function preparePasswordSubmit(event) {
+        if (!otpVerified) { event.preventDefault(); alert('Verify OTP first'); return; }
+        if (!document.getElementById('newPassword').classList.contains('valid') || !document.getElementById('confirmPassword').classList.contains('valid')) { event.preventDefault(); alert('Invalid password'); return; }
+        document.getElementById('pwdHiddenPassword').value = document.getElementById('newPassword').value;
+        const parts = document.getElementById('fullname').value.trim().split(/\s+/);
+        document.getElementById('pwdHiddenFirstName').value = parts[0] || '';
+        document.getElementById('pwdHiddenLastName').value = parts.slice(1).join(' ') || '';
+        document.getElementById('pwdHiddenUsername').value = document.getElementById('username').value.trim();
+        document.getElementById('pwdHiddenEmail').value = document.getElementById('email').value.trim();
+        document.getElementById('pwdHiddenPhoneNumber').value = document.getElementById('phone').value.trim();
+    }
+
+    function togglePwd(inputId) { const input = document.getElementById(inputId); if (input) input.type = input.type === 'password' ? 'text' : 'password'; }
+
+    window.addEventListener('load', () => {
+        ['fullname','username','email','phone'].forEach(id => document.getElementById(id)?.dispatchEvent(new Event('input')));
+        if (birthdateEl) birthdateEl.dispatchEvent(new Event('input'));
+        if (addressEl) addressEl.dispatchEvent(new Event('input'));
+    });
+</script>
+
+</body>
+</html>

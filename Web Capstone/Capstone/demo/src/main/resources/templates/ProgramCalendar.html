@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body { margin: 0; font-family: Arial, sans-serif; }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+    
+    .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .top-header {
+        background-color: #2d4a44;
+        display: flex;
+        border-bottom: 2px solid #FED734;
+    }
+    .top-header-tab {
+        flex: 1;
+        color: white;
+        text-align: center;
+        padding: 16px 20px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .panel {
+        padding: 20px;
+        background-color: #f5f5f5;
+        flex: 1;
+        display: flex;
+        gap: 20px;
+        overflow: hidden;
+    }
+
+    /* Calendar main */
+    .calendar-main {
+        flex: 2.5;
+        background-color: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #e0e0e0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .calendar-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        flex-shrink: 0;
+    }
+    .calendar-nav-btn {
+        background: none;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 5px 12px;
+        cursor: pointer;
+        color: #2d4a44;
+        font-size: 16px;
+        transition: background-color 0.2s;
+    }
+    .calendar-nav-btn:hover { background-color: #f0f0f0; }
+    .calendar-month-title {
+        font-size: 16px;
+        font-weight: bold;
+        color: #2d4a44;
+    }
+
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        flex: 1;
+        border-top: 1px solid #e0e0e0;
+        border-left: 1px solid #e0e0e0;
+        overflow: hidden;
+    }
+
+    .cal-day-name {
+        text-align: center;
+        font-size: 11px;
+        font-weight: bold;
+        color: #888;
+        padding: 6px 0;
+        text-transform: uppercase;
+        border-right: 1px solid #e0e0e0;
+        border-bottom: 1px solid #e0e0e0;
+        background-color: #fafafa;
+    }
+
+    .cal-day {
+        padding: 6px 4px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        border-right: 1px solid #e0e0e0;
+        border-bottom: 1px solid #e0e0e0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        min-height: 0;
+    }
+    .cal-day:hover {
+        background-color: #e8f5f0;
+        z-index: 1;
+    }
+    .cal-day.other-month {
+        background-color: #fafafa;
+        color: #ccc;
+    }
+    .cal-day.today .day-number {
+        background-color: #2d4a44;
+        color: white;
+        border-radius: 50%;
+        font-weight: bold;
+    }
+    .cal-day.has-event {
+        background-color: #f0faf5;
+    }
+
+    .day-number {
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 13px;
+    }
+
+    .event-dot {
+        width: 6px;
+        height: 6px;
+        background-color: #44C375;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    /* Side column */
+    .side-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        overflow: hidden;
+        min-width: 0;
+    }
+
+    .card-white {
+        background-color: white;
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #e0e0e0;
+    }
+
+    .card-title {
+        font-weight: bold;
+        font-size: 15px;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e0e0e0;
+        color: #2d4a44;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .upcoming-card {
+        flex: 2;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    #upcoming-events-list {
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .event-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        transition: border-color 0.2s;
+    }
+    .event-item:hover { border-color: #30534D; }
+    .event-item:last-child { margin-bottom: 0; }
+
+    .circle-id {
+        width: 30px;
+        height: 30px;
+        border: 2px solid #30534D;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: #30534D;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+    .event-info { flex: 1; min-width: 0; }
+    .event-name { font-size: 13px; font-weight: bold; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .event-time { font-size: 11px; color: #888; margin-top: 2px; }
+
+    .btn-blue {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+    .btn-blue:hover { background-color: #2176ae; }
+    .btn-green {
+        background-color: #44C375;
+        color: white;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+    .btn-green:hover { background-color: #2ea05e; }
+    .btn-red {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+    .btn-red:hover { background-color: #c0392b; }
+
+    /* Toggle */
+    .toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 13px;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .form-check-input {
+        width: 3em !important;
+        height: 1.5em !important;
+        cursor: pointer;
+    }
+    .form-check-input:checked { background-color: #2d4a44; border-color: #2d4a44; }
+
+    /* Export */
+    .export-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-top: 10px;
+        flex-wrap: wrap;
+    }
+    .btn-yellow {
+        background-color: #FED734;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+        color: #2d4a44;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+    .btn-yellow:hover { background-color: #d4ac0d; }
+    .export-select {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        font-size: 12px;
+        background-color: white;
+        min-width: 0;
+    }
+
+    /* Modals */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+        background-color: white;
+        margin: 5% auto;
+        padding: 25px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 520px;
+        max-height: 85vh;
+        overflow-y: auto;
+        text-align: left;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    .modal-header h3 {
+        margin: 0;
+        color: #2d4a44;
+        font-size: 17px;
+    }
+    .close-modal {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #888;
+        line-height: 1;
+        padding: 0 4px;
+    }
+    .close-modal:hover { color: #333; }
+
+    .form-group {
+        margin-bottom: 14px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        color: #2d4a44;
+        font-size: 12px;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: Arial, sans-serif;
+        background-color: white;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #2d4a44;
+        box-shadow: 0 0 0 2px rgba(45,74,68,0.1);
+    }
+
+    .form-row {
+        display: flex;
+        gap: 14px;
+        margin-bottom: 14px;
+    }
+    .form-row .form-col {
+        flex: 1;
+        min-width: 0;
+    }
+    .form-row .form-col label {
+        display: block;
+        font-weight: bold;
+        color: #2d4a44;
+        font-size: 12px;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .form-row .form-col input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    .form-row .form-col input:focus {
+        outline: none;
+        border-color: #2d4a44;
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid #e0e0e0;
+    }
+    .modal-buttons button {
+        flex: 1;
+        padding: 10px;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .btn-save {
+        background-color: #44C375;
+        color: white;
+        border: none;
+    }
+    .btn-save:hover { background-color: #2ea05e; }
+    .btn-cancel {
+        background-color: #e0e0e0;
+        border: none;
+        color: #555;
+    }
+    .btn-cancel:hover { background-color: #ccc; }
+
+    /* View Events Modal */
+    .event-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 14px;
+        margin-bottom: 12px;
+        background-color: #fafafa;
+    }
+    .event-card:hover {
+        background-color: #f0faf5;
+        border-color: #44C375;
+    }
+    .event-title {
+        font-size: 14px;
+        font-weight: bold;
+        color: #2d4a44;
+        margin-bottom: 10px;
+    }
+    .event-detail {
+        font-size: 13px;
+        color: #555;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .event-detail i {
+        width: 16px;
+        color: #888;
+        flex-shrink: 0;
+    }
+    .no-events {
+        text-align: center;
+        color: #aaa;
+        padding: 30px;
+    }
+
+    .force-modal { 
+        display: none; 
+        position: fixed; 
+        z-index: 9999; 
+        left: 0; 
+        top: 0; 
+        width: 100%; 
+        height: 100%; 
+        background-color: rgba(0,0,0,0.6); 
+    }
+    .force-modal-content { 
+        background: white; 
+        width: 400px; 
+        padding: 30px; 
+        border-radius: 8px; 
+        text-align: center; 
+        margin: 15% auto; 
+    }
+
+    /* PDF Export Styles */
+    @media print {
+        .sidebar, .top-header, .calendar-nav, .side-column, .modal, .btn, button, .export-row, .toggle-row {
+            display: none !important;
+        }
+        .calendar-main {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .calendar-grid {
+            page-break-inside: avoid;
+        }
+    }
+
+    .pdf-export-container {
+        padding: 20px;
+        background: white;
+        font-family: Arial, sans-serif;
+    }
+    .pdf-header {
+        text-align: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #2d4a44;
+    }
+    .pdf-header h2 { color: #2d4a44; margin: 0; }
+    .pdf-header p { color: #666; margin: 5px 0 0; }
+    .pdf-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    .pdf-table th, .pdf-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    .pdf-table th {
+        background-color: #2d4a44;
+        color: white;
+    }
+</style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" th:href="@{/css/sidebar.css}">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<title>Program Calendar</title>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- Lock Modal -->
+<div id="forcePasswordModal" class="force-modal">
+    <div class="force-modal-content">
+        <h2>🔒 First Login Detected</h2>
+        <p>You must change your password before using the system.</p>
+        <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+<!-- Sidebar -->
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+  <div class="content">
+
+    <div class="top-header">
+      <div class="top-header-tab">Program Calendar</div>
+    </div>
+
+    <div class="panel">
+
+      <!-- Calendar Main -->
+      <div class="calendar-main">
+        <div class="calendar-nav">
+          <button class="calendar-nav-btn" onclick="changeMonth(-1)"><i class="bi bi-chevron-left"></i></button>
+          <div class="calendar-month-title" id="calendar-title">March 2026</div>
+          <button class="calendar-nav-btn" onclick="changeMonth(1)"><i class="bi bi-chevron-right"></i></button>
+        </div>
+
+        <div class="calendar-grid" id="calendar-grid">
+          <div class="cal-day-name">Sun</div>
+          <div class="cal-day-name">Mon</div>
+          <div class="cal-day-name">Tue</div>
+          <div class="cal-day-name">Wed</div>
+          <div class="cal-day-name">Thu</div>
+          <div class="cal-day-name">Fri</div>
+          <div class="cal-day-name">Sat</div>
+        </div>
+      </div>
+
+      <!-- Side Column -->
+      <div class="side-column">
+
+        <!-- Upcoming Events -->
+        <div class="card-white upcoming-card">
+          <div class="card-title">
+            <span><i class="bi bi-calendar-event" style="margin-right:6px;"></i>Upcoming Events</span>
+            <button class="btn-green" onclick="openAddEventModal()">
+              <i class="bi bi-plus-circle"></i> Add
+            </button>
+          </div>
+          <div id="upcoming-events-list">
+            <div style="text-align: center; color: #aaa; font-size: 13px; padding: 20px 0;">
+              <i class="bi bi-calendar2-x" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+              No upcoming events.
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings & Export -->
+        <div class="card-white" style="flex-shrink: 0;">
+          <div class="card-title" style="border:none; margin-bottom: 0;">
+            <span><i class="bi bi-gear" style="margin-right:6px;"></i>Settings</span>
+          </div>
+          <div class="toggle-row">
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input" type="checkbox" id="notifToggle" checked>
+            </div>
+            <label for="notifToggle" style="cursor:pointer; font-size: 13px;">Notifications for upcoming programs</label>
+          </div>
+          <div class="export-row">
+            <button class="btn-yellow" onclick="exportToPDF()"><i class="bi bi-download"></i> Export PDF</button>
+            <select id="exportFormat" class="export-select">
+              <option value="both">📋 Both Calendar &amp; Events</option>
+              <option value="calendar">📅 Calendar Only</option>
+              <option value="events">📋 Events List Only</option>
+            </select>
+            <span style="font-size: 11px; color: #888;">Export as PDF</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- Add Event Modal -->
+<div id="addEventModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="bi bi-calendar-plus"></i> Add New Event</h3>
+            <button class="close-modal" onclick="closeAddEventModal()">&times;</button>
+        </div>
+        
+        <div class="form-group">
+            <label>Event Name / Program Name</label>
+            <input type="text" id="eventName" placeholder="e.g., Community Clean-up Drive">
+        </div>
+        
+        <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="eventDate">
+        </div>
+        
+        <div class="form-row">
+            <div class="form-col">
+                <label>Start Time</label>
+                <input type="time" id="startTime">
+            </div>
+            <div class="form-col">
+                <label>End Time</label>
+                <input type="time" id="endTime">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Location</label>
+            <input type="text" id="eventLocation" placeholder="e.g., Barangay Hall">
+        </div>
+        
+        <div class="form-group">
+            <label>Estimated Budget (₱)</label>
+            <input type="number" id="eventBudget" placeholder="0" value="0">
+        </div>
+        
+        <div class="form-group">
+            <label>Notes (Optional)</label>
+            <textarea id="eventNotes" rows="2" placeholder="Additional details..."></textarea>
+        </div>
+        
+        <div class="modal-buttons">
+            <button class="btn-save" onclick="saveNewEvent()">
+                <i class="bi bi-check-circle"></i> Save Event
+            </button>
+            <button class="btn-cancel" onclick="closeAddEventModal()">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- View Events Modal -->
+<div id="viewEventsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="bi bi-calendar-date"></i> Events for <span id="viewEventsDate">-</span></h3>
+            <button class="close-modal" onclick="closeViewEventsModal()">&times;</button>
+        </div>
+        <div id="viewEventsList">
+            <div class="no-events">Loading...</div>
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-green" onclick="openAddEventModalWithDate()">
+                <i class="bi bi-plus-circle"></i> Add Event on this Day
+            </button>
+            <button class="btn-cancel" onclick="closeViewEventsModal()">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Modal -->
+<div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
+<script src="/js/sidebar.js"></script>
+
+<script>
+
+  let dbEvents = {}; 
+  let allEvents = [];
+  let currentSelectedDate = null;
+
+  let currentDate = new Date();
+  currentDate.setDate(1);
+
+  async function loadEvents() {
+    try {
+        const response = await fetch('/api/calendar/all');
+        if (!response.ok) return;
+        allEvents = await response.json();
+        
+        console.log('Events loaded:', allEvents.length);
+
+        dbEvents = {};
+        allEvents.forEach(e => {
+            const key = e.eventDate;
+            if (!dbEvents[key]) dbEvents[key] = [];
+            dbEvents[key].push(e);
+        });
+
+        renderCalendar();
+        renderUpcomingEvents(allEvents);
+    } catch (error) {
+        console.error('Failed to load events:', error);
+        renderCalendar();
+    }
+  }
+
+  function renderUpcomingEvents(events) {
+    const list = document.getElementById('upcoming-events-list');
+
+    if (!events || events.length === 0) {
+        list.innerHTML = `
+            <div style="text-align: center; color: #aaa; font-size: 13px; padding: 20px 0;">
+                <i class="bi bi-calendar2-x" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+                No events found.
+            </div>`;
+        return;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const upcomingEvents = events.filter(e => e.eventDate >= today);
+    upcomingEvents.sort((a, b) => a.eventDate.localeCompare(b.eventDate));
+
+    if (upcomingEvents.length === 0) {
+        list.innerHTML = `
+            <div style="text-align: center; color: #aaa; font-size: 13px; padding: 20px 0;">
+                <i class="bi bi-calendar2-check" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+                No upcoming events.
+            </div>`;
+        return;
+    }
+
+    list.innerHTML = upcomingEvents.slice(0, 10).map((e, index) => {
+        const budgetValue = e.program_budget !== undefined && e.program_budget !== null ? e.program_budget : 0;
+        return `
+        <div class="event-item">
+            <div class="circle-id">${index + 1}</div>
+            <div class="event-info">
+                <div class="event-name">${escapeHtml(e.notes || 'Community Program')}</div>
+                <div class="event-time">
+                    <i class="bi bi-clock"></i> ${formatTime(e.startTime)}
+                    &nbsp;&middot;&nbsp;
+                    <i class="bi bi-calendar"></i> ${formatDate(e.eventDate)}
+                    &nbsp;&middot;&nbsp;
+                    <i class="bi bi-geo-alt"></i> ${escapeHtml(e.location || 'TBD')}
+                    ${budgetValue > 0 ? `&nbsp;&middot;&nbsp;<i class="bi bi-cash"></i> &#8369;${budgetValue.toLocaleString()}` : ''}
+                </div>
+            </div>
+            <div style="display: flex; gap: 5px; flex-shrink: 0;">
+                <button class="btn-blue" onclick="showEventsForDay('${e.eventDate}')">View</button>
+                <button class="btn-red" onclick="deleteEventFromList(${e.id}, '${e.eventDate}')">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    `}).join('');
+  }
+
+  async function deleteEventFromList(eventId, dateKey) {
+    if (!confirm('Are you sure you want to delete this event?')) return;
+    
+    try {
+        const response = await fetch(`/api/calendar/${eventId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            alert('Event deleted successfully!');
+            loadEvents();
+        } else {
+            alert('Failed to delete event');
+        }
+    } catch (error) {
+        console.error('Error deleting event:', error);
+        alert('Error deleting event');
+    }
+  }
+
+  function showEventsForDay(dateKey) {
+    currentSelectedDate = dateKey;
+    const events = dbEvents[dateKey] || [];
+    
+    document.getElementById('viewEventsDate').textContent = formatDateLong(dateKey);
+    
+    const container = document.getElementById('viewEventsList');
+    
+    if (events.length === 0) {
+        container.innerHTML = `
+            <div class="no-events">
+                <i class="bi bi-calendar-x" style="font-size: 48px; display: block; margin-bottom: 10px;"></i>
+                No events scheduled for this day.
+            </div>`;
+    } else {
+        container.innerHTML = events.map((e, index) => {
+            const budgetValue = e.program_budget !== undefined && e.program_budget !== null ? e.program_budget : 0;
+            return `
+            <div class="event-card">
+                <div class="event-title">
+                    <i class="bi bi-calendar-check"></i> ${escapeHtml(e.notes || 'Community Program')}
+                </div>
+                <div class="event-detail">
+                    <i class="bi bi-clock"></i> ${formatTime(e.startTime)} &ndash; ${formatTime(e.endTime)}
+                </div>
+                <div class="event-detail">
+                    <i class="bi bi-geo-alt"></i> ${escapeHtml(e.location || 'TBD')}
+                </div>
+                <div class="event-detail">
+                    <i class="bi bi-cash"></i> &#8369;${budgetValue.toLocaleString()}
+                </div>
+                <div class="event-detail" style="margin-top: 10px;">
+                    <button class="btn-red" onclick="deleteEvent(${e.id}, '${dateKey}')" style="padding: 4px 12px;">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        `}).join('');
+    }
+    
+    document.getElementById('viewEventsModal').style.display = 'block';
+  }
+
+  async function deleteEvent(eventId, dateKey) {
+    if (!confirm('Are you sure you want to delete this event?')) return;
+    
+    try {
+        const response = await fetch(`/api/calendar/${eventId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            alert('Event deleted successfully!');
+            loadEvents();
+            closeViewEventsModal();
+        } else {
+            alert('Failed to delete event');
+        }
+    } catch (error) {
+        console.error('Error deleting event:', error);
+        alert('Error deleting event');
+    }
+  }
+
+  function openAddEventModalWithDate() {
+    if (currentSelectedDate) {
+        document.getElementById('eventDate').value = currentSelectedDate;
+    }
+    closeViewEventsModal();
+    openAddEventModal();
+  }
+
+  function closeViewEventsModal() {
+    document.getElementById('viewEventsModal').style.display = 'none';
+    currentSelectedDate = null;
+  }
+
+  function openAddEventModal() {
+    const today = new Date().toISOString().split('T')[0];
+    if (!document.getElementById('eventDate').value) {
+        document.getElementById('eventDate').value = today;
+    }
+    document.getElementById('eventName').value = '';
+    document.getElementById('startTime').value = '09:00';
+    document.getElementById('endTime').value = '12:00';
+    document.getElementById('eventLocation').value = '';
+    document.getElementById('eventBudget').value = 0;
+    document.getElementById('eventNotes').value = '';
+    document.getElementById('addEventModal').style.display = 'block';
+  }
+
+  function closeAddEventModal() {
+    document.getElementById('addEventModal').style.display = 'none';
+  }
+
+  async function saveNewEvent() {
+    const eventName = document.getElementById('eventName').value.trim();
+    const eventDate = document.getElementById('eventDate').value;
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const location = document.getElementById('eventLocation').value.trim();
+    const budget = parseInt(document.getElementById('eventBudget').value) || 0;
+    const notes = document.getElementById('eventNotes').value.trim();
+
+    if (!eventName) {
+        alert('Please enter an event name.');
+        return;
+    }
+    if (!eventDate) {
+        alert('Please select a date.');
+        return;
+    }
+    if (!startTime) {
+        alert('Please select a start time.');
+        return;
+    }
+    if (!endTime) {
+        alert('Please select an end time.');
+        return;
+    }
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(eventDate);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
+        alert('❌ Cannot add events on past dates. Please select a future or today\'s date.');
+        return;
+    }
+
+    const eventData = {
+        notes: eventName,
+        eventDate: eventDate,
+        startTime: startTime,
+        endTime: endTime,
+        location: location || 'TBD',
+        programBudget: budget,
+        programId: 1
+    };
+
+    try {
+        const response = await fetch('/api/calendar/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData)
+        });
+
+        if (response.ok) {
+            alert('Event added successfully!');
+            closeAddEventModal();
+            loadEvents();
+        } else {
+            const error = await response.text();
+            alert('Failed to add event: ' + error);
+        }
+    } catch (error) {
+        console.error('Error adding event:', error);
+        alert('Error adding event. Please try again.');
+    }
+}
+
+  function formatTime(timeStr) {
+    if (!timeStr) return 'N/A';
+    const [hour, minute] = timeStr.split(':').map(Number);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const h = hour % 12 || 12;
+    return `${h}:${String(minute).padStart(2, '0')} ${ampm}`;
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${monthNames[month - 1]} ${day}`;
+  }
+
+  function formatDateLong(dateStr) {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const monthNames = ['January','February','March','April','May','June',
+                        'July','August','September','October','November','December'];
+    return `${monthNames[month - 1]} ${day}, ${year}`;
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function renderCalendar() {
+    const grid = document.getElementById('calendar-grid');
+    const title = document.getElementById('calendar-title');
+
+    const cells = grid.querySelectorAll('.cal-day');
+    cells.forEach(c => c.remove());
+
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const today = new Date();
+
+    const monthNames = ['January','February','March','April','May','June',
+                        'July','August','September','October','November','December'];
+    title.textContent = `${monthNames[month]} ${year}`;
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrev = new Date(year, month, 0).getDate();
+
+    for (let i = firstDay - 1; i >= 0; i--) {
+        const d = document.createElement('div');
+        d.className = 'cal-day other-month';
+        d.innerHTML = `<div class="day-number">${daysInPrev - i}</div>`;
+        grid.appendChild(d);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dateKey = `${year}-${String(month + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+        const hasEvent = dbEvents[dateKey] && dbEvents[dateKey].length > 0;
+
+        const div = document.createElement('div');
+        div.className = `cal-day${isToday ? ' today' : ''}${hasEvent ? ' has-event' : ''}`;
+        div.dataset.date = dateKey;
+        div.innerHTML = `
+            <div class="day-number">${d}</div>
+            ${hasEvent ? '<div class="event-dot"></div>' : ''}
+        `;
+        div.onclick = (function(date) { return function() { showEventsForDay(date); }; })(dateKey);
+        grid.appendChild(div);
+    }
+
+    const totalCells = firstDay + daysInMonth;
+    const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+    for (let i = 1; i <= remaining; i++) {
+        const d = document.createElement('div');
+        d.className = 'cal-day other-month';
+        d.innerHTML = `<div class="day-number">${i}</div>`;
+        grid.appendChild(d);
+    }
+  }
+
+  function changeMonth(dir) {
+    currentDate.setMonth(currentDate.getMonth() + dir);
+    renderCalendar();
+  }
+
+  async function exportToPDF() {
+    const format = document.getElementById('exportFormat').value;
+    const element = document.createElement('div');
+    element.className = 'pdf-export-container';
+    
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    const currentMonthYear = `${monthNames[month]} ${year}`;
+    
+    if (format === 'calendar' || format === 'both') {
+        const calendarClone = document.querySelector('.calendar-main').cloneNode(true);
+        const navBtns = calendarClone.querySelectorAll('.calendar-nav-btn');
+        navBtns.forEach(btn => btn.remove());
+        
+        const header = document.createElement('div');
+        header.className = 'pdf-header';
+        header.innerHTML = `
+            <h2>Barangay Program Calendar</h2>
+            <p>${currentMonthYear}</p>
+            <p>Generated on: ${new Date().toLocaleString()}</p>
+        `;
+        
+        element.appendChild(header);
+        element.appendChild(calendarClone);
+    }
+    
+    if (format === 'events' || format === 'both') {
+        const today = new Date().toISOString().split('T')[0];
+        const upcomingEvents = allEvents.filter(e => e.eventDate >= today);
+        upcomingEvents.sort((a, b) => a.eventDate.localeCompare(b.eventDate));
+        
+        const eventsDiv = document.createElement('div');
+        eventsDiv.style.marginTop = '30px';
+        eventsDiv.style.padding = '20px';
+        eventsDiv.style.borderTop = '2px solid #2d4a44';
+        
+        let eventsHtml = `
+            <div class="pdf-header" style="margin-top: 20px;">
+                <h2>Upcoming Events</h2>
+                <p>${upcomingEvents.length} event(s) scheduled</p>
+            </div>
+            <table class="pdf-table">
+                <thead>
+                    <tr><th>#</th><th>Event Name</th><th>Date</th><th>Time</th><th>Location</th><th>Budget</th></tr>
+                </thead>
+                <tbody>
+        `;
+        
+        upcomingEvents.forEach((e, index) => {
+            const budgetValue = e.program_budget !== undefined && e.program_budget !== null ? e.program_budget : 0;
+            eventsHtml += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${escapeHtml(e.notes || 'Community Program')}</td>
+                    <td>${formatDate(e.eventDate)}</td>
+                    <td>${formatTime(e.startTime)} - ${formatTime(e.endTime)}</td>
+                    <td>${escapeHtml(e.location || 'TBD')}</td>
+                    <td>&#8369;${budgetValue.toLocaleString()}</td>
+                </tr>
+            `;
+        });
+        
+        eventsHtml += `</tbody></table><div style="margin-top:20px;text-align:center;font-size:10px;color:#888;"><p>Official document from Barangay Program Management System.</p></div>`;
+        eventsDiv.innerHTML = eventsHtml;
+        
+        if (format === 'events') {
+            const header = document.createElement('div');
+            header.className = 'pdf-header';
+            header.innerHTML = `<h2>Barangay Program Events</h2><p>Generated on: ${new Date().toLocaleString()}</p>`;
+            element.appendChild(header);
+        }
+        element.appendChild(eventsDiv);
+    }
+    
+    const opt = {
+        margin: [0.5, 0.5, 0.5, 0.5],
+        filename: `Barangay_Calendar_${currentMonthYear.replace(/ /g, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, letterRendering: true, useCORS: true, logging: false },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    
+    const exportBtn = document.querySelector('.btn-yellow');
+    const originalText = exportBtn.innerHTML;
+    exportBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
+    exportBtn.disabled = true;
+    
+    try {
+        await html2pdf().set(opt).from(element).save();
+    } catch (error) {
+        console.error('PDF generation error:', error);
+        alert('Error generating PDF. Please try again.');
+    } finally {
+        exportBtn.innerHTML = originalText;
+        exportBtn.disabled = false;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', loadEvents);
+
+</script>
+
+</body>
+</html>

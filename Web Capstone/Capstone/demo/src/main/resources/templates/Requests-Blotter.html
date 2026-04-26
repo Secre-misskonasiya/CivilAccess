@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+
+<style>
+    body { margin: 0; font-family: Arial, sans-serif; }
+     .layout { display: flex; height: 100vh; overflow: hidden; }
+    
+    .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .sidebar {
+        width: 250px;
+        background-color: #30534D;
+        color: white;
+        padding: 15px;
+        position: relative; 
+        z-index: 1000;      
+    }
+
+    .header {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 0px;
+        border-bottom: 1px solid #FED734; 
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding-bottom: 10px;
+    }
+
+    .header-title {
+        display: flex;
+        align-items: center;
+    }
+
+    .header-user {
+        font-size: 15px;
+        font-weight: normal;
+        color: #ccc;
+        margin-top: 20px;
+        text-align: center;
+        padding-bottom: 3px;
+    }
+
+    .dropdown-menu-custom {
+        display: none;
+        padding-left: 40px;
+        background-color: #30534D;
+    }
+
+    .dropdown-menu-custom li {
+        padding: 8px 10px;
+        font-size: 13px;
+        color: #ccc;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    
+    .dropdown-menu-custom li:hover {
+        background-color: #52887F;
+        color: white;
+    }
+    
+    .dropdown-arrow {
+        margin-left: auto;
+        margin-right: 10px;
+        font-size: 12px;
+        transition: transform 0.2s;
+    }
+    
+    .dropdown-arrow.open {
+        transform: rotate(180deg);
+    }
+
+    .menu {
+        list-style: none;
+        padding: 0;
+        margin-top: 20px;
+    }
+
+    .menu li {
+        padding: 10px;
+        cursor: pointer;
+        display: flex;          
+        align-items: center;    
+        width: 100%; 
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+        box-sizing: content-box;
+    }
+
+    .menu li:hover {
+        background-color: #52887F;
+    }
+
+    .icon { 
+        width: 30px; 
+        height: 30px; 
+        margin-right: 10px; 
+        filter: invert(1);
+    }
+
+    .logout { bottom: 0; }
+
+    .brgy {
+        max-width: 50px;
+        margin-right: 10px;
+        margin-bottom: 8px;
+        margin-left: -10px;
+    }
+
+    .top-header {
+        background-color: #2d4a44;
+        display: flex;
+        border-bottom: 2px solid #FED734;
+    }
+    .top-header-tab {
+        flex: 1;
+        color: white;
+        text-align: center;
+        padding: 16px 20px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .search-bar-area {
+        padding: 16px 20px 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background-color: #f5f5f5;
+    }
+    .search-input-wrap { flex: 1; position: relative; }
+    .search-input-wrap input {
+        width: 100%;
+        padding: 9px 14px 9px 38px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: white;
+        box-sizing: border-box;
+    }
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #aaa;
+    }
+    .filter-btn {
+        padding: 9px 16px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        background: white;
+        font-size: 14px;
+        cursor: pointer;
+        color: #444;
+    }
+    .filter-select {
+        padding: 9px 16px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        background: white;
+        font-size: 14px;
+        cursor: pointer;
+        color: #444;
+    }
+    .export-btn {
+        padding: 9px 20px;
+        border: none;
+        border-radius: 6px;
+        background: #FED734;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        color: #2d4a44;
+    }
+
+    .tabbar {
+        display: flex;
+        background-color: white;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0 20px;
+        gap: 4px;
+    }
+    .tab {
+        padding: 12px 18px;
+        color: #666;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tab.active {
+        background-color: #2d4a44;
+        color: white;
+        border-radius: 6px 6px 0 0;
+        font-weight: bold;
+    }
+
+    .panel {
+        padding: 20px;
+        background-color: #f5f5f5;
+        flex: 1;
+        overflow-y: auto;
+    }
+    .panel-inner {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+    }
+    .panel-header {
+        background-color: #3d5f58;
+        color: white;
+        padding: 14px 20px;
+        font-weight: bold;
+        font-size: 15px;
+    }
+    .panel-content { overflow-x: auto; }
+
+    th {
+        background-color: #eaf2f0 !important;
+        color: #2d4a44 !important;
+        font-size: 12px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 10px 14px !important;
+        white-space: nowrap;
+    }
+    td {
+        padding: 12px 14px !important;
+        vertical-align: middle !important;
+    }
+
+    .action-buttons { display: inline-flex; gap: 6px; align-items: center; }
+    .approve-btn { background-color: #44C375; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
+    .approve-btn:hover { background-color: #2ea05e; }
+    .process-btn { background-color: #3498db; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
+    .process-btn:hover { background-color: #2176ae; }
+    .ready-btn { background-color: #FED734; color: #2d4a44; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
+    .ready-btn:hover { background-color: #e0bc2a; }
+    .view-btn { background-color: #8e44ad; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
+    .view-btn:hover { background-color: #6c3483; }
+    .archive-btn { background-color: #e74c3c; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
+    .archive-btn:hover { background-color: #b93e30; }
+
+    .table-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-top: 1px solid #e0e0e0;
+        font-size: 13px;
+        color: #888;
+    }
+    .page-item.active .page-link { background-color: #2d4a44; border-color: #2d4a44; }
+    .page-link { color: #2d4a44; }
+
+    .logout-modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    .logout-modal-content {
+        background-color: white;
+        margin: 10% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 420px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .blotter-modal-overlay {
+        display: none;
+        position: fixed;
+        z-index: 3000;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.6);
+        overflow-y: auto;
+    }
+    .blotter-modal-box {
+        background: white;
+        margin: 30px auto;
+        border-radius: 10px;
+        width: 700px;
+        max-width: 95%;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        overflow: hidden;
+    }
+    .blotter-modal-header {
+        background-color: #2d4a44;
+        color: white;
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 3px solid #FED734;
+    }
+    .blotter-modal-header h4 { margin: 0; font-size: 16px; }
+    .blotter-modal-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 22px;
+        cursor: pointer;
+        line-height: 1;
+    }
+    .blotter-modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+    .blotter-modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        background: #f9f9f9;
+    }
+    .blotter-detail-group { margin-bottom: 18px; border-bottom: 1px solid #eee; padding-bottom: 12px; }
+    .blotter-detail-group label { font-weight: bold; color: #2d4a44; display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
+    .blotter-detail-group div { font-size: 15px; color: #333; line-height: 1.5; }
+    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+    .status-INCOMING { background-color: #FF9800; color: white; }
+    .status-PROCESSING { background-color: #3498db; color: white; }
+    .status-READY { background-color: #FED734; color: #2d4a44; }
+    .status-ARCHIVE { background-color: #95a5a6; color: white; }
+    .force-modal {
+        display: none; position: fixed; z-index: 9999;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.6);
+    }
+    .force-modal-content {
+        background: white; width: 400px; padding: 30px;
+        border-radius: 8px; text-align: center; margin: 15% auto;
+    }
+</style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">   
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<title>Blotter Requests</title>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- Lock Modal -->
+ <input type="hidden" id="accountStatus" th:value="${currentstatus}">
+<div id="forcePasswordModal" class="force-modal">
+    <div class="force-modal-content">
+        <h2>First Login Detected</h2>
+        <p>You must change your password before using the system.</p>
+        <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+  <!-- Sidebar -->
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+<!-- Sidebar -->
+
+<div class="content">
+
+    <div class="top-header">
+        <div class="top-header-tab">Blotter Requests</div>
+    </div>
+
+    <div class="search-bar-area">
+        <div class="search-input-wrap">
+            <span class="search-icon"><i class="bi bi-search"></i></span>
+            <input type="text" id="request-search" placeholder="Search by complainant, respondent, incident type...">
+        </div>
+        <select id="filter-type" class="filter-select">
+            <option value="all">All Incident Types</option>
+            <option value="Theft">Theft</option>
+            <option value="Physical Injury">Physical Injury</option>
+            <option value="Verbal Abuse">Verbal Abuse</option>
+            <option value="Vandalism">Vandalism</option>
+            <option value="Disturbance">Disturbance</option>
+        </select>
+        <button class="export-btn" onclick="exportToPDF()">Export</button>
+    </div>
+
+    <div class="tabbar">
+        <div class="tab active" onclick="switchTab(this, 'incoming')">Incoming</div>
+        <div class="tab" onclick="switchTab(this, 'processing')">Processing</div>
+        <div class="tab" onclick="switchTab(this, 'ready')">Ready</div>
+        <div class="tab" onclick="switchTab(this, 'archive')">Archive</div>
+    </div>
+
+    <div class="panel">
+
+        <div id="tab-incoming" class="panel-inner">
+            <div class="panel-header">Incoming Blotter Reports</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead>
+                        <tr><th>Complainant</th><th>Respondent</th><th>Incident Type</th><th>Incident Date</th><th>Location</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="blotter : ${incomingBlotters}">
+                            <td th:text="${blotter.complainantName}"></td>
+                            <td th:text="${blotter.respondentName}"></td>
+                            <td th:text="${blotter.incidentType}"></td>
+                            <td th:text="${#temporals.format(blotter.incidentDate, 'MMM dd, yyyy')}"></td>
+                            <td th:text="${blotter.incidentLocation}"></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <form th:action="@{/requests-blotter/{id}/process(id=${blotter.id})}" method="post" style="display:inline;">
+                                        <button class="approve-btn" type="submit">Approve</button>
+                                    </form>
+                                    <form th:action="@{/requests-blotter/{id}/archive(id=${blotter.id})}" method="post" style="display:inline;">
+                                        <button class="archive-btn" type="submit">Archive</button>
+                                    </form>
+                                    <button type="button" class="view-btn" onclick="viewBlotterDetails(this)"
+                                        th:data-id="${blotter.id}"
+                                        th:data-complainant="${blotter.complainantName}"
+                                        th:data-respondent="${blotter.respondentName}"
+                                        th:data-type="${blotter.incidentType}"
+                                        th:data-date="${#temporals.format(blotter.incidentDate, 'MMM dd, yyyy')}"
+                                        th:data-location="${blotter.incidentLocation}"
+                                        th:data-narrative="${blotter.narrative}"
+                                        th:data-status="${blotter.status}">View</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(incomingBlotters)}">
+                            <td colspan="6" style="text-align:center; color:#999;">No incoming blotter reports</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="table-footer">
+                    <span>Showing incoming blotter requests</span>
+                    <nav><ul class="pagination pagination-sm mb-0"><li class="page-item"><a class="page-link" href="#">Prev</a></li><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">Next</a></li></ul></nav>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-processing" class="panel-inner d-none">
+            <div class="panel-header">Processing Blotter Reports</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead><tr><th>Complainant</th><th>Respondent</th><th>Incident Type</th><th>Incident Date</th><th>Location</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        <tr th:each="blotter : ${processingBlotters}">
+                            <td th:text="${blotter.complainantName}"></td>
+                            <td th:text="${blotter.respondentName}"></td>
+                            <td th:text="${blotter.incidentType}"></td>
+                            <td th:text="${#temporals.format(blotter.incidentDate, 'MMM dd, yyyy')}"></td>
+                            <td th:text="${blotter.incidentLocation}"></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <form th:action="@{/requests-blotter/{id}/ready(id=${blotter.id})}" method="post" style="display:inline;">
+                                        <button class="ready-btn" type="submit">Mark Resolved</button>
+                                    </form>
+                                    <form th:action="@{/requests-blotter/{id}/archive(id=${blotter.id})}" method="post" style="display:inline;">
+                                        <button class="archive-btn" type="submit">Archive</button>
+                                    </form>
+                                    <button type="button" class="view-btn" onclick="viewBlotterDetails(this)"
+                                        th:data-id="${blotter.id}"
+                                        th:data-complainant="${blotter.complainantName}"
+                                        th:data-respondent="${blotter.respondentName}"
+                                        th:data-type="${blotter.incidentType}"
+                                        th:data-date="${#temporals.format(blotter.incidentDate, 'MMM dd, yyyy')}"
+                                        th:data-location="${blotter.incidentLocation}"
+                                        th:data-narrative="${blotter.narrative}"
+                                        th:data-status="${blotter.status}">View</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(processingBlotters)}">
+                            <td colspan="6" style="text-align:center; color:#999;">No processing blotter reports</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="table-footer">
+                    <span>Showing processing blotter reports</span>
+                    <nav><ul class="pagination pagination-sm mb-0"><li class="page-item"><a class="page-link" href="#">Prev</a></li><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">Next</a></li></ul></nav>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-ready" class="panel-inner d-none">
+            <div class="panel-header">Resolved Blotter Reports</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead><tr><th>Complainant</th><th>Respondent</th><th>Incident Type</th><th>Incident Date</th><th>Location</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        <tr th:each="blotter : ${readyBlotters}">
+                            <td th:text="${blotter.complainantName}"></td>
+                            <td th:text="${blotter.respondentName}"></td>
+                            <td th:text="${blotter.incidentType}"></td>
+                            <td th:text="${#temporals.format(blotter.incidentDate, 'MMM dd, yyyy')}"></td>
+                            <td th:text="${blotter.incidentLocation}"></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <form th:action="@{/requests-blotter/{id}/archive(id=${blotter.id})}" method="post" style="display:inline;">
+                                        <button class="archive-btn" type="submit">Archive</button>
+                                    </form>
+                                    <button type="button" class="view-btn" onclick="viewBlotterDetails(this)"
+                                        th:data-id="${blotter.id}"
+                                        th:data-complainant="${blotter.complainantName}"
+                                        th:data-respondent="${blotter.respondentName}"
+                                        th:data-type="${blotter.incidentType}"
+                                        th:data-date="${#temporals.format(blotter.incidentDate, 'MMM dd, yyyy')}"
+                                        th:data-location="${blotter.incidentLocation}"
+                                        th:data-narrative="${blotter.narrative}"
+                                        th:data-status="${blotter.status}">View</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(readyBlotters)}">
+                            <td colspan="6" style="text-align:center; color:#999;">No resolved blotter reports</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="table-footer">
+                    <span>Showing resolved blotter reports</span>
+                    <nav><ul class="pagination pagination-sm mb-0"><li class="page-item"><a class="page-link" href="#">Prev</a></li><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">Next</a></li></ul></nav>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-archive" class="panel-inner d-none">
+            <div class="panel-header">Archived Blotter Reports</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead><tr><th>Complainant</th><th>Respondent</th><th>Incident Type</th><th>Incident Date</th><th>Location</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        <tr th:each="blotter : ${archivedBlotters}">
+                            <td th:text="${blotter.complainantName}"></td>
+                            <td th:text="${blotter.respondentName}"></td>
+                            <td th:text="${blotter.incidentType}"></td>
+                            <td th:text="${#temporals.format(blotter.incidentDate, 'MMM dd, yyyy')}"></td>
+                            <td th:text="${blotter.incidentLocation}"></td>
+                            <td>
+                                <button type="button" class="view-btn" onclick="viewBlotterDetails(this)"
+                                    th:data-id="${blotter.id}"
+                                    th:data-complainant="${blotter.complainantName}"
+                                    th:data-respondent="${blotter.respondentName}"
+                                    th:data-type="${blotter.incidentType}"
+                                    th:data-date="${#temporals.format(blotter.incidentDate, 'MMM dd, yyyy')}"
+                                    th:data-location="${blotter.incidentLocation}"
+                                    th:data-narrative="${blotter.narrative}"
+                                    th:data-status="${blotter.status}">View</button>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(archivedBlotters)}">
+                            <td colspan="6" style="text-align:center; color:#999;">No archived blotter reports</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="table-footer">
+                    <span>Showing archived blotter reports</span>
+                    <nav><ul class="pagination pagination-sm mb-0"><li class="page-item"><a class="page-link" href="#">Prev</a></li><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">Next</a></li></ul></nav>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</div>
+
+
+<!-- Logout Modal -->
+<div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
+
+<!-- Logout modal -->
+    <script src="/js/sidebar.js"></script>
+
+<div id="blotterModalOverlay" class="blotter-modal-overlay">
+    <div class="blotter-modal-box">
+        <div class="blotter-modal-header">
+            <h4>Blotter Report Details</h4>
+            <button class="blotter-modal-close" onclick="closeBlotterModal()">&times;</button>
+        </div>
+        <div class="blotter-modal-body" id="blotterModalBody"></div>
+        <div class="blotter-modal-footer">
+            <button class="btn-cancel" onclick="closeBlotterModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+  function switchTab(el, tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.panel-inner').forEach(p => p.classList.add('d-none'));
+    document.getElementById('tab-' + tab).classList.remove('d-none');
+    document.getElementById('request-search').value = '';
+    document.getElementById('filter-type').value = 'all';
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const searchValue = document.getElementById('request-search').value.toLowerCase();
+    const filterType = document.getElementById('filter-type').value;
+    const activePanel = document.querySelector('.panel-inner:not(.d-none)');
+    if (!activePanel) return;
+    const rows = activePanel.querySelectorAll('tbody tr');
+    let visibleCount = 0;
+    rows.forEach(row => {
+      if (row.querySelector('td[colspan]')) { row.style.display = ''; return; }
+      const complainant = row.cells[0]?.textContent.toLowerCase() || '';
+      const respondent = row.cells[1]?.textContent.toLowerCase() || '';
+      const incidentType = row.cells[2]?.textContent.toLowerCase() || '';
+      const searchText = `${complainant} ${respondent} ${incidentType}`;
+      let matchesSearch = searchValue === '' || searchText.includes(searchValue);
+      let matchesFilter = filterType === 'all' || incidentType.includes(filterType.toLowerCase());
+      if (matchesSearch && matchesFilter) { row.style.display = ''; visibleCount++; }
+      else { row.style.display = 'none'; }
+    });
+    const noDataRow = activePanel.querySelector('tbody tr td[colspan]')?.parentElement;
+    if (noDataRow) {
+      if (visibleCount === 0 && (searchValue !== '' || filterType !== 'all')) {
+        noDataRow.style.display = '';
+        const td = noDataRow.querySelector('td');
+        if (td) td.textContent = 'No matching blotter records found';
+      } else if (visibleCount === 0) { noDataRow.style.display = ''; }
+      else { noDataRow.style.display = 'none'; }
+    }
+  }
+
+  document.getElementById('request-search')?.addEventListener('keyup', applyFilters);
+  document.getElementById('filter-type')?.addEventListener('change', applyFilters);
+
+  function toggleDropdown(el) {
+    const dropdown = document.getElementById('requests-dropdown');
+    const arrow = el.querySelector('.dropdown-arrow');
+    const isOpen = dropdown.style.display === 'block';
+    dropdown.style.display = isOpen ? 'none' : 'block';
+    arrow.classList.toggle('open', !isOpen);
+  }
+
+  function viewBlotterDetails(button) {
+    const complainant = button.getAttribute('data-complainant') || 'N/A';
+    const respondent = button.getAttribute('data-respondent') || 'N/A';
+    const incidentType = button.getAttribute('data-type') || 'N/A';
+    const incidentDate = button.getAttribute('data-date') || 'N/A';
+    const location = button.getAttribute('data-location') || 'N/A';
+    const narrative = button.getAttribute('data-narrative') || 'No narrative provided';
+    const status = button.getAttribute('data-status') || 'INCOMING';
+    
+    let statusClass = '';
+    if (status === 'INCOMING') statusClass = 'status-INCOMING';
+    else if (status === 'PROCESSING') statusClass = 'status-PROCESSING';
+    else if (status === 'READY') statusClass = 'status-READY';
+    else if (status === 'ARCHIVE') statusClass = 'status-ARCHIVE';
+    
+    const html = `
+      <div class="blotter-detail-group"><label>Complainant Name</label><div>${escapeHtml(complainant)}</div></div>
+      <div class="blotter-detail-group"><label>Respondent Name</label><div>${escapeHtml(respondent)}</div></div>
+      <div class="blotter-detail-group"><label>Incident Type</label><div><span class="status-badge ${statusClass}">${escapeHtml(incidentType)}</span></div></div>
+      <div class="blotter-detail-group"><label>Incident Date</label><div>${escapeHtml(incidentDate)}</div></div>
+      <div class="blotter-detail-group"><label>Incident Location</label><div>${escapeHtml(location)}</div></div>
+      <div class="blotter-detail-group"><label>Narrative / Details</label><div style="white-space: pre-wrap;">${escapeHtml(narrative)}</div></div>
+      <div class="blotter-detail-group"><label>Current Status</label><div><span class="status-badge ${statusClass}">${escapeHtml(status)}</span></div></div>
+    `;
+    document.getElementById('blotterModalBody').innerHTML = html;
+    document.getElementById('blotterModalOverlay').style.display = 'block';
+  }
+  
+  function closeBlotterModal() { document.getElementById('blotterModalOverlay').style.display = 'none'; }
+  
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function exportToPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const activePanel = document.querySelector('.panel-inner:not(.d-none)');
+    const table = activePanel.querySelector('table');
+    const title = activePanel.querySelector('.panel-header').innerText;
+    doc.text(title, 14, 15);
+    doc.autoTable({ html: table, startY: 20, margin: { top: 20 } });
+    doc.save(`${title.replace(/\s+/g, '_')}.pdf`);
+  }
+
+  window.onload = function() {
+        const status = document.getElementById('accountStatus').value;
+        if (status === 'New' || status === 'Newly Updated') {
+            document.getElementById('forcePasswordModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+    };
+
+    function redirectToPassword() {
+        window.location.href = '/user-profile';
+    }
+</script>
+
+</body>
+</html>

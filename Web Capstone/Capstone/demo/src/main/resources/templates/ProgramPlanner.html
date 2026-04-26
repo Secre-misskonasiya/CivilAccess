@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<style>
+    body { margin: 0; font-family: Arial, sans-serif; }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+    
+    .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .top-header {
+        background-color: #2d4a44;
+        display: flex;
+        border-bottom: 2px solid #FED734;
+    }
+    .top-header-tab {
+        flex: 1;
+        color: white;
+        text-align: center;
+        padding: 16px 20px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .panel {
+        padding: 20px;
+        background-color: #f5f5f5;
+        flex: 1;
+        display: flex;
+        gap: 20px;
+        overflow: hidden;
+    }
+
+    /* Chatbot */
+    .ai-chatbot-container {
+        flex: 2;
+        background-color: white;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+    }
+    .chatbot-header {
+        background-color: #3d5f58;
+        color: white;
+        padding: 14px 20px;
+        font-weight: bold;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .chatbot-status-dot {
+        width: 10px;
+        height: 10px;
+        background-color: #44C375;
+        border-radius: 50%;
+        animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background-color: #fafafa;
+    }
+    .chat-bubble {
+        max-width: 70%;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    .chat-bubble.ai {
+        background-color: #e8f5f0;
+        color: #1a1a1a;
+        border: 1px solid #b8ddd0;
+        border-bottom-left-radius: 4px;
+        white-space: normal;
+        word-wrap: break-word;
+    }
+    .chat-bubble.ai br {
+        display: block;
+        margin: 4px 0;
+        content: "";
+    }
+    .chat-bubble.user {
+        background-color: #2d4a44;
+        color: white;
+        border-bottom-right-radius: 4px;
+        white-space: normal;
+        word-wrap: break-word;
+    }
+    .chat-bubble.user br {
+        display: block;
+        margin: 2px 0;
+        content: "";
+    }
+    .chat-bubble-label {
+        font-size: 11px;
+        color: #aaa;
+        margin-bottom: 4px;
+    }
+    .typing-indicator {
+        display: none;
+        background-color: #e8f5f0;
+        border: 1px solid #b8ddd0;
+        border-radius: 12px;
+        border-bottom-left-radius: 4px;
+        padding: 12px 16px;
+        gap: 5px;
+        align-items: center;
+        width: fit-content;
+    }
+    .typing-indicator.show { display: flex; }
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #2d7a5f;
+        border-radius: 50%;
+        animation: typing 1.2s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing {
+        0%, 60%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-6px); }
+    }
+    .chat-input-area {
+        padding: 14px 16px;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        gap: 10px;
+        background-color: white;
+    }
+    .chat-input {
+        flex: 1;
+        min-height: 42px;
+        max-height: 120px;
+        border: 1px solid #d0d5dd;
+        border-radius: 22px;
+        padding: 10px 16px;
+        font-size: 14px;
+        box-sizing: border-box;
+        resize: none;
+        overflow-y: auto;
+        word-wrap: break-word;
+        word-break: break-word;
+        white-space: pre-wrap;
+        font-family: inherit;
+    }
+    .chat-input:focus { outline: none; border-color: #30534D; }
+    .chat-send-btn {
+        height: 42px;
+        padding: 0 20px;
+        background-color: #2d4a44;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .chat-send-btn:hover { background-color: #1a3330; }
+    .chat-create-btn {
+        height: 42px;
+        padding: 0 20px;
+        background-color: #44C375;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        opacity: 0.5;
+        transition: opacity 0.3s;
+    }
+    .chat-create-btn.enabled {
+        opacity: 1;
+        cursor: pointer;
+    }
+    .chat-create-btn.enabled:hover { background-color: #2ea05e; }
+
+    /* Right column */
+    .right-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        overflow-y: auto;
+    }
+    .card-white {
+        background-color: white;
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #e0e0e0;
+    }
+    .card-title {
+        font-weight: bold;
+        font-size: 15px;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e0e0e0;
+        color: #2d4a44;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .program-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        transition: border-color 0.2s;
+    }
+    .program-item:hover { border-color: #30534D; }
+    .program-item:last-child { margin-bottom: 0; }
+    .circle-id {
+        width: 30px;
+        height: 30px;
+        border: 2px solid #30534D;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: #30534D;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+    .program-info { flex: 1; }
+    .program-name { font-size: 13px; font-weight: bold; color: #1a1a1a; }
+    .program-time { font-size: 11px; color: #888; margin-top: 2px; }
+    .view-blue-btn {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+        flex-shrink: 0;
+    }
+    .view-blue-btn:hover { background-color: #2176ae; }
+    .remove-red-btn {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+        flex-shrink: 0;
+    }
+    .remove-red-btn:hover { background-color: #c0392b; }
+
+    .empty-programs {
+        text-align: center;
+        color: #aaa;
+        font-size: 13px;
+        padding: 20px 0;
+    }
+
+    /* Budget */
+    .budget-card-inner {
+        background: linear-gradient(135deg, #e8f5f0, #d4f0e4);
+        border: 1px solid #b8ddd0;
+        border-radius: 10px;
+        padding: 16px;
+        margin: 12px 0;
+        text-align: center;
+    }
+    .budget-label { font-size: 12px; color: #2d7a5f; font-weight: 600; margin-bottom: 6px; }
+    .budget-amount { font-size: 28px; font-weight: bold; color: #1a4d3a; }
+    .budget-currency { font-size: 16px; }
+    .budget-footer { font-size: 11px; color: #888; margin-top: 6px; }
+    .update-yellow-btn {
+        background-color: #FED734;
+        border: none;
+        padding: 9px 0;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        color: #2d4a44;
+        font-size: 14px;
+        width: 100%;
+    }
+    .update-yellow-btn:hover { background-color: #d4ac0d; }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+        background-color: white;
+        margin: 10% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 420px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    .force-modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); }
+    .force-modal-content { background: white; width: 400px; padding: 30px; border-radius: 8px; text-align: center; margin: 15% auto; }
+
+    /* Create Program Modal */
+    .create-from-ai-modal .modal-content {
+        width: 520px;
+        max-height: 80vh;
+        overflow-y: auto;
+        text-align: left;
+    }
+    .program-detail-row {
+        margin-bottom: 12px;
+        padding: 8px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+    }
+    .program-detail-label {
+        font-weight: bold;
+        color: #2d4a44;
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+    .program-detail-value {
+        font-size: 14px;
+        color: #1a1a1a;
+    }
+    
+    /* View Program Modal */
+    .view-program-modal .modal-content {
+        width: 500px;
+        max-height: 80vh;
+        overflow-y: auto;
+        text-align: left;
+    }
+    .view-program-header {
+        background: linear-gradient(135deg, #2d4a44, #3d5f58);
+        color: white;
+        padding: 15px 20px;
+        margin: -20px -20px 20px -20px;
+        border-radius: 8px 8px 0 0;
+    }
+    .view-program-header h3 {
+        margin: 0;
+        font-size: 18px;
+    }
+    .view-program-detail {
+        display: flex;
+        padding: 10px 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    .view-program-detail:last-child {
+        border-bottom: none;
+    }
+    .view-program-label {
+        width: 120px;
+        font-weight: bold;
+        color: #2d4a44;
+        font-size: 13px;
+    }
+    .view-program-value {
+        flex: 1;
+        color: #333;
+        font-size: 14px;
+    }
+</style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" th:href="@{/css/sidebar.css}">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<title>Program Planner</title>
+</head>
+<body>
+
+<div class="layout">
+
+<div id="forcePasswordModal" class="force-modal">
+    <div class="force-modal-content">
+        <h2>🔒 First Login Detected</h2>
+        <p>You must change your password before using the system.</p>
+        <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+
+  <div class="content">
+
+    <div class="top-header">
+      <div class="top-header-tab">AI-assisted Recommendation and Planner</div>
+    </div>
+
+    <div class="panel">
+
+      <div class="ai-chatbot-container">
+        <div class="chatbot-header">
+          <div class="chatbot-status-dot"></div>
+          AI - Chatbot
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+          <div class="d-flex flex-column align-items-start">
+              <div class="chat-bubble-label">AI Assistant</div>
+              <div class="chat-bubble ai">
+                  Hello! I can help you plan barangay programs. 
+                  Tell me about your community's needs and I'll suggest suitable programs and budget allocations.
+              </div>
+          </div>
+
+          <div class="typing-indicator" id="typing-indicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <textarea class="chat-input" id="chat-input" placeholder="Ask the AI for program recommendations..." rows="1"></textarea>
+          <button class="chat-send-btn" onclick="sendMessage()">
+            <i class="bi bi-send"></i> Send
+          </button>
+          <button class="chat-create-btn" id="chat-create-btn" onclick="openAICreateModal()" disabled>
+            <i class="bi bi-plus-circle"></i> Create
+          </button>
+        </div>
+      </div>
+
+      <div class="right-column">
+
+        <div class="card-white" style="flex: 2;">
+          <div class="card-title">
+            Suggested Programs
+          </div>
+         
+          <div id="suggested-programs-list">
+            <div class="empty-programs">
+              <i class="bi bi-calendar2-x" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+              No programs yet. Ask the AI to suggest one!
+            </div>
+          </div>
+        </div>
+
+        <div class="card-white">
+          <div class="card-title" style="border: none; margin-bottom: 0;">
+              <span><i class="bi bi-wallet2" style="margin-right:6px;"></i>Current Budget</span>
+          </div>
+          <div class="budget-card-inner">
+              <div class="budget-label">AVAILABLE FUNDS</div>
+              <div class="budget-amount">
+                    <span class="budget-currency">₱</span> 
+                    <span id="total-budget-display">Loading...</span>
+                </div>
+              <div class="budget-footer">
+                  Last updated: <span th:text="${#temporals.format(#temporals.createNow(), 'MMM dd, yyyy')}">Current Date</span>
+              </div>
+          </div>
+          <button class="update-yellow-btn" onclick="openBudgetModal()">
+              <i class="bi bi-pencil"></i> Update Budget
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
+<script src="/js/sidebar.js"></script>
+
+<div id="budgetModal" class="modal">
+  <div class="modal-content">
+    <h3 style="margin-bottom: 15px; color: #2d4a44;">Update Budget Allocation</h3>
+    <div class="mb-3" style="text-align: left;">
+        <label class="form-label" style="font-size: 13px; font-weight: bold;">Enter Amount (₱)</label>
+        <input type="number" id="manual-budget-amount" class="form-control" placeholder="0.00">
+    </div>
+    <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
+      <button onclick="submitManualBudget()" class="chat-send-btn" style="flex: 1;">Save Entry</button>
+      <button onclick="closeBudgetModal()" class="update-yellow-btn" style="flex: 1; width: auto; background-color: #ccc;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="createProgramModal" class="modal">
+  <div class="modal-content" style="width: 520px; max-height: 80vh; overflow-y: auto; text-align: left;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h3 style="margin: 0; color: #2d4a44; font-size: 17px;">
+        <i class="bi bi-calendar-plus" style="margin-right: 8px;"></i>Add Program to Calendar
+      </h3>
+      <button onclick="closeCreateModal()" 
+              style="background: none; border: none; font-size: 20px; cursor: pointer; color: #888; line-height: 1;">
+        &times;
+      </button>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" style="font-size: 13px; font-weight: bold; color: #2d4a44;">
+        Select a Suggested Program
+      </label>
+      <select id="modal-program-select" class="form-select" style="font-size: 13px;"
+              onchange="populateFromSelected()">
+        <option value="">-- Choose a program --</option>
+      </select>
+    </div>
+
+    <hr style="border-color: #e0e0e0; margin: 12px 0;">
+
+    <div class="mb-3">
+      <label class="form-label" style="font-size: 13px; font-weight: bold; color: #2d4a44;">Program Name</label>
+      <input type="text" id="modal-program-name" class="form-control" 
+             style="font-size: 13px;" placeholder="e.g. Community Clean-up Drive">
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-6">
+        <label class="form-label" style="font-size: 13px; font-weight: bold; color: #2d4a44;">Date</label>
+        <input type="date" id="modal-event-date" class="form-control" style="font-size: 13px;">
+      </div>
+      <div class="col-6">
+        <label class="form-label" style="font-size: 13px; font-weight: bold; color: #2d4a44;">Location</label>
+        <input type="text" id="modal-location" class="form-control" 
+               style="font-size: 13px;" placeholder="e.g. Barangay Hall">
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-6">
+        <label class="form-label" style="font-size: 13px; font-weight: bold; color: #2d4a44;">Start Time</label>
+        <input type="time" id="modal-start-time" class="form-control" style="font-size: 13px;">
+      </div>
+      <div class="col-6">
+        <label class="form-label" style="font-size: 13px; font-weight: bold; color: #2d4a44;">End Time</label>
+        <input type="time" id="modal-end-time" class="form-control" style="font-size: 13px;">
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" style="font-size: 13px; font-weight: bold; color: #2d4a44;">Notes</label>
+      <textarea id="modal-notes" class="form-control" rows="2" 
+                style="font-size: 13px; resize: none;" 
+                placeholder="Additional details..."></textarea>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 16px;">
+      <button onclick="submitToCalendar()" class="chat-send-btn" style="flex: 1; height: 40px;">
+        <i class="bi bi-calendar-check"></i> Add to Calendar
+      </button>
+      <button onclick="closeCreateModal()" 
+              style="flex: 1; height: 40px; background-color: #e0e0e0; border: none; 
+                     border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; color: #555;">
+        Cancel
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- View Program Modal with Add to Calendar Button -->
+<div id="viewProgramModal" class="modal view-program-modal">
+    <div class="modal-content">
+        <div class="view-program-header">
+            <h3><i class="bi bi-info-circle"></i> Program Details</h3>
+        </div>
+        
+        <div id="view-program-details">
+            <div class="view-program-detail">
+                <div class="view-program-label">📌 Program Name:</div>
+                <div class="view-program-value" id="view-program-name">-</div>
+            </div>
+            <div class="view-program-detail">
+                <div class="view-program-label">📅 Date:</div>
+                <div class="view-program-value" id="view-program-date">-</div>
+            </div>
+            <div class="view-program-detail">
+                <div class="view-program-label">📍 Location:</div>
+                <div class="view-program-value" id="view-program-location">-</div>
+            </div>
+            <div class="view-program-detail">
+                <div class="view-program-label">⏰ Start Time:</div>
+                <div class="view-program-value" id="view-program-start">-</div>
+            </div>
+            <div class="view-program-detail">
+                <div class="view-program-label">⏰ End Time:</div>
+                <div class="view-program-value" id="view-program-end">-</div>
+            </div>
+            <div class="view-program-detail">
+                <div class="view-program-label">💰 Estimated Budget:</div>
+                <div class="view-program-value" id="view-program-budget">-</div>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button onclick="addToCalendarFromView()" class="chat-send-btn" style="flex: 1; background-color: #44C375;">
+                <i class="bi bi-calendar-plus"></i> Add to Calendar
+            </button>
+            <button onclick="closeViewModal()" class="chat-send-btn" style="flex: 1; background-color: #6c757d;">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- New Modal for AI Create Program -->
+<div id="aiCreateProgramModal" class="modal create-from-ai-modal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; color: #2d4a44; font-size: 17px;">
+                <i class="bi bi-robot" style="margin-right: 8px;"></i>AI Generated Program
+            </h3>
+            <button onclick="closeAICreateModal()" 
+                    style="background: none; border: none; font-size: 20px; cursor: pointer; color: #888; line-height: 1;">
+                &times;
+            </button>
+        </div>
+
+        <p style="font-size: 13px; color: #888; margin-bottom: 16px;">
+            The AI has gathered the following program details. Review and click "Add Event" to save to suggested programs.
+        </p>
+
+        <div id="ai-program-details">
+            <div class="program-detail-row">
+                <div class="program-detail-label">📌 Program Name</div>
+                <div class="program-detail-value" id="ai-program-name-display">-</div>
+            </div>
+            <div class="program-detail-row">
+                <div class="program-detail-label">📅 Date</div>
+                <div class="program-detail-value" id="ai-program-date-display">-</div>
+            </div>
+            <div class="program-detail-row">
+                <div class="program-detail-label">📍 Location</div>
+                <div class="program-detail-value" id="ai-program-location-display">-</div>
+            </div>
+            <div class="program-detail-row">
+                <div class="program-detail-label">⏰ Start Time</div>
+                <div class="program-detail-value" id="ai-program-starttime-display">-</div>
+            </div>
+            <div class="program-detail-row">
+                <div class="program-detail-label">⏰ End Time</div>
+                <div class="program-detail-value" id="ai-program-endtime-display">-</div>
+            </div>
+            <div class="program-detail-row">
+                <div class="program-detail-label">💰 Estimated Budget</div>
+                <div class="program-detail-value" id="ai-program-budget-display">-</div>
+            </div>
+            <div class="program-detail-row">
+                <div class="program-detail-label">📝 Notes</div>
+                <div class="program-detail-value" id="ai-program-notes-display">-</div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 16px;">
+            <button onclick="saveAIGeneratedProgram()" class="chat-send-btn" style="flex: 1; height: 40px; background-color: #44C375;">
+                <i class="bi bi-save"></i> Add Event
+            </button>
+            <button onclick="closeAICreateModal()" 
+                    style="flex: 1; height: 40px; background-color: #e0e0e0; border: none; 
+                           border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; color: #555;">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="reviewSuggestionModal" class="modal">
+    <div class="modal-content" style="width: 520px; max-height: 80vh; overflow-y: auto; text-align: left;">
+  
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="margin: 0; color: #2d4a44; font-size: 17px;">
+          <i class="bi bi-clipboard-check" style="margin-right: 8px;"></i>Review Program Suggestion
+        </h3>
+        <button onclick="closeReviewModal()" 
+                style="background: none; border: none; font-size: 20px; cursor: pointer; color: #888; line-height: 1;">
+          &times;
+        </button>
+      </div>
+  
+      <p style="font-size: 13px; color: #888; margin-bottom: 16px;">
+        Review the AI-suggested program details below. You can edit before saving.
+      </p>
+  
+      <div class="mb-3">
+        <label class="form-label" style="font-size: 13px; font-weight: bold; color: #2d4a44;">Program Name</label>
+        <input type="text" id="review-program-name" class="form-control" style="font-size: 13px;">
+      </div>
+  
+      <div class="row mb-3">
+        <div class="col-6">
+          <label class="form-label" style="font-size: 13px; font-weight: bold; color: #2d4a44;">Date</label>
+          <input type="date" id="review-program-date" class="form-control" style="font-size: 13px;">
+        </div>
+        <div class="col-6">
+          <label class="form-label" style="font-size: 13px; font-weight: bold; color: #2d4a44;">Location</label>
+          <input type="text" id="review-program-place" class="form-control" style="font-size: 13px;" placeholder="e.g. Barangay Hall">
+        </div>
+      </div>
+  
+      <div class="row mb-3">
+        <div class="col-6">
+          <label class="form-label" style="font-size: 13px; font-weight: bold; color: #2d4a44;">Start Time</label>
+          <input type="time" id="review-program-time" class="form-control" style="font-size: 13px;">
+        </div>
+        <div class="col-6">
+          <label class="form-label" style="font-size: 13px; font-weight: bold; color: #2d4a44;">End Time</label>
+          <input type="time" id="review-program-endtime" class="form-control" style="font-size: 13px;">
+        </div>
+      </div>
+  
+      <div class="mb-3">
+        <label class="form-label" style="font-size: 13px; font-weight: bold; color: #2d4a44;">Estimated Budget (₱)</label>
+        <input type="number" id="review-program-budget" class="form-control" style="font-size: 13px;" min="0" placeholder="0">
+      </div>
+  
+      <div style="display: flex; gap: 10px; margin-top: 16px;">
+        <button onclick="approveSuggestion()" class="chat-send-btn" style="flex: 1; height: 40px; background-color: #44C375;">
+          <i class="bi bi-check-circle"></i> Approve & Save
+        </button>
+        <button onclick="closeReviewModal()" 
+                style="flex: 1; height: 40px; background-color: #e0e0e0; border: none; 
+                       border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; color: #555;">
+          Discard
+        </button>
+      </div>
+  
+    </div>
+  </div>
+
+<script>
+  
+  let _selectedProgramId = null;
+  let _currentAIGeneratedProgram = null;
+  let _isCreateButtonEnabled = false;
+  let _currentViewedProgram = null; 
+  let _currentViewedProgramId = null;
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function formatMessageWithLineBreaks(message) {
+    if (!message) return '';
+    let escaped = escapeHtml(message);
+    escaped = escaped.replace(/\n/g, '<br>');
+    escaped = escaped.replace(/\n\s*\n/g, '<br><br>');
+    return escaped;
+  }
+
+  function formatUserMessage(message) {
+    if (!message) return '';
+    let escaped = escapeHtml(message);
+    
+    escaped = escaped.replace(/\n/g, '<br>');
+    return escaped;
+  }
+
+  function setCreateButtonEnabled(enabled) {
+    const btn = document.getElementById('chat-create-btn');
+    if (enabled) {
+      btn.disabled = false;
+      btn.classList.add('enabled');
+      _isCreateButtonEnabled = true;
+    } else {
+      btn.disabled = true;
+      btn.classList.remove('enabled');
+      _isCreateButtonEnabled = false;
+    }
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const messages = document.getElementById('chat-messages');
+    const typing = document.getElementById('typing-indicator');
+    const text = input.value.trim();
+
+    if (!text) return;
+
+    setCreateButtonEnabled(false);
+    _currentAIGeneratedProgram = null;
+
+    const userDiv = document.createElement('div');
+    userDiv.className = 'd-flex flex-column align-items-end';
+   
+    userDiv.innerHTML = `<div class="chat-bubble-label">You</div><div class="chat-bubble user">${formatUserMessage(text)}</div>`;
+    messages.insertBefore(userDiv, typing);
+    input.value = '';
+    
+    input.style.height = 'auto';
+
+    typing.classList.add('show');
+    messages.scrollTop = messages.scrollHeight;
+
+    try {
+      const response = await fetch('/api/calendar/chat-plan?programId=1', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: text
+      });
+
+      typing.classList.remove('show');
+      const aiDiv = document.createElement('div');
+      aiDiv.className = 'd-flex flex-column align-items-start';
+
+      if (response.ok) {
+        const data = await response.json();
+        const formattedMessage = formatMessageWithLineBreaks(data.message);
+        let chatHTML = `<div class="chat-bubble-label">AI Assistant</div><div class="chat-bubble ai">${formattedMessage}</div>`;
+
+        if (data.pending) {
+          window._pendingSuggestion = data.pending;
+          
+          _currentAIGeneratedProgram = {
+              programName: data.pending.programName || '',
+              programDate: data.pending.programDate || '',
+              program_place: data.pending.program_place || '',
+              programTime: data.pending.programTime || '',
+              programEndTime: data.pending.programendTime || '',
+              program_budget: data.pending.program_budget || 0
+          };
+          
+          setCreateButtonEnabled(true);
+          
+          chatHTML += `
+            <div class="chat-bubble ai mt-2 border-left-green bg-light-green fs-13">
+              <strong class="text-dark-green">📋 Program Suggestion Ready</strong><br>
+              📌 <b>Name:</b> ${escapeHtml(data.pending.programName)}<br>
+              📅 <b>Date:</b> ${escapeHtml(data.pending.programDate || 'TBD')}<br>
+              ⏰ <b>Time:</b> ${formatTime(data.pending.programTime)}<br>
+              📍 <b>Location:</b> ${escapeHtml(data.pending.program_place)}<br>
+              💰 <b>Est. Budget:</b> ₱${(data.pending.program_budget || 0).toLocaleString()}<br><br>
+              <small>Click the <strong>Create</strong> button next to the send button to save this program.</small>
+            </div>`;
+        }
+
+        if (data.event) {
+          chatHTML += `
+            <div class="chat-bubble ai mt-2 border-left-green bg-light-green fs-13">
+              <strong class="text-dark-green">📅 Event Scheduled</strong><br>
+              📌 <b>Plan:</b> ${escapeHtml(data.event.notes || 'Community Program')}<br>
+              📅 <b>Date:</b> ${escapeHtml(data.event.eventDate)}<br>
+              ⏰ <b>Time:</b> ${formatTime(data.event.startTime)}<br>
+            </div>`;
+          addProgramToList(data.event);
+        }
+
+        if (data.budget) {
+          chatHTML += `
+            <div class="chat-bubble ai mt-2 border-left-yellow bg-light-yellow fs-13">
+              <strong class="text-brown">💰 Budget Added</strong><br>
+              📝 <b>Item:</b> ${escapeHtml(data.budget.budgetItem)}<br>
+              💵 <b>Amount:</b> ₱${data.budget.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}
+            </div>`;
+        }
+        aiDiv.innerHTML = chatHTML;
+      } else {
+        aiDiv.innerHTML = `<div class="chat-bubble-label">AI Assistant</div><div class="chat-bubble ai error">I'm sorry, I'm having trouble processing that right now.</div>`;
+      }
+      messages.insertBefore(aiDiv, typing);
+    } catch (error) {
+      typing.classList.remove('show');
+      console.error('Error:', error);
+    }
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function openAICreateModal() {
+    if (!_currentAIGeneratedProgram) {
+      alert('No program data available. Please ask the AI to suggest a program first.');
+      return;
+    }
+    
+    document.getElementById('ai-program-name-display').textContent = _currentAIGeneratedProgram.programName || 'Not specified';
+    document.getElementById('ai-program-date-display').textContent = _currentAIGeneratedProgram.programDate || 'Not specified';
+    document.getElementById('ai-program-location-display').textContent = _currentAIGeneratedProgram.program_place || 'Not specified';
+    document.getElementById('ai-program-starttime-display').textContent = formatTime(_currentAIGeneratedProgram.programTime);
+    document.getElementById('ai-program-endtime-display').textContent = formatTime(_currentAIGeneratedProgram.programEndTime);
+    document.getElementById('ai-program-budget-display').innerHTML = `₱${(_currentAIGeneratedProgram.program_budget || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+    document.getElementById('ai-program-notes-display').textContent = _currentAIGeneratedProgram.notes || 'No notes';
+    
+    document.getElementById('aiCreateProgramModal').style.display = 'block';
+  }
+
+  function closeAICreateModal() {
+    document.getElementById('aiCreateProgramModal').style.display = 'none';
+  }
+
+  async function saveAIGeneratedProgram() {
+    if (!_currentAIGeneratedProgram) {
+        alert('No program data to save.');
+        return;
+    }
+    
+    const programData = {
+        programName: _currentAIGeneratedProgram.programName,
+        programDate: _currentAIGeneratedProgram.programDate,
+        program_place: _currentAIGeneratedProgram.program_place,
+        programTime: _currentAIGeneratedProgram.programTime,
+        programendTime: _currentAIGeneratedProgram.programEndTime,
+        program_budget: _currentAIGeneratedProgram.program_budget || 0
+    };
+    
+    try {
+        const response = await fetch('/api/calendar/suggested', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(programData)
+        });
+        
+        if (response.ok) {
+            alert('Program saved successfully!');
+            closeAICreateModal();
+            setCreateButtonEnabled(false);
+            _currentAIGeneratedProgram = null;
+            loadSuggestedPrograms();
+        } else {
+            const error = await response.text();
+            alert('Failed to save program: ' + error);
+        }
+    } catch (error) {
+        console.error('Error saving program:', error);
+        alert('Error saving program. Please try again.');
+    }
+  }
+
+  async function loadChatHistory() {
+    try {
+      const response = await fetch('/api/calendar/chat-history');
+      if (!response.ok) return;
+      const history = await response.json();
+      const messages = document.getElementById('chat-messages');
+      const typing = document.getElementById('typing-indicator');
+
+      history.forEach(chat => {
+        const div = document.createElement('div');
+        div.className = chat.sender === 'user' ? 'd-flex flex-column align-items-end' : 'd-flex flex-column align-items-start';
+        const formattedMessage = formatMessageWithLineBreaks(chat.message);
+        div.innerHTML = `
+          <div class="chat-bubble-label">${chat.sender === 'user' ? 'You' : 'AI Assistant'}</div>
+          <div class="chat-bubble ${chat.sender === 'user' ? 'user' : 'ai'}">${formattedMessage}</div>`;
+        messages.insertBefore(div, typing);
+      });
+      messages.scrollTop = messages.scrollHeight;
+    } catch (error) { console.error('History load error:', error); }
+  }
+
+  async function loadSuggestedPrograms() {
+    try {
+      const response = await fetch('/api/calendar/suggested');
+      if (response.ok) renderPrograms(await response.json());
+    } catch (error) { console.error('Failed to load programs:', error); }
+  }
+
+  function renderPrograms(programs) {
+    const list = document.getElementById('suggested-programs-list');
+    if (!programs || programs.length === 0) {
+        list.innerHTML = `<div class="empty-programs"><i class="bi bi-calendar2-x"></i> No programs yet. Ask AI!</div>`;
+        return;
+    }
+
+    list.innerHTML = programs.map((p, index) => {
+        console.log(`Program ${index} - Name: ${p.programName}, Budget: ${p.program_budget}, Type: ${typeof p.program_budget}, ID: ${p.id}`);
+        
+        return `
+        <div class="program-item" data-event='${JSON.stringify({
+            id: p.id,
+            programName: p.programName,
+            programDate: p.programDate,
+            program_place: p.program_place,
+            programTime: p.programTime,
+            programendTime: p.programendTime,
+            program_budget: p.program_budget !== undefined ? p.program_budget : 0
+        })}'>
+            <div class="circle-id">${index + 1}</div>
+            <div class="program-info">
+                <div class="program-name">${escapeHtml(p.programName || 'Community Program')}</div>
+                <div class="program-time">
+                    <i class="bi bi-clock"></i> ${formatTime(p.programTime)} | 
+                    <i class="bi bi-calendar"></i> ${escapeHtml(p.programDate || 'TBD')} | 
+                    <i class="bi bi-geo-alt"></i> ${escapeHtml(p.program_place || 'TBD')} |
+                    <i class="bi bi-cash"></i> ₱${(p.program_budget || 0).toLocaleString()}
+                </div>
+            </div>
+            <button class="view-blue-btn" onclick="viewProgram(${index})">View</button>
+            <button class="remove-red-btn" onclick="removeProgram(${p.id}, this)">Remove</button>
+        </div>
+    `}).join('');
+  }
+
+  function viewProgram(index) {
+    const programItem = document.querySelectorAll('.program-item')[index];
+    if (!programItem) return;
+    
+    const programData = JSON.parse(programItem.getAttribute('data-event'));
+    
+    console.log('Viewing program data:', programData);
+    console.log('Budget in viewed program:', programData.program_budget);
+    
+    _currentViewedProgramId = programData.id;
+    _currentViewedProgram = programData;
+    
+    document.getElementById('view-program-name').textContent = programData.programName || 'Not specified';
+    document.getElementById('view-program-date').textContent = programData.programDate || 'Not specified';
+    document.getElementById('view-program-location').textContent = programData.program_place || 'Not specified';
+    document.getElementById('view-program-start').textContent = formatTime(programData.programTime);
+    document.getElementById('view-program-end').textContent = formatTime(programData.programendTime);
+    
+    const estimatedBudget = programData.program_budget || 0;
+    document.getElementById('view-program-budget').innerHTML = `₱${estimatedBudget.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} <span style="font-size: 11px; color: #888; font-weight: normal;">(estimated)</span>`;
+    
+    document.getElementById('viewProgramModal').style.display = 'block';
+  }
+
+  async function addToCalendarFromView() {
+    if (!_currentViewedProgram) {
+        alert('No program selected.');
+        return;
+    }
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const eventDate = new Date(_currentViewedProgram.programDate);
+    eventDate.setHours(0, 0, 0, 0);
+    
+    if (eventDate < today) {
+        alert('❌ Cannot add events on past dates. Please select a future or today\'s date.');
+        return;
+    }
+    
+    const eventData = {
+        notes: _currentViewedProgram.programName,
+        eventDate: _currentViewedProgram.programDate,
+        startTime: _currentViewedProgram.programTime,
+        endTime: _currentViewedProgram.programendTime,
+        location: _currentViewedProgram.program_place,
+        program_budget: Number(_currentViewedProgram.program_budget) || 0,
+        programId: 1
+    };
+    
+    console.log('Sending event data:', JSON.stringify(eventData, null, 2));
+    
+    try {
+        const response = await fetch('/api/calendar/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData)
+        });
+        
+        const responseText = await response.text();
+        console.log('Add to calendar response:', responseText);
+        
+        if (response.ok) {
+            if (_currentViewedProgramId) {
+                const deleteResponse = await fetch(`/api/calendar/suggested/${_currentViewedProgramId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (deleteResponse.ok) {
+                    alert('✅ Program successfully added to calendar and removed from suggestions!');
+                    closeViewModal();
+                    loadSuggestedPrograms();
+                } else {
+                    alert('Program added to calendar but failed to remove from suggestions.');
+                }
+            } else {
+                alert('✅ Program successfully added to calendar!');
+                closeViewModal();
+            }
+        } else {
+            alert('Failed to add to calendar: ' + responseText);
+        }
+    } catch (error) {
+        console.error('Error adding to calendar:', error);
+        alert('Error adding program to calendar. Please try again.');
+    }
+  }
+
+  function closeViewModal() {
+    document.getElementById('viewProgramModal').style.display = 'none';
+    _currentViewedProgram = null;
+    _currentViewedProgramId = null;
+  }
+
+  async function removeProgram(id, btn) {
+    if (!confirm('Are you sure you want to remove this program?')) return;
+    try {
+      const response = await fetch(`/api/calendar/suggested/${id}`, { method: 'DELETE' });
+      if (response.ok) {
+        btn.closest('.program-item').remove();
+        refreshProgramIndices();
+        alert('Program removed successfully!');
+      } else {
+        alert('Failed to remove program');
+      }
+    } catch (error) { 
+      console.error('Remove failed:', error);
+      alert('Remove failed: ' + error.message); 
+    }
+  }
+
+  function refreshProgramIndices() {
+    const list = document.getElementById('suggested-programs-list');
+    const items = list.querySelectorAll('.program-item');
+    if (items.length === 0) {
+      list.innerHTML = `<div class="empty-programs"><i class="bi bi-calendar2-x"></i> No programs yet.</div>`;
+    } else {
+      items.forEach((el, i) => el.querySelector('.circle-id').textContent = i + 1);
+    }
+  }
+
+  async function loadCurrentBudget() {
+    try {
+      const response = await fetch('/api/calendar/budget/current');
+      const data = await response.json();
+      updateBudgetDisplay(data.totalBudget);
+    } catch (e) { updateBudgetDisplay(0); }
+  }
+
+  async function submitManualBudget() {
+    const amountEl = document.getElementById('manual-budget-amount');
+    const amount = parseFloat(amountEl.value);
+    if (!amount || amount < 0) return alert("Enter valid amount");
+
+    try {
+      const response = await fetch('/api/calendar/budget/update', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount })
+      });
+      const data = await response.json();
+      updateBudgetDisplay(data.totalBudget);
+      amountEl.value = '';
+      closeBudgetModal();
+      alert('Budget updated successfully!');
+    } catch (error) { alert("Update failed"); }
+  }
+
+  function updateBudgetDisplay(value) {
+    const display = document.getElementById('total-budget-display');
+    if (display) {
+      display.innerText = (value || 0).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+  }
+
+  function formatTime(timeStr) {
+    if (!timeStr) return 'N/A';
+    if (Array.isArray(timeStr)) timeStr = `${timeStr[0]}:${String(timeStr[1]).padStart(2, '0')}`;
+    const [hrs, mins] = timeStr.split(':');
+    let h = parseInt(hrs);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${h}:${mins.padStart(2, '0')} ${ampm}`;
+  }
+
+  function autoResizeTextarea() {
+    const textarea = document.getElementById('chat-input');
+    if (textarea) {
+        textarea.style.height = 'auto';
+        const newHeight = Math.min(textarea.scrollHeight, 120);
+        textarea.style.height = newHeight + 'px';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+     
+      const textarea = document.getElementById('chat-input');
+      if (textarea) {
+          textarea.addEventListener('input', autoResizeTextarea);
+      }
+      
+      loadSuggestedPrograms();
+      loadChatHistory();
+      loadCurrentBudget();
+      
+      document.getElementById('chat-input')?.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              sendMessage();
+          
+              setTimeout(() => {
+                  const textarea = document.getElementById('chat-input');
+                  if (textarea) textarea.style.height = 'auto';
+              }, 0);
+          }
+      });
+  });
+
+  function openBudgetModal()  { document.getElementById('budgetModal').style.display = 'block'; }
+  function closeBudgetModal() { document.getElementById('budgetModal').style.display = 'none'; }
+  function openCreateModal() { populateProgramDropdown(); document.getElementById('createProgramModal').style.display = 'block'; }
+  function closeCreateModal() { document.getElementById('createProgramModal').style.display = 'none'; }
+  function openReviewModal() { document.getElementById('reviewSuggestionModal').style.display = 'block'; }
+  function closeReviewModal() { document.getElementById('reviewSuggestionModal').style.display = 'none'; }
+  
+  function populateProgramDropdown() {}
+  function submitToCalendar() {}
+  function addProgramToList(program) {}
+  
+  window.onclick = function(event) {
+    const viewModal = document.getElementById('viewProgramModal');
+    const aiModal = document.getElementById('aiCreateProgramModal');
+    const budgetModal = document.getElementById('budgetModal');
+    const createModal = document.getElementById('createProgramModal');
+    const reviewModal = document.getElementById('reviewSuggestionModal');
+    
+    if (event.target === viewModal) closeViewModal();
+    if (event.target === aiModal) closeAICreateModal();
+    if (event.target === budgetModal) closeBudgetModal();
+    if (event.target === createModal) closeCreateModal();
+    if (event.target === reviewModal) closeReviewModal();
+  }
+</script>
+
+</body>
+</html>

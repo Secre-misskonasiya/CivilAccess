@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Brgy. San Sebastian</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #5ab5a0 0%, #4a9d8c 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .login-container {
+    display: flex;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 900px;
+    width: 100%;
+  }
+
+  .left-panel {
+    background: linear-gradient(135deg, #c8e6dc 0%, #a8d5c8 100%);
+    padding: 60px 40px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .brgy-title {
+    color: #2d5049;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 40px;
+  }
+
+  .logo {
+    width: 150px;
+    height: 150px;
+    margin-bottom: 40px;
+  }
+
+  .welcome-title {
+    color: #2d5049;
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 15px;
+  }
+
+  .welcome-subtitle {
+    color: #5a7872;
+    font-size: 16px;
+  }
+
+  .right-panel {
+    background: #3d5650;
+    padding: 60px 50px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .login-header {
+    margin-bottom: 40px;
+  }
+
+  .login-title {
+    color: white;
+    font-size: 42px;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  .login-subtitle {
+    color: #b8d4cd;
+    font-size: 16px;
+  }
+
+  .form-group {
+    margin-bottom: 25px;
+  }
+
+  label {
+    display: block;
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    width: 100%;
+    padding: 15px 20px;
+    background: transparent;
+    border: 2px solid #7a9d94;
+    border-radius: 12px;
+    color: white;
+    font-size: 16px;
+    transition: all 0.3s ease;
+  }
+
+  input::placeholder { color: #7a9d94; }
+
+  input:focus {
+    outline: none;
+    border-color: #b8d4cd;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  input.valid   { border-color: #4ade80; }
+  input.invalid { border-color: #ff6b6b; }
+
+  .forgot-password {
+    text-align: right;
+    margin-top: -15px;
+    margin-bottom: 25px;
+  }
+
+  .forgot-password a {
+    color: #b8d4cd;
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    cursor: pointer;
+  }
+
+  .forgot-password a:hover { color: white; }
+
+  .login-button {
+    width: 100%;
+    padding: 16px;
+    background: #f4c542;
+    color: #2d5049;
+    font-size: 20px;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .login-button:hover {
+    background: #f5d06a;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(244, 197, 66, 0.3);
+  }
+
+  .login-button:active  { transform: translateY(0); }
+
+  .login-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .error-message {
+    color: #ff8a8a;
+    text-align: center;
+    margin-top: 15px;
+    font-size: 14px;
+    display: none;
+  }
+
+  .error-message.show { display: block; }
+
+  .field-error {
+    color: #ff8a8a;
+    font-size: 13px;
+    margin-top: 5px;
+    display: none;
+  }
+
+  .field-error.show { display: block; }
+
+  /* Password wrapper */
+  .password-wrapper {
+    position: relative;
+  }
+
+  .password-wrapper input {
+    padding-right: 50px;
+  }
+
+  .toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #7a9d94;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s ease;
+  }
+
+  .toggle-password:hover { color: #b8d4cd; }
+  .toggle-password svg { width: 20px; height: 20px; }
+
+  /* Modal Styles */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .modal {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+    position: relative;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 20px; right: 20px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #7a9d94;
+    cursor: pointer;
+    transition: color 0.3s ease;
+  }
+
+  .modal-close:hover { color: #2d5049; }
+
+  .modal-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .modal-icon {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, #5ab5a0 0%, #4a9d8c 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 40px;
+  }
+
+  .modal-title {
+    color: #2d5049;
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  .modal-subtitle {
+    color: #5a7872;
+    font-size: 14px;
+  }
+
+  .modal-form-group { margin-bottom: 20px; }
+
+  .modal-form-group label {
+    display: block;
+    color: #2d5049;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .modal-form-group input {
+    width: 100%;
+    padding: 14px 18px;
+    background: #f5f5f5;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    color: #2d5049;
+    font-size: 16px;
+    transition: all 0.3s ease;
+  }
+
+  .modal-form-group input:focus {
+    outline: none;
+    border-color: #5ab5a0;
+    background: white;
+  }
+
+  .modal-button {
+    width: 100%;
+    padding: 14px;
+    background: #5ab5a0;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+  }
+
+  .modal-button:hover {
+    background: #4a9d8c;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(90, 181, 160, 0.3);
+  }
+
+  .modal-button:disabled {
+    background: #b8d4cd;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .resend-text {
+    text-align: center;
+    margin-top: 15px;
+    color: #7a9d94;
+    font-size: 14px;
+  }
+
+  .resend-link {
+    color: #5ab5a0;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .resend-link:hover { text-decoration: underline; }
+  .resend-link.disabled { color: #b8d4cd; cursor: not-allowed; }
+
+  .success-message, .modal-error-message {
+    text-align: center;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    display: none;
+  }
+
+  .success-message {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+
+  .modal-error-message {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+
+  .success-message.show, .modal-error-message.show { display: block; }
+
+  .step         { display: none; }
+  .step.active  { display: block; }
+
+  .done-icon {
+    width: 90px; height: 90px;
+    background: linear-gradient(135deg, #5ab5a0, #4a9d8c);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 48px;
+  }
+
+  /* Admin Login OTP Modal */
+  #otpModal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #otpModal.show { display: flex; }
+
+  .otp-modal-content {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    animation: slideUp 0.3s ease;
+  }
+
+  .otp-modal-content h2 { color: #2d5049; margin-bottom: 10px; }
+  .otp-modal-content p  { color: #5a7872; margin-bottom: 20px; }
+
+  #otp-single-input {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #a8d5c8;
+    border-radius: 12px;
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #1a1a1a;
+  }
+
+  /* Forgot password OTP input */
+  #forgotOtpInput {
+    color: #1a1a1a !important;
+  }
+
+  .otp-verify-btn {
+    width: 100%;
+    padding: 15px;
+    background: #f4c542;
+    color: #2d5049;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .otp-verify-btn:hover { background: #f5d06a; }
+
+  .otp-cancel-btn {
+    margin-top: 15px;
+    background: none;
+    border: none;
+    color: #5a7872;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  @media (max-width: 768px) {
+    .login-container  { flex-direction: column; }
+    .left-panel       { padding: 40px 30px; }
+    .right-panel      { padding: 40px 30px; }
+    .login-title      { font-size: 32px; }
+    .welcome-title    { font-size: 26px; }
+    .backbutton       { position: absolute; left: 20px; font-size: 14px; }
+    .modal            { padding: 30px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="login-container">
+  <input type="hidden" th:text="${empstatus}" id="empstatus">
+  <!-- Left Panel -->
+  <div class="left-panel">
+    <a th:href="@{/landing-page}" style="text-decoration: none; color: #2d5049; font-weight: bold;" class="backbutton">&larr; Back to Landing Page</a>
+    <div class="brgy-title">Brgy. San Sebastian</div>
+    <img src="/images/seal.png" alt="Barangay Seal" class="logo">
+    <div class="welcome-title">Welcome Back</div>
+    <div class="welcome-subtitle">Sign In to access the dashboard</div>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="right-panel">
+    <div class="login-header">
+      <h1 class="login-title">Login</h1>
+      <p class="login-subtitle">Enter your credentials to continue</p>
+    </div>
+
+    <form th:action="@{/login}" method="post" id="loginForm">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required autocomplete="email">
+        <div class="field-error" id="email-error">Please enter a valid email address</div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="password-wrapper">
+          <input type="password" id="password" name="password" required autocomplete="current-password">
+          <button type="button" class="toggle-password" id="togglePassword" aria-label="Toggle password visibility">
+            <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7
+                   -1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="field-error" id="password-error">Password is required</div>
+      </div>
+
+      <div class="forgot-password">
+        <a id="forgotPasswordLink">Forgot Password?</a>
+      </div>
+
+      <button type="submit" class="login-button">Sign In</button>
+
+      <p th:if="${param.error}" class="error-message show">
+        Invalid email or password.
+      </p>
+      <p class="error-message" id="loginErrorMsg"></p>
+    </form>
+  </div>
+</div>
+
+<!-- Admin Login OTP Modal -->
+<div id="otpModal">
+  <div class="otp-modal-content">
+    <h2>Verification Code</h2>
+    <p>A code has been sent to <br><strong id="displayEmail"></strong></p>
+    <input type="text" id="otp-single-input" placeholder="Enter 6-digit code" maxlength="6" inputmode="numeric">
+    <button type="button" onclick="verifyLoginOTP()" class="otp-verify-btn">Verify &amp; Sign In</button>
+    <button type="button" onclick="closeOtpModal()" class="otp-cancel-btn">Cancel</button>
+  </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal-overlay" id="forgotPasswordModal">
+  <div class="modal">
+    <button class="modal-close" id="closeModal">&times;</button>
+
+    <!-- Step 1: Enter Email -->
+    <div class="step active" id="step1">
+      <div class="modal-header">
+        <h2 class="modal-title">Forgot Password?</h2>
+        <p class="modal-subtitle">Enter your email to receive a verification code</p>
+      </div>
+
+      <div class="success-message" id="emailSuccess"></div>
+      <div class="modal-error-message" id="emailError"></div>
+
+      <div class="modal-form-group">
+        <label for="resetEmail">Email Address</label>
+        <input type="email" id="resetEmail" placeholder="your.email@example.com">
+      </div>
+
+      <button class="modal-button" id="sendOtpBtn">Send Verification Code</button>
+    </div>
+
+    <!-- Step 2: Enter OTP -->
+    <div class="step" id="step2">
+      <div class="modal-header">
+        <div class="modal-icon">🔐</div>
+        <h2 class="modal-title">Enter Verification Code</h2>
+        <p class="modal-subtitle">We've sent a 6-digit code to <strong><span id="emailDisplay"></span></strong></p>
+      </div>
+
+      <div class="success-message" id="otpSuccess"></div>
+      <div class="modal-error-message" id="otpError"></div>
+
+      <input type="text" id="forgotOtpInput"
+             placeholder="Enter 6-digit code" maxlength="6" inputmode="numeric"
+             style="width:100%; padding:15px; border:2px solid #a8d5c8; border-radius:12px;
+                    font-size:20px; text-align:center; margin:20px 0; color:#1a1a1a;">
+
+      <button class="modal-button" id="verifyOtpBtn">Verify Code</button>
+
+      <div class="resend-text">
+        Didn't receive code? <a class="resend-link" id="resendLink">Resend</a>
+        <span id="timerText" style="display:none;"> (Wait <span id="timer">60</span>s)</span>
+      </div>
+    </div>
+
+    <!-- Step 3: Done -->
+    <div class="step" id="step3">
+      <div class="modal-header">
+        <div class="done-icon">✅</div>
+        <h2 class="modal-title">Password Reset!</h2>
+        <p class="modal-subtitle">
+          A new temporary password has been sent to<br>
+          <strong><span id="doneEmailDisplay"></span></strong>.<br><br>
+          Please log in with the temporary password and change it immediately.
+        </p>
+      </div>
+      <button class="modal-button" id="doneBtn">Back to Login</button>
+    </div>
+
+  </div>
+</div>
+
+</body>
+<script>
+  // ============================================
+  // LOGIN FORM VALIDATION & ADMIN 2FA OTP
+  // ============================================
+
+  const loginForm     = document.getElementById('loginForm');
+  const emailInput    = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const emailError    = document.getElementById('email-error');
+  const loginButton   = document.querySelector('.login-button');
+  const loginErrorMsg = document.getElementById('loginErrorMsg');
+
+  let isOtpVerified = false;
+  const emailRegex  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  emailInput.addEventListener('input', () => { validateEmail(); updateLoginButton(); });
+  emailInput.addEventListener('blur', function() {
+    if (this.value.trim() !== '') validateEmail();
+  });
+
+  function validateEmail() {
+    const email   = emailInput.value.trim();
+    const isValid = emailRegex.test(email);
+    emailInput.classList.toggle('valid',   isValid);
+    emailInput.classList.toggle('invalid', !isValid && email !== '');
+    emailError.classList.toggle('show',    !isValid && email !== '');
+    return isValid;
+  }
+
+  function updateLoginButton() {
+    const isEmailValid    = emailInput.classList.contains('valid');
+    loginButton.disabled  = !isEmailValid;
+    loginButton.style.opacity = isEmailValid ? '1' : '0.6';
+  }
+
+  function showLoginError(msg) {
+    loginErrorMsg.textContent = msg;
+    loginErrorMsg.classList.add('show');
+  }
+
+  function hideLoginError() {
+    loginErrorMsg.textContent = '';
+    loginErrorMsg.classList.remove('show');
+  }
+
+  loginForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    hideLoginError();
+
+    const email    = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!password) {
+      document.getElementById('password-error').classList.add('show');
+      return;
+    }
+
+    loginButton.innerText = "Verifying...";
+    loginButton.disabled  = true;
+
+    try {
+      const response = await fetch(
+        '/check-admin-email?email='    + encodeURIComponent(email) +
+        '&password=' + encodeURIComponent(password)
+      );
+
+      if (response.ok) {
+        // Valid admin with correct password → send OTP
+        handleAdmin2FA(email);
+      } else if (response.status === 403) {
+        // Archived account
+        const message = await response.text();
+        alert(message);
+        resetLoginButton();
+      } else if (response.status === 401) {
+        // Wrong password (admin found but password mismatch)
+        showLoginError("Invalid email or password.");
+        resetLoginButton();
+      } else {
+        // 404 — not an admin, let Spring Security handle login normally
+        isOtpVerified = true;
+        loginForm.submit();
+      }
+    } catch (err) {
+      console.error("Connection Error:", err);
+      resetLoginButton();
+    }
+  });
+
+  async function handleAdmin2FA(email) {
+    loginButton.innerText = "Sending Code...";
+    try {
+      const res = await fetch('/send-otp?email=' + encodeURIComponent(email), { method: 'POST' });
+      if (res.ok) {
+        document.getElementById('displayEmail').innerText = email;
+        document.getElementById('otpModal').classList.add('show');
+      } else {
+        alert("Failed to send code. Please try again.");
+        resetLoginButton();
+      }
+    } catch (err) {
+      console.error("OTP Error:", err);
+      resetLoginButton();
+    }
+  }
+
+  function verifyLoginOTP() {
+    const otp   = document.getElementById('otp-single-input').value;
+    const email = document.getElementById('displayEmail').innerText;
+    fetch('/verify-otp?otp=' + encodeURIComponent(otp) + '&email=' + encodeURIComponent(email), { method: 'POST' })
+      .then(response => {
+        if (response.ok) {
+          isOtpVerified = true;
+          loginForm.submit();
+        } else {
+          alert("Invalid verification code.");
+        }
+      })
+      .catch(err => console.error("Verification error:", err));
+  }
+
+  function closeOtpModal() {
+    document.getElementById('otpModal').classList.remove('show');
+    document.getElementById('otp-single-input').value = '';
+    resetLoginButton();
+  }
+
+  function resetLoginButton() {
+    loginButton.innerText = "Sign In";
+    loginButton.disabled  = false;
+    updateLoginButton();
+  }
+
+  loginButton.disabled      = true;
+  loginButton.style.opacity = '0.6';
+
+  // ============================================
+  // SHOW / HIDE PASSWORD TOGGLE
+  // ============================================
+
+  const togglePassword = document.getElementById('togglePassword');
+  const eyeIcon        = document.getElementById('eyeIcon');
+
+  const eyeOpen = `
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7
+         -1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>`;
+
+  const eyeClosed = `
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7
+         a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243
+         M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29
+         M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7
+         a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>`;
+
+  togglePassword.addEventListener('click', () => {
+    const isPassword      = passwordInput.type === 'password';
+    passwordInput.type    = isPassword ? 'text' : 'password';
+    eyeIcon.innerHTML     = isPassword ? eyeClosed : eyeOpen;
+  });
+
+  // ============================================
+  // FORGOT PASSWORD — OTP → EMAIL NEW PASSWORD
+  // ============================================
+
+  const modal           = document.getElementById('forgotPasswordModal');
+  const forgotLink      = document.getElementById('forgotPasswordLink');
+  const closeModalBtn   = document.getElementById('closeModal');
+  const resetEmailInput = document.getElementById('resetEmail');
+  const sendOtpBtn      = document.getElementById('sendOtpBtn');
+  const verifyOtpBtn    = document.getElementById('verifyOtpBtn');
+  const resendLink      = document.getElementById('resendLink');
+  const doneBtn         = document.getElementById('doneBtn');
+  const forgotOtpInput  = document.getElementById('forgotOtpInput');
+
+  let resendTimer;
+  let countdown = 60;
+
+  function showModal()  { modal.classList.add('show');    document.body.style.overflow = 'hidden'; }
+  function hideModal()  { modal.classList.remove('show'); document.body.style.overflow = 'auto';   resetModal(); }
+
+  function showStep(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step' + n).classList.add('active');
+  }
+
+  function resetModal() {
+    showStep(1);
+    resetEmailInput.value  = '';
+    forgotOtpInput.value   = '';
+    hideAllMessages();
+    clearInterval(resendTimer);
+  }
+
+  function hideAllMessages() {
+    document.querySelectorAll('.success-message, .modal-error-message')
+            .forEach(m => m.classList.remove('show'));
+  }
+
+  function showMessage(id, text, isError = false) {
+    hideAllMessages();
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.classList.add('show');
+  }
+
+  function startResendTimer() {
+    countdown = 60;
+    resendLink.classList.add('disabled');
+    document.getElementById('timerText').style.display = 'inline';
+
+    resendTimer = setInterval(() => {
+      countdown--;
+      document.getElementById('timer').textContent = countdown;
+      if (countdown <= 0) {
+        clearInterval(resendTimer);
+        resendLink.classList.remove('disabled');
+        document.getElementById('timerText').style.display = 'none';
+      }
+    }, 1000);
+  }
+
+  forgotLink.addEventListener('click', showModal);
+  closeModalBtn.addEventListener('click', hideModal);
+  modal.addEventListener('click', e => { if (e.target === modal) hideModal(); });
+  doneBtn.addEventListener('click', hideModal);
+
+  // Step 1: Send OTP
+  sendOtpBtn.addEventListener('click', async () => {
+    const email = resetEmailInput.value.trim();
+
+    if (!emailRegex.test(email)) {
+      showMessage('emailError', 'Please enter a valid email address', true);
+      return;
+    }
+
+    sendOtpBtn.disabled    = true;
+    sendOtpBtn.textContent = 'Sending...';
+
+    try {
+      const response = await fetch('/api/forgot-password/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        document.getElementById('emailDisplay').textContent = email;
+        showStep(2);
+        startResendTimer();
+      } else {
+        showMessage('emailError', data.message || 'Email not found. Please try again.', true);
+      }
+    } catch {
+      showMessage('emailError', 'An error occurred. Please try again.', true);
+    } finally {
+      sendOtpBtn.disabled    = false;
+      sendOtpBtn.textContent = 'Send Verification Code';
+    }
+  });
+
+  // Step 2: Verify OTP → backend generates & emails new password
+  verifyOtpBtn.addEventListener('click', async () => {
+    const otp = forgotOtpInput.value.trim();
+    if (otp.length !== 6) {
+      showMessage('otpError', 'Please enter the complete 6-digit code', true);
+      return;
+    }
+
+    verifyOtpBtn.disabled    = true;
+    verifyOtpBtn.textContent = 'Verifying...';
+
+    try {
+      const response = await fetch('/api/forgot-password/verify-and-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: resetEmailInput.value.trim(),
+          otp
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        document.getElementById('doneEmailDisplay').textContent = resetEmailInput.value.trim();
+        showStep(3);
+        clearInterval(resendTimer);
+      } else {
+        showMessage('otpError', data.message || 'Invalid verification code', true);
+      }
+    } catch {
+      showMessage('otpError', 'An error occurred. Please try again.', true);
+    } finally {
+      verifyOtpBtn.disabled    = false;
+      verifyOtpBtn.textContent = 'Verify Code';
+    }
+  });
+
+  // Resend OTP
+  resendLink.addEventListener('click', async () => {
+    if (resendLink.classList.contains('disabled')) return;
+
+    try {
+      const response = await fetch('/api/forgot-password/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resetEmailInput.value.trim() })
+      });
+
+      if (response.ok) {
+        showMessage('otpSuccess', 'New code sent successfully!');
+        startResendTimer();
+        forgotOtpInput.value = '';
+        forgotOtpInput.focus();
+      }
+    } catch {
+      showMessage('otpError', 'Failed to resend code. Please try again.', true);
+    }
+  });
+</script>
+
+</body>
+</html>

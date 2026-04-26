@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<style>
+    body { 
+      margin: 0; 
+      font-family: Arial, sans-serif; 
+    }
+
+    .layout {
+      display: flex; 
+      height: 100vh; 
+      overflow: hidden;
+    }
+    
+    .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .top-header {
+        background-color: #2d4a44;
+        display: flex;
+        border-bottom: 2px solid #FED734;
+    }
+    .top-header-tab {
+        flex: 1;
+        color: white;
+        text-align: center;
+        padding: 16px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .search-bar-area {
+        padding: 16px 20px 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background-color: #f5f5f5;
+    }
+    .search-input-wrap { flex: 1; position: relative; }
+    .search-input-wrap input {
+        width: 100%;
+        padding: 9px 14px 9px 38px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: white;
+        box-sizing: border-box;
+    }
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #aaa;
+    }
+    .filter-btn {
+        padding: 9px 16px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        background: white;
+        font-size: 14px;
+        cursor: pointer;
+        color: #444;
+    }
+    .export-btn {
+        padding: 9px 20px;
+        border: none;
+        border-radius: 6px;
+        background: #FED734;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        color: #2d4a44;
+    }
+    .add-btn {
+        padding: 9px 20px;
+        border: none;
+        border-radius: 6px;
+        background: #44C375;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        color: white;
+    }
+
+    .tabbar {
+        display: flex;
+        background-color: white;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0 20px;
+        gap: 4px;
+    }
+    .tab {
+        padding: 12px 18px;
+        color: #666;
+        cursor: pointer;
+        font-size: 14px;
+        border-bottom: 3px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tab.active {
+        background-color: #2d4a44;
+        color: white;
+        border-radius: 6px 6px 0 0;
+        font-weight: bold;
+    }
+
+    .panel {
+        padding: 20px;
+        background-color: #f5f5f5;
+        flex: 1;
+        overflow-y: auto;
+    }
+    .panel-inner {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+    }
+    .panel-header {
+        background-color: #3d5f58;
+        color: white;
+        padding: 14px 20px;
+        font-weight: bold;
+        font-size: 15px;
+    }
+    .panel-content { padding: 16px 20px; }
+
+    th {
+        background-color: #eaf2f0 !important;
+        color: #2d4a44 !important;
+        font-size: 12px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 10px 14px !important;
+    }
+    td {
+        padding: 12px 14px !important;
+        vertical-align: middle !important;
+    }
+
+    .status-open {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        background-color: #f0fff4;
+        color: #27ae60;
+        border: 1px solid #b0e0c0;
+    }
+    .status-closed {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        background-color: #fff0f0;
+        color: #e74c3c;
+        border: 1px solid #f5c6c6;
+    }
+    .status-available {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        background-color: #e8f5f0;
+        color: #2d7a5f;
+        border: 1px solid #b8ddd0;
+    }
+
+    .contact-btn {
+        background-color: #3498db;
+        color: white;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .contact-btn:hover { background-color: #2176ae; }
+
+    .update-btn {
+        background-color: #f1c40f;
+        color: #30534D;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .update-btn:hover { background-color: #d4ac0d; }
+
+    .delete-btn {
+        background-color: #e74c3c;
+        color: white;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .delete-btn:hover { background-color: #c0392b; }
+
+    .table-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-top: 1px solid #e0e0e0;
+        font-size: 13px;
+        color: #888;
+    }
+    .page-item.active .page-link { background-color: #2d4a44; border-color: #2d4a44; }
+    .page-link { color: #2d4a44; }
+
+    .facility-name { font-weight: bold; font-size: 14px; }
+    .facility-address { font-size: 12px; color: #888; margin-top: 2px; }
+
+    .status-success {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        background-color: #f0fff4;
+        color: #27ae60;
+        border: 1px solid #b0e0c0;
+    }
+    .status-failed {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        background-color: #fff0f0;
+        color: #e74c3c;
+        border: 1px solid #f5c6c6;
+    }
+    .status-pending {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        background-color: #fffbe6;
+        color: #d4a017;
+        border: 1px solid #f0d88a;
+    }
+    .user-role {
+        font-size: 11px;
+        color: #888;
+        margin-top: 2px;
+    }
+    .action-badge {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        background-color: #eaf2f0;
+        color: #2d4a44;
+    }
+    .force-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.6);
+}
+
+.force-modal-content {
+    background: white;
+    width: 400px;
+    padding: 30px;
+    border-radius: 8px;
+    text-align: center;
+    margin: 15% auto;
+}
+</style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">   
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<title>Activity Logs</title>
+</head>
+<body>
+
+<div class="layout">
+<input type="hidden" id="accountStatus" th:value="${currentstatus}">
+      <div id="forcePasswordModal" class="force-modal">
+    <div class="force-modal-content">
+        <h2>First Login Detected</h2>
+        <p>You must change your password before using the system.</p>
+        <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+
+<!-- Lock Modal -->
+ <input type="hidden" id="accountStatus" th:value="${currentstatus}">
+<div id="forcePasswordModal" class="force-modal">
+    <div class="force-modal-content">
+        <h2>First Login Detected</h2>
+        <p>You must change your password before using the system.</p>
+        <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+  <!-- Sidebar -->
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+<!-- Sidebar -->
+
+
+
+  <div class="content">
+
+    <!-- Top header -->
+    <div class="top-header">
+      <div class="top-header-tab">Activity Logs</div>
+    </div>
+
+    
+    <!-- Search bar -->
+    <div class="search-bar-area">
+      <div class="search-input-wrap">
+        <span class="search-icon"><i class="bi bi-search"></i></span>
+        <input type="text" id="contact-search" placeholder="Search activity by name, action, or module...">
+      </div>
+      <!-- REPLACE the existing filter-btn button with this entire block -->
+<div style="position: relative; display: inline-block;">
+    <button class="filter-btn" id="filterToggleBtn" onclick="toggleFilterPanel()">
+        <i class="bi bi-funnel"></i> Filters
+        <span id="activeFilterCount" style="display:none; background:#2d4a44; color:white; border-radius:50%; padding:1px 6px; font-size:11px; margin-left:4px;">0</span>
+    </button>
+
+    <div id="filterPanel" style="display:none; position:absolute; top:calc(100% + 6px); left:-200px; z-index:999;
+         background:white; border:1px solid #d0d5dd; border-radius:8px; padding:16px; width:340px;
+         box-shadow: 0 4px 16px rgba(0,0,0,0.12);">
+
+        <div style="font-weight:bold; font-size:13px; color:#2d4a44; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.05em;">Filter Logs</div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+            <div>
+                <label style="font-size:12px; color:#555; display:block; margin-bottom:4px;">Date From</label>
+                <input type="date" id="filter-date-from" style="width:100%; padding:7px 10px; border:1px solid #d0d5dd; border-radius:6px; font-size:13px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="font-size:12px; color:#555; display:block; margin-bottom:4px;">Date To</label>
+                <input type="date" id="filter-date-to" style="width:100%; padding:7px 10px; border:1px solid #d0d5dd; border-radius:6px; font-size:13px; box-sizing:border-box;">
+            </div>
+        </div>
+
+        <div style="margin-bottom:10px;">
+            <label style="font-size:12px; color:#555; display:block; margin-bottom:4px;">Status</label>
+            <select id="filter-status" style="width:100%; padding:7px 10px; border:1px solid #d0d5dd; border-radius:6px; font-size:13px;">
+                <option value="">All Statuses</option>
+                <option value="Success">Success</option>
+                <option value="Failed">Failed</option>
+                <option value="Pending">Pending</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom:10px;">
+            <label style="font-size:12px; color:#555; display:block; margin-bottom:4px;">Action</label>
+            <select id="filter-action" style="width:100%; padding:7px 10px; border:1px solid #d0d5dd; border-radius:6px; font-size:13px;">
+                <option value="">All Actions</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <label style="font-size:12px; color:#555; display:block; margin-bottom:4px;">Role</label>
+            <select id="filter-role" style="width:100%; padding:7px 10px; border:1px solid #d0d5dd; border-radius:6px; font-size:13px;">
+                <option value="">All Roles</option>
+            </select>
+        </div>
+
+        <div style="display:flex; gap:8px;">
+            <button onclick="applyFilters()" style="flex:1; padding:8px; background:#2d4a44; color:white; border:none; border-radius:6px; font-size:13px; font-weight:bold; cursor:pointer;">Apply</button>
+            <button onclick="clearFilters()" style="flex:1; padding:8px; background:white; color:#2d4a44; border:1px solid #2d4a44; border-radius:6px; font-size:13px; font-weight:bold; cursor:pointer;">Clear</button>
+        </div>
+    </div>
+</div>
+      <button class="export-btn" id="export-pdf-btn" onclick="exportToPDF()">Export</button>
+    </div>
+
+  
+
+    <div class="panel">
+
+      <!-- Activity Log Table -->
+      <div id="tab-police" class="panel-inner">
+        <div class="panel-header">Employee Activity Log</div>
+        <div class="panel-content">
+          <table class="table table-bordered table-hover mb-0">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Module</th>
+                <th>Details</th>
+                <th>IP Address</th>
+                <th>Status</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              
+                <tr th:each="log : ${activityLogs}">
+                  <td th:text="${log.id}">1</td>
+                  <td>
+                    <div class="facility-name" th:text="${log.userName}">John Smith</div>
+                    <div class="user-role" th:text="${log.userRole}">Admin</div>
+                  </td>
+                  <td><span class="action-badge" th:text="${log.action}">LOGIN</span></td>
+                  <td th:text="${log.module}">Dashboard</td>
+                  <td th:text="${log.details}">User logged in successfully</td>
+                  <td th:text="${log.ipAddress}">192.168.1.1</td>
+                  <td>
+                    <span th:classappend="${log.status == 'Success'} ? 'status-success' : (${log.status == 'Failed'} ? 'status-failed' : 'status-pending')"
+                          class="status-success" th:text="${log.status}">Success</span>
+                  </td>
+                  <td th:text="${#temporals.format(log.timestamp, 'MMM dd, yyyy HH:mm')}">Jan 01, 2025 08:00</td>
+                </tr>
+                
+            </tbody>
+          </table>
+          <div class="table-footer">
+            <span>Showing recent activities</span>
+            <nav>
+              <ul class="pagination pagination-sm mb-0">
+                <li class="page-item disabled"><a class="page-link" href="#"><i class="bi bi-arrow-left"></i> Prev</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item disabled"><a class="page-link" href="#">Next <i class="bi bi-arrow-right"></i></a></li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+      
+
+    </div>
+
+  </div>
+</div>
+<!-- Logout Modal -->
+<div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
+
+<!-- Logout modal -->
+<script src="/js/sidebar.js"></script>
+<script>
+    // ── Force password modal ──────────────────────────────────
+    window.onload = function () {
+        const status = document.getElementById("accountStatus").value;
+        if (status === "New" || status === "Newly Updated") {
+            document.getElementById("forcePasswordModal").style.display = "block";
+            document.body.style.overflow = "hidden";
+        }
+        populateFilterDropdowns();
+    };
+
+    function redirectToPassword() { window.location.href = "/user-profile"; }
+
+    // ── Search ────────────────────────────────────────────────
+    document.getElementById('contact-search').addEventListener('keyup', function () {
+        applyFilters();
+    });
+
+    // ── Filter panel toggle ───────────────────────────────────
+    function toggleFilterPanel() {
+        const panel = document.getElementById('filterPanel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Close filter panel when clicking outside
+    document.addEventListener('click', function (e) {
+        const panel  = document.getElementById('filterPanel');
+        const btn    = document.getElementById('filterToggleBtn');
+        if (panel.style.display === 'block' && !panel.contains(e.target) && !btn.contains(e.target)) {
+            panel.style.display = 'none';
+        }
+    });
+
+    // ── Populate Action + Role dropdowns from actual table data ─
+    function populateFilterDropdowns() {
+        const rows = document.querySelectorAll('#tab-police tbody tr');
+        const actions = new Set();
+        const roles   = new Set();
+
+        rows.forEach(function (row) {
+            const actionEl = row.querySelector('td:nth-child(3) .action-badge');
+            const roleEl   = row.querySelector('td:nth-child(2) .user-role');
+            if (actionEl && actionEl.textContent.trim()) actions.add(actionEl.textContent.trim());
+            if (roleEl   && roleEl.textContent.trim())   roles.add(roleEl.textContent.trim());
+        });
+
+        const actionSel = document.getElementById('filter-action');
+        actions.forEach(function (a) {
+            const opt = document.createElement('option');
+            opt.value = a; opt.textContent = a;
+            actionSel.appendChild(opt);
+        });
+
+        const roleSel = document.getElementById('filter-role');
+        roles.forEach(function (r) {
+            const opt = document.createElement('option');
+            opt.value = r; opt.textContent = r;
+            roleSel.appendChild(opt);
+        });
+    }
+
+    // ── Core filter logic ─────────────────────────────────────
+    function applyFilters() {
+        const search   = document.getElementById('contact-search').value.toLowerCase().trim();
+        const status   = document.getElementById('filter-status').value;
+        const action   = document.getElementById('filter-action').value;
+        const role     = document.getElementById('filter-role').value;
+        const dateFrom = document.getElementById('filter-date-from').value;
+        const dateTo   = document.getElementById('filter-date-to').value;
+
+        let visibleCount = 0;
+
+        document.querySelectorAll('#tab-police tbody tr').forEach(function (row) {
+            const cells      = row.querySelectorAll('td');
+            const rowText    = row.textContent.toLowerCase();
+            const rowStatus  = cells[6] ? cells[6].textContent.trim() : '';
+            const rowAction  = cells[2] ? cells[2].textContent.trim() : '';
+            const rowRole    = row.querySelector('.user-role') ? row.querySelector('.user-role').textContent.trim() : '';
+            const rowTsRaw   = cells[7] ? cells[7].textContent.trim() : '';  // e.g. "Jan 01, 2025 08:00"
+            const rowDate    = rowTsRaw ? new Date(rowTsRaw) : null;
+
+            // Search match
+            const matchSearch = !search || rowText.includes(search);
+
+            // Status match
+            const matchStatus = !status || rowStatus === status;
+
+            // Action match
+            const matchAction = !action || rowAction === action;
+
+            // Role match
+            const matchRole = !role || rowRole === role;
+
+            // Date range match
+            let matchDate = true;
+            if (dateFrom && rowDate) matchDate = matchDate && rowDate >= new Date(dateFrom);
+            if (dateTo   && rowDate) {
+                const toEnd = new Date(dateTo);
+                toEnd.setHours(23, 59, 59, 999);
+                matchDate = matchDate && rowDate <= toEnd;
+            }
+
+            const visible = matchSearch && matchStatus && matchAction && matchRole && matchDate;
+            row.style.display = visible ? '' : 'none';
+            if (visible) visibleCount++;
+        });
+
+        updateFilterBadge();
+        updateRowCount(visibleCount);
+    }
+
+    function clearFilters() {
+        document.getElementById('filter-status').value    = '';
+        document.getElementById('filter-action').value    = '';
+        document.getElementById('filter-role').value      = '';
+        document.getElementById('filter-date-from').value = '';
+        document.getElementById('filter-date-to').value   = '';
+        applyFilters();
+        document.getElementById('filterPanel').style.display = 'none';
+    }
+
+    // Show a count badge on the button when filters are active
+    function updateFilterBadge() {
+        const status   = document.getElementById('filter-status').value;
+        const action   = document.getElementById('filter-action').value;
+        const role     = document.getElementById('filter-role').value;
+        const dateFrom = document.getElementById('filter-date-from').value;
+        const dateTo   = document.getElementById('filter-date-to').value;
+        const count    = [status, action, role, dateFrom, dateTo].filter(Boolean).length;
+        const badge    = document.getElementById('activeFilterCount');
+        badge.textContent    = count;
+        badge.style.display  = count > 0 ? 'inline' : 'none';
+    }
+
+    // Update the "Showing X results" footer text
+    function updateRowCount(count) {
+        const footer = document.querySelector('.table-footer span');
+        if (footer) footer.textContent = 'Showing ' + count + ' result' + (count !== 1 ? 's' : '');
+    }
+
+    // ── Export PDF ────────────────────────────────────────────
+    function exportToPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc   = new jsPDF();
+        const panel = document.querySelector('.panel-inner:not(.d-none)');
+        const table = panel.querySelector('table');
+        const title = panel.querySelector('.panel-header').innerText;
+
+        doc.text(title, 14, 15);
+        doc.autoTable({
+            html: table,
+            startY: 20,
+            // Only export rows that are currently visible (i.e. passed the filter)
+            didParseCell: function (data) {
+                if (data.row.raw && data.row.raw.style && data.row.raw.style.display === 'none') {
+                    data.row.height = 0;
+                    data.cell.styles.fontSize = 0;
+                    data.cell.styles.cellPadding = 0;
+                }
+            }
+        });
+        doc.save(title.replace(/\s+/g, '_') + '.pdf');
+    }
+
+    function toggleDropdown(el) {
+        const dropdown = document.getElementById('requests-dropdown');
+        const arrow    = el.querySelector('.dropdown-arrow');
+        const isOpen   = dropdown.style.display === 'block';
+        dropdown.style.display = isOpen ? 'none' : 'block';
+        arrow.classList.toggle('open', !isOpen);
+    }
+</script>
+
+</body>
+</html>

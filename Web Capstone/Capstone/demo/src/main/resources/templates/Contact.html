@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<style>
+    body { margin: 0; font-family: Arial, sans-serif; }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+    
+    .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .top-header {
+        background-color: #2d4a44;
+        display: flex;
+        border-bottom: 2px solid #FED734;
+    }
+    .top-header-tab {
+        flex: 1;
+        color: white;
+        text-align: center;
+        padding: 16px 20px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .search-bar-area {
+        padding: 16px 20px 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background-color: #f5f5f5;
+    }
+    .search-input-wrap { flex: 1; position: relative; }
+    .search-input-wrap input {
+        width: 100%;
+        padding: 9px 14px 9px 38px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: white;
+        box-sizing: border-box;
+    }
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #aaa;
+    }
+    .filter-btn {
+        padding: 9px 16px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        background: white;
+        font-size: 14px;
+        cursor: pointer;
+        color: #444;
+    }
+
+    .tabbar {
+        display: flex;
+        background-color: white;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0 20px;
+        gap: 4px;
+    }
+    .tab {
+        padding: 12px 18px;
+        color: #666;
+        cursor: pointer;
+        font-size: 14px;
+        border-bottom: 3px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tab.active {
+        background-color: #2d4a44;
+        color: white;
+        border-radius: 6px 6px 0 0;
+        font-weight: bold;
+    }
+    .tab-badge {
+        background-color: #FED734;
+        color: #2d4a44;
+        border-radius: 10px;
+        padding: 1px 7px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .panel {
+        padding: 20px;
+        background-color: #f5f5f5;
+        flex: 1;
+        overflow-y: auto;
+    }
+    .panel-inner {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+    }
+    .panel-header {
+        background-color: #3d5f58;
+        color: white;
+        padding: 14px 20px;
+        font-weight: bold;
+        font-size: 15px;
+    }
+    .panel-content { padding: 20px; }
+
+    .card-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 10px 0;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .card {
+        background: rgb(255, 255, 255);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #e0e0e0;
+        padding: 14px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        overflow: hidden;
+    }
+
+    .card-name {
+        font-weight: bold;
+        font-size: 14px;
+        color: #1a1a1a;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .badge-type {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        background-color: #e8f5f0;
+        color: #2d7a5f;
+        border: 1px solid #b8ddd0;
+        white-space: nowrap;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .status-incoming {
+        background-color: #fff8ec;
+        color: #e67e22;
+        border: 1px solid #f5ddb0;
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+    .status-resolved {
+        background-color: #f0fff4;
+        color: #27ae60;
+        border: 1px solid #b0e0c0;
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+    .status-archived {
+        background-color: #f5f5f5;
+        color: #888;
+        border: 1px solid #ddd;
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+    
+    .new-msg-badge {
+        background-color: #e74c3c;
+        color: white;
+        font-size: 11px;
+        font-weight: bold;
+        padding: 2px 8px;
+        border-radius: 12px;
+        display: inline-block;
+        flex-shrink: 0;
+        margin-left: 4px;
+        margin-right: 0;
+    }
+
+    .resolved-by-badge {
+        background-color: #6c757d;
+        color: white;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .card-divider { border: none; border-top: 1px solid #f0f0f0; margin: 4px 0; overflow: hidden;}
+
+    .card-message {
+        font-size: 13px;
+        color: #555;
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+
+    .card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-top: 4px;
+        flex-wrap: wrap;
+        overflow: hidden;
+    }
+
+    .card-contact {
+        font-size: 12px;
+        color: #888;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .card-date {
+        font-size: 12px;
+        color: #aaa;
+        white-space: nowrap;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .resolve-btn {
+        background-color: #FED734;
+        color: #30534D;
+        padding: 5px 12px;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .resolve-btn:hover { background-color: #d6b42a; }
+    .archive-btn {
+        background-color: #e74c3c;
+        color: white;
+        padding: 5px 12px;
+        border: none;
+        border-radius: 4px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+    .archive-btn:hover { background-color: #b93e30; }
+    .view-btn {
+        background-color: #3498db;
+        color: white;
+        padding: 5px 12px;
+        border: none;
+        border-radius: 5px;
+        font-size: 12px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .view-btn:hover { background-color: #2176ae; }
+
+    /* ===================== CHAT MODAL ===================== */
+    .chat-modal .modal-dialog {
+        max-width: 520px;
+        margin: 1.75rem auto;
+    }
+    .chat-modal .modal-content {
+        border-radius: 14px;
+        overflow: hidden;
+        height: 82vh;
+        max-height: 640px;
+        display: flex;
+        flex-direction: column;
+        border: none;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+    .chat-modal .modal-body {
+        padding: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    /* Header */
+    .chat-header {
+        background-color: #2d4a44;
+        color: white;
+        padding: 14px 18px;
+        font-weight: bold;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 3px solid #FED734;
+        flex-shrink: 0;
+    }
+    .chat-header-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #FED734;
+        flex-shrink: 0;
+        background: #3d5f58;
+    }
+    .chat-header-avatar-placeholder {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #44C375;
+        border: 2px solid #FED734;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+    }
+    .chat-header-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+    .chat-header-name { font-size: 15px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-header-sub { font-size: 12px; color: #b0ccc8; font-weight: normal; }
+
+    .chat-status-dot {
+        width: 9px;
+        height: 9px;
+        background-color: #44C375;
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-left: 2px;
+    }
+    .chat-status-dot.disabled { background-color: #aaa; }
+
+    .chat-disabled-badge {
+        display: inline-block;
+        background-color: #e74c3c;
+        color: white;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 12px;
+    }
+
+    /* Request info strip */
+    .request-info {
+        background-color: #f0f7f5;
+        padding: 10px 16px;
+        border-bottom: 1px solid #d8ede8;
+        font-size: 12.5px;
+        flex-shrink: 0;
+        color: #444;
+        line-height: 1.6;
+    }
+    .request-info strong { color: #2d4a44; }
+
+    /* Messages area */
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 16px 8px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        background-color: #f7f8fa;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+
+    /* Date separator */
+    .date-separator {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 12px 0 8px 0;
+    }
+    .date-separator-line {
+        flex: 1;
+        height: 1px;
+        background: #ddd;
+    }
+    .date-separator-label {
+        font-size: 11px;
+        color: #999;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+        background: #f7f8fa;
+        padding: 0 4px;
+    }
+
+    /* Bubble row */
+    .bubble-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 2px;
+    }
+    .bubble-row.admin { flex-direction: row-reverse; }
+    .bubble-row.resident { flex-direction: row; }
+    /* Push avatar down past the sender name label so it lines up with the first bubble */
+    .bubble-row.resident > .bubble-avatar,
+    .bubble-row.resident > .bubble-avatar-placeholder {
+        margin-top: 14px;
+    }
+
+    /* Avatar in chat bubbles */
+    .bubble-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+        border: 1.5px solid #e0e0e0;
+        background: #ddd;
+    }
+    .bubble-avatar-placeholder {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #44C375;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 13px;
+        border: 1.5px solid #e0e0e0;
+    }
+    /* Invisible same-size placeholder so layout doesn't shift */
+    .bubble-avatar-spacer {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        visibility: hidden;
+    }
+
+    /* Column of bubbles + meta */
+    .bubble-col {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        max-width: 68%;
+    }
+    .bubble-col.admin { align-items: flex-end; }
+    .bubble-col.resident { align-items: flex-start; }
+
+    .bubble-sender-name {
+        font-size: 11px;
+        color: #888;
+        font-weight: 600;
+        padding: 0 4px;
+        margin-bottom: 1px;
+    }
+
+    .chat-bubble {
+        padding: 9px 14px;
+        border-radius: 18px;
+        font-size: 14px;
+        line-height: 1.5;
+        word-wrap: break-word;
+        word-break: break-word;
+        max-width: 100%;
+        position: relative;
+    }
+    .chat-bubble.admin {
+        background-color: #2d4a44;
+        color: white;
+        border-bottom-right-radius: 5px;
+    }
+    .chat-bubble.resident {
+        background-color: #e5e7eb;
+        color: #1a1a1a;
+        border-bottom-left-radius: 5px;
+    }
+
+    .bubble-time {
+        font-size: 10.5px;
+        color: #bbb;
+        padding: 0 4px;
+        margin-top: 1px;
+    }
+    .bubble-col.admin .bubble-time { text-align: right; }
+    .bubble-col.resident .bubble-time { text-align: left; }
+
+    /* Empty chat */
+    .empty-chat {
+        text-align: center;
+        color: #999;
+        padding: 40px;
+        font-size: 14px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex: 1;
+    }
+    .empty-chat i { font-size: 48px; color: #ccc; }
+
+    /* Input area */
+    .chat-input-area {
+        padding: 12px 14px;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        gap: 8px;
+        background-color: white;
+        flex-shrink: 0;
+        align-items: center;
+    }
+    .chat-input-area.disabled {
+        background-color: #f5f5f5;
+        opacity: 0.7;
+    }
+    .chat-input {
+        flex: 1;
+        min-height: 42px;
+        max-height: 120px;
+        border: 1.5px solid #d0d5dd;
+        border-radius: 22px;
+        padding: 10px 16px;
+        font-size: 14px;
+        box-sizing: border-box;
+        background: #f7f8fa;
+        transition: border-color 0.2s;
+        resize: none;
+        overflow-y: auto;
+        word-wrap: break-word;
+        word-break: break-word;
+        white-space: pre-wrap;
+        font-family: inherit;
+        line-height: 1.4;
+    }
+    .chat-input:focus { outline: none; border-color: #2d4a44; background: white; }
+    .chat-input:disabled { background-color: #f0f0f0; cursor: not-allowed; }
+    .chat-send-btn {
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        background-color: #2d4a44;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        font-size: 16px;
+        cursor: pointer;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s, transform 0.1s;
+    }
+    .chat-send-btn:disabled { background-color: #bbb; cursor: not-allowed; }
+    .chat-send-btn:hover:not(:disabled) { background-color: #1a3330; transform: scale(1.05); }
+    .chat-send-btn:active:not(:disabled) { transform: scale(0.96); }
+
+    /* Force modal */
+    .force-modal {
+        display: none; position: fixed; z-index: 9999;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.6);
+    }
+    .force-modal-content {
+        background: white; width: 400px; padding: 30px;
+        border-radius: 8px; text-align: center; margin: 15% auto;
+    }
+</style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">   
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<title>Contact Help</title>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- Lock Modal -->
+ <input type="hidden" id="accountStatus" th:value="${currentstatus}">
+<div id="forcePasswordModal" class="force-modal">
+    <div class="force-modal-content">
+        <h2>🔒First Login Detected</h2>
+        <p>You must change your password before using the system.</p>
+        <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+  <!-- Sidebar -->
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+<div class="content">
+
+    <!-- Top header -->
+    <div class="top-header">
+        <div class="top-header-tab">Contact Help</div>
+    </div>
+
+    <!-- Search bar -->
+    <div class="search-bar-area">
+    <div class="search-input-wrap">
+        <span class="search-icon"><i class="bi bi-search"></i></span>
+        <input type="text" id="contact-search" placeholder="Search contacts by name, message, or type...">
+    </div>
+    <div style="position: relative;">
+        <button class="filter-btn" onclick="toggleTypeFilter(event)">
+            <i class="bi bi-funnel"></i> <span id="filterLabel">All Types</span> <i class="bi bi-chevron-down" style="font-size:11px;"></i>
+        </button>
+        <div id="typeFilterDropdown" style="display:none; position:absolute; right:0; top:110%; background:white; border:1px solid #d0d5dd; border-radius:8px; min-width:180px; z-index:999; box-shadow:0 4px 12px rgba(0,0,0,0.1); padding:6px 0;">
+            <div style="padding:8px 16px; font-weight:bold; font-size:13px; color:#2d4a44; border-bottom:1px solid #f0f0f0;">Select Type</div>
+            <div class="type-option" onclick="filterByType('', 'All Types')" style="padding:10px 16px; font-size:13px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">All Types <i class="bi bi-check type-check" style="color:#2d4a44; display:none;"></i></div>
+            <div class="type-option" onclick="filterByType('General Inquiry', 'General Inquiry')" style="padding:10px 16px; font-size:13px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f5f5f5;">General Inquiry <i class="bi bi-check type-check" style="color:#2d4a44; display:none;"></i></div>
+            <div class="type-option" onclick="filterByType('Health Services', 'Health Services')" style="padding:10px 16px; font-size:13px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f5f5f5;">Health Services <i class="bi bi-check type-check" style="color:#2d4a44; display:none;"></i></div>
+            <div class="type-option" onclick="filterByType('Infrastructure', 'Infrastructure')" style="padding:10px 16px; font-size:13px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f5f5f5;">Infrastructure <i class="bi bi-check type-check" style="color:#2d4a44; display:none;"></i></div>
+            <div class="type-option" onclick="filterByType('Safety Concern', 'Safety Concern')" style="padding:10px 16px; font-size:13px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f5f5f5;">Safety Concern <i class="bi bi-check type-check" style="color:#2d4a44; display:none;"></i></div>
+            <div class="type-option" onclick="filterByType('Other', 'Other')" style="padding:10px 16px; font-size:13px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f5f5f5;">Other <i class="bi bi-check type-check" style="color:#2d4a44; display:none;"></i></div>
+        </div>
+    </div>
+</div>
+
+    <!-- Tabs -->
+    <div class="tabbar">
+        <div class="tab" th:classappend="${currentTab == 'incoming' ? 'active' : ''}" onclick="window.location.href='/contact-help?tab=incoming'">Incoming <span class="tab-badge" th:text="${incomingCount}">0</span></div>
+        <div class="tab" th:classappend="${currentTab == 'resolved' ? 'active' : ''}" onclick="window.location.href='/contact-help?tab=resolved'">Resolved <span class="tab-badge" th:text="${resolvedCount}">0</span></div>
+        <div class="tab" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/contact-help?tab=archive'">Archive <span class="tab-badge" th:text="${archivedCount}">0</span></div>
+    </div>
+
+    <!-- Panel -->
+    <div class="panel">
+        <!-- Incoming Panel -->
+        <div id="tab-incoming" class="panel-inner" th:classappend="${currentTab != 'incoming' ? 'd-none' : ''}">
+            <div class="panel-header">Incoming Contacts</div>
+            <div class="panel-content">
+                <div class="card-grid" th:if="${not #lists.isEmpty(incomingRequests)}">
+                    <div class="card" th:each="request : ${incomingRequests}" th:attr="data-request-id=${request.id}">
+                        <div class="card-top">
+                            <div class="card-name" th:text="${request.name != null ? request.name : 'Unknown'}">Juan dela Cruz</div>
+                            <span class="new-msg-badge" th:style="${unreadStatus[request.id]} ? 'display: inline-block;' : 'display: none;'">NEW</span>
+                            <span class="badge-type" th:text="${request.type != null ? request.type : 'General Inquiry'}">General Inquiry</span>
+                            <span class="status-incoming">Incoming</span>
+                            <div class="card-date" th:text="${request.createdAt != null ? #temporals.format(request.createdAt, 'MMM dd, yyyy hh:mm a') : 'No date'}">Mar 15, 2026 02:30 PM</div>
+                        </div>
+                        <hr class="card-divider">
+                        <div class="card-message" th:text="${request.message != null ? request.message : 'No message provided'}">I would like to ask about the barangay clearance requirements and how to apply online.</div>
+                        <div class="card-footer">
+                            <div class="card-contact"><i class="bi bi-telephone"></i> <span th:text="${request.phoneNumber != null ? request.phoneNumber : 'N/A'}">09123456789</span></div>
+                            <div class="d-flex gap-2">
+                                <button class="view-btn" th:onclick="'openChatModal(' + ${request.id} + ', \'incoming\')'">View</button>
+                                <button class="resolve-btn" th:onclick="'updateStatus(' + ${request.id} + ', \'RESOLVED\')'">Resolve</button>
+                                <button class="archive-btn" th:onclick="'updateStatus(' + ${request.id} + ', \'ARCHIVED\')'">Archive</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center p-4" th:if="${#lists.isEmpty(incomingRequests)}">
+                    <p class="text-muted">No incoming requests</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resolved Panel -->
+        <div id="tab-resolved" class="panel-inner" th:classappend="${currentTab != 'resolved' ? 'd-none' : ''}">
+            <div class="panel-header">Resolved Contacts</div>
+            <div class="panel-content">
+                <div class="card-grid" th:if="${not #lists.isEmpty(resolvedRequests)}">
+                    <div class="card" th:each="request : ${resolvedRequests}" th:attr="data-request-id=${request.id}">
+                        <div class="card-top">
+                            <div class="card-name" th:text="${request.name != null ? request.name : 'Unknown'}">Carlos Reyes</div>
+                            <span class="new-msg-badge" th:style="${unreadStatus[request.id]} ? 'display: inline-block;' : 'display: none;'">NEW</span>
+                            <span class="badge-type" th:text="${request.type != null ? request.type : 'General Inquiry'}">General Inquiry</span>
+                            <span class="status-resolved">Resolved</span>
+                            <div class="card-date" th:text="${request.resolvedAt != null ? #temporals.format(request.resolvedAt, 'MMM dd, yyyy hh:mm a') : (request.createdAt != null ? #temporals.format(request.createdAt, 'MMM dd, yyyy hh:mm a') : 'No date')}">Mar 10, 2026 03:45 PM</div>
+                            <span th:if="${request.resolvedBy != null}" class="resolved-by-badge">
+                                <i class="bi bi-person-check"></i> <span th:text="'Resolved by: ' + ${request.resolvedBy}"></span>
+                            </span>
+                        </div>
+                        <hr class="card-divider">
+                        <div class="card-message" th:text="${request.message != null ? request.message : 'No message provided'}">Asked about the schedule for health services at the barangay health center. Already assisted.</div>
+                        <div class="card-footer">
+                            <div class="card-contact"><i class="bi bi-telephone"></i> <span th:text="${request.phoneNumber != null ? request.phoneNumber : 'N/A'}">09654321098</span></div>
+                            <div class="d-flex gap-2">
+                                <button class="view-btn" th:onclick="'openChatModal(' + ${request.id} + ', \'resolved\')'">View</button>
+                                <button class="archive-btn" th:onclick="'updateStatus(' + ${request.id} + ', \'ARCHIVED\')'">Archive</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center p-4" th:if="${#lists.isEmpty(resolvedRequests)}">
+                    <p class="text-muted">No resolved requests</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Archive Panel -->
+        <div id="tab-archive" class="panel-inner" th:classappend="${currentTab != 'archive' ? 'd-none' : ''}">
+            <div class="panel-header">Archived Contacts</div>
+            <div class="panel-content">
+                <div class="card-grid" th:if="${not #lists.isEmpty(archivedRequests)}">
+                    <div class="card" th:each="request : ${archivedRequests}" th:attr="data-request-id=${request.id}">
+                        <div class="card-top">
+                            <div class="card-name" th:text="${request.name != null ? request.name : 'Unknown'}">Ramon Santos</div>
+                            <span class="new-msg-badge" th:style="${unreadStatus[request.id]} ? 'display: inline-block;' : 'display: none;'">NEW</span>
+                            <span class="badge-type" th:text="${request.type != null ? request.type : 'Request'}">Request</span>
+                            <span class="status-archived">Archived</span>
+                            <div class="card-date" th:text="${request.resolvedAt != null ? #temporals.format(request.resolvedAt, 'MMM dd, yyyy hh:mm a') : (request.createdAt != null ? #temporals.format(request.createdAt, 'MMM dd, yyyy hh:mm a') : 'No date')}">Mar 1, 2026 09:15 AM</div>
+                            <span th:if="${request.resolvedBy != null}" class="resolved-by-badge">
+                                <i class="bi bi-person-check"></i> <span th:text="'Resolved by: ' + ${request.resolvedBy}"></span>
+                            </span>
+                        </div>
+                        <hr class="card-divider">
+                        <div class="card-message" th:text="${request.message != null ? request.message : 'No message provided'}">Requested a copy of the barangay blotter report for a previous incident.</div>
+                        <div class="card-footer">
+                            <div class="card-contact"><i class="bi bi-telephone"></i> <span th:text="${request.phoneNumber != null ? request.phoneNumber : 'N/A'}">09556677889</span></div>
+                            <div class="d-flex gap-2">
+                                <button class="view-btn" th:onclick="'openChatModal(' + ${request.id} + ', \'archive\')'">View</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center p-4" th:if="${#lists.isEmpty(archivedRequests)}">
+                    <p class="text-muted">No archived requests</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- ===================== CHAT MODAL ===================== -->
+<div class="modal fade chat-modal" id="chatModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <!-- Header with avatar -->
+            <div class="chat-header">
+                <div id="chatHeaderAvatar" class="chat-header-avatar-placeholder">?</div>
+                <div class="chat-header-info">
+                    <div class="chat-header-name" id="chatTitle">Conversation</div>
+                    <div class="chat-header-sub" id="chatHeaderSub">Loading...</div>
+                </div>
+                <div class="chat-status-dot" id="chatStatusDot"></div>
+                <span id="chatDisabledBadge" class="chat-disabled-badge" style="display: none;">Read Only</span>
+                <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Info strip -->
+                <div class="request-info" id="chatRequestInfo"></div>
+
+                <!-- Messages -->
+                <div class="chat-messages" id="chatMessages">
+                    <div class="empty-chat" id="emptyChat">
+                        <i class="bi bi-chat-dots"></i>
+                        <p>No messages yet</p>
+                        <small>Type your message to start the conversation</small>
+                    </div>
+                </div>
+
+                <!-- Input area -->
+                <div class="chat-input-area" id="chatInputArea">
+                    <textarea class="chat-input" id="chatInput" placeholder="Type a message..." rows="1" onkeypress="handleChatKeyPress(event)"></textarea>
+                    <button class="chat-send-btn" id="chatSendBtn" onclick="sendMessage()" title="Send">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Modal -->
+<div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
+
+<script src="/js/sidebar.js"></script>
+
+<script>
+    let currentRequest = null;
+    let pollInterval = null;
+    let lastMessageId = 0;
+    let isChatDisabled = false;
+    let lastMessageInfo = {};
+    let knownRequestIds = new Set();
+    let isInitialLoad = true;
+    let activeTypeFilter = '';
+    let residentAvatarUrl = null;
+    let residentName = '';
+
+    function syncBadges() {
+        Object.keys(lastMessageInfo).forEach(requestId => {
+            const card = document.querySelector(`.card[data-request-id="${requestId}"]`);
+            if (!card) return;
+            const badge = card.querySelector('.new-msg-badge');
+            if (!badge) return;
+            badge.style.display = lastMessageInfo[requestId].hasUnread ? 'inline-block' : 'none';
+        });
+    }
+    
+    function reorderCards() {
+        const grid = document.querySelector('#tab-incoming .card-grid');
+        if (!grid) return;
+        const cards = Array.from(grid.querySelectorAll('.card'));
+        const unreadCards = cards.filter(card => {
+            const id = card.getAttribute('data-request-id');
+            return lastMessageInfo[id] && lastMessageInfo[id].hasUnread;
+        });
+        const readCards = cards.filter(card => {
+            const id = card.getAttribute('data-request-id');
+            return !lastMessageInfo[id] || !lastMessageInfo[id].hasUnread;
+        });
+        const fragment = document.createDocumentFragment();
+        [...unreadCards, ...readCards].forEach(card => fragment.appendChild(card));
+        grid.innerHTML = '';
+        grid.appendChild(fragment);
+    }
+
+    function markAsRead(requestId) {
+        fetch('/contact-help/' + requestId + '/mark-read', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        }).then(response => {
+            if (response.ok) {
+                if (lastMessageInfo[requestId]) lastMessageInfo[requestId].hasUnread = false;
+                syncBadges();
+                reorderCards();
+            }
+        }).catch(err => console.error('Error marking as read:', err));
+    }
+
+    function updateStatus(id, status) {
+        fetch('/contact-help/' + id + '/status?status=' + status, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' }
+        }).then(response => {
+            if (response.ok) window.location.reload();
+            else alert('Error updating status');
+        });
+    }
+
+    function toggleTypeFilter(event) {
+        event.stopPropagation();
+        const dd = document.getElementById('typeFilterDropdown');
+        dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function filterByType(type, label) {
+        activeTypeFilter = type;
+        document.getElementById('filterLabel').textContent = label || 'All Types';
+        document.querySelectorAll('.type-option').forEach(opt => {
+            const check = opt.querySelector('.type-check');
+            check.style.display = opt.textContent.trim() === (label || 'All Types') ? 'inline' : 'none';
+        });
+        document.getElementById('typeFilterDropdown').style.display = 'none';
+        document.querySelectorAll('.panel-inner:not(.d-none) .card').forEach(card => {
+            const badgeEl = card.querySelector('.badge-type');
+            const cardType = badgeEl ? badgeEl.textContent.trim() : '';
+            card.style.display = (!type || cardType === type) ? '' : 'none';
+        });
+    }
+
+    function autoResizeTextarea() {
+        const textarea = document.getElementById('chatInput');
+        if (textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+        }
+    }
+
+    function openChatModal(id, tabType) {
+        markAsRead(id);
+
+        currentRequest = null;
+        lastMessageId = 0;
+        residentAvatarUrl = null;
+        isChatDisabled = (tabType === 'resolved' || tabType === 'archive');
+
+        const headerAvatar = document.getElementById('chatHeaderAvatar');
+        headerAvatar.className = 'chat-header-avatar-placeholder';
+        headerAvatar.textContent = '?';
+        headerAvatar.id = 'chatHeaderAvatar';
+
+        const chatModalEl = document.getElementById('chatModal');
+        const chatModal = new bootstrap.Modal(chatModalEl);
+        chatModal.show();
+
+        chatModalEl.addEventListener('hidden.bs.modal', function onClose() {
+            chatModalEl.removeEventListener('hidden.bs.modal', onClose);
+            stopPolling();
+            syncBadges();
+            reorderCards();
+        });
+
+        fetch('/contact-help/' + id)
+            .then(response => response.json())
+            .then(data => {
+                currentRequest = data;
+                residentName = data.name || 'Resident';
+                const initials = getInitials(residentName);
+
+                document.getElementById('chatTitle').textContent = residentName;
+                document.getElementById('chatHeaderSub').textContent =
+                    (data.type || 'General Inquiry') + ' · ' + (data.phoneNumber || 'N/A');
+
+                const hav = document.getElementById('chatHeaderAvatar');
+                hav.className = 'chat-header-avatar-placeholder';
+                hav.textContent = initials;
+
+                const statusDot = document.getElementById('chatStatusDot');
+                const disabledBadge = document.getElementById('chatDisabledBadge');
+                const chatInput = document.getElementById('chatInput');
+                const sendBtn = document.getElementById('chatSendBtn');
+                const inputArea = document.getElementById('chatInputArea');
+
+                if (isChatDisabled) {
+                    statusDot.classList.add('disabled');
+                    disabledBadge.style.display = 'inline-block';
+                    chatInput.disabled = true;
+                    sendBtn.disabled = true;
+                    inputArea.classList.add('disabled');
+                } else {
+                    statusDot.classList.remove('disabled');
+                    disabledBadge.style.display = 'none';
+                    chatInput.disabled = false;
+                    sendBtn.disabled = false;
+                    inputArea.classList.remove('disabled');
+                }
+
+                document.getElementById('chatRequestInfo').innerHTML = `
+                    <strong>${escapeHtml(residentName)}</strong> &nbsp;|&nbsp;
+                    <i class="bi bi-telephone"></i> ${escapeHtml(data.phoneNumber || 'N/A')} &nbsp;|&nbsp;
+                    <i class="bi bi-envelope"></i> ${escapeHtml(data.email || 'N/A')}<br>
+                    <small><strong>Issue:</strong> ${escapeHtml(data.type || 'General Inquiry')}</small>
+                    <div class="mt-1"><strong>Initial Message:</strong> "${escapeHtml(data.message || 'No message')}"</div>
+                    ${data.resolvedBy ? `<div class="mt-1"><strong>Resolved By:</strong> ${escapeHtml(data.resolvedBy)}</div>` : ''}
+                `;
+
+                const msgsDiv = document.getElementById('chatMessages');
+                msgsDiv.innerHTML = '<div class="empty-chat"><i class="bi bi-chat-dots"></i><p>Loading…</p></div>';
+
+                fetch('/contact-help/' + id + '/resident-avatar')
+                    .then(r => r.ok ? r.json() : null)
+                    .then(avatarData => {
+                        if (avatarData && avatarData.avatar_url && avatarData.avatar_url !== '') {
+                            residentAvatarUrl = avatarData.avatar_url;
+                            const currentHav = document.getElementById('chatHeaderAvatar');
+                            const img = document.createElement('img');
+                            img.src = residentAvatarUrl;
+                            img.className = 'chat-header-avatar';
+                            img.alt = residentName;
+                            img.id = 'chatHeaderAvatar';
+                            img.onerror = () => {
+                                residentAvatarUrl = '';
+                                img.className = 'chat-header-avatar-placeholder';
+                                img.alt = '';
+                                const fallback = document.createElement('div');
+                                fallback.className = 'chat-header-avatar-placeholder';
+                                fallback.textContent = initials;
+                                fallback.id = 'chatHeaderAvatar';
+                                img.replaceWith(fallback);
+                            };
+                            currentHav.replaceWith(img);
+                        } else {
+                            residentAvatarUrl = '';
+                        }
+                    })
+                    .catch(() => { residentAvatarUrl = ''; })
+                    .finally(() => {
+                        loadMessages();
+                        if (!isChatDisabled) {
+                            if (pollInterval) clearInterval(pollInterval);
+                            pollInterval = setInterval(loadMessages, 3000);
+                        }
+                        const textarea = document.getElementById('chatInput');
+                        if (textarea) {
+                            textarea.focus();
+                            textarea.addEventListener('input', autoResizeTextarea);
+                        }
+                    });
+            })
+            .catch(() => alert('Error loading conversation'));
+    }
+
+    function stopPolling() {
+        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+        currentRequest = null;
+        lastMessageId = 0;
+    }
+
+    function loadMessages() {
+        if (!currentRequest) return;
+        fetch('/contact-help/' + currentRequest.id + '/messages')
+            .then(r => r.json())
+            .then(messages => {
+                const msgsDiv = document.getElementById('chatMessages');
+                if (messages.length === 0) {
+                    msgsDiv.innerHTML = `<div class="empty-chat" id="emptyChat"><i class="bi bi-chat-dots"></i><p>No messages yet</p><small>Type your message to start the conversation</small></div>`;
+                    lastMessageId = 0;
+                    return;
+                }
+                messages.sort((a, b) => a.id - b.id);
+                if (lastMessageId === 0) {
+                    msgsDiv.innerHTML = '';
+                    renderMessagesWithDates(messages, msgsDiv);
+                    lastMessageId = messages[messages.length - 1].id;
+                    scrollChatToBottom();
+                    return;
+                }
+                const newMsgs = messages.filter(m => m.id > lastMessageId).sort((a, b) => a.id - b.id);
+                if (newMsgs.length > 0) {
+                    appendMessagesWithDates(newMsgs, msgsDiv);
+                    lastMessageId = newMsgs[newMsgs.length - 1].id;
+                    scrollChatToBottom();
+                }
+            })
+            .catch(err => console.error('Poll error:', err));
+    }
+
+    function getDateLabel(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+        const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+        if (sameDay(d, today)) return 'Today';
+        if (sameDay(d, yesterday)) return 'Yesterday';
+        return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    function renderMessagesWithDates(messages, container) {
+        let lastDateLabel = null;
+        messages.forEach(msg => {
+            const label = getDateLabel(msg.createdAt);
+            if (label && label !== lastDateLabel) {
+                container.appendChild(makeDateSeparator(label));
+                lastDateLabel = label;
+            }
+            renderBubble(msg, container);
+        });
+    }
+
+    function appendMessagesWithDates(newMsgs, container) {
+        const separators = container.querySelectorAll('.date-separator');
+        let lastRenderedLabel = separators.length > 0 ? separators[separators.length - 1].querySelector('.date-separator-label').textContent : null;
+        newMsgs.forEach(msg => {
+            const label = getDateLabel(msg.createdAt);
+            if (label && label !== lastRenderedLabel) {
+                container.appendChild(makeDateSeparator(label));
+                lastRenderedLabel = label;
+            }
+            renderBubble(msg, container);
+        });
+    }
+
+    function makeDateSeparator(label) {
+        const sep = document.createElement('div');
+        sep.className = 'date-separator';
+        sep.innerHTML = `<div class="date-separator-line"></div><span class="date-separator-label">${escapeHtml(label)}</span><div class="date-separator-line"></div>`;
+        return sep;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // renderBubble:
+    //   • Each bubble is its own row.
+    //   • Avatar appears next to the FIRST bubble of a resident group only.
+    //     Subsequent bubbles in the same group get an invisible spacer instead.
+    //   • Timestamp: only the LAST bubble in a group shows the time.
+    //     When a new bubble joins a group, the previous row's time is removed
+    //     and re-added to the new (now-last) row.
+    // ─────────────────────────────────────────────────────────────────────────
+    function renderBubble(msg, container) {
+        const msgsDiv = container || document.getElementById('chatMessages');
+        const isAdmin = msg.senderType === 'ADMIN';
+        const side = isAdmin ? 'admin' : 'resident';
+
+        let timeStr = '';
+        if (msg.createdAt) {
+            try {
+                const d = new Date(msg.createdAt);
+                timeStr = d.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            } catch(e) {}
+        }
+
+        const senderName = isAdmin ? (msg.senderName || 'Staff') : (msg.senderName || residentName || 'Resident');
+
+        // Check if the previous element is a bubble-row on the same side
+        const prevRow = msgsDiv.lastElementChild;
+        const isSameGroup = prevRow
+            && prevRow.classList
+            && prevRow.classList.contains('bubble-row')
+            && prevRow.getAttribute('data-side') === side;
+
+        // If continuing a group: strip the timestamp from the previous row's col
+        // (we'll add it to the new row instead, keeping time on the last bubble only)
+        if (isSameGroup) {
+            const prevCol = prevRow.querySelector('.bubble-col');
+            if (prevCol) {
+                const prevTime = prevCol.querySelector('.bubble-time');
+                if (prevTime) prevTime.remove();
+            }
+        }
+
+        // ── Build the new row ──────────────────────────────────────────────
+        const row = document.createElement('div');
+        row.className = 'bubble-row ' + side;
+        row.setAttribute('data-side', side);
+
+        // LEFT slot for resident: real avatar on first bubble, spacer on the rest
+        if (!isAdmin) {
+            if (!isSameGroup) {
+                const avatar = makeResidentAvatar(senderName);
+                row.appendChild(avatar);
+            } else {
+                const spacer = document.createElement('div');
+                spacer.className = 'bubble-avatar-spacer';
+                row.appendChild(spacer);
+            }
+        }
+
+        // Bubble column
+        const col = document.createElement('div');
+        col.className = 'bubble-col ' + side;
+
+        // Sender name only on the first bubble of a resident group
+        if (!isAdmin && !isSameGroup) {
+            const nameEl = document.createElement('div');
+            nameEl.className = 'bubble-sender-name';
+            nameEl.textContent = senderName;
+            col.appendChild(nameEl);
+        }
+
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble ' + side;
+        bubble.textContent = msg.message;
+        col.appendChild(bubble);
+
+        // Timestamp always on this (currently last) bubble
+        const timeEl = document.createElement('div');
+        timeEl.className = 'bubble-time';
+        timeEl.textContent = timeStr;
+        col.appendChild(timeEl);
+
+        row.appendChild(col);
+
+        // RIGHT slot: spacer for admin rows (mirrors resident avatar width)
+        if (isAdmin) {
+            const spacer = document.createElement('div');
+            spacer.className = 'bubble-avatar-spacer';
+            row.appendChild(spacer);
+        }
+
+        msgsDiv.appendChild(row);
+    }
+
+    function makeResidentAvatar(name) {
+        if (residentAvatarUrl && residentAvatarUrl !== '') {
+            const img = document.createElement('img');
+            img.src = residentAvatarUrl;
+            img.className = 'bubble-avatar';
+            img.alt = name;
+            img.onerror = () => {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'bubble-avatar-placeholder';
+                placeholder.textContent = getInitials(name);
+                // preserve data-avatar-slot if set
+                if (img.hasAttribute('data-avatar-slot')) {
+                    placeholder.setAttribute('data-avatar-slot', 'true');
+                }
+                img.replaceWith(placeholder);
+            };
+            return img;
+        } else {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'bubble-avatar-placeholder';
+            placeholder.textContent = getInitials(name);
+            return placeholder;
+        }
+    }
+
+    function getInitials(name) {
+        if (!name) return '?';
+        const parts = name.trim().split(' ');
+        if (parts.length === 1) return parts[0][0].toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+
+    function sendMessage() {
+        if (isChatDisabled) { alert('This conversation is resolved/archived and cannot be modified.'); return; }
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text || !currentRequest) return;
+        input.value = '';
+        autoResizeTextarea();
+        fetch('/contact-help/' + currentRequest.id + '/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text })
+        }).then(r => r.json()).then(saved => {
+            const msgsDiv = document.getElementById('chatMessages');
+            const emptyEl = msgsDiv.querySelector('.empty-chat');
+            if (emptyEl) emptyEl.remove();
+            const label = getDateLabel(saved.createdAt);
+            const separators = msgsDiv.querySelectorAll('.date-separator');
+            const lastLabel = separators.length > 0 ? separators[separators.length - 1].querySelector('.date-separator-label').textContent : null;
+            if (label && label !== lastLabel) msgsDiv.appendChild(makeDateSeparator(label));
+            renderBubble(saved, msgsDiv);
+            if (saved.id > lastMessageId) lastMessageId = saved.id;
+            scrollChatToBottom();
+        }).catch(() => alert('Failed to send message. Please try again.'));
+    }
+
+    function handleChatKeyPress(event) { if (event.key === 'Enter' && !event.shiftKey && !isChatDisabled) { event.preventDefault(); sendMessage(); } }
+    function scrollChatToBottom() { const msgsDiv = document.getElementById('chatMessages'); msgsDiv.scrollTop = msgsDiv.scrollHeight; }
+    function escapeHtml(text) { if (text == null) return ''; const d = document.createElement('div'); d.textContent = String(text); return d.innerHTML; }
+
+    document.getElementById('contact-search').addEventListener('keyup', function() {
+        const searchValue = this.value.toLowerCase();
+        document.querySelectorAll('.panel-inner:not(.d-none) .card').forEach(card => {
+            const text = card.textContent.toLowerCase();
+            const badgeEl = card.querySelector('.badge-type');
+            const cardType = badgeEl ? badgeEl.textContent.trim() : '';
+            const matchesSearch = text.includes(searchValue);
+            const matchesType = !activeTypeFilter || cardType === activeTypeFilter;
+            card.style.display = (matchesSearch && matchesType) ? '' : 'none';
+        });
+    });
+
+    document.addEventListener('click', function() { const dd = document.getElementById('typeFilterDropdown'); if (dd) dd.style.display = 'none'; });
+
+    function buildAndInjectNewCard(req) {
+        const grid = document.querySelector('#tab-incoming .card-grid');
+        if (!grid) return;
+        const emptyMsg = document.querySelector('#tab-incoming .text-center');
+        if (emptyMsg) emptyMsg.style.display = 'none';
+        const dateStr = req.createdAt ? new Date(req.createdAt).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : 'No date';
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.setAttribute('data-request-id', req.id);
+        card.innerHTML = `<div class="card-top"><div class="card-name">${escapeHtml(req.name || 'Unknown')}</div><span class="new-msg-badge" style="display: inline-block;">NEW</span><span class="badge-type">${escapeHtml(req.type || 'General Inquiry')}</span><span class="status-incoming">Incoming</span><div class="card-date">${escapeHtml(dateStr)}</div></div><hr class="card-divider"><div class="card-message">${escapeHtml(req.message || 'No message provided')}</div><div class="card-footer"><div class="card-contact"><i class="bi bi-telephone"></i> ${escapeHtml(req.phoneNumber || 'N/A')}</div><div class="d-flex gap-2"><button class="view-btn" onclick="openChatModal(${req.id}, 'incoming')">View</button><button class="resolve-btn" onclick="updateStatus(${req.id}, 'RESOLVED')">Resolve</button><button class="archive-btn" onclick="updateStatus(${req.id}, 'ARCHIVED')">Archive</button></div></div>`;
+        grid.prepend(card);
+        lastMessageInfo[req.id] = { count: 0, lastSender: null, hasUnread: true };
+        reorderCards();
+        if (activeTypeFilter && (req.type || 'General Inquiry') !== activeTypeFilter) card.style.display = 'none';
+        const tabBadge = document.querySelector('.tabbar .tab:first-child .tab-badge');
+        if (tabBadge) tabBadge.textContent = parseInt(tabBadge.textContent || '0') + 1;
+    }
+
+    function checkForNewRequests() {
+        fetch('/contact-help/api/incoming-requests').then(r => r.json()).then(requests => {
+            requests.forEach(req => { const id = String(req.id); if (!knownRequestIds.has(id)) { knownRequestIds.add(id); lastMessageInfo[id] = { count: 0, lastSender: null, hasUnread: true }; buildAndInjectNewCard(req); } });
+        }).catch(err => console.error('Error checking new requests:', err));
+    }
+
+    function initMessageInfo() {
+        const promises = [];
+        document.querySelectorAll('.card').forEach(card => {
+            const requestId = card.getAttribute('data-request-id');
+            if (!requestId) return;
+            knownRequestIds.add(requestId);
+            const promise = fetch('/contact-help/' + requestId + '/unread-status').then(r => r.json()).then(status => {
+                const badge = card.querySelector('.new-msg-badge');
+                lastMessageInfo[requestId] = { count: 0, lastSender: null, hasUnread: status.hasUnread };
+                if (badge) badge.style.display = status.hasUnread ? 'inline-block' : 'none';
+            }).catch(err => console.error('Error getting unread status:', err));
+            promises.push(promise);
+        });
+        Promise.all(promises).then(() => { reorderCards(); isInitialLoad = false; });
+    }
+
+    function checkNewMessages() {
+        if (isInitialLoad) return;
+        document.querySelectorAll('.card').forEach(card => {
+            const requestId = card.getAttribute('data-request-id');
+            if (!requestId) return;
+            fetch('/contact-help/' + requestId + '/check-new-messages').then(r => r.json()).then(data => {
+                if (data.hasNewResidentMessage && lastMessageInfo[requestId] && !lastMessageInfo[requestId].hasUnread) {
+                    lastMessageInfo[requestId].hasUnread = true;
+                    syncBadges();
+                    reorderCards();
+                }
+            }).catch(err => console.error('Error checking new messages:', err));
+        });
+    }
+
+    setInterval(checkForNewRequests, 3000);
+    setInterval(checkNewMessages, 5000);
+    document.addEventListener('DOMContentLoaded', function() { initMessageInfo(); });
+    window.onload = function() {
+        const status = document.getElementById("accountStatus").value;
+        if (status === "New" || status === 'Newly Updated') { document.getElementById("forcePasswordModal").style.display = "block"; document.body.style.overflow = "hidden"; }
+    };
+</script>
+</body>
+</html>

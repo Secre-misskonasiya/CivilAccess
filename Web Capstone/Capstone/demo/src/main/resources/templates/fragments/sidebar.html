@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="sidebar" class="sidebar">
+
+    <div class="header">
+        <div class="header-title">
+            <img src="/images/brgy.png" class="brgy"/> Barangay San Sebastian
+        </div>
+    </div>
+
+    <div class="header-user">
+        <span th:text="${currentrole}">role</span>: <span th:text="${currentUser}">username</span>
+    </div>
+
+    <!-- MAIN -->
+    <button class="section-toggle" onclick="toggleSection(this, 'sec-main')">
+        Main <i class="bi bi-chevron-down section-arrow"></i>
+    </button>
+    <div class="section-body" id="sec-main">
+        <ul class="menu">
+            <li onclick="window.location.href='/home'">
+                <img src="/icons/dashboard.svg" class="icon"> Dashboard
+            </li>
+            <li onclick="window.location.href='/announcements'">
+                <img src="/icons/announcements.svg" class="icon"> Announcements
+            </li>
+        </ul>
+    </div>
+
+    <!-- MANAGEMENT -->
+    <button class="section-toggle" onclick="toggleSection(this, 'sec-management')">
+        Management <i class="bi bi-chevron-down section-arrow"></i>
+    </button>
+    <div class="section-body" id="sec-management">
+        <ul class="menu">
+            <li th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY'}" onclick="window.location.href='/account'">
+                <img src="/icons/accounts.svg" class="icon"> Accounts
+            </li>
+            <li onclick="window.location.href='/user-profile'">
+                <img src="/icons/user.svg" class="icon"> User Profile
+            </li>
+        </ul>
+    </div>
+
+    <!-- RESIDENT SERVICES -->
+    <button class="section-toggle" onclick="toggleSection(this, 'sec-resident')">
+        Resident Services <i class="bi bi-chevron-down section-arrow"></i>
+    </button>
+    <div class="section-body" id="sec-resident">
+        <ul class="menu">
+            <li onclick="toggleSubMenu(this, 'sub-requests')">
+                <img src="/icons/requests.svg" class="icon"> Requests
+                <i class="bi bi-chevron-down dropdown-arrow"></i>
+            </li>
+            <ul class="sub-menu" id="sub-requests">
+                <li onclick="window.location.href='/requests-blotter'">Blotter</li>
+                <li onclick="window.location.href='/requests-document'">Documents</li>
+            </ul>
+            <li onclick="window.location.href='/contact-help'" th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY'}">
+                <img src="/icons/help.svg" class="icon"> Contact Help
+            </li>
+            <li onclick="window.location.href='/facilities'">
+                <img src="/icons/facilities.svg" class="icon"> Facilities &amp; Hotlines
+            </li>
+        </ul>
+    </div>
+
+    <!-- COMMUNITY SAFETY -->
+    <button class="section-toggle" onclick="toggleSection(this, 'sec-safety')" th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY'}">
+        Community Safety <i class="bi bi-chevron-down section-arrow"></i>
+    </button>
+    <div class="section-body" id="sec-safety">
+        <ul class="menu">
+            <li onclick="window.location.href='/safety-reports'">
+                <img src="/icons/safety.svg" class="icon"> Reports &amp; Alerts
+            </li>
+            <li onclick="window.location.href='/sos-monitoring'">
+                <img src="/icons/sos.svg" class="icon"> SOS Monitoring
+            </li>
+        </ul>
+    </div>
+
+    <!-- PROGRAMS (ADMIN only) -->
+    <button class="section-toggle" onclick="toggleSection(this, 'sec-programs')">
+        Programs <i class="bi bi-chevron-down section-arrow"></i>
+    </button>
+    <div class="section-body" id="sec-programs">
+        <ul class="menu">
+            <li onclick="window.location.href='/program-calendar'">
+                <img src="/icons/calendar.svg" class="icon"> Program Calendar
+            </li>
+            <li onclick="window.location.href='/program-planner'">
+                <img src="/icons/planner.svg" class="icon"> Program Planner
+            </li>
+        </ul>
+    </div>
+
+    <!-- SYSTEM -->
+    <button class="section-toggle" onclick="toggleSection(this, 'sec-system')" th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY'}">
+        System <i class="bi bi-chevron-down section-arrow"></i>
+    </button>
+    <div class="section-body" id="sec-system">
+        <ul class="menu">
+            <li onclick="window.location.href='/Activity-logs'">
+                <img src="/icons/monitor.svg" class="icon"> Activity Logs
+            </li>
+            <li th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY'}" onclick="window.location.href='/system-settings'">
+                <img src="/icons/settings.svg" class="icon"> System Settings
+            </li>
+        </ul>
+    </div>
+
+    <!-- LOGOUT -->
+    <hr class="sidebar-divider">
+    <div class="logout-item" onclick="openLogoutModal()">
+        <img src="/icons/logout.svg" class="icon"> Logout
+    </div>
+
+</div>
+</body>
+</html>
+<script src="/js/sos-global-alert.js"></script>

@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+
+<style>
+    body { 
+        margin: 0; 
+        font-family: Arial, sans-serif; 
+    }
+
+    
+.layout { display: flex; height: 100vh; overflow: hidden; }
+    
+    .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+
+    .top-header {
+        background-color: #2d4a44;
+        display: flex;
+        border-bottom: 2px solid #FED734;
+    }
+    .top-header-tab {
+        flex: 1;
+        color: white;
+        text-align: center;
+        padding: 16px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .top-header-tab.inactive { 
+        color: #8aada8; 
+        font-weight: normal; 
+    }
+
+    .tabbar {
+        display: flex;
+        background-color: white;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0 20px;
+        gap: 4px;
+    }
+    .tab {
+        padding: 12px 18px;
+        color: #666;
+        cursor: pointer;
+        font-size: 14px;
+        border-bottom: 3px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tab.active {
+        background-color: #2d4a44;
+        color: white;
+        border-radius: 6px 6px 0 0;
+        font-weight: bold;
+    }
+
+    .panel {
+        padding: 20px;
+        background-color: #f5f5f5;
+        flex: 1;
+        overflow-y: auto;
+    }
+    .panel-inner {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+    }
+    .panel-header {
+        background-color: #3d5f58;
+        color: white;
+        padding: 14px 20px;
+        font-weight: bold;
+        font-size: 15px;
+    }
+    .panel-content { padding: 20px; }
+
+    .alert-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+        background: #fafafa;
+    }
+    .alert-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .alert-card-title { 
+        font-weight: bold; 
+        font-size: 14px; 
+    }
+
+    .alert-card-date { 
+        font-size: 12px; 
+        color: #888; 
+    }
+
+    .alert-card-msg { 
+        font-size: 13px; 
+        color: #555; 
+        margin-bottom: 10px; 
+    }
+
+
+    .proceed-btn {
+        background-color: #44C375;
+        color: white;
+        padding: 8px 24px;
+        border: none;
+        border-radius: 5px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .proceed-btn:hover { 
+        background-color: #2ea05e; 
+    }
+
+    .archive-btn {
+        background-color: white;
+        color: #e74c3c;
+        padding: 6px 14px;
+        border: 1.5px solid #e74c3c;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .archive-btn:hover { 
+        background-color: #fff0f0; 
+    }
+
+    .delete-btn {
+        background-color: #e74c3c;
+        color: white;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    .delete-btn:hover { 
+        background-color: #c0392b; 
+    }
+
+    .view-btn {
+        background-color: #3498db;
+        color: white;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+        margin-right: 8px;
+    }
+    .view-btn:hover {
+        background-color: #2176ae;
+    }
+
+    .search-bar-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    }
+
+    .search-input-wrap {
+        flex: 1;
+        position: relative;
+    }
+    .search-input-wrap input {
+        width: 100%;
+        padding: 9px 14px 9px 38px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: white;
+        box-sizing: border-box;
+    }
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #aaa;
+    }
+    .filter-btn {
+        padding: 9px 16px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        background: white;
+        font-size: 14px;
+        cursor: pointer;
+        color: #444;
+    }
+
+    /* Map styles */
+    #createMap {
+        width: 100%;
+        height: 300px;
+        border-radius: 8px;
+        border: 1px solid #d0d5dd;
+        margin-bottom: 15px;
+        z-index: 1;
+    }
+    .map-instruction {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .map-instruction i {
+        color: #e74c3c;
+    }
+    .current-location-btn {
+        background-color: #f0f0f0;
+        border: 1px solid #d0d5dd;
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+        margin-left: 10px;
+    }
+    .current-location-btn:hover {
+        background-color: #e0e0e0;
+    }
+
+    /* Modal styles */
+    .modal-content {
+        border-radius: 8px;
+    }
+    .modal-header {
+        background-color: #30534D;
+        color: white;
+        border-bottom: 2px solid #FED734;
+    }
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+    .force-modal {
+        display: none; position: fixed; z-index: 9999;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.6);
+    }
+    .force-modal-content {
+        background: white; width: 400px; padding: 30px;
+        border-radius: 8px; text-align: center; margin: 15% auto;
+    }
+    
+    /* View Modal - Social post style */
+    #viewAlertModal .modal-dialog { max-width: 500px; }
+    #viewAlertModal .modal-content { border-radius: 12px; border: none; overflow: hidden; }
+    #viewAlertModal .modal-header { background-color: #30534D; border-bottom: 2px solid #FED734; padding: 12px 16px; }
+    #viewAlertModal .modal-body { padding: 0; }
+    #viewAlertModal .modal-footer { border-top: 1px solid #f0f0f0; padding: 10px 16px; }
+    .view-post-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px 16px; }
+    .view-post-avatar { width: 42px; height: 42px; border-radius: 50%; background-color: #30534D; display: flex; align-items: center; justify-content: center; color: #FED734; font-size: 18px; flex-shrink: 0; }
+    .view-post-meta { flex: 1; min-width: 0; }
+    .view-post-author { font-weight: bold; font-size: 14px; color: #1a1a1a; }
+    .view-post-date { font-size: 12px; color: #aaa; }
+    .view-post-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background-color: #e8f5f0; color: #2d7a5f; border: 1px solid #b8ddd0; flex-shrink: 0; }
+    .view-post-badge.high { background-color: #fff8e1; color: #b8860b; border-color: #FED734; }
+    .view-post-title { font-weight: bold; font-size: 15px; color: #1a1a1a; padding: 0 16px 8px 16px; }
+    .view-post-content { font-size: 14px; color: #333; padding: 0 16px 14px 16px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+    .view-post-location { font-size: 13px; color: #666; padding: 0 16px 10px 16px; display: flex; align-items: center; gap: 6px; }
+    .view-post-divider { border: none; border-top: 1px solid #f0f0f0; margin: 0; }
+    .view-post-footer { display: flex; align-items: center; gap: 6px; padding: 10px 16px; font-size: 12px; color: #aaa; }
+    /* Fix modal map container */
+#viewMapModal {
+    width: 100%;
+    height: 200px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border: 1px solid #E4E6EB;
+    background: #F7F8FA;
+    overflow: hidden;
+}
+
+/* Ensure modal body has proper padding */
+#viewAlertModal .modal-body {
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/* Fix for map container within modal */
+.view-map-container {
+    width: 100%;
+    padding: 0 16px;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+}
+
+.view-map-container #viewMapModal {
+    margin: 0;
+    width: 100%;
+}
+    
+    /* Barangay boundary indicator */
+    .boundary-status {
+        font-size: 12px;
+        margin-top: 8px;
+        margin-bottom: 15px;
+        padding: 8px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .boundary-status.valid {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        border: 1px solid #a5d6a7;
+    }
+    .boundary-status.invalid {
+        background-color: #ffebee;
+        color: #c62828;
+        border: 1px solid #ef9a9a;
+    }
+    
+    /* Map wrapper hidden class */
+    .map-wrapper {
+        transition: all 0.3s ease;
+    }
+    .map-wrapper.hidden {
+        display: none;
+    }
+</style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" th:href="@{/css/sidebar.css}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<title>Emergency Alerts</title>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- Lock Modal -->
+<input type="hidden" id="accountStatus" th:value="${currentstatus}">
+<div id="forcePasswordModal" class="force-modal">
+    <div class="force-modal-content">
+        <h2>🔒First Login Detected</h2>
+        <p>You must change your password before using the system.</p>
+        <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+<!-- Sidebar -->
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+<!-- Main content -->
+<div class="content">
+
+    <!-- Top header -->
+    <div class="top-header">
+        <div class="top-header-tab inactive" onclick="window.location.href='/safety-reports'">Safety Reports</div>
+        <div class="top-header-tab active" onclick="window.location.href='/emergency-alerts'">Emergency Alerts</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabbar">
+        <div class="tab" th:classappend="${currentTab == 'create' ? 'active' : ''}" onclick="window.location.href='/emergency-alerts?tab=create'">Create Alert</div>
+        <div class="tab" th:classappend="${currentTab == 'current' ? 'active' : ''}" onclick="window.location.href='/emergency-alerts?tab=current'">Current Alerts</div>
+        <div class="tab" th:classappend="${currentTab == 'history' ? 'active' : ''}" onclick="window.location.href='/emergency-alerts?tab=history'">Alert History</div>
+    </div>
+
+    <!-- Panel -->
+    <div class="panel">
+
+        <!-- Create Alert -->
+        <div id="tab-create" class="panel-inner" th:classappend="${currentTab != 'create' ? 'd-none' : ''}">
+            <div class="panel-header">Create an Alert</div>
+            <div class="panel-content">
+                <div class="d-flex gap-3 mb-3">
+                    <select class="form-select" id="alertType">
+                        <option value="">Alert Type</option>
+                        <option value="Fire Emergency">Fire Emergency</option>
+                        <option value="Flood">Flood</option>
+                        <option value="Earthquake">Earthquake</option>
+                        <option value="Severe Weather">Severe Weather</option>
+                        <option value="Medical Emergency">Medical Emergency (outbreak)</option>
+                        <option value="Crime and Security">Crime and Security</option>
+                        <option value="Infrastructure">Infrastructure and utilities</option>
+                        <option value="Environmental">Environmental Hazards</option>
+                        <option value="Public Safety">Public Safety</option>
+                        <option value="Road Closure">Road Closure</option>
+                    </select>
+                    <select class="form-select" id="priority">
+                        <option value="">Severity Level</option>
+                        <option value="Level 1">Level 1</option>
+                        <option value="Level 2">Level 2</option>
+                        <option value="Level 3">Level 3</option>
+                        <option value="Level 4">Level 4</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="title" placeholder="Alert Title">
+                </div>
+                
+                <!-- Map section -->
+                <div id="mapSection" class="map-wrapper">
+                    <div class="map-instruction">
+                        <i class="bi bi-geo-alt-fill"></i> Click on the map to pin the alert location
+                        <button type="button" class="current-location-btn" onclick="getCurrentLocation()">
+                            <i class="bi bi-crosshair"></i> Use My Location
+                        </button>
+                    </div>
+                    <div id="createMap"></div>
+                    <div id="boundaryStatus" class="boundary-status" style="display: none;"></div>
+                </div>
+                <input type="hidden" id="latitude" value="">
+                <input type="hidden" id="longitude" value="">
+                <input type="text" class="form-control mb-3" id="location" placeholder="Location address" readonly>
+                
+                <label class="mb-1" style="font-size:14px; font-weight:bold;">Message</label>
+                <textarea class="form-control mb-3" id="message" rows="5" placeholder="Type your alert message here..."></textarea>
+                <div class="d-flex justify-content-end">
+                    <button class="proceed-btn" onclick="createAlert()">Post Alert</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Alerts -->
+        <div id="tab-current" class="panel-inner" th:classappend="${currentTab != 'current' ? 'd-none' : ''}">
+            <div class="panel-header">Current Alerts</div>
+            <div class="panel-content">
+                <div class="search-bar-area mb-3">
+                    <div class="search-input-wrap">
+                        <span class="search-icon"><i class="bi bi-search"></i></span>
+                        <input type="text" id="current-search" placeholder="Search alerts...">
+                    </div>
+                    <button class="filter-btn" onclick="window.location.href='/emergency-alerts?tab=current'"><i class="bi bi-funnel"></i> Reset</button>
+                </div>
+                
+                <div th:if="${not #lists.isEmpty(currentAlerts)}">
+                    <div class="alert-card" th:each="alert : ${currentAlerts}">
+                        <div class="alert-card-top">
+                            <span class="alert-card-title" th:text="${alert.title != null ? alert.title : 'Alert'}">Alert 1</span>
+                            <span class="alert-card-date" th:text="${alert.dateCreated != null ? #temporals.format(alert.dateCreated, 'MMM dd, yyyy hh:mm a') : 'N/A'}">Mar 15, 2026 08:00 AM</span>
+                        </div>
+                        <p class="alert-card-msg" th:text="${alert.message != null ? alert.message : 'No message'}">Flooding reported near Purok 3.</p>
+                        <div class="d-flex justify-content-end">
+                            <button class="view-btn" th:attr="onclick='viewAlert(\'' + ${alert.id} + '\')'">View</button>
+                            <button class="archive-btn" th:attr="onclick='archiveAlert(\'' + ${alert.id} + '\')'">Archive</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center p-4" th:if="${#lists.isEmpty(currentAlerts)}">
+                    <p class="text-muted">No current alerts</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert History -->
+        <div id="tab-history" class="panel-inner" th:classappend="${currentTab != 'history' ? 'd-none' : ''}">
+            <div class="panel-header">Alert History</div>
+            <div class="panel-content">
+                <div class="search-bar-area mb-3">
+                    <div class="search-input-wrap">
+                        <span class="search-icon"><i class="bi bi-search"></i></span>
+                        <input type="text" id="history-search" placeholder="Search alert history...">
+                    </div>
+                    <button class="filter-btn" onclick="window.location.href='/emergency-alerts?tab=history'"><i class="bi bi-funnel"></i> Reset</button>
+                </div>
+                
+                <div th:if="${not #lists.isEmpty(archivedAlerts)}">
+                    <div class="alert-card" th:each="alert : ${archivedAlerts}">
+                        <div class="alert-card-top">
+                            <span class="alert-card-title" th:text="${alert.title != null ? alert.title : 'Alert'}">Alert 1</span>
+                            <span class="alert-card-date" th:text="${alert.dateCreated != null ? #temporals.format(alert.dateCreated, 'MMM dd, yyyy hh:mm a') : 'N/A'}">Mar 10, 2026 10:00 AM</span>
+                        </div>
+                        <p class="alert-card-msg" th:text="${alert.message != null ? alert.message : 'No message'}">Fire incident reported.</p>
+                        <div class="d-flex justify-content-end">
+                            <button class="view-btn" th:attr="onclick='viewAlert(\'' + ${alert.id} + '\')'">View</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center p-4" th:if="${#lists.isEmpty(archivedAlerts)}">
+                    <p class="text-muted">No archived alerts</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+<!-- View Alert Modal (Social Post Style) -->
+<div class="modal fade" id="viewAlertModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Emergency Alert Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewModalBody" style="padding: 0; overflow-x: hidden;">
+                <!-- Filled by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Modal -->
+<div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
+
+<script src="/js/sidebar.js"></script>
+<script>
+    let createMap = null;
+    let createMarker = null;
+    let viewMap = null;
+    
+    // Barangay San Sebastian boundary polygon
+    const BARANGAY_BOUNDARY = [
+        [14.418865, 120.886515], [14.418666, 120.887862], [14.418969, 120.887902],
+        [14.419010, 120.889089], [14.419495, 120.890312], [14.419868, 120.891458],
+        [14.421015, 120.892997], [14.420850, 120.894121], [14.421649, 120.895839],
+        [14.422202, 120.897952], [14.423068, 120.897849], [14.423119, 120.901125],
+        [14.424041, 120.901272], [14.424003, 120.901537], [14.423712, 120.901693],
+        [14.423442, 120.901698], [14.422226, 120.902297], [14.421938, 120.902353],
+        [14.421616, 120.902259], [14.421310, 120.901863], [14.421144, 120.901766],
+        [14.420634, 120.901951], [14.420445, 120.901895], [14.420210, 120.902035],
+        [14.420090, 120.902842], [14.419753, 120.902879], [14.419026, 120.902860],
+        [14.419009, 120.903096], [14.418809, 120.903301], [14.418490, 120.902674],
+        [14.418246, 120.902392], [14.417720, 120.901458], [14.416779, 120.900345],
+        [14.415834, 120.899736], [14.414386, 120.896173], [14.413767, 120.895386],
+        [14.411402, 120.895039], [14.410154, 120.894599], [14.409451, 120.893831],
+        [14.408851, 120.892746], [14.409384, 120.892449], [14.409930, 120.891833],
+        [14.410030, 120.891627], [14.411015, 120.890809], [14.411201, 120.890131],
+        [14.411176, 120.889748], [14.411426, 120.889479], [14.411647, 120.889479],
+        [14.414170, 120.887581], [14.415289, 120.887273], [14.415541, 120.886679],
+        [14.415663, 120.886825], [14.418853, 120.886512]
+    ];
+    
+    // Custom point-in-polygon function (ray casting algorithm)
+    function isPointInPolygon(point, polygon) {
+        const x = point[0];
+        const y = point[1];
+        let inside = false;
+        
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            const xi = polygon[i][0];
+            const yi = polygon[i][1];
+            const xj = polygon[j][0];
+            const yj = polygon[j][1];
+            
+            const intersect = ((yi > y) != (yj > y)) &&
+                (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+        }
+        return inside;
+    }
+    
+    function isPointInsideBoundary(lat, lng) {
+        return isPointInPolygon([lng, lat], BARANGAY_BOUNDARY.map(coord => [coord[1], coord[0]]));
+    }
+    
+    function updateBoundaryStatus(lat, lng) {
+        const statusDiv = document.getElementById('boundaryStatus');
+        const isInside = isPointInsideBoundary(lat, lng);
+        
+        statusDiv.style.display = 'flex';
+        if (isInside) {
+            statusDiv.className = 'boundary-status valid';
+            statusDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> Location is within Barangay San Sebastian boundaries';
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+        } else {
+            statusDiv.className = 'boundary-status invalid';
+            statusDiv.innerHTML = '<i class="bi bi-x-circle-fill"></i> Location is OUTSIDE Barangay San Sebastian boundaries. Please select a location within the barangay.';
+            document.getElementById('latitude').value = '';
+            document.getElementById('longitude').value = '';
+        }
+        return isInside;
+    }
+    
+    function initCreateMap(lat = 14.418865, lng = 120.886515) {
+        const mapContainer = document.getElementById('createMap');
+        if (!mapContainer) return;
+        
+        if (createMap) {
+            createMap.remove();
+        }
+        
+        createMap = L.map('createMap').setView([lat, lng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(createMap);
+        
+        // Draw barangay boundary
+        const boundaryPolygon = L.polygon(BARANGAY_BOUNDARY, {
+            color: '#2d4a44',
+            weight: 3,
+            fillColor: '#2d4a44',
+            fillOpacity: 0.1
+        }).addTo(createMap);
+        
+        // Add click handler to place marker
+        createMap.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            
+            // Remove existing marker
+            if (createMarker) {
+                createMap.removeLayer(createMarker);
+            }
+            
+            // Create red marker icon
+            const redIcon = L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+            
+            // Add marker
+            createMarker = L.marker([lat, lng], { icon: redIcon }).addTo(createMap);
+            
+            // Update boundary status
+            updateBoundaryStatus(lat, lng);
+            
+            // Reverse geocode to get address
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`)
+                .then(response => response.json())
+                .then(data => {
+                    const address = data.display_name || `${lat}, ${lng}`;
+                    document.getElementById('location').value = address;
+                })
+                .catch(() => {
+                    document.getElementById('location').value = `${lat}, ${lng}`;
+                });
+        });
+    }
+    
+    // FIXED: Handle Alert Type change without clearing location when switching back from Severe Weather
+    function handleAlertTypeChange() {
+        const alertType = document.getElementById('alertType').value;
+        const mapSection = document.getElementById('mapSection');
+        const locationField = document.getElementById('location');
+        const latitudeField = document.getElementById('latitude');
+        const longitudeField = document.getElementById('longitude');
+        const boundaryStatusDiv = document.getElementById('boundaryStatus');
+        
+        if (alertType === 'Severe Weather') {
+            // Hide map section
+            mapSection.classList.add('hidden');
+            // Set location to San Sebastian, Kawit Cavite (fixed location)
+            locationField.value = 'San Sebastian, Kawit Cavite';
+            latitudeField.value = '14.418865';
+            longitudeField.value = '120.886515';
+            // Clear any existing marker from map if map exists, but do not recreate map
+            if (createMarker && createMap) {
+                createMap.removeLayer(createMarker);
+                createMarker = null;
+            }
+            // Show valid boundary status for clarity
+            boundaryStatusDiv.style.display = 'flex';
+            boundaryStatusDiv.className = 'boundary-status valid';
+            boundaryStatusDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> Location is within Barangay San Sebastian boundaries (Severe Weather default)';
+        } else {
+            // Show map section again
+            mapSection.classList.remove('hidden');
+            // ONLY clear location if there was no existing location OR if the previous location was the default severe weather one
+            // But to preserve existing valid location when switching between non-severe types, we check: if current location value is "San Sebastian, Kawit Cavite" or empty then clear; otherwise preserve.
+            const currentLoc = locationField.value;
+            const currentLat = latitudeField.value;
+            const currentLng = longitudeField.value;
+            const isDefaultSevereLoc = (currentLoc === 'San Sebastian, Kawit Cavite' && currentLat === '14.418865' && currentLng === '120.886515');
+            
+            // If it's the severe weather placeholder or empty, we clear so user can pick new location.
+            if (isDefaultSevereLoc || !currentLat || !currentLng || currentLat === '' || currentLng === '') {
+                locationField.value = '';
+                latitudeField.value = '';
+                longitudeField.value = '';
+                boundaryStatusDiv.style.display = 'none';
+                if (createMarker && createMap) {
+                    createMap.removeLayer(createMarker);
+                    createMarker = null;
+                }
+            } else {
+                // Preserve existing location data — do not clear anything. Keep current marker if exists.
+                // Boundary status might need refresh but keep content.
+                if (currentLat && currentLng && isPointInsideBoundary(parseFloat(currentLat), parseFloat(currentLng))) {
+                    boundaryStatusDiv.style.display = 'flex';
+                    boundaryStatusDiv.className = 'boundary-status valid';
+                    boundaryStatusDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> Location is within Barangay San Sebastian boundaries';
+                } else if (currentLat && currentLng) {
+                    boundaryStatusDiv.style.display = 'flex';
+                    boundaryStatusDiv.className = 'boundary-status invalid';
+                    boundaryStatusDiv.innerHTML = '<i class="bi bi-x-circle-fill"></i> Location is OUTSIDE Barangay San Sebastian boundaries.';
+                }
+                // Ensure marker is re-added to map if map exists and marker missing? rebuild marker if needed.
+                if (createMap && currentLat && currentLng && !createMarker) {
+                    const redIcon = L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    });
+                    createMarker = L.marker([parseFloat(currentLat), parseFloat(currentLng)], { icon: redIcon }).addTo(createMap);
+                }
+            }
+            // Initialize map only if it doesn't exist
+            if (!createMap) {
+                setTimeout(initCreateMap, 100);
+            } else {
+                // If map exists and there's valid lat/lng not cleared, we might want to center but not clear.
+                if (!isDefaultSevereLoc && latitudeField.value && longitudeField.value && latitudeField.value !== '' && longitudeField.value !== '') {
+                    // just ensure map shows existing marker
+                    if (!createMarker && createMap) {
+                        const redIcon = L.icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                            iconSize: [25, 41],
+                            iconAnchor: [12, 41],
+                            popupAnchor: [1, -34],
+                            shadowSize: [41, 41]
+                        });
+                        createMarker = L.marker([parseFloat(latitudeField.value), parseFloat(longitudeField.value)], { icon: redIcon }).addTo(createMap);
+                        createMap.setView([parseFloat(latitudeField.value), parseFloat(longitudeField.value)], 15);
+                    }
+                }
+            }
+        }
+    }
+    
+    function getCurrentLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                initCreateMap(lat, lng);
+                setTimeout(() => {
+                    if (createMarker) createMap.removeLayer(createMarker);
+                    const redIcon = L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    });
+                    createMarker = L.marker([lat, lng], { icon: redIcon }).addTo(createMap);
+                    updateBoundaryStatus(lat, lng);
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`)
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById('location').value = data.display_name || `${lat}, ${lng}`;
+                        });
+                }, 100);
+            }, function(error) {
+                alert("Could not get your location. Please check permissions.");
+            });
+        }
+    }
+    
+    function createAlert() {
+        const alertData = {
+            type: document.getElementById('alertType').value,
+            priority: document.getElementById('priority').value,
+            title: document.getElementById('title').value,
+            location: document.getElementById('location').value,
+            message: document.getElementById('message').value,
+            latitude: document.getElementById('latitude').value,
+            longitude: document.getElementById('longitude').value
+        };
+        
+        if (!alertData.type || !alertData.priority || !alertData.title || !alertData.message) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        if (!alertData.latitude || !alertData.longitude) {
+            alert('Please select a valid location within Barangay San Sebastian');
+            return;
+        }
+        
+        fetch('/emergency-alerts/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(alertData)
+        }).then(response => {
+            if (response.ok) window.location.href = '/emergency-alerts?tab=current';
+            else alert('Error creating alert');
+        });
+    }
+    function viewAlert(id) {
+    fetch('/emergency-alerts/' + id).then(response => response.json()).then(data => {
+        const modalBody = document.getElementById('viewModalBody');
+        const hasLocation = data.latitude && data.longitude && data.latitude !== 0 && data.longitude !== 0;
+        const priorityClass = data.priority === 'Level 4' ? 'high' : '';
+        
+        modalBody.innerHTML = `
+            <div class="view-post-header">
+                <div class="view-post-avatar"><i class="bi bi-megaphone-fill"></i></div>
+                <div class="view-post-meta">
+                    <div class="view-post-author">${escapeHtml(data.createdByName || 'Barangay San Sebastian')}</div>
+                    <div class="view-post-date">${data.dateCreated ? new Date(data.dateCreated).toLocaleString() : 'N/A'}</div>
+                </div>
+                <span class="view-post-badge ${priorityClass}">${escapeHtml(data.priority || 'N/A')}</span>
+            </div>
+            <div class="view-post-title">${escapeHtml(data.title || 'Untitled')}</div>
+            <div class="view-post-content">${escapeHtml(data.message || 'No message')}</div>
+            <div class="view-post-location"><i class="bi bi-geo-alt-fill"></i> ${escapeHtml(data.location || 'No location')}</div>
+            ${hasLocation ? '<div class="view-map-container"><div id="viewMapModal" style="width:100%; height:200px; border-radius:8px; border:1px solid #E4E6EB; background:#F7F8FA;"></div></div>' : ''}
+            <hr class="view-post-divider">
+            <div class="view-post-footer">
+                <i class="bi bi-info-circle"></i> Type: ${escapeHtml(data.type || 'N/A')} &nbsp;|&nbsp;
+                <i class="bi bi-person-badge"></i> Role: ${escapeHtml(data.createdByRole || 'N/A')}
+            </div>
+        `;
+        
+        const modal = new bootstrap.Modal(document.getElementById('viewAlertModal'));
+        if (hasLocation) {
+            document.getElementById('viewAlertModal').addEventListener('shown.bs.modal', function handler() {
+                this.removeEventListener('shown.bs.modal', handler);
+                setTimeout(function() {
+                    if (viewMap) viewMap.remove();
+                    const mapContainer = document.getElementById('viewMapModal');
+                    if (mapContainer) {
+                        viewMap = L.map('viewMapModal').setView([data.latitude, data.longitude], 16);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+                            attribution: '© OpenStreetMap contributors' 
+                        }).addTo(viewMap);
+                        L.marker([data.latitude, data.longitude])
+                            .addTo(viewMap)
+                            .bindPopup(`<b>${escapeHtml(data.title || 'Alert Location')}</b>`)
+                            .openPopup();
+                        setTimeout(function() {
+                            viewMap.invalidateSize();
+                        }, 100);
+                    }
+                }, 200);
+            });
+        }
+        modal.show();
+    });
+}
+    
+    function archiveAlert(id) {
+        if (confirm('Archive this alert?')) {
+            fetch('/emergency-alerts/' + id + '/archive', { method: 'PUT' }).then(response => {
+                if (response.ok) window.location.reload();
+                else alert('Error archiving alert');
+            });
+        }
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Search functionality
+    document.getElementById('current-search')?.addEventListener('keyup', function() {
+        const val = this.value.toLowerCase();
+        document.querySelectorAll('#tab-current .alert-card').forEach(card => {
+            card.style.display = card.textContent.toLowerCase().includes(val) ? '' : 'none';
+        });
+    });
+    
+    document.getElementById('history-search')?.addEventListener('keyup', function() {
+        const val = this.value.toLowerCase();
+        document.querySelectorAll('#tab-history .alert-card').forEach(card => {
+            card.style.display = card.textContent.toLowerCase().includes(val) ? '' : 'none';
+        });
+    });
+    
+    // Add event listener for alert type change
+    document.getElementById('alertType')?.addEventListener('change', handleAlertTypeChange);
+    
+    window.onload = function() {
+        const status = document.getElementById('accountStatus').value;
+        if (status === 'New' || status === 'Newly Updated') {
+            document.getElementById('forcePasswordModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        // Initialize map if on create tab
+        const createTab = document.getElementById('tab-create');
+        if (createTab && !createTab.classList.contains('d-none')) {
+            // check current alert type to hide map if needed initially
+            const alertType = document.getElementById('alertType').value;
+            if (alertType === 'Severe Weather') {
+                document.getElementById('mapSection')?.classList.add('hidden');
+                document.getElementById('location').value = 'San Sebastian, Kawit Cavite';
+                document.getElementById('latitude').value = '14.418865';
+                document.getElementById('longitude').value = '120.886515';
+            } else {
+                setTimeout(initCreateMap, 300);
+            }
+        }
+    };
+    
+    function redirectToPassword() {
+        window.location.href = '/user-profile';
+    }
+</script>
+
+</body>
+</html>

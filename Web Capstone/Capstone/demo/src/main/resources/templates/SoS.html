@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<style>
+    body { margin: 0; font-family: Arial, sans-serif; }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+    
+    .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .top-header {
+        background-color: #2d4a44;
+        display: flex;
+        border-bottom: 2px solid #FED734;
+    }
+    .top-header-tab {
+        flex: 1;
+        color: white;
+        text-align: center;
+        padding: 16px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .search-bar-area {
+        padding: 16px 20px 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background-color: #f5f5f5;
+    }
+    .search-input-wrap { flex: 1; position: relative; }
+    .search-input-wrap input {
+        width: 100%;
+        padding: 9px 14px 9px 38px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: white;
+        box-sizing: border-box;
+    }
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #aaa;
+    }
+    .filter-btn {
+        padding: 9px 16px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        background: white;
+        font-size: 14px;
+        cursor: pointer;
+        color: #444;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .filter-btn:hover { background-color: #f0f0f0; }
+    .export-btn {
+        padding: 9px 20px;
+        border: none;
+        border-radius: 6px;
+        background: #FED734;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        color: #2d4a44;
+    }
+
+    .tabbar {
+        display: flex;
+        background-color: white;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0 20px;
+        gap: 4px;
+    }
+    .tab {
+        padding: 12px 18px;
+        color: #666;
+        cursor: pointer;
+        font-size: 14px;
+        border-bottom: 3px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tab.active {
+        background-color: #2d4a44;
+        color: white;
+        border-radius: 6px 6px 0 0;
+        font-weight: bold;
+    }
+    .tab-badge {
+        background-color: #FED734;
+        color: #2d4a44;
+        border-radius: 10px;
+        padding: 1px 7px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .panel {
+        padding: 20px;
+        background-color: #f5f5f5;
+        flex: 1;
+        overflow-y: auto;
+    }
+    .panel-inner {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+    }
+    .panel-header {
+        background-color: #3d5f58;
+        color: white;
+        padding: 14px 20px;
+        font-weight: bold;
+        font-size: 15px;
+    }
+    .panel-content { padding: 16px 20px; }
+
+    th {
+        background-color: #eaf2f0 !important;
+        color: #2d4a44 !important;
+        font-size: 12px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 10px 14px !important;
+    }
+    td {
+        padding: 12px 14px !important;
+        vertical-align: middle !important;
+    }
+
+    .sos-name { font-weight: bold; font-size: 14px; }
+    .sos-id   { font-size: 12px; color: #888; margin-top: 2px; }
+
+    .badge-sos { display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+
+    .status-incoming   { background-color: #fff8ec; color: #e67e22; border: 1px solid #f5ddb0; display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .status-processing { background-color: #eef4ff; color: #2471a3; border: 1px solid #aed6f1; display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .status-resolved   { background-color: #f0fff4; color: #27ae60; border: 1px solid #b0e0c0; display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .status-archived   { background-color: #f5f5f5; color: #888;    border: 1px solid #ddd;    display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .status-cancelled  { background-color: #fef0f0; color: #c0392b; border: 1px solid #f5c0b8; display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+
+    .view-btn    { background-color: #3498db; color: white; padding: 6px 14px; border: none; border-radius: 5px; font-size: 13px; cursor: pointer; font-weight: bold; }
+    .view-btn:hover { background-color: #2176ae; }
+
+    .resolve-btn { background-color: #FED734; color: #30534D; padding: 6px 14px; border: none; border-radius: 5px; font-size: 13px; cursor: pointer; font-weight: bold; }
+    .resolve-btn:hover { background-color: #d6b42a; }
+
+    .archive-btn { background-color: #e74c3c; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
+    .archive-btn:hover { background-color: #b93e30; }
+
+    .table-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-top: 1px solid hsl(0, 0%, 88%);
+        font-size: 13px;
+        color: #888;
+    }
+    .page-item.active .page-link { background-color: #2d4a44; border-color: #2d4a44; }
+    .page-link { color: #2d4a44; }
+
+    .modal-content { border-radius: 8px; }
+    .modal-header  { background-color: #30534D; color: white; border-bottom: 2px solid #FED734; }
+    .modal-header .btn-close { filter: brightness(0) invert(1); }
+
+    @keyframes sosFlash {
+        0%   { background-color: rgba(254, 215, 52, 0.45); }
+        100% { background-color: transparent; }
+    }
+    .new-sos-row { animation: sosFlash 2s ease-out; }
+
+    @keyframes cancelFlash {
+        0%   { background-color: rgba(231, 76, 60, 0.18); }
+        100% { background-color: transparent; }
+    }
+    .new-cancelled-row { animation: cancelFlash 2s ease-out; }
+
+    .force-modal {
+        display: none; position: fixed; z-index: 9999;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.6);
+    }
+    .force-modal-content {
+        background: white; width: 400px; padding: 30px;
+        border-radius: 8px; text-align: center; margin: 15% auto;
+    }
+
+    /* Toast */
+    #sos-toast {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background-color: #2d4a44;
+        color: white;
+        padding: 14px 20px;
+        border-radius: 8px;
+        border-left: 4px solid #FED734;
+        font-size: 14px;
+        font-weight: bold;
+        z-index: 9999;
+        display: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    @keyframes slideIn {
+        from { transform: translateX(100px); opacity: 0; }
+        to   { transform: translateX(0);     opacity: 1; }
+    }
+    
+    /* Map styles */
+    #viewMap {
+        width: calc(100% - 24px);
+        height: 250px;
+        border-radius: 8px;
+        margin: 0 12px 12px 12px;
+        border: 1px solid #E4E6EB;
+        background: #F7F8FA;
+    }
+    
+    .detail-card {
+        background: white;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        border: 1px solid #E4E6EB;
+        overflow: hidden;
+    }
+    .detail-card-header {
+        display: flex;
+        align-items: flex-start;
+        padding: 12px;
+        gap: 12px;
+    }
+    .detail-avatar {
+        width: 50px;
+        height: 50px;
+        min-width: 50px;
+        border-radius: 50%;
+        background-color: #E4E6EB;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+    }
+    .detail-header-info {
+        flex: 1;
+    }
+    .detail-card-title {
+        font-size: 11px;
+        font-weight: 600;
+        color: #65676B;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+    }
+    .detail-value {
+        font-size: 15px;
+        font-weight: 600;
+        color: #050505;
+        margin: 0;
+        background: none;
+        padding: 0;
+    }
+    .detail-sub {
+        font-size: 13px;
+        color: #65676B;
+        margin: 0;
+        background: none;
+        padding: 0;
+    }
+    .detail-card-footer {
+        border-top: 1px solid #E4E6EB;
+        height: 8px;
+        margin-top: 4px;
+    }
+    .detail-description {
+        font-size: 14px;
+        color: #050505;
+        line-height: 1.6;
+        padding: 0 12px 12px 12px;
+        margin: 0;
+        background: none;
+    }
+    .detail-date-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 12px 10px 12px;
+        font-size: 11px;
+        color: #65676B;
+    }
+</style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" th:href="@{/css/sidebar.css}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+<title>SoS Monitoring</title>
+</head>
+<body>
+
+<div id="sos-toast">🚨 New SoS Alert received!</div>
+
+<div class="layout">
+
+<input type="hidden" id="accountStatus" th:value="${currentstatus}">
+<div id="forcePasswordModal" class="force-modal">
+    <div class="force-modal-content">
+        <h2>First Login Detected</h2>
+        <p>You must change your password before using the system.</p>
+        <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+<div class="content">
+
+    <div class="top-header">
+        <div class="top-header-tab">SoS Monitoring</div>
+    </div>
+
+    <div class="search-bar-area">
+        <div class="search-input-wrap">
+            <span class="search-icon"><i class="bi bi-search"></i></span>
+            <input type="text" id="sos-search" placeholder="Search by name, location, or SoS type...">
+        </div>
+        <div class="dropdown" style="display:inline-block;">
+            <button class="filter-btn dropdown-toggle" type="button" id="typeFilterDropdown"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-funnel"></i> Filter by Type
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="typeFilterDropdown" id="typeFilterMenu">
+                <li><a class="dropdown-item" href="#" data-type="all">All Types</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#" data-type="Flood">Flood</a></li>
+                <li><a class="dropdown-item" href="#" data-type="Earthquake">Earthquake</a></li>
+                <li><a class="dropdown-item" href="#" data-type="Severe Weather">Severe Weather</a></li>
+                <li><a class="dropdown-item" href="#" data-type="Crime and Security">Crime and Security</a></li>
+                <li><a class="dropdown-item" href="#" data-type="Infrastructure and Utilities">Infrastructure and Utilities</a></li>
+                <li><a class="dropdown-item" href="#" data-type="Environmental Hazard">Environmental Hazard</a></li>
+                <li><a class="dropdown-item" href="#" data-type="Public Safety">Public Safety</a></li>
+            </ul>
+        </div>
+        <button class="export-btn" onclick="exportToPDF()">Export</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabbar">
+        <div class="tab" th:classappend="${currentTab == 'incoming'   ? 'active' : ''}" onclick="window.location.href='/sos-monitoring?tab=incoming'">
+            Incoming   <span class="tab-badge" id="badge-incoming"    th:text="${incomingCount}">0</span>
+        </div>
+        <div class="tab" th:classappend="${currentTab == 'processing' ? 'active' : ''}" onclick="window.location.href='/sos-monitoring?tab=processing'">
+            Processing <span class="tab-badge" id="badge-processing"  th:text="${processingCount}">0</span>
+        </div>
+        <div class="tab" th:classappend="${currentTab == 'resolved'   ? 'active' : ''}" onclick="window.location.href='/sos-monitoring?tab=resolved'">
+            Resolved   <span class="tab-badge"                        th:text="${resolvedCount}">0</span>
+        </div>
+        <div class="tab" th:classappend="${currentTab == 'archive'    ? 'active' : ''}" onclick="window.location.href='/sos-monitoring?tab=archive'">
+            Archive    <span class="tab-badge"                        th:text="${archivedCount}">0</span>
+        </div>
+        <div class="tab" th:classappend="${currentTab == 'cancelled'  ? 'active' : ''}" onclick="window.location.href='/sos-monitoring?tab=cancelled'">
+            Cancelled  <span class="tab-badge" id="badge-cancelled"   th:text="${cancelledCount}">0</span>
+        </div>
+    </div>
+
+    <div class="panel">
+
+        <!-- ===== INCOMING ===== -->
+        <div id="tab-incoming" class="panel-inner" th:classappend="${currentTab != 'incoming' ? 'd-none' : ''}">
+            <div class="panel-header">Incoming SoS Alerts</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0" id="sos-table-incoming">
+                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="incoming-tbody">
+                        <tr th:each="report : ${incomingReports}" th:if="${not #lists.isEmpty(incomingReports)}" th:attr="data-id=${report.id}">
+                            <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
+                            <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
+                            <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
+                            <td th:text="${report.location != null ? report.location : 'N/A'}"></td>
+                            <td><span class="status-incoming">Incoming</span></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'PROCESSING\')'">Process</button><button class="archive-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="text-center p-4" id="incoming-empty" th:if="${#lists.isEmpty(incomingReports)}"><p class="text-muted">No incoming SoS alerts</p></div>
+            </div>
+        </div>
+
+        <!-- ===== PROCESSING ===== -->
+        <div id="tab-processing" class="panel-inner" th:classappend="${currentTab != 'processing' ? 'd-none' : ''}">
+            <div class="panel-header">Processing SoS Alerts</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="processing-tbody">
+                        <tr th:each="report : ${processingReports}" th:if="${processingReports != null and not #lists.isEmpty(processingReports)}" th:attr="data-id=${report.id}">
+                            <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
+                            <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
+                            <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
+                            <td th:text="${report.location != null ? report.location : 'N/A'}"></td>
+                            <td><span class="status-processing">Processing</span></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'RESOLVED\')'">Resolve</button><button class="archive-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="text-center p-4" id="processing-empty" th:if="${processingReports == null or #lists.isEmpty(processingReports)}"><p class="text-muted">No processing SoS alerts</p></div>
+            </div>
+        </div>
+
+        <!-- ===== RESOLVED ===== -->
+        <div id="tab-resolved" class="panel-inner" th:classappend="${currentTab != 'resolved' ? 'd-none' : ''}">
+            <div class="panel-header">Resolved SoS Alerts</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        <tr th:each="report : ${resolvedReports}" th:if="${not #lists.isEmpty(resolvedReports)}">
+                            <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
+                            <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
+                            <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
+                            <td th:text="${report.location != null ? report.location : 'N/A'}"></td>
+                            <td><span class="status-resolved">Resolved</span></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="archive-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="text-center p-4" th:if="${#lists.isEmpty(resolvedReports)}"><p class="text-muted">No resolved SoS alerts</p></div>
+            </div>
+        </div>
+
+        <!-- ===== ARCHIVE ===== (WITH VIEW BUTTON ADDED) -->
+        <div id="tab-archive" class="panel-inner" th:classappend="${currentTab != 'archive' ? 'd-none' : ''}">
+            <div class="panel-header">Archived SoS Alerts</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        <tr th:each="report : ${archivedReports}" th:if="${not #lists.isEmpty(archivedReports)}">
+                            <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
+                            <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
+                            <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
+                            <td th:text="${report.location != null ? report.location : 'N/A'}"></td>
+                            <td><span class="status-archived">Archived</span></td>
+                            <td><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="text-center p-4" th:if="${#lists.isEmpty(archivedReports)}"><p class="text-muted">No archived SoS alerts</p></div>
+            </div>
+        </div>
+
+        <!-- ===== CANCELLED ===== -->
+        <div id="tab-cancelled" class="panel-inner" th:classappend="${currentTab != 'cancelled' ? 'd-none' : ''}">
+            <div class="panel-header">Cancelled SoS Alerts</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="cancelled-tbody">
+                        <tr th:each="report : ${cancelledReports}" th:if="${cancelledReports != null and not #lists.isEmpty(cancelledReports)}" th:attr="data-id=${report.id}">
+                            <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
+                            <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
+                            <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
+                            <td th:text="${report.location != null ? report.location : 'N/A'}"></td>
+                            <td><span class="status-cancelled">Cancelled</span></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="archive-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="text-center p-4" id="cancelled-empty" th:if="${cancelledReports == null or #lists.isEmpty(cancelledReports)}"><p class="text-muted">No cancelled SoS alerts</p></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</div>
+
+<!-- View Modal -->
+<div class="modal fade" id="viewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">SoS Alert Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments/logout-modal :: logoutModal"></div>
+<script src="/js/sidebar.js"></script>
+
+<script>
+// =================================================================
+// AUDIO
+// =================================================================
+const _actx = new (window.AudioContext || window.webkitAudioContext)();
+['click','keydown','touchstart','mousedown'].forEach(e =>
+    document.addEventListener(e, () => { if (_actx.state === 'suspended') _actx.resume(); }, { passive: true })
+);
+
+function playSiren() {
+    _actx.resume().then(() => {
+        const now = _actx.currentTime;
+        const totalDur = 5.0;
+        const cycleDur = 1.5;
+        const toneDur = 1.0;
+        const freqA = 853;
+        const freqB = 960;
+        const master = _actx.createGain();
+        master.connect(_actx.destination);
+        const oscA = _actx.createOscillator();
+        const oscB = _actx.createOscillator();
+        oscA.type = 'sine';
+        oscB.type = 'sine';
+        oscA.frequency.setValueAtTime(freqA, now);
+        oscB.frequency.setValueAtTime(freqB, now);
+        for (let i = 0; i < totalDur / cycleDur; i++) {
+            const tStart = now + (i * cycleDur);
+            const tEnd = tStart + toneDur;
+            master.gain.setValueAtTime(0.5, tStart);
+            master.gain.setValueAtTime(0.0, tEnd);
+        }
+        oscA.connect(master);
+        oscB.connect(master);
+        oscA.start(now);
+        oscB.start(now);
+        oscA.stop(now + totalDur);
+        oscB.stop(now + totalDur);
+    });
+}
+
+let _toastTimer = null;
+function showToast(msg) {
+    const t = document.getElementById('sos-toast');
+    t.textContent = msg;
+    t.style.display = 'block';
+    t.style.animation = 'none';
+    void t.offsetWidth;
+    t.style.animation = 'slideIn 0.3s ease-out';
+    if (_toastTimer) clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => { t.style.display = 'none'; }, 5000);
+}
+
+// =================================================================
+// POLLING
+// =================================================================
+let lastSeenIncomingId = 0;
+let lastSeenProcessingId = 0;
+let lastSeenCancelledId = 0;
+let currentMap = null;
+
+function initLastSeenIds() {
+    let maxId = 0;
+    document.querySelectorAll('#incoming-tbody tr').forEach(row => {
+        const m = (row.querySelector('.sos-id')?.innerText || '').match(/ID:\s*(\d+)/);
+        if (m) maxId = Math.max(maxId, parseInt(m[1]));
+    });
+    lastSeenIncomingId = maxId;
+    
+    maxId = 0;
+    document.querySelectorAll('#processing-tbody tr').forEach(row => {
+        const m = (row.querySelector('.sos-id')?.innerText || '').match(/ID:\s*(\d+)/);
+        if (m) maxId = Math.max(maxId, parseInt(m[1]));
+    });
+    lastSeenProcessingId = maxId;
+    
+    maxId = 0;
+    document.querySelectorAll('#cancelled-tbody tr').forEach(row => {
+        const m = (row.querySelector('.sos-id')?.innerText || '').match(/ID:\s*(\d+)/);
+        if (m) maxId = Math.max(maxId, parseInt(m[1]));
+    });
+    lastSeenCancelledId = maxId;
+}
+
+async function pollIncoming() {
+    try {
+        const res = await fetch('/sos-monitoring/api/incoming?lastId=' + lastSeenIncomingId + '&t=' + Date.now());
+        if (!res.ok) return;
+        const data = await res.json();
+        const badge = document.getElementById('badge-incoming');
+        if (badge && data.count != null) badge.textContent = data.count;
+        if (data.newSos && data.newSos.length > 0) {
+            lastSeenIncomingId = Math.max(lastSeenIncomingId, ...data.newSos.map(r => r.id));
+            const tbody = document.getElementById('incoming-tbody');
+            const empty = document.getElementById('incoming-empty');
+            if (empty) empty.style.display = 'none';
+            data.newSos.forEach(r => {
+                if (tbody.querySelector('[data-id="' + r.id + '"]')) return;
+                const tr = document.createElement('tr');
+                tr.className = 'new-sos-row';
+                tr.setAttribute('data-id', r.id);
+                tr.innerHTML = buildIncomingRow(r);
+                tbody.prepend(tr);
+            });
+        }
+        if (data.reports && data.reports.length > 0) {
+            lastSeenIncomingId = Math.max(lastSeenIncomingId, ...data.reports.map(r => r.id));
+        }
+    } catch (_) {}
+}
+
+async function pollProcessing() {
+    try {
+        const res = await fetch('/sos-monitoring/api/processing?lastId=' + lastSeenProcessingId + '&t=' + Date.now());
+        if (!res.ok) return;
+        const data = await res.json();
+        const badge = document.getElementById('badge-processing');
+        if (badge && data.count != null) badge.textContent = data.count;
+        if (data.newProcessing && data.newProcessing.length > 0) {
+            lastSeenProcessingId = Math.max(lastSeenProcessingId, ...data.newProcessing.map(r => r.id));
+            const tbody = document.getElementById('processing-tbody');
+            const empty = document.getElementById('processing-empty');
+            if (empty && tbody.children.length === 0) empty.style.display = 'none';
+            data.newProcessing.forEach(r => {
+                if (tbody && !tbody.querySelector('[data-id="' + r.id + '"]')) {
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-id', r.id);
+                    tr.innerHTML = buildProcessingRow(r);
+                    tbody.prepend(tr);
+                }
+            });
+        }
+    } catch (_) {}
+}
+
+async function pollCancelled() {
+    try {
+        const res = await fetch('/sos-monitoring/api/cancelled?lastId=' + lastSeenCancelledId + '&t=' + Date.now());
+        if (!res.ok) return;
+        const data = await res.json();
+        const badge = document.getElementById('badge-cancelled');
+        if (badge && data.count != null) badge.textContent = data.count;
+        if (data.newCancelled && data.newCancelled.length > 0) {
+            lastSeenCancelledId = Math.max(lastSeenCancelledId, ...data.newCancelled.map(r => r.id));
+            const tbody = document.getElementById('cancelled-tbody');
+            const empty = document.getElementById('cancelled-empty');
+            data.newCancelled.forEach(r => {
+                const procRow = document.querySelector('#processing-tbody [data-id="' + r.id + '"]');
+                if (procRow) procRow.remove();
+                const incRow = document.querySelector('#incoming-tbody [data-id="' + r.id + '"]');
+                if (incRow) incRow.remove();
+                if (tbody && !tbody.querySelector('[data-id="' + r.id + '"]')) {
+                    if (empty) empty.style.display = 'none';
+                    const tr = document.createElement('tr');
+                    tr.className = 'new-cancelled-row';
+                    tr.setAttribute('data-id', r.id);
+                    tr.innerHTML = buildCancelledRow(r);
+                    tbody.prepend(tr);
+                }
+            });
+        }
+        if (data.reports && data.reports.length > 0) {
+            lastSeenCancelledId = Math.max(lastSeenCancelledId, ...data.reports.map(r => r.id));
+        }
+    } catch (_) {}
+}
+
+function buildIncomingRow(r) {
+    return `<tr data-id="${r.id}"><td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-incoming">Incoming</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatus(${r.id},'PROCESSING')">Process</button><button class="archive-btn" onclick="updateStatus(${r.id},'ARCHIVED')">Archive</button></div></td></tr>`;
+}
+
+function buildProcessingRow(r) {
+    return `<tr data-id="${r.id}"><td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-processing">Processing</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatus(${r.id},'RESOLVED')">Resolve</button><button class="archive-btn" onclick="updateStatus(${r.id},'ARCHIVED')">Archive</button></div></td></tr>`;
+}
+
+function buildCancelledRow(r) {
+    return `<tr data-id="${r.id}"><td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-cancelled">Cancelled</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="archive-btn" onclick="updateStatus(${r.id},'ARCHIVED')">Archive</button></div></td></tr>`;
+}
+
+// =================================================================
+// VIEW REPORT WITH MAP
+// =================================================================
+function viewReport(id) {
+    fetch('/sos-monitoring/' + id)
+        .then(r => r.json())
+        .then(data => {
+            const modalBody = document.getElementById('modalBody');
+            const hasLocation = data.latitude && data.longitude && data.latitude !== 0 && data.longitude !== 0;
+            
+            modalBody.innerHTML = `
+                <div class="detail-card">
+                    <div class="detail-card-header">
+                        <div class="detail-avatar">👤</div>
+                        <div class="detail-header-info">
+                            <div class="detail-card-title">Submitted By</div>
+                            <div class="detail-value">${escapeHtml(data.reporterName) || 'Anonymous'}</div>
+                            <div class="detail-sub">${escapeHtml(data.phoneNumber) || 'No contact info'}</div>
+                        </div>
+                    </div>
+                    <div class="detail-card-footer"></div>
+                </div>
+                <div class="detail-card">
+                    <div class="detail-card-header">
+                        <div class="detail-avatar">🆘</div>
+                        <div class="detail-header-info">
+                            <div class="detail-card-title">SoS Type</div>
+                            <div class="detail-value">${escapeHtml(data.sosType) || 'General'}</div>
+                        </div>
+                    </div>
+                    <div class="detail-card-footer"></div>
+                </div>
+                <div class="detail-card">
+                    <div class="detail-card-header">
+                        <div class="detail-avatar">📍</div>
+                        <div class="detail-header-info">
+                            <div class="detail-card-title">Location</div>
+                            <div class="detail-sub">${escapeHtml(data.location) || 'No address provided'}</div>
+                        </div>
+                    </div>
+                    ${hasLocation ? '<div id="viewMap"></div>' : '<div style="height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#aaa;gap:6px;margin-bottom:12px;">🗺️ <span style="font-size:13px;">No location coordinates</span></div>'}
+                    <div class="detail-card-footer"></div>
+                </div>
+                <div class="detail-card">
+                    <div class="detail-card-header">
+                        <div class="detail-avatar">📄</div>
+                        <div class="detail-header-info">
+                            <div class="detail-card-title">Description</div>
+                            <div class="detail-value">${escapeHtml(data.description) || 'No description'}</div>
+                        </div>
+                        <span class="status-${(data.status || 'pending').toLowerCase()}" style="background-color:${getStatusColor(data.status)};color:white;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;margin-left:6px;align-self:flex-start;">${data.status || 'Pending'}</span>
+                    </div>
+                    <p class="detail-description">${escapeHtml(data.description) || 'No description provided.'}</p>
+                    <div class="detail-date-row">
+                        <span>Reported on: ${data.dateReported ? new Date(data.dateReported).toLocaleString() : 'N/A'}</span>
+                        <span>Responder: ${escapeHtml(data.responderName) || 'Not assigned'}</span>
+                    </div>
+                    ${data.dateResolved ? `<div class="detail-date-row"><span>Resolved on: ${new Date(data.dateResolved).toLocaleString()}</span></div>` : ''}
+                    <div class="detail-card-footer"></div>
+                </div>
+            `;
+            
+            const modal = new bootstrap.Modal(document.getElementById('viewModal'));
+            modal.show();
+            
+            if (hasLocation) {
+                document.getElementById('viewModal').addEventListener('shown.bs.modal', function initMapOnce() {
+                    setTimeout(() => {
+                        const mapContainer = document.getElementById('viewMap');
+                        if (mapContainer) {
+                            if (currentMap) { currentMap.remove(); currentMap = null; }
+                            const map = L.map('viewMap').setView([data.latitude, data.longitude], 16);
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+                            const redIcon = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
+                            L.marker([data.latitude, data.longitude], { icon: redIcon }).addTo(map).bindPopup(`<b>${data.sosType || 'SOS Location'}</b>`).openPopup();
+                            map.invalidateSize();
+                            currentMap = map;
+                        }
+                    }, 200);
+                    document.getElementById('viewModal').removeEventListener('shown.bs.modal', initMapOnce);
+                });
+            }
+        });
+}
+
+function getStatusColor(status) {
+    switch (status?.toUpperCase()) {
+        case 'INCOMING': return '#e67e22';
+        case 'PROCESSING': return '#2471a3';
+        case 'RESOLVED': return '#27ae60';
+        case 'CANCELLED': return '#c0392b';
+        case 'ARCHIVED': return '#888';
+        default: return '#888';
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return text;
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// =================================================================
+// FILTERS & UTILITIES
+// =================================================================
+let currentTypeFilter = 'all';
+
+function applyFilters() {
+    const val = document.getElementById('sos-search').value.toLowerCase();
+    const activePanel = document.querySelector('.panel-inner:not(.d-none)');
+    if (!activePanel) return;
+    activePanel.querySelectorAll('tbody tr').forEach(row => {
+        const matchSearch = row.textContent.toLowerCase().includes(val);
+        let matchType = true;
+        if (currentTypeFilter !== 'all') {
+            const span = row.querySelector('.badge-sos');
+            matchType = span ? span.innerText.trim() === currentTypeFilter : false;
+        }
+        row.style.display = (matchSearch && matchType) ? '' : 'none';
+    });
+}
+
+document.querySelectorAll('#typeFilterMenu .dropdown-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+        e.preventDefault();
+        currentTypeFilter = this.getAttribute('data-type');
+        document.getElementById('typeFilterDropdown').innerHTML = '<i class="bi bi-funnel"></i> ' + (currentTypeFilter === 'all' ? 'Filter by Type' : currentTypeFilter);
+        applyFilters();
+    });
+});
+
+document.getElementById('sos-search').addEventListener('keyup', applyFilters);
+
+function updateStatus(id, status) {
+    let responderName = '';
+    const nameElement = document.querySelector('.user-name, .admin-name, [class*="user"], [class*="admin"]');
+    if (nameElement) {
+        let fullText = nameElement.innerText.trim();
+        responderName = fullText.replace(/^ADMIN:\s*/i, '').replace(/^Name:\s*/i, '');
+    }
+    if (!responderName) responderName = 'Barangay Responder';
+    let url = '/sos-monitoring/' + id + '/status?status=' + status;
+    if (status === 'PROCESSING') url += '&responderName=' + encodeURIComponent(responderName);
+    fetch(url, { method: 'PUT' }).then(r => { if (r.ok) location.reload(); else alert('Error'); });
+}
+
+function exportToPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const panel = document.querySelector('.panel-inner:not(.d-none)');
+    const title = panel.querySelector('.panel-header').innerText;
+    doc.text(title, 14, 15);
+    doc.autoTable({ html: panel.querySelector('table'), startY: 20, margin: { top: 20 }, columnStyles: { 5: { cellWidth: 'wrap', minCellWidth: 0 } }, didParseCell: d => { if (d.column.index === 5) { d.cell.styles.fontSize = 0; d.cell.styles.textColor = [255,255,255]; } } });
+    doc.save(title.replace(/\s+/g, '_') + '.pdf');
+}
+
+function redirectToPassword() { window.location.href = '/user-profile'; }
+
+window.addEventListener('DOMContentLoaded', () => {
+    applyFilters();
+    initLastSeenIds();
+    setInterval(pollIncoming, 5000);
+    setInterval(pollProcessing, 5000);
+    setInterval(pollCancelled, 5000);
+    setTimeout(() => { if (_actx.state === 'suspended') _actx.resume(); }, 100);
+});
+</script>
+
+</body>
+</html>

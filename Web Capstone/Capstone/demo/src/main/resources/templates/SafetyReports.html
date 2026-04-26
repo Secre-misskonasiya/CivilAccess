@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+    
+.layout { display: flex; height: 100vh; overflow: hidden; }
+    
+    .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .top-header {
+        background-color: #2d4a44;
+        display: flex;
+        border-bottom: 2px solid #FED734;
+    }
+    .top-header-tab {
+        flex: 1;
+        color: white;
+        text-align: center;
+        padding: 16px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .top-header-tab.inactive {
+        color: #8aada8;
+        font-weight: normal;
+    }
+
+    .search-bar-area {
+        padding: 16px 20px 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background-color: #f5f5f5;
+    }
+    .search-input-wrap {
+        flex: 1;
+        position: relative;
+    }
+    .search-input-wrap input {
+        width: 100%;
+        padding: 9px 14px 9px 38px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: white;
+        box-sizing: border-box;
+    }
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #aaa;
+    }
+    .filter-btn {
+        padding: 9px 16px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        background: white;
+        font-size: 14px;
+        cursor: pointer;
+        color: #444;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .filter-btn:hover {
+        background-color: #f0f0f0;
+    }
+    .export-btn {
+        padding: 9px 20px;
+        border: none;
+        border-radius: 6px;
+        background: #FED734;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        color: #2d4a44;
+    }
+
+    .tabbar {
+        display: flex;
+        background-color: white;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0 20px;
+        gap: 4px;
+    }
+    .tab {
+        padding: 12px 18px;
+        color: #666;
+        cursor: pointer;
+        font-size: 14px;
+        border-bottom: 3px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tab.active {
+        background-color: #2d4a44;
+        color: white;
+        border-radius: 6px 6px 0 0;
+        font-weight: bold;
+    }
+    .tab-badge {
+        background-color: #FED734;
+        color: #2d4a44;
+        border-radius: 10px;
+        padding: 1px 7px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .panel {
+        padding: 20px;
+        background-color: #f5f5f5;
+        flex: 1;
+        overflow-y: auto;
+    }
+    .panel-inner {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+    }
+    .panel-header {
+        background-color: #3d5f58;
+        color: white;
+        padding: 14px 20px;
+        font-weight: bold;
+        font-size: 15px;
+    }
+    .panel-content {
+        padding: 16px 20px;
+    }
+
+    th {
+        background-color: #eaf2f0;
+        color: #2d4a44;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 10px 14px;
+    }
+    td {
+        padding: 14px;
+        vertical-align: middle;
+    }
+
+    .badge-type {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        background-color: #e8f5f0;
+        color: #2d7a5f;
+        border: 1px solid #b8ddd0;
+    }
+    .badge-priority {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .priority-high { 
+        background-color: #fff0f0; 
+        color: #e74c3c; 
+        border: 1px solid #f5c6c6; 
+    }
+    .priority-medium { 
+        background-color: #fff8ec; 
+        color: #e67e22; 
+        border: 1px solid #f5ddb0;
+    }
+    .priority-low { 
+        background-color: #f0fff4; 
+        color: #27ae60; 
+        border: 1px solid #b0e0c0; 
+    }
+    
+    .resolved-by-badge {
+        background-color: #6c757d;
+        color: white;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .report-title { 
+        font-weight: bold; 
+        font-size: 14px; 
+    }
+
+    .report-location { 
+        font-size: 12px; 
+        color: #888; 
+        margin-top: 2px; 
+    }
+
+    .approve-btn {
+        background-color: #44C375;
+        color: white;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .approve-btn:hover {
+        background-color: #2ea05e;
+        color: white;
+    }
+    .archive-btn {
+        background-color: white;
+        color: #e74c3c;
+        padding: 6px 14px;
+        border: 1.5px solid #e74c3c;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .archive-btn:hover {
+        background-color: #fff0f0;
+        color: #e74c3c;
+    }
+    .process-btn {
+        background-color: #3498db;
+        color: white;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .process-btn:hover {
+        background-color: #2176ae;
+        color: white;
+    }
+    .resolve-btn {
+        background-color: #FED734;
+        color: #1E322F;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .resolve-btn:hover {
+        background-color: #bb9d26;
+        color: #1E322F;
+    }
+    .view-btn {
+        background-color: #3498db;
+        color: white;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .view-btn:hover {
+        background-color: #2176ae;
+    }
+    .view-resolution-btn {
+        background-color: #6c757d;
+        color: white;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .view-resolution-btn:hover {
+        background-color: #5a6268;
+    }
+
+    .table-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-top: 1px solid #e0e0e0;
+        font-size: 13px;
+        color: #888;
+    }
+    .page-item.active .page-link {
+        background-color: #2d4a44;
+        border-color: #2d4a44;
+    }
+    .page-link {
+        color: #2d4a44;
+    }
+    
+    /* Modal styles */
+    .modal-content {
+        border-radius: 8px;
+    }
+    .modal-header {
+        background-color: #30534D;
+        color: white;
+        border-bottom: 2px solid #FED734;
+    }
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+    .force-modal {
+        display: none; position: fixed; z-index: 9999;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.6);
+    }
+    .force-modal-content {
+        background: white; width: 400px; padding: 30px;
+        border-radius: 8px; text-align: center; margin: 15% auto;
+    }
+    
+    /* Resolution Modal Styles */
+    #resolutionModal textarea, #resolutionModal input {
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+    #resolutionModal textarea:focus, #resolutionModal input:focus {
+        border-color: #2d4a44;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(45, 74, 68, 0.1);
+    }
+    #resolutionModal .form-label {
+        color: #2d4a44;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    #confirmResolveBtn {
+        background-color: #44C375;
+        border: none;
+    }
+    #confirmResolveBtn:hover {
+        background-color: #2ea05e;
+    }
+    .resolution-info-row {
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        padding: 10px;
+        margin-bottom: 15px;
+    }
+    .resolution-info-row .row {
+        margin-bottom: 8px;
+    }
+    .resolution-info-row .label {
+        font-weight: 600;
+        color: #2d4a44;
+        font-size: 12px;
+    }
+    .resolution-info-row .value {
+        color: #333;
+        font-size: 13px;
+    }
+    #resolutionResponseTime {
+        background-color: #f5f5f5;
+        color: #666;
+        cursor: not-allowed;
+    }
+    
+    /* View Resolution Modal (Read-only) */
+    .readonly-field {
+        background-color: #f5f5f5;
+        color: #333;
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 13px;
+        line-height: 1.5;
+        margin-bottom: 15px;
+    }
+    .readonly-field strong {
+        color: #2d4a44;
+        display: block;
+        margin-bottom: 6px;
+        font-size: 12px;
+    }
+    .readonly-field p {
+        margin: 0;
+        white-space: pre-wrap;
+    }
+    
+    /* Custom Confirmation Modal */
+    .confirm-modal-overlay {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        align-items: center;
+        justify-content: center;
+    }
+    .confirm-modal-content {
+        background: white;
+        width: 380px;
+        border-radius: 12px;
+        text-align: center;
+        padding: 24px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .confirm-modal-content h4 {
+        margin-bottom: 12px;
+        color: #2d4a44;
+    }
+    .confirm-modal-content p {
+        margin-bottom: 24px;
+        color: #666;
+    }
+    .confirm-modal-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+    }
+    .confirm-modal-buttons button {
+        padding: 8px 24px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .confirm-cancel {
+        background-color: #e0e0e0;
+        color: #333;
+    }
+    .confirm-ok {
+        background-color: #e74c3c;
+        color: white;
+    }
+</style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" th:href="@{/css/sidebar.css}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+<title>Safety Reports</title>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- Lock Modal -->
+<input type="hidden" id="accountStatus" th:value="${currentstatus}">
+<div id="forcePasswordModal" class="force-modal">
+    <div class="force-modal-content">
+        <h2>🔒First Login Detected</h2>
+        <p>You must change your password before using the system.</p>
+        <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+<!-- Custom Confirmation Modal for Archive -->
+<div id="archiveConfirmModal" class="confirm-modal-overlay">
+    <div class="confirm-modal-content">
+        <h4><i class="bi bi-archive"></i> Archive Report</h4>
+        <p>Are you sure you want to archive this safety report?</p>
+        <div class="confirm-modal-buttons">
+            <button class="confirm-cancel" onclick="closeArchiveConfirm()">Cancel</button>
+            <button class="confirm-ok" id="confirmArchiveBtn">Archive</button>
+        </div>
+    </div>
+</div>
+
+<!-- Sidebar -->
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+<!-- Main content -->
+<div class="content">
+
+    <!-- Top header -->
+    <div class="top-header">
+        <div class="top-header-tab active" onclick="window.location.href='/safety-reports'">Safety Reports</div>
+        <div class="top-header-tab inactive" onclick="window.location.href='/emergency-alerts'">Emergency Alerts</div>
+    </div>
+
+    <!-- Search / Filter / Export -->
+    <div class="search-bar-area">
+        <div class="search-input-wrap">
+            <span class="search-icon"><i class="bi bi-search"></i></span>
+            <input type="text" id="report-search" placeholder="Search reports by title, location, or reporter...">
+        </div>
+        <div class="dropdown">
+            <button class="filter-btn dropdown-toggle" type="button" id="typeFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-funnel"></i> Filter by Type
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="typeFilterDropdown" id="typeFilterMenu">
+                <li><a class="dropdown-item" href="#" data-type="all">All Types</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#" data-type="Fire Emergency">Fire Emergency</a></li>
+                <li><a class="dropdown-item" href="#" data-type="Flood">Flood</a></li>
+                <li><a class="dropdown-item" href="#" data-type="Earthquake">Earthquake</a></li>
+                <li><a class="dropdown-item" href="#" data-type="Severe Weather">Severe Weather</a></li>
+                <li><a class="dropdown-item" href="#" data-type="Medical Emergency">Medical Emergency</a></li>
+                <li><a class="dropdown-item" href="#" data-type="Crime and Security">Crime and Security</a></li>
+                <li><a class="dropdown-item" href="#" data-type="Infrastructure and Utilities">Infrastructure and Utilities</a></li>
+                <li><a class="dropdown-item" href="#" data-type="Environmental Hazards">Environmental Hazards</a></li>
+                <li><a class="dropdown-item" href="#" data-type="Public Safety">Public Safety</a></li>
+            </ul>
+        </div>
+        <button class="export-btn" id="export-pdf-btn" onclick="exportToPDF()">Export</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabbar">
+        <div class="tab" th:classappend="${currentTab == 'incoming' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=incoming'">Incoming <span class="tab-badge" id="badge-incoming" th:text="${incomingCount}">0</span></div>
+        <div class="tab" th:classappend="${currentTab == 'approved' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=approved'">Approved <span class="tab-badge" id="badge-approved" th:text="${approvedCount}">0</span></div>
+        <div class="tab" th:classappend="${currentTab == 'inprogress' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=inprogress'">In Progress <span class="tab-badge" id="badge-inprogress" th:text="${inProgressCount}">0</span></div>
+        <div class="tab" th:classappend="${currentTab == 'resolved' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=resolved'">Resolved <span class="tab-badge" id="badge-resolved" th:text="${resolvedCount}">0</span></div>
+        <div class="tab" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=archive'">Archive <span class="tab-badge" id="badge-archive" th:text="${archivedCount}">0</span></div>
+    </div>
+
+    <!-- Panel -->
+    <div class="panel">
+
+        <!-- Incoming -->
+        <div id="tab-incoming" class="panel-inner" th:classappend="${currentTab != 'incoming' ? 'd-none' : ''}">
+            <div class="panel-header">Incoming Safety Reports</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0" id="incoming-table">
+                    <thead>
+                        <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="incoming-tbody">
+                        <tr th:each="report : ${incomingReports}" th:if="${not #lists.isEmpty(incomingReports)}" th:attr="data-id=${report.id}">
+                            <td>
+                                <div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div>
+                                <div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div>
+                            </td>
+                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
+                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
+                            <td>
+                                <span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" 
+                                      th:text="${report.priority != null ? report.priority : 'LOW'}"></span>
+                            </td>
+                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
+                                    <button class="approve-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'APPROVED\')'">Approve</button>
+                                    <button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button>
+                                </div>
+                             </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="text-center p-4" th:if="${#lists.isEmpty(incomingReports)}">
+                    <p class="text-muted">No incoming reports</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approved -->
+        <div id="tab-approved" class="panel-inner" th:classappend="${currentTab != 'approved' ? 'd-none' : ''}">
+            <div class="panel-header">Approved Safety Reports</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0" id="approved-table">
+                    <thead><tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date</th><th>Actions</th></tr></thead>
+                    <tbody id="approved-tbody">
+                        <tr th:each="report : ${approvedReports}" th:if="${not #lists.isEmpty(approvedReports)}" th:attr="data-id=${report.id}">
+                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></td>
+                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
+                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
+                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
+                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="process-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'IN_PROGRESS\')'">Process</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="text-center p-4" th:if="${#lists.isEmpty(approvedReports)}"><p class="text-muted">No approved reports</p></div>
+            </div>
+        </div>
+
+        <!-- In Progress -->
+        <div id="tab-inprogress" class="panel-inner" th:classappend="${currentTab != 'inprogress' ? 'd-none' : ''}">
+            <div class="panel-header">In Progress Safety Reports</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0" id="inprogress-table">
+                    <thead><tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date</th><th>Actions</th></tr></thead>
+                    <tbody id="inprogress-tbody">
+                        <tr th:each="report : ${inProgressReports}" th:if="${not #lists.isEmpty(inProgressReports)}" th:attr="data-id=${report.id}">
+                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></td>
+                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
+                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
+                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
+                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'openResolutionModal(' + ${report.id} + ')'">Resolve</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="text-center p-4" th:if="${#lists.isEmpty(inProgressReports)}"><p class="text-muted">No in progress reports</p></div>
+            </div>
+        </div>
+
+        <!-- Resolved -->
+        <div id="tab-resolved" class="panel-inner" th:classappend="${currentTab != 'resolved' ? 'd-none' : ''}">
+            <div class="panel-header">Resolved Safety Reports</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0" id="resolved-table">
+                    <thead>
+                        <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date</th><th>Resolved By</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="resolved-tbody">
+                        <tr th:each="report : ${resolvedReports}" th:if="${not #lists.isEmpty(resolvedReports)}" th:attr="data-id=${report.id}">
+                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></td>
+                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
+                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
+                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
+                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
+                            <td><span th:if="${report.resolvedBy != null}" class="resolved-by-badge"><i class="bi bi-person-check"></i> <span th:text="${report.resolvedBy}"></span></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="text-center p-4" th:if="${#lists.isEmpty(resolvedReports)}"><p class="text-muted">No resolved reports</p></div>
+            </div>
+        </div>
+
+        <!-- Archive -->
+        <div id="tab-archive" class="panel-inner" th:classappend="${currentTab != 'archive' ? 'd-none' : ''}">
+            <div class="panel-header">Archived Safety Reports</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0" id="archive-table">
+                    <thead>
+                        <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date</th><th>Resolved By</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="archive-tbody">
+                        <tr th:each="report : ${archivedReports}" th:if="${not #lists.isEmpty(archivedReports)}" th:attr="data-id=${report.id}">
+                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></td>
+                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
+                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
+                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
+                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
+                            <td><span th:if="${report.resolvedBy != null}" class="resolved-by-badge"><i class="bi bi-person-check"></i> <span th:text="${report.resolvedBy}"></span></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="text-center p-4" th:if="${#lists.isEmpty(archivedReports)}"><p class="text-muted">No archived reports</p></div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+<!-- View Report Modal -->
+<div class="modal fade" id="viewReportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Safety Report Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewModalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <!-- Approve button inside modal for incoming reports -->
+                <button type="button" class="btn btn-success" id="modalApproveBtn" style="display: none;" onclick="modalApproveAction()">Approve Report</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resolution Modal (for creating resolution) -->
+<div class="modal fade" id="resolutionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Resolve Safety Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="resolutionReportId">
+                <div class="resolution-info-row">
+                    <div class="row mb-2"><div class="col-4 label">Report Title:</div><div class="col-8 value" id="infoTitle">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Location:</div><div class="col-8 value" id="infoLocation">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Type:</div><div class="col-8 value" id="infoType">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Priority:</div><div class="col-8 value" id="infoPriority">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Reporter:</div><div class="col-8 value" id="infoReporter">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Date Submitted:</div><div class="col-8 value" id="infoDate">-</div></div>
+                </div>
+                <div class="mb-3"><label class="form-label fw-bold">Response Time (Auto-calculated)</label><input type="text" class="form-control" id="resolutionResponseTime" readonly></div>
+                <div class="mb-3"><label class="form-label fw-bold">Actions Taken</label><textarea class="form-control" id="resolutionActions" rows="4" placeholder="List the specific actions taken to address this issue..."></textarea></div>
+                <div class="mb-3"><label class="form-label fw-bold">Additional Notes</label><textarea class="form-control" id="resolutionNotes" rows="3" placeholder="Any additional notes or follow-up actions..."></textarea></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-success" id="confirmResolveBtn">Confirm Resolution</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- View Resolution Modal (Read-only) -->
+<div class="modal fade" id="viewResolutionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Resolution Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body"><div class="resolution-info-row"><div class="row mb-2"><div class="col-4 label">Report Title:</div><div class="col-8 value" id="viewInfoTitle">-</div></div><div class="row mb-2"><div class="col-4 label">Location:</div><div class="col-8 value" id="viewInfoLocation">-</div></div><div class="row mb-2"><div class="col-4 label">Type:</div><div class="col-8 value" id="viewInfoType">-</div></div><div class="row mb-2"><div class="col-4 label">Priority:</div><div class="col-8 value" id="viewInfoPriority">-</div></div><div class="row mb-2"><div class="col-4 label">Reporter:</div><div class="col-8 value" id="viewInfoReporter">-</div></div><div class="row mb-2"><div class="col-4 label">Date Submitted:</div><div class="col-8 value" id="viewInfoDate">-</div></div><div class="row mb-2"><div class="col-4 label">Resolved By:</div><div class="col-8 value" id="viewInfoResolvedBy">-</div></div><div class="row mb-2"><div class="col-4 label">Resolved On:</div><div class="col-8 value" id="viewInfoResolvedOn">-</div></div></div><div class="readonly-field"><strong>Response Time</strong><p id="viewResponseTime">-</p></div><div class="readonly-field"><strong>Actions Taken</strong><p id="viewActionsTaken">-</p></div><div class="readonly-field"><strong>Additional Notes</strong><p id="viewAdditionalNotes">-</p></div></div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Modal -->
+<div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
+
+<script src="/js/sidebar.js"></script>
+<script>
+    let currentMap = null;
+    let currentTypeFilter = 'all';
+    let pendingArchiveId = null;
+    let currentModalReportId = null;
+    let currentModalReportStatus = null;
+
+    // Archive Confirmation Functions
+    function confirmArchive(id) {
+        pendingArchiveId = id;
+        document.getElementById('archiveConfirmModal').style.display = 'flex';
+    }
+    
+    function closeArchiveConfirm() {
+        pendingArchiveId = null;
+        document.getElementById('archiveConfirmModal').style.display = 'none';
+    }
+    
+    document.getElementById('confirmArchiveBtn').addEventListener('click', function() {
+        if (pendingArchiveId) {
+            updateStatus(pendingArchiveId, 'ARCHIVED');
+            closeArchiveConfirm();
+        }
+    });
+    
+    document.getElementById('archiveConfirmModal').addEventListener('click', function(e) {
+        if (e.target === this) closeArchiveConfirm();
+    });
+
+    function applyTypeFilter() {
+        const activePanel = document.querySelector('.panel-inner:not(.d-none)');
+        if (!activePanel) return;
+        const rows = activePanel.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const typeCell = row.querySelector('.type-cell');
+            let matchType = true;
+            if (currentTypeFilter !== 'all') {
+                const typeText = typeCell ? typeCell.innerText.trim() : '';
+                matchType = typeText === currentTypeFilter;
+            }
+            row.style.display = matchType ? '' : 'none';
+        });
+    }
+    
+    document.querySelectorAll('#typeFilterMenu .dropdown-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentTypeFilter = this.getAttribute('data-type');
+            const buttonText = currentTypeFilter === 'all' ? 'Filter by Type' : currentTypeFilter;
+            document.getElementById('typeFilterDropdown').innerHTML = `<i class="bi bi-funnel"></i> ${buttonText}`;
+            applyTypeFilter();
+        });
+    });
+    
+    document.getElementById('report-search').addEventListener('keyup', function() {
+        const searchValue = this.value.toLowerCase();
+        const activePanel = document.querySelector('.panel-inner:not(.d-none)');
+        if (!activePanel) return;
+        const rows = activePanel.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const matchesSearch = text.includes(searchValue);
+            let matchesType = true;
+            if (currentTypeFilter !== 'all') {
+                const typeCell = row.querySelector('.type-cell');
+                const typeText = typeCell ? typeCell.innerText.trim() : '';
+                matchesType = typeText === currentTypeFilter;
+            }
+            row.style.display = (matchesSearch && matchesType) ? '' : 'none';
+        });
+    });
+    
+    // Updated viewReport with Approve button inside modal for incoming status
+    function viewReport(id) {
+        currentModalReportId = id;
+        fetch('/safety-reports/' + id)
+            .then(response => response.json())
+            .then(data => {
+                currentModalReportStatus = data.status;
+                const modalBody = document.getElementById('viewModalBody');
+                const hasLocation = data.latitude && data.longitude && data.latitude !== 0 && data.longitude !== 0;
+                const priorityClass = data.priority === 'HIGH' ? 'priority-high' : data.priority === 'MEDIUM' ? 'priority-medium' : 'priority-low';
+                const getStatusColor = (status) => {
+                    switch (status?.toUpperCase()) {
+                        case 'INCOMING': return '#FF9800';
+                        case 'APPROVED': return '#FF9800';
+                        case 'IN_PROGRESS': return '#2bb6f7';
+                        case 'RESOLVED': return '#44C375';
+                        default: return '#888';
+                    }
+                };
+                modalBody.innerHTML = `
+                    <style>.detail-card{background:white;border-radius:12px;margin-bottom:12px;border:1px solid #E4E6EB;overflow:hidden}.detail-card-header{display:flex;align-items:flex-start;padding:12px;gap:12px}.detail-avatar{width:50px;height:50px;min-width:50px;border-radius:50%;background-color:#E4E6EB;display:flex;align-items:center;justify-content:center;font-size:22px}.detail-header-info{flex:1}.detail-card-title{font-size:11px;font-weight:600;color:#65676B;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px}.detail-value{font-size:15px;font-weight:600;color:#050505;margin:0}.detail-sub{font-size:13px;color:#65676B}.detail-type-tag{display:inline-flex;align-items:center;background-color:#F0F8F7;padding:4px 10px;border-radius:6px;font-size:14px;font-weight:500;color:#386660;gap:5px}.detail-description{font-size:14px;color:#050505;line-height:1.6;padding:0 12px 12px 12px}.detail-date-row{display:flex;justify-content:space-between;align-items:center;padding:6px 12px 10px 12px;font-size:11px;color:#65676B}#viewMap{width:calc(100% - 24px);height:250px;border-radius:8px;margin:0 12px 12px 12px;border:1px solid #E4E6EB}</style>
+                    <div class="detail-card"><div class="detail-card-header"><div class="detail-avatar">👤</div><div class="detail-header-info"><div class="detail-card-title">Submitted By</div><div class="detail-value">${escapeHtml(data.reporterName || 'Anonymous')}</div><div class="detail-sub">${escapeHtml(data.reporterContact || 'No contact info')}</div></div></div></div>
+                    <div class="detail-card"><div class="detail-card-header"><div class="detail-avatar">⚠️</div><div class="detail-header-info"><div class="detail-card-title">Alert Type</div><span class="detail-type-tag">⚠️ ${escapeHtml(data.type || 'General Incident')}</span></div></div></div>
+                    <div class="detail-card"><div class="detail-card-header"><div class="detail-avatar">📍</div><div class="detail-header-info"><div class="detail-card-title">Incident Location</div><div class="detail-sub">📍 ${escapeHtml(data.location || 'No address provided')}</div></div></div>${hasLocation ? '<div id="viewMap"></div>' : '<div style="height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#aaa;gap:6px;margin-bottom:12px;">🗺️ <span style="font-size:13px;">No location coordinates</span></div>'}</div>
+                    <div class="detail-card"><div class="detail-card-header"><div class="detail-avatar">📄</div><div class="detail-header-info"><div class="detail-card-title">Description</div><div class="detail-value">${escapeHtml(data.title) || 'Untitled'}</div></div><span class="badge-priority ${priorityClass}" style="margin-left:8px">${data.priority || 'N/A'}</span><span style="background-color:${getStatusColor(data.status)};color:white;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;margin-left:6px">${data.status || 'Pending'}</span></div><p class="detail-description">${escapeHtml(data.description) || 'No description provided.'}</p><div class="detail-date-row"><span>Reported on: ${data.dateSubmitted || 'N/A'}</span>${data.resolvedBy ? `<span><i class="bi bi-person-check"></i> Resolved by: ${escapeHtml(data.resolvedBy)}</span>` : ''}</div>${data.resolutionActions ? `<div class="detail-date-row"><strong>Actions Taken:</strong><br>${escapeHtml(data.resolutionActions)}</div>` : ''}${data.resolutionResponseTime ? `<div class="detail-date-row"><strong>Response Time:</strong> ${escapeHtml(data.resolutionResponseTime)}</div>` : ''}${data.resolutionNotes ? `<div class="detail-date-row"><strong>Additional Notes:</strong><br>${escapeHtml(data.resolutionNotes)}</div>` : ''}</div>
+                `;
+                // Show/hide approve button based on status
+                const approveBtn = document.getElementById('modalApproveBtn');
+                if (data.status === 'INCOMING') {
+                    approveBtn.style.display = 'inline-block';
+                } else {
+                    approveBtn.style.display = 'none';
+                }
+                if (currentMap) { currentMap.remove(); currentMap = null; }
+                const modalEl = document.getElementById('viewReportModal');
+                const modal = new bootstrap.Modal(modalEl);
+                if (hasLocation) {
+                    modalEl.addEventListener('shown.bs.modal', function handler() {
+                        modalEl.removeEventListener('shown.bs.modal', handler);
+                        const mapContainer = document.getElementById('viewMap');
+                        if (!mapContainer) return;
+                        const map = L.map('viewMap').setView([data.latitude, data.longitude], 16);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+                        const redIcon = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
+                        L.marker([data.latitude, data.longitude], { icon: redIcon }).addTo(map).bindPopup(`<b>${escapeHtml(data.title || 'Report Location')}</b>`).openPopup();
+                        map.invalidateSize();
+                        currentMap = map;
+                    });
+                }
+                modal.show();
+            })
+            .catch(error => { console.error(error); alert("Error loading report details"); });
+    }
+    
+    function modalApproveAction() {
+        if (currentModalReportId && currentModalReportStatus === 'INCOMING') {
+            updateStatus(currentModalReportId, 'APPROVED');
+            const modalEl = document.getElementById('viewReportModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return text;
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function updateStatus(id, status) {
+        fetch('/safety-reports/' + id + '/status?status=' + status, { method: 'PUT', headers: { 'Content-Type': 'application/json' } })
+            .then(response => { if (response.ok) window.location.reload(); else alert('Error updating status'); });
+    }
+    
+    function viewResolutionDetails(id) {
+        fetch('/safety-reports/' + id).then(response => response.json()).then(data => {
+            document.getElementById('viewInfoTitle').textContent = data.title || 'Untitled';
+            document.getElementById('viewInfoLocation').textContent = data.location || 'No location';
+            document.getElementById('viewInfoType').textContent = data.type || 'Safety';
+            const priorityClass = data.priority === 'HIGH' ? 'priority-high' : data.priority === 'MEDIUM' ? 'priority-medium' : 'priority-low';
+            document.getElementById('viewInfoPriority').innerHTML = `<span class="badge-priority ${priorityClass}">${data.priority || 'LOW'}</span>`;
+            document.getElementById('viewInfoReporter').textContent = data.reporterName || 'N/A';
+            document.getElementById('viewInfoDate').textContent = data.dateSubmitted || 'N/A';
+            document.getElementById('viewInfoResolvedBy').textContent = data.resolvedBy || 'N/A';
+            document.getElementById('viewInfoResolvedOn').textContent = data.dateHandled ? new Date(data.dateHandled).toLocaleString() : 'N/A';
+            document.getElementById('viewResponseTime').textContent = data.resolutionResponseTime || 'N/A';
+            document.getElementById('viewActionsTaken').textContent = data.resolutionActions || 'No actions recorded';
+            document.getElementById('viewAdditionalNotes').textContent = data.resolutionNotes || 'No additional notes';
+            new bootstrap.Modal(document.getElementById('viewResolutionModal')).show();
+        }).catch(error => { console.error(error); alert('Error loading resolution details'); });
+    }
+    
+    let pendingResolveId = null;
+    function openResolutionModal(id) {
+        pendingResolveId = id;
+        fetch('/safety-reports/' + id).then(response => response.json()).then(data => {
+            document.getElementById('infoTitle').textContent = data.title || 'Untitled';
+            document.getElementById('infoLocation').textContent = data.location || 'No location';
+            document.getElementById('infoType').textContent = data.type || 'Safety';
+            const priorityClass = data.priority === 'HIGH' ? 'priority-high' : data.priority === 'MEDIUM' ? 'priority-medium' : 'priority-low';
+            document.getElementById('infoPriority').innerHTML = `<span class="badge-priority ${priorityClass}">${data.priority || 'LOW'}</span>`;
+            document.getElementById('infoReporter').textContent = data.reporterName || 'N/A';
+            document.getElementById('infoDate').textContent = data.dateSubmitted || 'N/A';
+            const approvedTime = data.dateHandled ? new Date(data.dateHandled) : null;
+            if (approvedTime) {
+                const now = new Date(); const diffMs = now - approvedTime; const diffMins = Math.floor(diffMs / 60000); const diffHours = Math.floor(diffMins / 60); const diffDays = Math.floor(diffHours / 24);
+                let responseTimeText = diffDays > 0 ? `${diffDays} day(s), ${diffHours % 24} hour(s), ${diffMins % 60} minute(s)` : diffHours > 0 ? `${diffHours} hour(s), ${diffMins % 60} minute(s)` : `${diffMins} minute(s)`;
+                document.getElementById('resolutionResponseTime').value = responseTimeText;
+            } else { document.getElementById('resolutionResponseTime').value = 'Not yet approved'; }
+            document.getElementById('resolutionActions').value = '';
+            document.getElementById('resolutionNotes').value = '';
+            new bootstrap.Modal(document.getElementById('resolutionModal')).show();
+        }).catch(error => { console.error(error); });
+    }
+    
+    document.getElementById('confirmResolveBtn').addEventListener('click', function() {
+        if (!pendingResolveId) return;
+        const resolutionData = { actions: document.getElementById('resolutionActions').value, notes: document.getElementById('resolutionNotes').value, responseTime: document.getElementById('resolutionResponseTime').value };
+        fetch('/safety-reports/' + pendingResolveId + '/resolution', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(resolutionData) })
+            .then(response => { if (response.ok) return fetch('/safety-reports/' + pendingResolveId + '/status?status=RESOLVED', { method: 'PUT', headers: { 'Content-Type': 'application/json' } }); else throw new Error('Failed to save resolution'); })
+            .then(response => { if (response.ok) window.location.reload(); else alert('Error updating status'); })
+            .catch(error => { console.error(error); alert('Error saving resolution'); });
+    });
+    
+    function exportToPDF() { const { jsPDF } = window.jspdf; const doc = new jsPDF(); const activePanel = document.querySelector('.panel-inner:not(.d-none)'); const title = activePanel.querySelector('.panel-header').innerText; doc.text(title, 14, 15); doc.autoTable({ html: activePanel.querySelector('table'), startY: 20, margin: { top: 20 } }); doc.save(title.replace(/\s+/g, '_') + '.pdf'); }
+    function redirectToPassword() { window.location.href = '/user-profile'; }
+    
+    let lastSeenId = 0, pollingInterval = null;
+    function initLastSeenId() { let maxId = 0; document.querySelectorAll('.panel-inner tbody tr').forEach(row => { const viewBtn = row.querySelector('.view-btn'); if (viewBtn && viewBtn.getAttribute('onclick')) { const match = viewBtn.getAttribute('onclick').match(/viewReport\((\d+)\)/); if (match && match[1]) maxId = Math.max(maxId, parseInt(match[1])); } }); lastSeenId = maxId; }
+    async function pollReports() { try { const response = await fetch('/safety-reports/api/poll?lastId=' + lastSeenId + '&t=' + Date.now()); if (!response.ok) return; const data = await response.json(); if (data.counts) { const badges = ['incoming', 'approved', 'inprogress', 'resolved', 'archive']; badges.forEach(badge => { const el = document.getElementById('badge-' + badge); if (el) el.textContent = data.counts[badge] || 0; }); } if (data.newReports && data.newReports.length > 0) { lastSeenId = Math.max(lastSeenId, ...data.newReports.map(r => r.id)); window.location.reload(); } } catch (error) { console.error("Polling error:", error); } }
+    function startPolling() { if (pollingInterval) clearInterval(pollingInterval); pollingInterval = setInterval(pollReports, 5000); }
+    window.onload = function() { const status = document.getElementById('accountStatus'); if (status && (status.value === 'New' || status.value === 'Newly Updated')) { document.getElementById('forcePasswordModal').style.display = 'block'; document.body.style.overflow = 'hidden'; } initLastSeenId(); startPolling(); };
+    window.addEventListener('beforeunload', function() { if (pollingInterval) clearInterval(pollingInterval); });
+</script>
+
+</body>
+</html>

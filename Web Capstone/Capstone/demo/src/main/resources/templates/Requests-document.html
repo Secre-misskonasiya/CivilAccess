@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+
+<style>
+    body { margin: 0; font-family: Arial, sans-serif; }
+     .layout { display: flex; height: 100vh; overflow: hidden; }
+    
+    .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .top-header {
+        background-color: #2d4a44;
+        display: flex;
+        border-bottom: 2px solid #FED734;
+    }
+    .top-header-tab {
+        flex: 1;
+        color: white;
+        text-align: center;
+        padding: 16px 20px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .search-bar-area {
+        padding: 16px 20px 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background-color: #f5f5f5;
+    }
+    .search-input-wrap { flex: 1; position: relative; }
+    .search-input-wrap input {
+        width: 100%;
+        padding: 9px 14px 9px 38px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: white;
+        box-sizing: border-box;
+    }
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #aaa;
+    }
+    .filter-btn {
+        padding: 9px 16px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        background: white;
+        font-size: 14px;
+        cursor: pointer;
+        color: #444;
+    }
+    .filter-select {
+        padding: 9px 16px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        background: white;
+        font-size: 14px;
+        cursor: pointer;
+        color: #444;
+    }
+    .export-btn {
+        padding: 9px 20px;
+        border: none;
+        border-radius: 6px;
+        background: #FED734;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        color: #2d4a44;
+    }
+
+    .tabbar {
+        display: flex;
+        background-color: white;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0 20px;
+        gap: 4px;
+    }
+    .tab {
+        padding: 12px 18px;
+        color: #666;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tab.active {
+        background-color: #2d4a44;
+        color: white;
+        border-radius: 6px 6px 0 0;
+        font-weight: bold;
+    }
+
+    .panel {
+        padding: 20px;
+        background-color: #f5f5f5;
+        flex: 1;
+        overflow-y: auto;
+    }
+    .panel-inner {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+    }
+    .panel-header {
+        background-color: #3d5f58;
+        color: white;
+        padding: 14px 20px;
+        font-weight: bold;
+        font-size: 15px;
+    }
+    .panel-content { overflow-x: auto; }
+
+    th {
+        background-color: #eaf2f0 !important;
+        color: #2d4a44 !important;
+        font-size: 12px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 10px 14px !important;
+        white-space: nowrap;
+    }
+    td {
+        padding: 12px 14px !important;
+        vertical-align: middle !important;
+    }
+
+    .action-buttons { display: inline-flex; gap: 6px; align-items: center; }
+    .approve-btn { background-color: #44C375; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
+    .approve-btn:hover { background-color: #2ea05e; }
+    .process-btn { background-color: #3498db; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
+    .process-btn:hover { background-color: #2176ae; }
+    .ready-btn { background-color: #FED734; color: #2d4a44; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
+    .ready-btn:hover { background-color: #e0bc2a; }
+    .view-btn { background-color: #8e44ad; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
+    .view-btn:hover { background-color: #6c3483; }
+    .archive-btn { background-color: #e74c3c; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
+    .archive-btn:hover { background-color: #b93e30; }
+
+    .table-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-top: 1px solid #e0e0e0;
+        font-size: 13px;
+        color: #888;
+    }
+    .page-item.active .page-link { background-color: #2d4a44; border-color: #2d4a44; }
+    .page-link { color: #2d4a44; }
+    /* Document Modal */
+    .doc-modal-overlay {
+        display: none;
+        position: fixed;
+        z-index: 3000;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.6);
+        overflow-y: auto;
+    }
+    .doc-modal-box {
+        background: white;
+        margin: 30px auto;
+        border-radius: 10px;
+        width: 900px;
+        max-width: 95%;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        overflow: hidden;
+    }
+    .doc-modal-header {
+        background-color: #2d4a44;
+        color: white;
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 3px solid #FED734;
+    }
+    .doc-modal-header h4 { margin: 0; font-size: 16px; }
+    .doc-modal-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 22px;
+        cursor: pointer;
+        line-height: 1;
+    }
+    .doc-modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+    .doc-modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        background: #f9f9f9;
+    }
+
+    /* Document Template */
+    .doc-template {
+        border: 2px solid #2d4a44;
+        border-radius: 10px;
+        padding: 20px;
+        position: relative;
+        background: white;
+        font-family: 'Times New Roman', serif;
+    }
+    .doc-template.with-watermark::before {
+        content: 'READY FOR PICKUP';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-35deg);
+        font-size: 52px;
+        font-weight: 900;
+        color: rgba(231, 76, 60, 0.18);
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 10;
+        letter-spacing: 4px;
+        font-family: Arial, sans-serif;
+    }
+    .doc-header {
+        text-align: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #2d4a44;
+        padding-bottom: 14px;
+    }
+    .doc-header .republic { font-size: 11px; color: #555; margin-bottom: 2px; }
+    .doc-header .province { font-size: 11px; color: #555; }
+    .doc-header .barangay-name { font-size: 20px; font-weight: bold; color: #2d4a44; margin: 6px 0 2px; }
+    .doc-header .doc-title { font-size: 15px; font-weight: bold; letter-spacing: 2px; margin-top: 8px; text-transform: uppercase; color: #333; }
+    .doc-field { margin-bottom: 14px; }
+    .doc-field label { display: block; font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+    .doc-field input, .doc-field select, .doc-field textarea {
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid #aaa;
+        padding: 5px 2px;
+        font-size: 14px;
+        font-family: 'Times New Roman', serif;
+        background: transparent;
+        box-sizing: border-box;
+        outline: none;
+        color: #222;
+    }
+    .doc-field input:focus, .doc-field select:focus, .doc-field textarea:focus {
+        border-bottom: 2px solid #2d4a44;
+    }
+    .doc-field textarea { resize: none; }
+    .doc-row { display: flex; gap: 20px; }
+    .doc-row .doc-field { flex: 1; }
+    .doc-section-title {
+        font-size: 12px;
+        font-weight: bold;
+        color: #2d4a44;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin: 18px 0 10px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 4px;
+    }
+    .doc-signature-area {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 40px;
+    }
+    .doc-signature-block { text-align: center; width: 45%; }
+    .doc-signature-block .sig-line { border-top: 1px solid #333; padding-top: 6px; font-size: 13px; font-weight: bold; }
+    .doc-signature-block .sig-sub { font-size: 11px; color: #666; }
+
+    .btn-print {
+        padding: 9px 20px; border: none; border-radius: 6px;
+        background: #2d4a44; font-size: 14px; font-weight: bold;
+        cursor: pointer; color: white;
+    }
+    .btn-print:hover { background: #1e3330; }
+    .btn-download {
+        padding: 9px 20px; border: none; border-radius: 6px;
+        background: #FED734; font-size: 14px; font-weight: bold;
+        cursor: pointer; color: #2d4a44;
+    }
+    .btn-download:hover { background: #e0bc2a; }
+    .btn-cancel {
+        padding: 9px 20px; border: 1px solid #ccc; border-radius: 6px;
+        background: white; font-size: 14px; cursor: pointer; color: #555;
+    }
+    .force-modal {
+        display: none; position: fixed; z-index: 9999;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.6);
+    }
+    .force-modal-content {
+        background: white; width: 400px; padding: 30px;
+        border-radius: 8px; text-align: center; margin: 15% auto;
+    }
+</style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">   
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<title>Requests</title>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- Lock Modal -->
+ <input type="hidden" id="accountStatus" th:value="${currentstatus}">
+<div id="forcePasswordModal" class="force-modal">
+    <div class="force-modal-content">
+        <h2>First Login Detected</h2>
+        <p>You must change your password before using the system.</p>
+        <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+  <!-- Sidebar -->
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+<!-- Sidebar -->
+
+
+<div class="content">
+
+    <!-- Top header -->
+    <div class="top-header">
+        <div class="top-header-tab">Document Requests</div>
+    </div>
+
+    <!-- Search / Filter / Export -->
+    <div class="search-bar-area">
+        <div class="search-input-wrap">
+            <span class="search-icon"><i class="bi bi-search"></i></span>
+            <input type="text" id="request-search" placeholder="Search by name, type, or ID...">
+        </div>
+        <select id="filter-type" class="filter-select">
+            <option value="all">All Document Types</option>
+            <option value="Barangay_ID">Barangay ID</option>
+            <option value="Barangay_Clearance">Barangay Clearance</option>
+            <option value="Certificate_of_Residency">Certificate of Residency</option>
+        </select>
+        <button class="export-btn" id="export-pdf-btn" onclick="exportToPDF()">Export</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabbar">
+        <div class="tab active" onclick="switchTab(this, 'incoming')">Incoming</div>
+        <div class="tab" onclick="switchTab(this, 'processing')">Processing</div>
+        <div class="tab" onclick="switchTab(this, 'ready')">Ready</div>
+        <div class="tab" onclick="switchTab(this, 'archive')">Archive</div>
+    </div>
+
+    <!-- Panel -->
+    <div class="panel">
+
+        <!-- Incoming -->
+        <div id="tab-incoming" class="panel-inner">
+            <div class="panel-header">Incoming Document Requests</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead>
+                        
+                            <th>Name</th>
+                            <th>Phone Number</th>
+                            <th>File</th>
+                            <th>Request Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="req : ${incomingRequests}">
+                            <td th:text="${req.fullName}"></td>
+                            <td th:text="${req.contactNumber}"></td>
+                            <td>
+                                <a th:if="${req.validIdUrl != null}" th:href="${req.validIdUrl}" target="_blank">View File</a>
+                                <span th:unless="${req.validIdUrl != null}">N/A</span>
+                            </td>
+                            <td th:text="${req.documentType}"></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <form th:action="@{/requests-document/{id}/process(id=${req.id})}" method="post" style="display:inline;">
+                                        <button class="approve-btn" type="submit">Approve</button>
+                                    </form>
+                                    <form th:action="@{/requests-document/{id}/archive(id=${req.id})}" method="post" style="display:inline;">
+                                        <button class="archive-btn" type="submit">Archive</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(incomingRequests)}">
+                            <td colspan="5" style="text-align:center; color:#999;">No incoming requests</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="table-footer">
+                    <span>Showing incoming requests</span>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item"><a class="page-link" href="#"><i class="bi bi-arrow-left"></i> Prev</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">Next <i class="bi bi-arrow-right"></i></a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processing -->
+        <div id="tab-processing" class="panel-inner d-none">
+            <div class="panel-header">Processing Document Requests</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone Number</th>
+                            <th>File</th>
+                            <th>Request Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="req : ${processingRequests}">
+                            <td th:text="${req.fullName}"></td>
+                            <td th:text="${req.contactNumber}"></td>
+                            <td>
+                                <a th:if="${req.validIdUrl != null}" th:href="${req.validIdUrl}" target="_blank">View File</a>
+                                <span th:unless="${req.validIdUrl != null}">N/A</span>
+                            </td>
+                            <td th:text="${req.documentType}"></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button type="button" class="process-btn"
+                                        th:data-id="${req.id}"
+                                        th:data-name="${req.fullName}"
+                                        th:data-phone="${req.contactNumber}"
+                                        th:data-type="${req.documentType}"
+                                        th:data-readonly="false"
+                                        onclick="openDocModal(this)">
+                                        Process
+                                    </button>
+                                    <form th:action="@{/requests-document/{id}/ready(id=${req.id})}" method="post" style="display:inline;">
+                                        <button class="ready-btn" type="submit">Mark Ready</button>
+                                    </form>
+                                    <form th:action="@{/requests-document/{id}/archive(id=${req.id})}" method="post" style="display:inline;">
+                                        <button class="archive-btn" type="submit">Archive</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(processingRequests)}">
+                            <td colspan="5" style="text-align:center; color:#999;">No processing requests</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="table-footer">
+                    <span>Showing processing requests</span>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item"><a class="page-link" href="#"><i class="bi bi-arrow-left"></i> Prev</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">Next <i class="bi bi-arrow-right"></i></a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ready -->
+        <div id="tab-ready" class="panel-inner d-none">
+            <div class="panel-header">Ready Document Requests</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone Number</th>
+                            <th>File</th>
+                            <th>Request Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="req : ${readyRequests}">
+                            <td th:text="${req.fullName}"></td>
+                            <td th:text="${req.contactNumber}"></td>
+                            <td>
+                                <a th:if="${req.validIdUrl != null}" th:href="${req.validIdUrl}" target="_blank">View File</a>
+                                <span th:unless="${req.validIdUrl != null}">N/A</span>
+                            </td>
+                            <td th:text="${req.documentType}"></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button type="button" class="view-btn"
+                                        th:data-id="${req.id}"
+                                        th:data-name="${req.fullName}"
+                                        th:data-phone="${req.contactNumber}"
+                                        th:data-type="${req.documentType}"
+                                        th:data-readonly="true"
+                                        onclick="openDocModal(this)">
+                                        View
+                                    </button>
+                                    <form th:action="@{/requests-document/{id}/archive(id=${req.id})}" method="post" style="display:inline;">
+                                        <button class="archive-btn" type="submit">Archive</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(readyRequests)}">
+                            <td colspan="5" style="text-align:center; color:#999;">No ready requests</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="table-footer">
+                    <span>Showing ready requests</span>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item"><a class="page-link" href="#"><i class="bi bi-arrow-left"></i> Prev</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">Next <i class="bi bi-arrow-right"></i></a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Archive -->
+        <div id="tab-archive" class="panel-inner d-none">
+            <div class="panel-header">Archived Document Requests</div>
+            <div class="panel-content">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone Number</th>
+                            <th>File</th>
+                            <th>Request Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="req : ${archivedRequests}">
+                            <td th:text="${req.fullName}"></td>
+                            <td th:text="${req.contactNumber}"></td>
+                            <td>
+                                <a th:if="${req.validIdUrl != null}" th:href="${req.validIdUrl}" target="_blank">View File</a>
+                                <span th:unless="${req.validIdUrl != null}">N/A</span>
+                            </td>
+                            <td th:text="${req.documentType}"></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(archivedRequests)}">
+                            <td colspan="4" style="text-align:center; color:#999;">No archived requests</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="table-footer">
+                    <span>Showing archived requests</span>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item"><a class="page-link" href="#"><i class="bi bi-arrow-left"></i> Prev</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">Next <i class="bi bi-arrow-right"></i></a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</div>
+
+<!-- Logout Modal -->
+<div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
+
+<!-- Logout modal -->
+    <script src="/js/sidebar.js"></script>
+
+<!-- Document Modal -->
+<div id="docModalOverlay" class="doc-modal-overlay">
+    <div class="doc-modal-box">
+        <div class="doc-modal-header">
+            <h4 id="docModalTitle">Document Template</h4>
+            <button class="doc-modal-close" onclick="closeDocModal()">&times;</button>
+        </div>
+        <div class="doc-modal-body">
+            <div id="printable-area"></div>
+        </div>
+        <div class="doc-modal-footer">
+            <button class="btn-cancel" onclick="closeDocModal()">Close</button>
+            <button class="btn-download" onclick="downloadPDF()"><i class="bi bi-download"></i> Download PDF</button>
+            <button class="btn-print" onclick="printDocument()"><i class="bi bi-printer"></i> Print</button>
+        </div>
+    </div>
+</div>
+
+<script>
+  // ── Tab switching ──────────────────────────────────────────────────────────
+  function switchTab(el, tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.panel-inner').forEach(p => p.classList.add('d-none'));
+    document.getElementById('tab-' + tab).classList.remove('d-none');
+    document.getElementById('request-search').value = '';
+    document.getElementById('filter-type').value = 'all';
+    applyFilters();
+  }
+
+  // ── Search and Filter Functions ───────────────────────────────────────────
+  function applyFilters() {
+    const searchValue = document.getElementById('request-search').value.toLowerCase();
+    const filterType = document.getElementById('filter-type').value;
+    const activePanel = document.querySelector('.panel-inner:not(.d-none)');
+    
+    if (!activePanel) return;
+    
+    const rows = activePanel.querySelectorAll('tbody tr');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+      // Skip the "no data" row if it exists
+      if (row.querySelector('td[colspan]')) {
+        row.style.display = '';
+        return;
+      }
+      
+      const name = row.cells[0]?.textContent.toLowerCase() || '';
+      const phone = row.cells[1]?.textContent.toLowerCase() || '';
+      const documentType = row.cells[3]?.textContent.toLowerCase() || '';
+      const searchText = `${name} ${phone} ${documentType}`;
+      
+      let matchesSearch = searchValue === '' || searchText.includes(searchValue);
+      
+      let matchesFilter = filterType === 'all';
+      if (!matchesFilter && filterType !== 'all') {
+        const filterValue = filterType.toLowerCase().replace(/_/g, ' ');
+        matchesFilter = documentType.includes(filterValue) || documentType.includes(filterType.toLowerCase());
+      }
+      
+      if (matchesSearch && matchesFilter) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+    
+    // Update the "no results" message
+    const noDataRow = activePanel.querySelector('tbody tr td[colspan]')?.parentElement;
+    if (noDataRow) {
+      if (visibleCount === 0 && searchValue !== '') {
+        noDataRow.style.display = '';
+        const td = noDataRow.querySelector('td');
+        if (td) td.textContent = 'No matching requests found';
+      } else if (visibleCount === 0 && filterType !== 'all') {
+        noDataRow.style.display = '';
+        const td = noDataRow.querySelector('td');
+        if (td) td.textContent = `No ${filterType.replace(/_/g, ' ')} requests found`;
+      } else {
+        noDataRow.style.display = 'none';
+      }
+    }
+  }
+
+  // ── Search input listener ─────────────────────────────────────────────────
+  const searchInput = document.getElementById('request-search');
+  if (searchInput) {
+    searchInput.addEventListener('keyup', applyFilters);
+  }
+
+  // ── Filter dropdown listener ─────────────────────────────────────────────
+  const filterSelect = document.getElementById('filter-type');
+  if (filterSelect) {
+    filterSelect.addEventListener('change', applyFilters);
+  }
+
+
+  // Helper function to escape HTML special characters
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // ── Document Modal ─────────────────────────────────────────────────────────
+  function openDocModal(button) {
+    const id = button.getAttribute('data-id');
+    const fullName = button.getAttribute('data-name') || '';
+    const contactNumber = button.getAttribute('data-phone') || '';
+    let documentType = button.getAttribute('data-type') || '';
+    const isReadOnly = button.getAttribute('data-readonly') === 'true';
+    
+    documentType = documentType.trim();
+    
+    const safeFullName = escapeHtml(fullName);
+    const safeContactNumber = escapeHtml(contactNumber);
+    const today = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+    const ro = isReadOnly ? 'readonly' : '';
+    const wm = isReadOnly ? 'with-watermark' : '';
+    let html = '';
+
+    document.getElementById('docModalTitle').textContent =
+      (isReadOnly ? 'View: ' : 'Process: ') + documentType.replace(/_/g, ' ');
+
+    if (documentType.includes('Certificate_of_Residency') || 
+        documentType.toLowerCase().includes('residency')) {
+      html = `
+        <div class="doc-template ${wm}">
+          <div class="doc-header">
+            <div class="republic">Republic of the Philippines</div>
+            <div class="province">City/Municipality of ___________</div>
+            <div class="barangay-name">Barangay San Sebastian</div>
+            <div class="doc-title">Certificate of Residency</div>
+          </div>
+          <p style="font-size:13px; margin: 16px 0 10px; line-height:1.7;">TO WHOM IT MAY CONCERN:</p>
+          <p style="font-size:13px; line-height:1.9; margin-bottom: 6px;">
+            This is to certify that
+            <strong><input type="text" value="${safeFullName}" ${ro} style="width:200px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;font-weight:bold;padding:0 4px;"/></strong>,
+            of legal age, is a <strong>bona fide resident</strong> of
+            <input type="text" placeholder="complete address" ${ro} style="width:260px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;"/>
+            and has been residing in this barangay for
+            <input type="text" placeholder="X" ${ro} style="width:40px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;text-align:center;"/>
+            year(s).
+          </p>
+          <div class="doc-section-title">Certificate Details</div>
+          <div class="doc-row">
+            <div class="doc-field">
+              <label>Purpose</label>
+              <input type="text" placeholder="e.g. School Enrollment, Employment, Loan" ${ro}/>
+            </div>
+            <div class="doc-field">
+              <label>Contact Number</label>
+              <input type="text" value="${safeContactNumber}" ${ro}/>
+            </div>
+          </div>
+          <div class="doc-row">
+            <div class="doc-field">
+              <label>Civil Status</label>
+              <select ${ro}>
+                <option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option>
+              </select>
+            </div>
+            <div class="doc-field">
+              <label>Date of Birth</label>
+              <input type="text" placeholder="e.g. January 1, 2000" ${ro}/>
+            </div>
+            <div class="doc-field">
+              <label>Date Issued</label>
+              <input type="text" value="${today}" ${ro}/>
+            </div>
+          </div>
+          <div class="doc-field">
+            <label>Additional Notes (optional)</label>
+            <textarea rows="2" placeholder="Any additional information..." ${ro}></textarea>
+          </div>
+          <div class="doc-signature-area">
+            <div class="doc-signature-block">
+              <div class="doc-field" style="margin-bottom:6px;">
+                <input type="text" placeholder="Issued By (Name)" ${ro} style="text-align:center;"/>
+              </div>
+              <div class="sig-sub">Issuing Officer</div>
+            </div>
+            <div class="doc-signature-block">
+              <div class="doc-field" style="margin-bottom:0;">
+                <input type="text" placeholder="Punong Barangay Name" ${ro} style="text-align:center;"/>
+              </div>
+              <div class="sig-sub">Punong Barangay</div>
+            </div>
+          </div>
+        </div>`;
+    }
+    else if (documentType.includes('Barangay_Clearance') || 
+             documentType.toLowerCase().includes('clearance')) {
+      html = `
+        <div class="doc-template ${wm}">
+          <div class="doc-header">
+            <div class="republic">Republic of the Philippines</div>
+            <div class="province">City/Municipality of ___________</div>
+            <div class="barangay-name">Barangay San Sebastian</div>
+            <div class="doc-title">Barangay Clearance</div>
+          </div>
+          <p style="font-size:13px; margin: 16px 0 10px; line-height:1.7;">TO WHOM IT MAY CONCERN:</p>
+          <p style="font-size:13px; line-height:1.9; margin-bottom: 6px;">
+            This is to certify that
+            <strong><input type="text" value="${safeFullName}" ${ro} style="width:200px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;font-weight:bold;padding:0 4px;"/></strong>,
+            of legal age,
+            <select ${ro} style="border:none;border-bottom:1px solid #333;font-size:13px;">
+              <option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option>
+            </select>,
+            Filipino citizen, and a resident of
+            <input type="text" placeholder="complete address" ${ro} style="width:260px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;"/>
+            is known to be a person of <strong>good moral character</strong> and has no derogatory record on file in this office.
+          </p>
+          <div class="doc-section-title">Clearance Details</div>
+          <div class="doc-row">
+            <div class="doc-field">
+              <label>Purpose</label>
+              <input type="text" placeholder="e.g. Employment, Loan, School Enrollment" ${ro}/>
+            </div>
+            <div class="doc-field">
+              <label>Contact Number</label>
+              <input type="text" value="${safeContactNumber}" ${ro}/>
+            </div>
+          </div>
+          <div class="doc-row">
+            <div class="doc-field">
+              <label>OR Number</label>
+              <input type="text" placeholder="Official Receipt No." ${ro}/>
+            </div>
+            <div class="doc-field">
+              <label>Amount Paid</label>
+              <input type="text" placeholder="e.g. PHP 50.00" ${ro}/>
+            </div>
+            <div class="doc-field">
+              <label>Date Issued</label>
+              <input type="text" value="${today}" ${ro}/>
+            </div>
+          </div>
+          <div class="doc-signature-area">
+            <div class="doc-signature-block">
+              <div class="doc-field" style="margin-bottom:6px;">
+                <input type="text" placeholder="Issued By (Name)" ${ro} style="text-align:center;"/>
+              </div>
+              <div class="sig-sub">Issuing Officer</div>
+            </div>
+            <div class="doc-signature-block">
+              <div class="doc-field" style="margin-bottom:0;">
+                <input type="text" placeholder="Punong Barangay Name" ${ro} style="text-align:center;"/>
+              </div>
+              <div class="sig-sub">Punong Barangay</div>
+            </div>
+          </div>
+        </div>`;
+    }
+    else {
+      html = `
+        <div class="doc-template ${wm}" style="max-width: 850px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #2d4a44 0%, #1e3330 100%); color: white; padding: 15px 25px; border-radius: 10px 10px 0 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 15px;">
+                <img src="images/brgy.png" style="width: 60px; height: 60px; filter: brightness(0) invert(1);" alt="Logo"/>
+                <div>
+                  <div style="font-size: 12px; letter-spacing: 1px;">Republic of the Philippines</div>
+                  <div style="font-size: 18px; font-weight: bold;">Barangay San Sebastian</div>
+                  <div style="font-size: 11px;">City/Municipality of ___________</div>
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 16px; font-weight: bold; background: #FED734; color: #2d4a44; padding: 6px 16px; border-radius: 25px;">
+                  OFFICIAL ID
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="background: white; padding: 25px; border-radius: 0 0 10px 10px; border: 1px solid #ddd; border-top: none;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <div style="font-size: 18px; font-weight: bold; color: #2d4a44; border-bottom: 3px solid #FED734; display: inline-block; padding-bottom: 6px;">
+                BARANGAY IDENTIFICATION CARD
+              </div>
+            </div>
+            
+            <div style="display: flex; gap: 30px;">
+              <div style="flex: 0.9;">
+                <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+                  <div style="width: 150px; height: 170px; border: 2px solid #2d4a44; background: #f5f5f5; display: flex; align-items: center; justify-content: center; border-radius: 6px;">
+                    <i class="bi bi-person" style="font-size: 80px; color: #aaa;"></i>
+                  </div>
+                </div>
+                
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px;">
+                  <div style="margin-bottom: 10px;">
+                    <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 4px;">ID Number</div>
+                    <div style="font-size: 15px; font-weight: bold; color: #2d4a44;">
+                      <input type="text" ${ro} style="border: none; background: transparent; font-weight: bold; width: 100%; font-size: 15px;" placeholder="BSS-2026-XXXXX"/>
+                    </div>
+                  </div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                      <div style="font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 3px;">Date Issued</div>
+                      <div style="font-size: 12px;">
+                        <input type="text" value="${today}" ${ro} style="border: none; background: transparent; width: 100%; font-size: 12px;"/>
+                      </div>
+                    </div>
+                    <div>
+                      <div style="font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 3px;">Valid Until</div>
+                      <div style="font-size: 12px; font-weight: bold; color: #e74c3c;">
+                        <input type="text" ${ro} style="border: none; background: transparent; font-weight: bold; width: 100%; font-size: 12px;" placeholder="Dec 31, 2028"/>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div style="display: flex; justify-content: center; margin-top: 20px;">
+                  <div style="width: 90px; height: 90px; border: 1px solid #ddd; background: white; display: flex; align-items: center; justify-content: center; border-radius: 6px;">
+                    <i class="bi bi-qr-code" style="font-size: 65px; color: #888;"></i>
+                  </div>
+                </div>
+              </div>
+              
+              <div style="flex: 2.1;">
+                <div style="margin-bottom: 15px;">
+                  <div style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Full Name</div>
+                  <div style="font-size: 18px; font-weight: bold; color: #333; border-bottom: 2px solid #2d4a44; padding: 8px 0;">
+                    <input type="text" value="${safeFullName}" ${ro} style="border: none; width: 100%; font-weight: bold; font-size: 18px; background: transparent;" placeholder="_________________________"/>
+                  </div>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                  <div style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Address</div>
+                  <div style="font-size: 14px; border-bottom: 1px solid #ddd; padding: 6px 0;">
+                    <input type="text" ${ro} style="border: none; width: 100%; background: transparent; font-size: 14px;" placeholder="___________________________________"/>
+                  </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
+                  <div>
+                    <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 5px;">Civil Status</div>
+                    <select ${ro} style="width: 100%; border: none; border-bottom: 1px solid #ddd; padding: 6px 0; font-size: 13px; background: transparent;">
+                      <option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 5px;">Blood Type</div>
+                    <select ${ro} style="width: 100%; border: none; border-bottom: 1px solid #ddd; padding: 6px 0; font-size: 13px; background: transparent;">
+                      <option value="">--</option>
+                      <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                      <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 12px;">
+                  <div>
+                    <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 5px;">Date of Birth</div>
+                    <input type="text" ${ro} style="width: 100%; border: none; border-bottom: 1px solid #ddd; padding: 6px 0; font-size: 12px;" placeholder="MM/DD/YYYY"/>
+                  </div>
+                  <div>
+                    <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 5px;">Height (cm)</div>
+                    <input type="text" ${ro} style="width: 100%; border: none; border-bottom: 1px solid #ddd; padding: 6px 0; font-size: 12px;" placeholder="165"/>
+                  </div>
+                  <div>
+                    <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 5px;">Weight (kg)</div>
+                    <input type="text" ${ro} style="width: 100%; border: none; border-bottom: 1px solid #ddd; padding: 6px 0; font-size: 12px;" placeholder="60"/>
+                  </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
+                  <div>
+                    <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 5px;">Place of Birth</div>
+                    <input type="text" ${ro} style="width: 100%; border: none; border-bottom: 1px solid #ddd; padding: 6px 0; font-size: 12px;" placeholder="City/Municipality"/>
+                  </div>
+                  <div>
+                    <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 5px;">Contact Number</div>
+                    <input type="text" value="${safeContactNumber}" ${ro} style="width: 100%; border: none; border-bottom: 1px solid #ddd; padding: 6px 0; font-size: 12px;"/>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee;">
+              <div style="text-align: center; flex: 1;">
+                <div style="border-top: 2px solid #333; padding-top: 12px; width: 85%; margin: 0 auto;"></div>
+                <div style="font-size: 11px; color: #666; margin-top: 8px;">Signature of Holder</div>
+              </div>
+              <div style="text-align: center; flex: 1;">
+                <div style="border-top: 2px solid #333; padding-top: 12px; width: 85%; margin: 0 auto;"></div>
+                <div style="font-size: 11px; color: #666; margin-top: 8px;">Punong Barangay</div>
+              </div>
+              <div style="text-align: center; flex: 1;">
+                <div style="border-top: 2px solid #333; padding-top: 12px; width: 85%; margin: 0 auto;"></div>
+                <div style="font-size: 11px; color: #666; margin-top: 8px;">Barangay Secretary</div>
+              </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 15px; font-size: 9px; color: #999;">
+              This is an official government-issued ID. Report if found. | www.barangaysansebastian.gov.ph
+            </div>
+          </div>
+        </div>`;
+    }
+
+    document.getElementById('printable-area').innerHTML = html;
+    document.getElementById('docModalOverlay').style.display = 'block';
+  }
+
+  function closeDocModal() {
+    document.getElementById('docModalOverlay').style.display = 'none';
+    document.getElementById('printable-area').innerHTML = '';
+  }
+
+  // ── Print ──────────────────────────────────────────────────────────────────
+  function printDocument() {
+    const content = document.getElementById('printable-area').innerHTML;
+    const win = window.open('', '_blank');
+    win.document.write(`
+      <html><head><title>Print Document</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; margin: 40px; }
+        .doc-template { border: 2px solid #2d4a44; padding: 30px; position: relative; }
+        .doc-template.with-watermark::before {
+          content: 'READY FOR PICKUP';
+          position: fixed; top: 50%; left: 50%;
+          transform: translate(-50%, -50%) rotate(-35deg);
+          font-size: 72px; font-weight: 900;
+          color: rgba(231,76,60,0.15);
+          white-space: nowrap; pointer-events: none; z-index: 10;
+          letter-spacing: 4px; font-family: Arial, sans-serif;
+        }
+        .doc-header { text-align: center; border-bottom: 2px solid #2d4a44; padding-bottom: 14px; margin-bottom: 20px; }
+        .doc-header .republic, .doc-header .province { font-size: 11px; color: #555; }
+        .doc-header .barangay-name { font-size: 20px; font-weight: bold; color: #2d4a44; margin: 6px 0 2px; }
+        .doc-header .doc-title { font-size: 15px; font-weight: bold; letter-spacing: 2px; margin-top: 8px; text-transform: uppercase; }
+        .doc-field { margin-bottom: 14px; }
+        .doc-field label { display: block; font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; margin-bottom: 3px; }
+        .doc-field input, .doc-field select, .doc-field textarea { width: 100%; border: none; border-bottom: 1px solid #aaa; font-size: 14px; font-family: 'Times New Roman', serif; background: transparent; padding: 5px 2px; box-sizing: border-box; }
+        .doc-row { display: flex; gap: 20px; }
+        .doc-row .doc-field { flex: 1; }
+        .doc-section-title { font-size: 12px; font-weight: bold; color: #2d4a44; text-transform: uppercase; margin: 18px 0 10px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+        .doc-signature-area { display: flex; justify-content: space-between; margin-top: 40px; }
+        .doc-signature-block { text-align: center; width: 45%; }
+        .doc-signature-block .sig-line { border-top: 1px solid #333; padding-top: 6px; font-size: 13px; font-weight: bold; }
+        .doc-signature-block .sig-sub { font-size: 11px; color: #666; }
+      </style></head><body>${content}</body></html>
+    `);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); win.close(); }, 400);
+  }
+
+  // ── Download PDF with html2canvas ─────────────────────────────────────────
+  async function downloadPDF() {
+    const area = document.getElementById('printable-area');
+    const title = document.getElementById('docModalTitle').textContent;
+    
+    const downloadBtn = document.querySelector('.btn-download');
+    const originalText = downloadBtn.innerHTML;
+    downloadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating PDF...';
+    downloadBtn.disabled = true;
+    
+    try {
+      const element = area.firstElementChild;
+      if (!element) return;
+      
+      const canvas = await html2canvas(element, {
+        scale: 3,
+        backgroundColor: '#ffffff',
+        logging: false,
+        useCORS: true
+      });
+      
+      const { jsPDF } = window.jspdf;
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 190;
+      const pageHeight = 277;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      const orientation = imgWidth > imgHeight ? 'landscape' : 'portrait';
+      const doc = new jsPDF({ orientation: orientation, unit: 'mm', format: 'a4' });
+      
+      doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        doc.addPage();
+        doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
+      doc.save(title.replace(/[\s:]+/g, '_') + '.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    } finally {
+      downloadBtn.innerHTML = originalText;
+      downloadBtn.disabled = false;
+    }
+  }
+
+  function exportToPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const activePanel = document.querySelector('.panel-inner:not(.d-none)');
+    const table = activePanel.querySelector('table');
+    const title = activePanel.querySelector('.panel-header').innerText;
+
+    doc.text(title, 14, 15);
+
+    doc.autoTable({
+        html: table,
+        startY: 20,
+        margin: { top: 20 },
+        columnStyles: {
+            5: { cellWidth: 0, minCellWidth: 0 }
+        }
+    });
+
+    doc.save(`${title.replace(/\s+/g, '_')}.pdf`);
+  }
+window.onload = function() {
+        const status = document.getElementById('accountStatus').value;
+        if (status === 'New' || status === 'Newly Updated') {
+            document.getElementById('forcePasswordModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+    };
+
+    function redirectToPassword() {
+        window.location.href = '/user-profile';
+    }
+</script>
+
+</body>
+</html>

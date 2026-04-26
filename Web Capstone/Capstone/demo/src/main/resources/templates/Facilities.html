@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+
+<style>
+    body { 
+      margin: 0; 
+      font-family: Arial, sans-serif; 
+    }
+
+  .layout { display: flex; height: 100vh; overflow: hidden; }
+    
+    .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .top-header {
+        background-color: #2d4a44;
+        display: flex;
+        border-bottom: 2px solid #FED734;
+    }
+    .top-header-tab {
+        flex: 1;
+        color: white;
+        text-align: center;
+        padding: 16px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .search-bar-area {
+        padding: 16px 20px 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background-color: #f5f5f5;
+    }
+    .search-input-wrap { flex: 1; position: relative; }
+    .search-input-wrap input {
+        width: 100%;
+        padding: 9px 14px 9px 38px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: white;
+        box-sizing: border-box;
+    }
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #aaa;
+    }
+    .filter-btn {
+        padding: 9px 16px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        background: white;
+        font-size: 14px;
+        cursor: pointer;
+        color: #444;
+    }
+    .export-btn {
+        padding: 9px 20px;
+        border: none;
+        border-radius: 6px;
+        background: #FED734;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        color: #2d4a44;
+    }
+    .add-btn {
+        padding: 9px 20px;
+        border: none;
+        border-radius: 6px;
+        background: #44C375;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        color: white;
+    }
+
+    .tabbar {
+        display: flex;
+        background-color: white;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0 20px;
+        gap: 4px;
+    }
+    .tab {
+        padding: 12px 18px;
+        color: #666;
+        cursor: pointer;
+        font-size: 14px;
+        border-bottom: 3px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tab.active {
+        background-color: #2d4a44;
+        color: white;
+        border-radius: 6px 6px 0 0;
+        font-weight: bold;
+    }
+
+    .panel {
+        padding: 20px;
+        background-color: #f5f5f5;
+        flex: 1;
+        overflow-y: auto;
+    }
+    .panel-inner {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+    }
+    .panel-header {
+        background-color: #3d5f58;
+        color: white;
+        padding: 14px 20px;
+        font-weight: bold;
+        font-size: 15px;
+    }
+    .panel-content { padding: 16px 20px; }
+
+    th {
+        background-color: #eaf2f0 !important;
+        color: #2d4a44 !important;
+        font-size: 12px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 10px 14px !important;
+    }
+    td {
+        padding: 12px 14px !important;
+        vertical-align: middle !important;
+    }
+
+    .status-open {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        background-color: #f0fff4;
+        color: #27ae60;
+        border: 1px solid #b0e0c0;
+    }
+    .status-closed {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        background-color: #fff0f0;
+        color: #e74c3c;
+        border: 1px solid #f5c6c6;
+    }
+
+    .contact-btn {
+        background-color: #3498db;
+        color: white;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .contact-btn:hover { background-color: #2176ae; }
+
+    .update-btn {
+        background-color: #f1c40f;
+        color: #30534D;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .update-btn:hover { background-color: #d4ac0d; }
+
+    .delete-btn {
+        background-color: #e74c3c;
+        color: white;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .delete-btn:hover { background-color: #c0392b; }
+
+    .table-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-top: 1px solid #e0e0e0;
+        font-size: 13px;
+        color: #888;
+    }
+    .page-item.active .page-link { background-color: #2d4a44; border-color: #2d4a44; }
+    .page-link { color: #2d4a44; }
+
+    .facility-name { font-weight: bold; font-size: 14px; }
+    .facility-address { font-size: 12px; color: #888; margin-top: 2px; }
+    
+    /* Modal styles */
+    .modal-content {
+        border-radius: 8px;
+    }
+    .modal-header {
+        background-color: #30534D;
+        color: white;
+        border-bottom: 2px solid #FED734;
+    }
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+    .modal-body label {
+        font-weight: bold;
+        color: #30534D;
+        margin-top: 10px;
+    }
+    .modal-body p {
+        padding: 8px;
+        background-color: #f5f5f5;
+        border-radius: 4px;
+    }
+    .modal-body input, .modal-body select {
+        margin-bottom: 15px;
+    }
+
+    /* sorting button active state */
+    .sort-active {
+        background-color: #30534D !important;
+        color: white !important;
+        border-color: #30534D !important;
+    }
+    .force-modal {
+        display: none; position: fixed; z-index: 9999;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.6);
+    }
+    .force-modal-content {
+        background: white; width: 400px; padding: 30px;
+        border-radius: 8px; text-align: center; margin: 15% auto;
+    }
+</style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">   
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<title>Facilities &amp; Hotlines</title>
+</head>
+<body>
+
+<div class="layout">
+
+ <!-- Lock Modal -->
+ <input type="hidden" id="accountStatus" th:value="${currentstatus}">
+<div id="forcePasswordModal" class="force-modal">
+    <div class="force-modal-content">
+        <h2>First Login Detected</h2>
+        <p>You must change your password before using the system.</p>
+        <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+  <!-- Sidebar -->
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+<!-- Sidebar -->
+
+
+  <div class="content">
+
+    <!-- Top header -->
+    <div class="top-header">
+      <div class="top-header-tab">Facilities &amp; Hotlines</div>
+    </div>
+
+    
+    <div class="search-bar-area">
+      <div class="search-input-wrap">
+        <span class="search-icon"><i class="bi bi-search"></i></span>
+        <input type="text" id="facility-search" placeholder="Search facilities by name, location, or status...">
+      </div>
+      <!-- Sorting button (replaced reset button) -->
+      <button class="filter-btn" id="sortStatusBtn"><i class="bi bi-sort-up"></i> Sort: Open First</button>
+      <button class="add-btn" data-bs-toggle="modal" data-bs-target="#addFacilityModal"><i class="bi bi-plus-circle"></i> Add New Facility</button>
+      
+    </div>
+
+  
+    <div class="tabbar">
+      <div class="tab" th:classappend="${currentTab == 'police' ? 'active' : ''}" onclick="window.location.href='/facilities?tab=police'">Police Station</div>
+      <div class="tab" th:classappend="${currentTab == 'fire' ? 'active' : ''}" onclick="window.location.href='/facilities?tab=fire'">Fire Station</div>
+      <div class="tab" th:classappend="${currentTab == 'hospital' ? 'active' : ''}" onclick="window.location.href='/facilities?tab=hospital'">Hospital</div>
+      <div class="tab" th:classappend="${currentTab == 'emergency' ? 'active' : ''}" onclick="window.location.href='/facilities?tab=emergency'">Emergency Stations</div>
+    </div>
+
+    
+    <div class="panel">
+
+      <!-- Police Station -->
+      <div id="tab-police" class="panel-inner" th:classappend="${currentTab != 'police' ? 'd-none' : ''}">
+        <div class="panel-header">Police Stations</div>
+        <div class="panel-content">
+          <table class="table table-bordered table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Facility</th>
+                <th>Hotline</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="police-tbody">
+              <tr th:each="facility : ${policeFacilities}" th:if="${not #lists.isEmpty(policeFacilities)}">
+                <td>
+                  <div class="facility-name" th:text="${facility.facilityName != null ? facility.facilityName : 'Unknown'}">Kawit Municipal Police Station</div>
+                  <div class="facility-address" th:text="${facility.address != null ? facility.address : 'No address'}">Poblacion 1, Kawit, Cavite</div>
+                </td>
+                <td th:text="${facility.contactNumber != null ? facility.contactNumber : 'N/A'}">(046) 481-0001</td>
+                <td>
+                  <div class="d-flex gap-2">
+                    <button class="contact-btn" th:onclick="'viewFacility(' + ${facility.id} + ')'">View</button>
+                    <button class="update-btn" th:onclick="'editFacility(' + ${facility.id} + ')'">Update</button>
+                    <button class="delete-btn" th:onclick="'deleteFacility(' + ${facility.id} + ')'">Remove</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="text-center p-4" th:if="${#lists.isEmpty(policeFacilities)}">
+            <p class="text-muted">No police stations found</p>
+          </div>
+          <div class="table-footer">
+            <span th:text="'Showing ' + ${#lists.size(policeFacilities)} + ' police stations'">Showing 2 police stations</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fire Station -->
+      <div id="tab-fire" class="panel-inner" th:classappend="${currentTab != 'fire' ? 'd-none' : ''}">
+        <div class="panel-header">Fire Stations</div>
+        <div class="panel-content">
+          <table class="table table-bordered table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Facility</th>
+                <th>Hotline</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="fire-tbody">
+              <tr th:each="facility : ${fireFacilities}" th:if="${not #lists.isEmpty(fireFacilities)}">
+                <td>
+                  <div class="facility-name" th:text="${facility.facilityName != null ? facility.facilityName : 'Unknown'}">Kawit Bureau of Fire Protection</div>
+                  <div class="facility-address" th:text="${facility.address != null ? facility.address : 'No address'}">Poblacion 2, Kawit, Cavite</div>
+                </td>
+                <td th:text="${facility.contactNumber != null ? facility.contactNumber : 'N/A'}">(046) 481-0100</td>
+                <td>
+                  <div class="d-flex gap-2">
+                    <button class="contact-btn" th:onclick="'viewFacility(' + ${facility.id} + ')'">View</button>
+                    <button class="update-btn" th:onclick="'editFacility(' + ${facility.id} + ')'">Update</button>
+                    <button class="delete-btn" th:onclick="'deleteFacility(' + ${facility.id} + ')'">Remove</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="text-center p-4" th:if="${#lists.isEmpty(fireFacilities)}">
+            <p class="text-muted">No fire stations found</p>
+          </div>
+          <div class="table-footer">
+            <span th:text="'Showing ' + ${#lists.size(fireFacilities)} + ' fire stations'">Showing 2 fire stations</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hospital -->
+      <div id="tab-hospital" class="panel-inner" th:classappend="${currentTab != 'hospital' ? 'd-none' : ''}">
+        <div class="panel-header">Hospitals</div>
+        <div class="panel-content">
+          <table class="table table-bordered table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Facility</th>
+                <th>Hotline</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="hospital-tbody">
+              <tr th:each="facility : ${hospitalFacilities}" th:if="${not #lists.isEmpty(hospitalFacilities)}">
+                <td>
+                  <div class="facility-name" th:text="${facility.facilityName != null ? facility.facilityName : 'Unknown'}">Kawit District Hospital</div>
+                  <div class="facility-address" th:text="${facility.address != null ? facility.address : 'No address'}">Poblacion 3, Kawit, Cavite</div>
+                </td>
+                <td th:text="${facility.contactNumber != null ? facility.contactNumber : 'N/A'}">(046) 481-0200</td>
+                <td>
+                  <div class="d-flex gap-2">
+                    <button class="contact-btn" th:onclick="'viewFacility(' + ${facility.id} + ')'">View</button>
+                    <button class="update-btn" th:onclick="'editFacility(' + ${facility.id} + ')'">Update</button>
+                    <button class="delete-btn" th:onclick="'deleteFacility(' + ${facility.id} + ')'">Remove</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="text-center p-4" th:if="${#lists.isEmpty(hospitalFacilities)}">
+            <p class="text-muted">No hospitals found</p>
+          </div>
+          <div class="table-footer">
+            <span th:text="'Showing ' + ${#lists.size(hospitalFacilities)} + ' hospitals'">Showing 3 hospitals</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Emergency Stations -->
+      <div id="tab-emergency" class="panel-inner" th:classappend="${currentTab != 'emergency' ? 'd-none' : ''}">
+        <div class="panel-header">Emergency Stations</div>
+        <div class="panel-content">
+          <table class="table table-bordered table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Facility</th>
+                <th>Hotline</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="emergency-tbody">
+              <tr th:each="facility : ${emergencyFacilities}" th:if="${not #lists.isEmpty(emergencyFacilities)}">
+                <td>
+                  <div class="facility-name" th:text="${facility.facilityName != null ? facility.facilityName : 'Unknown'}">Barangay San Sebastian Emergency Center</div>
+                  <div class="facility-address" th:text="${facility.address != null ? facility.address : 'No address'}">Brgy. Hall, San Sebastian, Kawit, Cavite</div>
+                </td>
+                <td th:text="${facility.contactNumber != null ? facility.contactNumber : 'N/A'}">(046) 481-0911</td>
+                <td>
+                  <div class="d-flex gap-2">
+                    <button class="contact-btn" th:onclick="'viewFacility(' + ${facility.id} + ')'">View</button>
+                    <button class="update-btn" th:onclick="'editFacility(' + ${facility.id} + ')'">Update</button>
+                    <button class="delete-btn" th:onclick="'deleteFacility(' + ${facility.id} + ')'">Remove</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="text-center p-4" th:if="${#lists.isEmpty(emergencyFacilities)}">
+            <p class="text-muted">No emergency stations found</p>
+          </div>
+          <div class="table-footer">
+            <span th:text="'Showing ' + ${#lists.size(emergencyFacilities)} + ' emergency stations'">Showing 2 emergency stations</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- View Facility Modal -->
+<div class="modal fade" id="viewFacilityModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Facility Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="viewModalBody">
+        <!-- Filled by JavaScript -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Facility Modal -->
+<div class="modal fade" id="addFacilityModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Facility</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addFacilityForm">
+          <label>Facility Name:</label>
+          <input type="text" class="form-control mb-2" id="facilityName" required>
+          
+          <label>Facility Type:</label>
+          <select class="form-control mb-2" id="facilityType">
+            <option value="POLICE">Police Station</option>
+            <option value="FIRE">Fire Station</option>
+            <option value="HOSPITAL">Hospital</option>
+            <option value="EMERGENCY">Emergency Station</option>
+          </select>
+          
+          <label>Contact Number:</label>
+          <input type="text" class="form-control mb-2" id="contactNumber">
+          
+          <label>Email:</label>
+          <input type="email" class="form-control mb-2" id="email">
+          
+          <label>Address:</label>
+          <input type="text" class="form-control mb-2" id="address">
+          
+          <label>Status:</label>
+          <select class="form-control mb-2" id="status">
+            <option value="OPEN">Open</option>
+            <option value="CLOSED">Closed</option>
+          </select>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveFacility()">Save Facility</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Facility Modal -->
+<div class="modal fade" id="editFacilityModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Facility</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editFacilityForm">
+          <input type="hidden" id="editFacilityId">
+          
+          <label>Facility Name:</label>
+          <input type="text" class="form-control mb-2" id="editFacilityName" required>
+          
+          <label>Facility Type:</label>
+          <select class="form-control mb-2" id="editFacilityType">
+            <option value="POLICE">Police Station</option>
+            <option value="FIRE">Fire Station</option>
+            <option value="HOSPITAL">Hospital</option>
+            <option value="EMERGENCY">Emergency Station</option>
+          </select>
+          
+          <label>Contact Number:</label>
+          <input type="text" class="form-control mb-2" id="editContactNumber">
+          
+          <label>Email:</label>
+          <input type="email" class="form-control mb-2" id="editEmail">
+          
+          <label>Address:</label>
+          <input type="text" class="form-control mb-2" id="editAddress">
+          
+          <label>Status:</label>
+          <select class="form-control mb-2" id="editStatus">
+            <option value="OPEN">Open</option>
+            <option value="CLOSED">Closed</option>
+          </select>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="updateFacility()">Update Facility</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Logout Modal -->
+<div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
+
+<!-- Logout modal -->
+    <script src="/js/sidebar.js"></script>
+
+<script>
+  // Sorting state and function
+  let currentSortMode = 'open-first'; // 'open-first' or 'closed-first'
+  
+  function sortFacilitiesByStatus() {
+    // get currently visible tab (active panel)
+    const activePanels = document.querySelectorAll('.panel-inner:not(.d-none)');
+    if (activePanels.length === 0) return;
+    
+    activePanels.forEach(panel => {
+      const tbody = panel.querySelector('tbody');
+      if (!tbody) return;
+      
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      if (rows.length === 0) return;
+      
+      // Define status priority: OPEN first or CLOSED first
+      const getStatusPriority = (row) => {
+        const statusCell = row.cells[2];
+        if (!statusCell) return 1;
+        const statusText = statusCell.innerText.trim().toUpperCase();
+        if (currentSortMode === 'open-first') {
+          if (statusText === 'OPEN') return 0;
+          if (statusText === 'CLOSED') return 1;
+          return 2;
+        } else {
+          if (statusText === 'CLOSED') return 0;
+          if (statusText === 'OPEN') return 1;
+          return 2;
+        }
+      };
+      
+      rows.sort((a, b) => {
+        const priorityA = getStatusPriority(a);
+        const priorityB = getStatusPriority(b);
+        if (priorityA !== priorityB) return priorityA - priorityB;
+        return 0;
+      });
+      
+      // reorder DOM
+      rows.forEach(row => tbody.appendChild(row));
+    });
+  }
+  
+  // Toggle sort mode and update button UI
+  function toggleSortMode() {
+    if (currentSortMode === 'open-first') {
+      currentSortMode = 'closed-first';
+      sortBtn.innerHTML = '<i class="bi bi-sort-down"></i> Sort: Closed First';
+      sortBtn.classList.add('sort-active');
+    } else {
+      currentSortMode = 'open-first';
+      sortBtn.innerHTML = '<i class="bi bi-sort-up"></i> Sort: Open First';
+      sortBtn.classList.remove('sort-active');
+    }
+    sortFacilitiesByStatus();
+  }
+  
+  // attach sorting button listener
+  const sortBtn = document.getElementById('sortStatusBtn');
+  if (sortBtn) {
+    sortBtn.addEventListener('click', toggleSortMode);
+  }
+  
+  // Search functionality with sorting preservation
+  document.getElementById('facility-search').addEventListener('keyup', function() {
+    const searchValue = this.value.toLowerCase();
+    document.querySelectorAll('.panel-inner:not(.d-none) tbody tr').forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(searchValue) ? '' : 'none';
+    });
+    // re-apply sorting after filter to maintain order among visible rows
+    sortFacilitiesByStatus();
+  });
+  
+  // apply sorting after initial load
+  window.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+      sortFacilitiesByStatus();
+    }, 100);
+  });
+  
+  function toggleDropdown(el) {
+    const dropdown = document.getElementById('requests-dropdown');
+    const arrow = el.querySelector('.dropdown-arrow');
+    const isOpen = dropdown.style.display === 'block';
+    dropdown.style.display = isOpen ? 'none' : 'block';
+    arrow.classList.toggle('open', !isOpen);
+  }
+
+  function viewFacility(id) {
+    fetch('/facilities/' + id)
+      .then(response => response.json())
+      .then(data => {
+        const modalBody = document.getElementById('viewModalBody');
+        modalBody.innerHTML = `
+          <label>Facility Name:</label>
+          <p>${data.facilityName || 'N/A'}</p>
+          <label>Facility Type:</label>
+          <p>${data.facilityType || 'N/A'}</p>
+          <label>Contact Number:</label>
+          <p>${data.contactNumber || 'N/A'}</p>
+          <label>Email:</label>
+          <p>${data.email || 'N/A'}</p>
+          <label>Address:</label>
+          <p>${data.address || 'N/A'}</p>
+          <label>Status:</label>
+          <p>${data.status || 'N/A'}</p>
+          <label>Created:</label>
+          <p>${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>
+          <label>Last Updated:</label>
+          <p>${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'N/A'}</p>
+        `;
+        new bootstrap.Modal(document.getElementById('viewFacilityModal')).show();
+      });
+  }
+
+  function editFacility(id) {
+    fetch('/facilities/' + id)
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('editFacilityId').value = data.id;
+        document.getElementById('editFacilityName').value = data.facilityName || '';
+        document.getElementById('editFacilityType').value = data.facilityType || 'POLICE';
+        document.getElementById('editContactNumber').value = data.contactNumber || '';
+        document.getElementById('editEmail').value = data.email || '';
+        document.getElementById('editAddress').value = data.address || '';
+        document.getElementById('editStatus').value = data.status || 'OPEN';
+        
+        new bootstrap.Modal(document.getElementById('editFacilityModal')).show();
+      });
+  }
+
+  function updateFacility() {
+    const id = document.getElementById('editFacilityId').value;
+    const facility = {
+      facilityName: document.getElementById('editFacilityName').value,
+      facilityType: document.getElementById('editFacilityType').value,
+      contactNumber: document.getElementById('editContactNumber').value,
+      email: document.getElementById('editEmail').value,
+      address: document.getElementById('editAddress').value,
+      status: document.getElementById('editStatus').value
+    };
+
+    fetch('/facilities/' + id, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(facility)
+    })
+    .then(response => {
+      if (response.ok) {
+        window.location.reload();
+      } else {
+        alert('Error updating facility');
+      }
+    });
+  }
+
+  function deleteFacility(id) {
+    if (confirm('Are you sure you want to delete this facility?')) {
+      fetch('/facilities/' + id, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          alert('Error deleting facility');
+        }
+      });
+    }
+  }
+
+  function saveFacility() {
+    const facility = {
+      facilityName: document.getElementById('facilityName').value,
+      facilityType: document.getElementById('facilityType').value,
+      contactNumber: document.getElementById('contactNumber').value,
+      email: document.getElementById('email').value,
+      address: document.getElementById('address').value,
+      status: document.getElementById('status').value
+    };
+
+    fetch('/facilities/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(facility)
+    })
+    .then(response => {
+      if (response.ok) {
+        window.location.reload();
+      } else {
+        alert('Error adding facility');
+      }
+    });
+  }
+  window.onload = function() {
+        const status = document.getElementById('accountStatus').value;
+        if (status === 'New' || status === 'Newly Updated') {
+            document.getElementById('forcePasswordModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+    };
+
+    function redirectToPassword() {
+        window.location.href = '/user-profile';
+    }
+</script>
+
+</body>
+</html>

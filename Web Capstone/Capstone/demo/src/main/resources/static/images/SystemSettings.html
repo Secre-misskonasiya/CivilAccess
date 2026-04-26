@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<style>
+
+    body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    }
+
+    .layout { 
+    display: flex; 
+    height: 100vh; 
+    }
+
+    .sidebar {
+    width: 225px;
+    background-color: #30534D;
+    color: white;
+    padding: 15px;
+    position: relative; 
+    z-index: 1000;      
+    }
+
+
+    .content { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    }
+
+    .header {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #FED734; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    }
+
+    .menu {
+    list-style: none;
+    padding: 0;
+    }
+
+    .menu li {
+    padding: 10px ;
+    cursor: pointer;
+    display: flex;          
+    align-items: center;    
+    width: 100%; 
+    
+    }
+
+
+    .menu li:hover {
+    background-color: #52887F;
+    
+    }
+
+    .icon { 
+    width: 30px; 
+    height: 30px; 
+    margin-right: 10px; 
+    filter: invert(1);
+    }
+
+    .logout {
+    margin-top: 80%;
+    }
+
+    .brgy {
+        max-width: 40px;
+        margin-right: 10px;
+        margin-bottom: 8px;
+        margin-left: -10px;
+    }
+
+    .tabbar {
+    display: flex;
+    background-color: #30534D;
+    }
+
+    .tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    color: white;
+    cursor: pointer;
+    }
+
+    .tab.active {
+    background-color: #52887F;
+    font-weight: bold;
+    }
+
+
+    .panel {
+    padding: 30px;
+    background-color: #f5f5f5;
+    flex: 1;
+    }
+
+    table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    }
+
+    th, td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+    }
+
+    th {
+    background-color: #30534D;
+    color: white;
+    }
+
+    .action-buttons {
+    display: inline-block;
+    }
+
+    .action-buttons button {
+    margin-right: 5px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    }
+
+    .view-btn { 
+    background-color: #3498db; 
+    color: white; 
+    }
+
+    .update-btn { 
+    background-color: #f1c40f; 
+    color: #30534D;; 
+    }
+
+    .delete-btn { 
+    background-color: #e74c3c; 
+    color: white; 
+    }
+
+    .create-btn {
+    position: fixed;       
+    bottom: 40px;          
+    right: 40px;          
+    padding: 12px 25px;
+    background-color: #27ae60;
+    font-size: 18px;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    }
+
+
+
+
+</style>
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Settings</title>
+</head>
+<body>
+
+<div class="layout">
+<!-- sidebar part -->
+  <div class="sidebar">
+    <div class="header"><img src="images/brgy.png" class="brgy"/> brgy Num/Name</div>
+    <ul class="menu">
+        <li><img src="icons/dashboard.svg" class="icon"> Dashboard</li>
+        <li><img src="icons/accounts.svg" class="icon"> Accounts</li>
+        <li><img src="icons/safety.svg" class="icon"> Safety Reports</li>
+        <li><img src="icons/alerts.svg" class="icon"> Emergency Alerts</li>
+        <li><img src="icons/facilities.svg" class="icon"> Facilities & Hotlines</li>
+        <li><img src="icons/sos.svg" class="icon"> SoS Monitoring</li>
+        <li><img src="icons/help.svg" class="icon"> Contact Help</li>
+        <li><img src="icons/announcements.svg" class="icon"> Announcements</li>
+        <li><img src="icons/requests.svg" class="icon"> Requests</li>
+        <li><img src="icons/planner.svg" class="icon"> Program Planner</li>
+        <li><img src="icons/calendar.svg" class="icon"> Program Calendar</li>
+        <li><img src="icons/settings.svg" class="icon"> System Settings</li>
+        <li class="logout"><img src="icons/logout.svg" class="icon"> Logout</li>
+    </ul>
+  </div>
+<!-- sidebar part -->
+
+<!-- tabs of acc part -->
+<div class="content">
+<div class="tabbar">
+  <div class="tab active">Employee</div>
+  <div class="tab">Residents</div>
+</div>
+
+<!-- tabs of acc part -->
+
+<!-- main area -->
+<div class="panel"> 
+    <table>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Role</th>
+        <th>Email</th>
+        <th>Username</th>
+        <th>Password</th>
+        <th>Actions</th>
+    </tr>
+    <tr>
+        <td>001</td>
+        <td>Juan Dela Cruz</td>
+        <td>Admin</td>
+        <td>juan@example.com</td>
+        <td>juancruz</td>
+        <td>123456</td>
+        <td>
+        <div class="action-buttons">
+            <button class="view-btn">View</button>
+            <button class="update-btn">Update</button>
+            <button class="delete-btn">Delete</button>
+        </div>
+        </td>
+    </tr>
+    </table>
+
+    <button class="create-btn">Create New Account</button>
+
+</div>
+</div>
+<!-- main area -->
+
+
+</div>
+
+    
+</body>
+</html>

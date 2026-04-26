@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<style>
+    body { margin: 0; font-family: Arial, sans-serif; }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+    .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .top-header { background-color: #2d4a44; display: flex; border-bottom: 2px solid #FED734; }
+    .top-header-tab { flex: 1; color: white; text-align: center; padding: 16px 20px; font-size: 16px; font-weight: bold; }
+    .panel { padding: 20px; background-color: #f5f5f5; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+    .settings-card { background: white; border-radius: 8px; border: 1px solid #e0e0e0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .settings-card-header { background-color: #3d5f58; color: white; padding: 12px 20px; font-weight: bold; font-size: 14px; }
+    .settings-card-body { padding: 4px 0; }
+    .notif-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #f0f0f0; font-size: 14px; color: #333; }
+    .notif-row:last-child { border-bottom: none; }
+    .notif-label { font-weight: 500; }
+    .notif-toggles { display: flex; align-items: center; gap: 24px; }
+    .toggle-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #555; }
+    .form-check-input { cursor: pointer; }
+    .form-check-input:checked { background-color: #2d4a44; border-color: #2d4a44; }
+    .action-cards-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .action-card { background: white; border-radius: 8px; border: 1px solid #e0e0e0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 30px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .action-card-title { font-size: 16px; font-weight: bold; color: #2d4a44; letter-spacing: 0.5px; }
+    .action-card-icon { font-size: 32px; color: #3d5f58; }
+    .btn-yellow { background-color: #FED734; border: none; padding: 9px 40px; border-radius: 6px; font-weight: bold; cursor: pointer; color: #2d4a44; font-size: 14px; }
+    .btn-yellow:hover { background-color: #d4ac0d; }
+    .btn-yellow:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-red { background-color: #e74c3c; border: none; padding: 9px 40px; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; font-size: 14px; }
+    .btn-red:hover { background-color: #c0392b; }
+    .btn-red:disabled { opacity: 0.6; cursor: not-allowed; }
+    .save-bar { display: none; position: fixed; bottom: 24px; right: 24px; background: #2d4a44; color: white; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: bold; z-index: 999; gap: 12px; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .save-bar.show { display: flex; }
+    .save-bar button { background: #FED734; border: none; padding: 6px 18px; border-radius: 5px; font-weight: bold; cursor: pointer; color: #2d4a44; }
+    .toast-msg { position: fixed; bottom: 80px; right: 24px; background: #27ae60; color: white; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: bold; z-index: 9999; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .toast-msg.error { background: #e74c3c; }
+    .force-modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); }
+    .force-modal-content { background: white; width: 400px; padding: 30px; border-radius: 8px; text-align: center; margin: 15% auto; }
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" th:href="@{/css/sidebar.css}">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"></script>
+<title>System Settings</title>
+</head>
+<body>
+
+<input type="hidden" id="accountStatus" th:value="${currentstatus}">
+<div id="forcePasswordModal" class="force-modal">
+    <div class="force-modal-content">
+        <h2>First Login Detected</h2>
+        <p>You must change your password before using the system.</p>
+        <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+<div class="layout">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="content">
+
+        <div class="top-header">
+            <div class="top-header-tab">System Settings</div>
+        </div>
+
+        <div class="panel">
+
+            <!-- View / Restrict Permissions -->
+            <div class="settings-card">
+                <div class="settings-card-header"><i class="bi bi-shield-lock me-2"></i>View / Restrict Sections</div>
+                <div class="settings-card-body" style="padding:0;">
+                    <div style="padding:15px 20px; border-bottom:1px solid #f0f0f0; background:#fafafa; display:flex; align-items:center; gap:12px;">
+                        <label style="font-size:13px; font-weight:600; color:#2d4a44; white-space:nowrap;">Modify permissions for:</label>
+                        <select class="form-select form-select-sm w-auto" id="roleSelector" onchange="loadPermissions()">
+                            <option value="SECRETARY">Secretary</option>
+                            <option value="TREASURER">Treasurer</option>
+                            <option value="BARANGAY-CAPTAIN">Barangay Captain</option>
+                        </select>
+                    </div>
+                    <div style="padding:14px 20px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px;" id="permGrid"></div>
+                    <div style="padding:0 20px 16px; text-align:right;">
+                        <button class="btn-yellow" onclick="savePermissions()"><i class="bi bi-save me-1"></i>Save Permissions</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Cards -->
+            <div class="action-card">
+                <div class="action-card-icon"><i class="bi bi-database"></i></div>
+                <div class="action-card-title">BACKUP DATABASE</div>
+                <p style="font-size:13px; color:#888; margin:0;">Download a full backup of the database as a SQL file.</p>
+                <button class="btn-yellow" id="backupBtn" onclick="backupDatabase()">
+                    <i class="bi bi-download"></i> Download Backup
+                </button>
+            </div>
+
+                <div class="action-card">
+                    <div class="action-card-icon" style="color:#e74c3c;"><i class="bi bi-broadcast"></i></div>
+                    <div class="action-card-title">TEST EMERGENCY ALERT</div>
+                    <p style="font-size:13px; color:#888; margin:0;">Send a test alert email to all active admins to verify the emergency system.</p>
+                    <button class="btn-red" id="testAlertBtn" onclick="sendTestAlert()"><i class="bi bi-broadcast"></i>Send Test Alert</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Save bar -->
+<div class="save-bar" id="saveBar">
+    <span>You have unsaved notification changes</span>
+    <button onclick="saveNotifications()">Save</button>
+    <button onclick="discardChanges()" style="background:#aaa; color:white;">Discard</button>
+</div>
+
+<!-- Toast -->
+<div class="toast-msg" id="toastMsg"></div>
+
+<div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
+<script src="/js/sidebar.js"></script>
+
+<script th:inline="javascript">
+    const savedSettings = /*[[${settings}]]*/ {};
+</script>
+
+<script>
+const SECTIONS = ["Dashboard","Accounts","Blotter","Documents","Announcements","SoS Monitoring","Safety Reports","Program Planner","System Settings"];
+
+let isDirty = false;
+let originalToggles = {};
+
+// ── Load saved notification toggles ─────────────────────────
+function loadNotifications() {
+    document.querySelectorAll('.notif-toggle').forEach(input => {
+        const key = input.getAttribute('data-key');
+        const val = savedSettings[key];
+        input.checked = (val === 'true');
+        originalToggles[key] = input.checked;
+    });
+}
+
+function markDirty() {
+    isDirty = true;
+    document.getElementById('saveBar').classList.add('show');
+}
+
+function discardChanges() {
+    document.querySelectorAll('.notif-toggle').forEach(input => {
+        const key = input.getAttribute('data-key');
+        input.checked = originalToggles[key] || false;
+    });
+    isDirty = false;
+    document.getElementById('saveBar').classList.remove('show');
+}
+
+function backupDatabase() {
+    const btn = document.getElementById('backupBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Preparing...';
+
+    fetch('/api/settings/backup', { method: 'POST' })
+        .then(response => {
+            if (!response.ok) throw new Error('Backup failed');
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+            a.href = url;
+            a.download = `barangay-backup-${timestamp}.sql`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            showToast('✅ Backup downloaded successfully.', false);
+        })
+        .catch(() => showToast('❌ Backup failed. Please try again.', true))
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-download"></i> Download Backup';
+        });
+}
+
+function saveNotifications() {
+    const payload = {};
+    document.querySelectorAll('.notif-toggle').forEach(input => {
+        payload[input.getAttribute('data-key')] = String(input.checked);
+    });
+    fetch('/api/settings/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }).then(r => {
+        if (r.ok) {
+            // update originals
+            document.querySelectorAll('.notif-toggle').forEach(input => {
+                originalToggles[input.getAttribute('data-key')] = input.checked;
+            });
+            isDirty = false;
+            document.getElementById('saveBar').classList.remove('show');
+            showToast('Notification settings saved.', false);
+        } else {
+            showToast('Failed to save. Please try again.', true);
+        }
+    }).catch(() => showToast('Network error.', true));
+}
+
+// ── Permissions ──────────────────────────────────────────────
+function loadPermissions() {
+    const role = document.getElementById('roleSelector').value;
+    const grid = document.getElementById('permGrid');
+    grid.innerHTML = SECTIONS.map(section => {
+        const key = 'perm.' + role + '.' + section.replace(/\s+/g, '_');
+        const checked = savedSettings[key] === 'true';
+        return `
+        <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:#444; padding:10px 14px; border:1px solid #e0e0e0; border-radius:8px; background:#fafafa;">
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input perm-toggle" type="checkbox" data-key="${key}" style="width:2.5em;height:1.3em;cursor:pointer;" ${checked ? 'checked' : ''}>
+            </div>
+            <label style="margin:0; cursor:pointer;">${section}</label>
+        </div>`;
+    }).join('');
+}
+
+function savePermissions() {
+    const payload = {};
+    document.querySelectorAll('.perm-toggle').forEach(input => {
+        payload[input.getAttribute('data-key')] = String(input.checked);
+    });
+    fetch('/api/settings/permissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }).then(r => {
+        if (r.ok) {
+            // update savedSettings cache
+            Object.assign(savedSettings, payload);
+            showToast('Permissions saved.', false);
+        } else {
+            showToast('Failed to save permissions.', true);
+        }
+    }).catch(() => showToast('Network error.', true));
+}
+
+// ── Test Alert ───────────────────────────────────────────────
+function sendTestAlert() {
+    const btn = document.getElementById('testAlertBtn');
+    if (!confirm('This will send a test emergency alert email to all active admins. Continue?')) return;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
+    fetch('/api/settings/test-alert', { method: 'POST' })
+        .then(r => r.text().then(msg => {
+            if (r.ok) showToast('✅ ' + msg, false);
+            else showToast('❌ Failed to send alert.', true);
+        }))
+        .catch(() => showToast('Network error.', true))
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-broadcast"></i> Send Test Alert';
+        });
+}
+
+// ── Toast ────────────────────────────────────────────────────
+function showToast(msg, isError) {
+    const t = document.getElementById('toastMsg');
+    t.textContent = msg;
+    t.className = 'toast-msg' + (isError ? ' error' : '');
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+
+// ── Init ─────────────────────────────────────────────────────
+window.onload = function() {
+    const status = document.getElementById('accountStatus').value;
+    console.log('savedSettings:', savedSettings);
+    if (status === 'New' || status === 'Newly Updated') {
+        document.getElementById('forcePasswordModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+    loadNotifications();
+    loadPermissions();
+};
+
+function redirectToPassword() { window.location.href = '/user-profile'; }
+
+function toggleDropdown(el) {
+    const dropdown = document.getElementById('requests-dropdown');
+    const arrow = el.querySelector('.dropdown-arrow');
+    const isOpen = dropdown.style.display === 'block';
+    dropdown.style.display = isOpen ? 'none' : 'block';
+    arrow.classList.toggle('open', !isOpen);
+}
+</script>
+
+</body>
+</html>
