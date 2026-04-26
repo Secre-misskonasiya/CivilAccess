@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Hide sensitive files
+src/main/resources/application.properties
+src/main/resources/application.yml
+
+# Hide environment files
+.env
+*.env

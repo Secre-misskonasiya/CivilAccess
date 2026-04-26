@@ -113,6 +113,11 @@ public class MainController {
     // =========================================================
     // AUTH / NAVIGATION
     // =========================================================
+    @GetMapping("/")
+    public String root() {
+        return "redirect:/landing-page";
+    }
+
 
     @GetMapping("/login")
     public String LoginPage() {
