@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,17 +20,19 @@ public class ActivityLogService {
         return activityLogRepository.findAll(Sort.by(Sort.Direction.DESC, "timestamp"));
     }
 
-    // NEW: fetches only N most recent logs at DB level — no full table scan
     public List<Activitylogs> getRecentLogs(int limit) {
         return activityLogRepository.findAll(
             PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "timestamp"))
         ).getContent();
     }
+
     public org.springframework.data.domain.Page<Activitylogs> getLogsPaginated(int page, int size) {
-    return activityLogRepository.findAll(
-        PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "timestamp"))
-    );
-}
+        return activityLogRepository.findAll(
+            PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "timestamp"))
+        );
+    }
+
+    @Transactional                          // ← added
     public void log(String userName, String userRole,
                     String action, String module,
                     String details, String ipAddress, String status) {
@@ -44,6 +47,6 @@ public class ActivityLogService {
         log.setStatus(status);
         log.setTimestamp(LocalDateTime.now());
 
-        activityLogRepository.save(log);
+        activityLogRepository.saveAndFlush(log); // ← was save()
     }
 }
