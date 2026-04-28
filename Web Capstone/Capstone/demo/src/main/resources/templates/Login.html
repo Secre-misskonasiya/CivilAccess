@@ -112,10 +112,8 @@
 
   .left-panel > * { position: relative; z-index: 1; }
 
-  .backbutton {
-    position: absolute;
-    top: 20px;
-    left: 20px;
+ .backbutton {
+    position: relative;
     text-decoration: none;
     color: rgba(255,255,255,0.85);
     font-size: 0.85rem;
@@ -129,7 +127,8 @@
     padding: 6px 12px;
     border-radius: 30px;
     backdrop-filter: blur(4px);
-    margin: 0;
+    margin: 0 auto 15px auto;
+    width: fit-content;
 }
 
   .backbutton:hover {
