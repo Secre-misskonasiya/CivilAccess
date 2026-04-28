@@ -35,6 +35,29 @@
     .toast-msg.error { background: #e74c3c; }
     .force-modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); }
     .force-modal-content { background: white; width: 400px; padding: 30px; border-radius: 8px; text-align: center; margin: 15% auto; }
+    
+    /* Fixed - original 3 column layout with no cutting */
+    .perm-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        padding: 14px 20px;
+    }
+    .perm-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        color: #444;
+        padding: 10px 14px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background: #fafafa;
+    }
+    .perm-item label {
+        margin: 0;
+        cursor: pointer;
+    }
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -69,37 +92,38 @@
             <!-- View / Restrict Permissions -->
             <div class="settings-card">
                 <div class="settings-card-header"><i class="bi bi-shield-lock me-2"></i>View / Restrict Sections</div>
-                <div class="settings-card-body" style="padding:0;">
+                <div class="settings-card-body">
                     <div style="padding:15px 20px; border-bottom:1px solid #f0f0f0; background:#fafafa; display:flex; align-items:center; gap:12px;">
                         <label style="font-size:13px; font-weight:600; color:#2d4a44; white-space:nowrap;">Modify permissions for:</label>
-                        <select class="form-select form-select-sm w-auto" id="roleSelector" onchange="loadPermissions()">
+                        <select class="form-select form-select-sm w-auto" id="roleSelector" onchange="loadPermissions()" style="width:auto;">
                             <option value="SECRETARY">Secretary</option>
                             <option value="TREASURER">Treasurer</option>
                             <option value="BARANGAY-CAPTAIN">Barangay Captain</option>
                         </select>
                     </div>
-                    <div style="padding:14px 20px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px;" id="permGrid"></div>
-                    <div style="padding:0 20px 16px; text-align:right;">
+                    <div class="perm-grid" id="permGrid"></div>
+                    <div style="padding:16px 20px; text-align:right; border-top:1px solid #f0f0f0;">
                         <button class="btn-yellow" onclick="savePermissions()"><i class="bi bi-save me-1"></i>Save Permissions</button>
                     </div>
                 </div>
             </div>
 
             <!-- Action Cards -->
-            <div class="action-card">
-                <div class="action-card-icon"><i class="bi bi-database"></i></div>
-                <div class="action-card-title">BACKUP DATABASE</div>
-                <p style="font-size:13px; color:#888; margin:0;">Download a full backup of the database as a SQL file.</p>
-                <button class="btn-yellow" id="backupBtn" onclick="backupDatabase()">
-                    <i class="bi bi-download"></i> Download Backup
-                </button>
-            </div>
+            <div class="action-cards-row">
+                <div class="action-card">
+                    <div class="action-card-icon"><i class="bi bi-database"></i></div>
+                    <div class="action-card-title">BACKUP DATABASE</div>
+                    <p style="font-size:13px; color:#888; margin:0;">Download a full backup of the database as a SQL file.</p>
+                    <button class="btn-yellow" id="backupBtn" onclick="backupDatabase()">
+                        <i class="bi bi-download"></i> Download Backup
+                    </button>
+                </div>
 
                 <div class="action-card">
                     <div class="action-card-icon" style="color:#e74c3c;"><i class="bi bi-broadcast"></i></div>
                     <div class="action-card-title">TEST EMERGENCY ALERT</div>
                     <p style="font-size:13px; color:#888; margin:0;">Send a test alert email to all active admins to verify the emergency system.</p>
-                    <button class="btn-red" id="testAlertBtn" onclick="sendTestAlert()"><i class="bi bi-broadcast"></i>Send Test Alert</button>
+                    <button class="btn-red" id="testAlertBtn" onclick="sendTestAlert()"><i class="bi bi-broadcast"></i> Send Test Alert</button>
                 </div>
             </div>
 
@@ -194,7 +218,6 @@ function saveNotifications() {
         body: JSON.stringify(payload)
     }).then(r => {
         if (r.ok) {
-            // update originals
             document.querySelectorAll('.notif-toggle').forEach(input => {
                 originalToggles[input.getAttribute('data-key')] = input.checked;
             });
@@ -215,7 +238,7 @@ function loadPermissions() {
         const key = 'perm.' + role + '.' + section.replace(/\s+/g, '_');
         const checked = savedSettings[key] === 'true';
         return `
-        <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:#444; padding:10px 14px; border:1px solid #e0e0e0; border-radius:8px; background:#fafafa;">
+        <div class="perm-item">
             <div class="form-check form-switch mb-0">
                 <input class="form-check-input perm-toggle" type="checkbox" data-key="${key}" style="width:2.5em;height:1.3em;cursor:pointer;" ${checked ? 'checked' : ''}>
             </div>
@@ -235,7 +258,6 @@ function savePermissions() {
         body: JSON.stringify(payload)
     }).then(r => {
         if (r.ok) {
-            // update savedSettings cache
             Object.assign(savedSettings, payload);
             showToast('Permissions saved.', false);
         } else {
