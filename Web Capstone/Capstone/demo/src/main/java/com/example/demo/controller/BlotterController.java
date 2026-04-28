@@ -24,91 +24,66 @@ public class BlotterController {
         this.adminUserService = adminUserService;
     }
 
-    // ── Main page ──────────────────────────────────────────────────────────────
     @GetMapping
     public String blotterRequestsPage(Model model, Principal principal) {
-        // Get the logged-in user information 
         if (principal != null) {
             String username = principal.getName();
             AdminUser admin = adminUserService.getAdminByEmail(username);
-            
             if (admin != null) {
-                String name = admin.getName();
-                String role = admin.getRole();
-                
-                // Add user info to model
-                model.addAttribute("currentUser", name);
-                model.addAttribute("currentrole", role);
+                model.addAttribute("currentUser", admin.getName());
+                model.addAttribute("currentrole", admin.getRole());
             } else {
-                // Fallback if admin not found
                 model.addAttribute("currentUser", username);
                 model.addAttribute("currentrole", "USER");
             }
         } else {
-            // Fallback if not logged in
             model.addAttribute("currentUser", "Guest");
             model.addAttribute("currentrole", "USER");
         }
-
-        // Add the blotter lists by status
         model.addAttribute("incomingBlotters",   service.getByStatus("INCOMING"));
         model.addAttribute("processingBlotters", service.getByStatus("PROCESSING"));
         model.addAttribute("readyBlotters",      service.getByStatus("READY"));
         model.addAttribute("archivedBlotters",   service.getByStatus("ARCHIVE"));
-
-        return "Requests-blotter";
+        return "Requests-Blotter";
     }
 
-    // ── Move to Processing (Approve) ───────────────────────────────────────────
     @PostMapping("/{id}/process")
     public String processBlotter(@PathVariable Long id, Principal principal) {
-        String user = getCurrentUserName(principal);
-        service.updateStatus(id, "PROCESSING", user);
+        service.updateStatus(id, "PROCESSING", getCurrentUserName(principal));
         return "redirect:/requests-blotter";
     }
 
-    // ── Mark as Ready/Resolved ─────────────────────────────────────────────────
     @PostMapping("/{id}/ready")
     public String markReady(@PathVariable Long id, Principal principal) {
-        String user = getCurrentUserName(principal);
-        service.updateStatus(id, "READY", user);
+        service.updateStatus(id, "READY", getCurrentUserName(principal));
         return "redirect:/requests-blotter";
     }
 
-    // ── Archive ────────────────────────────────────────────────────────────────
     @PostMapping("/{id}/archive")
     public String archiveBlotter(@PathVariable Long id, Principal principal) {
-        String user = getCurrentUserName(principal);
-        service.archiveBlotter(id, user);
+        service.archiveBlotter(id, getCurrentUserName(principal));
         return "redirect:/requests-blotter";
     }
 
-    // ── Search (AJAX) ──────────────────────────────────────────────────────────
     @GetMapping("/search")
     @ResponseBody
     public List<Blotter> search(@RequestParam String query) {
         return service.searchBlotters(query);
     }
-    
-    // ── Submit new blotter report ──────────────────────────────────────────────
+
     @PostMapping("/submit")
     public String submitBlotter(@ModelAttribute("newBlotter") Blotter blotter, Principal principal) {
-        String user = getCurrentUserName(principal);
         blotter.setStatus("INCOMING");
-        blotter.setCreatedBy(user);
+        blotter.setCreatedBy(getCurrentUserName(principal));
         service.saveBlotter(blotter);
         return "redirect:/requests-blotter";
     }
-    
-    // Helper method to get current user name
+
     private String getCurrentUserName(Principal principal) {
         if (principal != null) {
-            String username = principal.getName();
-            AdminUser admin = adminUserService.getAdminByEmail(username);
-            if (admin != null) {
-                return admin.getName();
-            }
-            return username;
+            AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+            if (admin != null) return admin.getName();
+            return principal.getName();
         }
         return "System";
     }
