@@ -16,6 +16,7 @@ import com.example.demo.services.SosReportsService;
 import com.example.demo.services.SafetyReportService;
 import com.example.demo.services.ProgramBudgetService;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
@@ -47,6 +48,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.TimeZone;
 
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -72,6 +74,11 @@ public class MainController {
     
     // Track last modification time for accounts polling
     private volatile long lastAccountsModificationTime = System.currentTimeMillis();
+
+    @PostConstruct
+    public void init() {
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Manila"));
+    }
 
     @InitBinder
     public void initBinder(WebDataBinder binder) {
