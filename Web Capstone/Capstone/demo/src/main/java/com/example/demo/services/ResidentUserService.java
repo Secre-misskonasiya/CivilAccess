@@ -13,30 +13,30 @@ import org.springframework.lang.NonNull;
 
 @Service
 public class ResidentUserService {
+
     @Autowired
     private ResidentUserRepository repository;
 
     public ResidentUser getResidentById(@NonNull UUID id) {
         return repository.findById(id).orElse(null);
     }
+
     public ResidentUser saveResident(ResidentUser resident) {
-    if (resident.getId() == null && (resident.getResidentId() == null ||
-        resident.getResidentId().trim().isEmpty() ||
-        resident.getResidentId().equals("Auto-generated"))) {
-        resident.setResidentId(generateNextResidentId());
+        if (resident.getId() == null && (resident.getResidentId() == null ||
+            resident.getResidentId().trim().isEmpty() ||
+            resident.getResidentId().equals("Auto-generated"))) {
+            resident.setResidentId(generateNextResidentId());
+        }
+        if (resident.getStatus() == null || resident.getStatus().trim().isEmpty()) {
+            resident.setStatus("Active");
+        }
+        return repository.save(resident);
     }
-    // ✅ Add this — new residents default to Active
-    if (resident.getStatus() == null || resident.getStatus().trim().isEmpty()) {
-        resident.setStatus("Active");
-    }
-    return repository.save(resident);
-    }
+
     private String generateNextResidentId() {
-       String year = String.valueOf(java.time.Year.now().getValue());
-        String prefix = "RES-" + year; 
-        
+        String year = String.valueOf(java.time.Year.now().getValue());
+        String prefix = "RES-" + year;
         String maxId = repository.findMaxResidentIdByYear(prefix);
-        
         int nextSeq = 1;
         if (maxId != null && maxId.contains("-")) {
             try {
@@ -48,44 +48,44 @@ public class ResidentUserService {
                 nextSeq = 1;
             }
         }
-        
         return prefix + "-" + String.format("%04d", nextSeq);
     }
 
     public List<ResidentDTO> getAllResidentsDTO() {
-    return repository.findAll().stream()
-        .map(resident -> new ResidentDTO(
-            resident.getId(),
-            resident.getResidentId(),
-            resident.getFirstName(),
-            resident.getLastName(),
-            resident.getGender(),
-            resident.getBirthDate(),
-            resident.getMobileNumber(),
-            resident.getEmail(),
-            resident.getAddress(),
-            resident.getStatus(),
-            resident.getSelfie(),
-            resident.getValidId(),
-            resident.getBarangayIndigency(),
-            resident.getAccount_status(),
-            resident.getAvatarUrl()  // Add this line
-        ))
-        .collect(Collectors.toList());
-}
+        return repository.findAllSortedByNewest().stream()
+            .map(resident -> new ResidentDTO(
+                resident.getId(),
+                resident.getResidentId(),
+                resident.getFirstName(),
+                resident.getLastName(),
+                resident.getGender(),
+                resident.getBirthDate(),
+                resident.getMobileNumber(),
+                resident.getEmail(),
+                resident.getAddress(),
+                resident.getStatus(),
+                resident.getSelfie(),
+                resident.getValidId(),
+                resident.getBarangayIndigency(),
+                resident.getAccount_status(),
+                resident.getAvatarUrl()
+            ))
+            .collect(Collectors.toList());
+    }
+
     public List<ResidentUser> getAllResidents() {
-        return repository.findAll();
+        return repository.findAllSortedByNewest();
     }
 
     public void deleteResident(@NonNull UUID id) {
-    repository.deleteById(id);
+        repository.deleteById(id);
     }
 
     public long countResidents() {
-    return repository.countActiveResidents();
-}
+        return repository.countActiveResidents();
+    }
+
     public List<ResidentUser> getResidentsByStatus(String status) {
-    return repository.findByStatus(status);
-}
-    
+        return repository.findByStatusSorted(status);
+    }
 }

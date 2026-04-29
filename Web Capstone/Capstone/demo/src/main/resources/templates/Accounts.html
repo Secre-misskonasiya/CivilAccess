@@ -239,7 +239,8 @@
                                                 data-birth=${admin.birthDate},
                                                 data-address=${admin.address},
                                                 data-phone=${admin.phoneNumber},
-                                                data-status=${admin.empstatus}"
+                                                data-status=${admin.empstatus},
+                                                data-picture=${admin.profilePicture}"
                                         onclick="openViewModalFromButton(this)">View</button>
                                     <button class="update-btn"
                                         th:onclick="openEditModal(
@@ -434,17 +435,18 @@
                                 <div class="action-buttons">
                                     <button class="view-btn"
                                         th:attr="data-id=${admin.id},
-                                                data-employee=${admin.employeeId},
-                                                data-fname=${admin.firstName},
-                                                data-lname=${admin.lastName},
-                                                data-username=${admin.username},
-                                                data-email=${admin.email},
-                                                data-role=${admin.role},
-                                                data-gender=${admin.gender},
-                                                data-birth=${admin.birthDate},
-                                                data-address=${admin.address},
-                                                data-phone=${admin.phoneNumber},
-                                                data-status=${admin.empstatus}"
+                                            data-employee=${admin.employeeId},
+                                            data-fname=${admin.firstName},
+                                            data-lname=${admin.lastName},
+                                            data-username=${admin.username},
+                                            data-email=${admin.email},
+                                            data-role=${admin.role},
+                                            data-gender=${admin.gender},
+                                            data-birth=${admin.birthDate},
+                                            data-address=${admin.address},
+                                            data-phone=${admin.phoneNumber},
+                                            data-status=${admin.empstatus},
+                                            data-picture=${admin.profilePicture}"
                                         onclick="openViewModalFromButton(this)">View</button>
                                 </div>
                             </td>
@@ -698,8 +700,11 @@
       </div>
 
       <div style="display:flex; align-items:flex-end; gap:16px; margin-top:20px;">
-        <div style="width:72px; height:72px; bottom:10%; border-radius:50%; background:#3d6b63; border:2px solid #9fd4c8; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom: 10px;">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="#9fd4c8"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <div id="view-avatar" style="width:72px; height:72px; border-radius:50%; background:#3d6b63; border:2px solid #9fd4c8; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:10px; overflow:hidden;">
+            <img id="view-avatar-img" src="" alt="Profile" style="width:100%; height:100%; object-fit:cover; display:none; border-radius:50%;">
+            <svg id="view-avatar-svg" width="36" height="36" viewBox="0 0 24 24" fill="#9fd4c8">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
         </div>
         <div style="padding-bottom:20px;">
           <p style="color:white; font-size:18px; font-weight:500; margin:0;" id="view-fullname"></p>
@@ -1294,6 +1299,8 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
     function openViewModalFromButton(button) {
         const fname = button.getAttribute('data-fname');
         const lname = button.getAttribute('data-lname');
+        const picture = button.getAttribute('data-picture');
+
         document.getElementById('view-id').textContent       = button.getAttribute('data-employee') || '';
         document.getElementById('view-fullname').textContent = (fname || '') + ' ' + (lname || '');
         document.getElementById('view-role').textContent     = button.getAttribute('data-role')     || '';
@@ -1303,7 +1310,21 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
         document.getElementById('view-gender').textContent   = button.getAttribute('data-gender')   || '';
         document.getElementById('view-birth').textContent    = button.getAttribute('data-birth')    || '';
         document.getElementById('view-address').textContent  = button.getAttribute('data-address')  || '';
-        document.getElementById('view-status').textContent  = button.getAttribute('data-status')  || '';
+        document.getElementById('view-status').textContent   = button.getAttribute('data-status')   || '';
+
+        // Show profile picture or fallback to SVG icon
+        const img = document.getElementById('view-avatar-img');
+        const svg = document.getElementById('view-avatar-svg');
+        if (picture && picture !== 'null' && picture.trim() !== '') {
+            img.src          = picture;
+            img.style.display = 'block';
+            svg.style.display = 'none';
+        } else {
+            img.src          = '';
+            img.style.display = 'none';
+            svg.style.display = 'block';
+        }
+
         viewModal.style.display = "block";
     }
     function closeViewModal() { viewModal.style.display = "none"; }
@@ -1479,9 +1500,11 @@ startPolling();
             </div>
           </div>
           <div style="display:flex; align-items:flex-end; gap:16px; margin-top:20px;">
-            <div style="width:72px; height:72px; border-radius:50%; background:#3d6b63; border:2px solid #9fd4c8; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:10px; overflow:hidden;">
-              <img id="rv_avatar" src="" style="width:100%; height:100%; object-fit:cover; display:none;">
-              <svg id="rv_avatar_placeholder" width="36" height="36" viewBox="0 0 24 24" fill="#9fd4c8"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            <div id="view-avatar" style="width:72px; height:72px; border-radius:50%; background:#3d6b63; border:2px solid #9fd4c8; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:10px; overflow:hidden;">
+                <img id="view-avatar-img" src="" alt="Profile" style="width:100%; height:100%; object-fit:cover; display:none; border-radius:50%;">
+                <svg id="view-avatar-svg" width="36" height="36" viewBox="0 0 24 24" fill="#9fd4c8">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
             </div>
             <div style="padding-bottom:20px;">
               <p style="color:white; font-size:18px; font-weight:500; margin:0;" id="rv_fullname"></p>
@@ -1606,16 +1629,17 @@ viewBtn.onclick = function() {
     
     // Handle avatar
     var avatarUrl = row.getAttribute('data-avatar');
-    var avatarImg = document.getElementById('rv_avatar');
-    var avatarPlaceholder = document.getElementById('rv_avatar_placeholder');
-    
+        var avatarImg = document.querySelector('#residentViewModal #view-avatar-img');
+    var avatarSvg = document.querySelector('#residentViewModal #view-avatar-svg');
+
     if (avatarUrl && avatarUrl !== 'null' && avatarUrl !== '') {
         avatarImg.src = avatarUrl;
         avatarImg.style.display = 'block';
-        avatarPlaceholder.style.display = 'none';
+        avatarSvg.style.display = 'none';
     } else {
+        avatarImg.src = '';
         avatarImg.style.display = 'none';
-        avatarPlaceholder.style.display = 'block';
+        avatarSvg.style.display = 'block';
     }
     
     document.getElementById('residentViewModal').style.display = 'block';

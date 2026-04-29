@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.util.UUID;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @Entity
 @Table(name = "admin_users")
@@ -24,6 +25,7 @@ public class AdminUser {
 
 
     @Column(name = "birth_date")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private java.time.LocalDate birthDate;
 
     private String address;

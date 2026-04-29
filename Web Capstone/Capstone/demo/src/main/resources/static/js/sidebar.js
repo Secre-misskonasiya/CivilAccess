@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const sectionMap = [
         { match: ['/home', '/announcements'],                           section: 'sec-main' },
         { match: ['/account', '/user-profile', '/system-settings'],    section: 'sec-management' },
-        { match: ['/requests-blotter', '/requests-document'],          section: 'sec-resident', sub: 'sub-requests' },
+        { match: ['/requests-document'], section: 'sec-resident', sub: 'sub-requests' },
         { match: ['/contact-help', '/facilities'],                      section: 'sec-resident' },
         { match: ['/safety-reports', '/sos-monitoring'],               section: 'sec-safety' },
         { match: ['/program-calendar', '/program-planner'],            section: 'sec-programs' },

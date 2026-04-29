@@ -33,10 +33,10 @@ public interface AdminUserRepository extends JpaRepository<AdminUser, Long> {
     @Query("SELECT a.phoneNumber FROM AdminUser a")
     List<String> findAllPhoneNumbers();
 
-    @Query("SELECT new com.example.demo.dto.AdminUserDTO(" +
-       "a.id, a.username, a.employeeId, a.firstName, a.lastName, a.gender, " +
-       "a.birthDate, a.phoneNumber, a.role, a.empstatus, a.email, a.address) " +
-       "FROM AdminUser a")
-List<AdminUserDTO> findAllAdminsOptimized();
+      @Query("SELECT new com.example.demo.dto.AdminUserDTO(" +
+            "a.id, a.username, a.employeeId, a.firstName, a.lastName, a.gender, " +
+            "a.birthDate, a.phoneNumber, a.role, a.empstatus, a.email, a.address, a.profilePicture) " +
+            "FROM AdminUser a ORDER BY a.id DESC")
+      List<AdminUserDTO> findAllAdminsOptimized();
     
 }

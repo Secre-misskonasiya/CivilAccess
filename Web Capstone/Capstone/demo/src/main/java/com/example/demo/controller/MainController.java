@@ -193,7 +193,7 @@ public class MainController {
     @PostMapping("/register")
     public String registerAdmin(
             @ModelAttribute("newAdmin") AdminUser admin,
-            @RequestParam("profilePicture") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam(value = "profilePicture", required = false) org.springframework.web.multipart.MultipartFile file,
             @RequestParam(value = "redirectTo", required = false) String redirectTo,
             @RequestParam(value = "profilePictureUrl", required = false) String profilePictureUrl,
             RedirectAttributes redirectAttributes,
@@ -221,7 +221,9 @@ public class MainController {
                 existingAdmin.setPhoneNumber(admin.getPhoneNumber());
                 existingAdmin.setAddress(admin.getAddress());
                 existingAdmin.setGender(admin.getGender());
-                existingAdmin.setRole(admin.getRole());
+                if (admin.getRole() != null && !admin.getRole().isBlank()) {
+                    existingAdmin.setRole(admin.getRole());
+                }
                 existingAdmin.setBirthDate(admin.getBirthDate());
 
                 // Handle profile picture URL from Supabase
@@ -557,6 +559,7 @@ public ResponseEntity<Map<String, Object>> pollAccounts() {
             model.addAttribute("latestAnnouncement", announcementsService.getLatest());
             model.addAttribute("pendingDocuments",   documentService.countPending());
             model.addAttribute("budget", programBudgetService.getTotalBudget());
+            model.addAttribute("currentAdminProfilePicture", admin.getProfilePicture());
 
             boolean isPrivileged = "ADMIN".equals(role)
                                 || "BARANGAY-CAPTAIN".equals(role)

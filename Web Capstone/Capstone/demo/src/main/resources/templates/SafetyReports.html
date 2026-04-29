@@ -944,7 +944,15 @@
     function initLastSeenId() { let maxId = 0; document.querySelectorAll('.panel-inner tbody tr').forEach(row => { const viewBtn = row.querySelector('.view-btn'); if (viewBtn && viewBtn.getAttribute('onclick')) { const match = viewBtn.getAttribute('onclick').match(/viewReport\((\d+)\)/); if (match && match[1]) maxId = Math.max(maxId, parseInt(match[1])); } }); lastSeenId = maxId; }
     async function pollReports() { try { const response = await fetch('/safety-reports/api/poll?lastId=' + lastSeenId + '&t=' + Date.now()); if (!response.ok) return; const data = await response.json(); if (data.counts) { const badges = ['incoming', 'approved', 'inprogress', 'resolved', 'archive']; badges.forEach(badge => { const el = document.getElementById('badge-' + badge); if (el) el.textContent = data.counts[badge] || 0; }); } if (data.newReports && data.newReports.length > 0) { lastSeenId = Math.max(lastSeenId, ...data.newReports.map(r => r.id)); window.location.reload(); } } catch (error) { console.error("Polling error:", error); } }
     function startPolling() { if (pollingInterval) clearInterval(pollingInterval); pollingInterval = setInterval(pollReports, 5000); }
-    window.onload = function() { const status = document.getElementById('accountStatus'); if (status && (status.value === 'New' || status.value === 'Newly Updated')) { document.getElementById('forcePasswordModal').style.display = 'block'; document.body.style.overflow = 'hidden'; } initLastSeenId(); startPolling(); };
+    document.addEventListener('DOMContentLoaded', function() {
+        const status = document.getElementById('accountStatus');
+        if (status && (status.value === 'New' || status.value === 'Newly Updated')) {
+            document.getElementById('forcePasswordModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        initLastSeenId();
+        startPolling();
+    });
     window.addEventListener('beforeunload', function() { if (pollingInterval) clearInterval(pollingInterval); });
 </script>
 

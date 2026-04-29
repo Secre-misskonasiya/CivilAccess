@@ -29,6 +29,8 @@ public class AnnouncementsService {
     }
 
     public Announcements getLatest() {
-        return repository.findTopByOrderByDatePostedDesc().orElse(null);    
+        return repository
+            .findTopByStatusNotIgnoreCaseOrderByDatePostedDesc("ARCHIVED")
+            .orElse(null);
     }
 }

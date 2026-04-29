@@ -9,10 +9,11 @@ public record AdminUserDTO(
     String firstName,
     String lastName,
     String gender,
-    LocalDate birthDate, // Ensure this is LocalDate
+    LocalDate birthDate, 
     String phoneNumber,
     String role,
     String empstatus,
     String email,
-    String address       // Must be the 12th argument
+    String address,
+    String profilePicture
 ) {}
