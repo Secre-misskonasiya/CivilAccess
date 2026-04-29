@@ -729,28 +729,6 @@
     let currentModalReportId = null;
     let currentModalReportStatus = null;
 
-    // SIMPLE SIDEBAR TOGGLE - Match what works in other files
-    function toggleSection(sectionId) {
-        const element = document.getElementById(sectionId);
-        if (element) {
-            if (element.style.display === 'none' || element.style.display === '') {
-                element.style.display = 'block';
-            } else {
-                element.style.display = 'none';
-            }
-        }
-    }
-
-    function toggleSubmenu(element) {
-        const parent = element.closest('li');
-        if (parent) {
-            parent.classList.toggle('open');
-        }
-        const next = element.nextElementSibling;
-        if (next && next.classList) {
-            next.classList.toggle('show');
-        }
-    }
 
     // Archive Confirmation Functions
     function confirmArchive(id) {
