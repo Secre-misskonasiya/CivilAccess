@@ -1,145 +1,198 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-<style>
 
-    body { margin: 0; font-family: Arial, sans-serif; }
+    <style>
+
+    body { margin: 0; font-family: Arial, sans-serif; font-size: 16px; }
     .layout { display: flex; height: 100vh; overflow: hidden; }
-    .content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-width: 0;   /* ← add this */
-}
+    .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 
     .panel {
-        padding: 30px;
-        background-color: #f5f5f5;
+        padding: 24px 28px;
+        background-color: #f0f2f0;
         flex: 1;
         overflow-y: auto;
-        overflow-x: hidden;   /* ← add this */
-        min-width: 0;         /* ← add this — fixes flex child overflow */
+        overflow-x: hidden;
+        min-width: 0;
     }
 
     .top-bar {
-        background-color: white; padding: 8px 30px;
-        display: flex; justify-content: space-between; align-items: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        background-color: white;
+        padding: 0 28px;
+        height: 64px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e8e8e8;
+        flex-shrink: 0;
     }
-    .welcome-text { font-size: 24px; font-weight: bold; color: #333; }
-    .user-info { display: flex; align-items: center; gap: 15px; font-size: 16px; color: #333; }
+    .welcome-text { font-size: 18px; font-weight: bold; color: #1e3a35; }
+    .welcome-text span { color: #30534D; }
+    .user-info { display: flex; align-items: center; gap: 14px; }
+    .user-name-label { font-size: 14px; color: #555; font-weight: 500; }
     .user-avatar {
-        width: 50px; height: 50px;
-        background: linear-gradient(135deg, #30534D 0%, #52887F 100%);
-        border-radius: 50%; display: flex; align-items: center;
-        justify-content: center; color: white; font-weight: bold; font-size: 20px;
+        width: 42px; height: 42px;
+        background: linear-gradient(135deg, #1e3a35 0%, #30534D 100%);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        color: #FED734; font-weight: bold; font-size: 17px;
+        cursor: pointer; border: 2px solid #FED734;
+        transition: opacity 0.2s;
+    }
+    .user-avatar:hover { opacity: 0.85; }
+
+    .dashboard-grid { display: grid; grid-template-columns: 1fr 300px; gap: 24px; }
+
+    .section-label {
+        font-size: 12px; font-weight: bold; color: #30534D;
+        text-transform: uppercase; letter-spacing: 0.08em;
+        margin-bottom: 12px;
     }
 
-    .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
-
-    .announcements-box {
-        background-color: white; padding: 20px; border-radius: 8px;
-        margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .section-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #333; }
-    .announcement-content {
-        border: 1px solid #ddd; border-radius: 6px; background-color: #fafafa;
-        min-height: 100px; display: flex; align-items: center; justify-content: center;
-        color: #999; font-style: italic; overflow: hidden;
-    }
-
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px; }
+    /* ── Stat cards ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
     .stat-card {
-        background-color: white; padding: 20px; border-radius: 8px;
-        text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        background: white; padding: 18px 20px;
+        border-radius: 12px; border: 0.5px solid #e8e8e8;
+        display: flex; flex-direction: column; gap: 6px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
-    .stat-label { font-size: 15px; color: #666; margin-bottom: 15px; }
-    .stat-number { font-size: 45px; font-weight: bold; color: #333; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+    .stat-icon-wrap {
+        width: 36px; height: 36px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px; margin-bottom: 6px;
+    }
+    .ic-r { background: #fef0ee; }
+    .ic-g { background: #eaf5f0; }
+    .ic-b { background: #eaf0fb; }
+    .ic-a { background: #fef8e6; }
+    .ic-p { background: #f3f0fb; }
+    .stat-label { font-size: 12px; color: #888; line-height: 1.4; }
+    .stat-number { font-size: 32px; font-weight: bold; color: #222; line-height: 1; }
+    .stat-number.budget { font-size: 19px; margin-top: 5px; }
     .stat-red { color: #e74c3c; }
     .stat-green { color: #27ae60; }
 
-    .sidebar-widgets { display: flex; flex-direction: column; gap: 20px; }
+    /* ── Chart cards ── */
+    .chart-card {
+        background: white; border-radius: 12px; border: 0.5px solid #e0e0e0;
+        padding: 20px; margin-bottom: 18px;
+    }
+    .chart-card:last-child { margin-bottom: 0; }
+    .chart-title { font-size: 14px; font-weight: bold; color: #222; margin-bottom: 3px; }
+    .chart-sub { font-size: 12px; color: #aaa; margin-bottom: 14px; }
+    .charts-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+    .legend-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #555; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+    .rate-center { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 0 10px; }
+    .rate-pct { font-size: 26px; font-weight: bold; color: #27ae60; margin-top: 8px; }
+    .rate-sub { font-size: 12px; color: #aaa; }
 
-    /* ── Dynamic Calendar ── */
-    .calendar-widget {
-        background-color: white; padding: 20px; border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    /* ── Announcement ── */
+    .announcements-box {
+        background: white; border-radius: 12px; border: 0.5px solid #e0e0e0;
+        margin-bottom: 20px; overflow: hidden;
     }
-    .calendar-nav {
-        display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 14px;
+    .announce-header {
+        padding: 16px 22px; border-bottom: 0.5px solid #f0f0f0;
+        display: flex; align-items: center; justify-content: space-between;
     }
+    .announce-header-title { font-size: 14px; font-weight: bold; color: #222; }
+    .announce-badge {
+        background: #eaf5f0; color: #30534D;
+        font-size: 11px; font-weight: bold;
+        padding: 4px 10px; border-radius: 24px;
+    }
+    .announcement-content {
+        min-height: 80px; display: flex;
+        align-items: center; justify-content: center;
+        color: #bbb; font-style: italic; font-size: 14px;
+    }
+
+    /* ── Sidebar widgets ── */
+    .sidebar-widgets { display: flex; flex-direction: column; gap: 18px; }
+    .widget-box { background: white; border-radius: 12px; border: 0.5px solid #e0e0e0; overflow: hidden; }
+    .widget-header {
+        padding: 14px 18px; border-bottom: 0.5px solid #f0f0f0;
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .widget-title { font-size: 14px; font-weight: bold; color: #222; }
+
+    /* ── Calendar ── */
+    .calendar-nav { display: flex; align-items: center; gap: 8px; }
     .calendar-nav button {
         background: none; border: none; cursor: pointer;
-        font-size: 18px; color: #30534D; padding: 2px 8px;
-        border-radius: 4px; transition: background 0.2s;
+        font-size: 19px; color: #30534D; padding: 3px 8px;
+        border-radius: 5px; transition: background 0.2s; line-height: 1;
     }
     .calendar-nav button:hover { background: #f0f0f0; }
-    .calendar-nav-title { font-weight: bold; font-size: 15px; color: #30534D; }
-    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
-    .calendar-day-name { font-size: 11px; color: #666; font-weight: bold; padding: 4px 2px; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; padding: 12px 14px 14px; }
+    .calendar-day-name { font-size: 11px; color: #bbb; font-weight: bold; text-align: center; padding: 4px 0; }
     .calendar-day {
-        font-size: 12px; border-radius: 4px;
-        min-height: 28px; padding: 5px 2px;
-        display: flex; flex-direction: column; align-items: center;
+        font-size: 12px; border-radius: 5px; min-height: 28px;
+        padding: 5px 3px; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; color: #555;
     }
     .calendar-day.today {
-        background-color: #30534D; color: white;
-        border-radius: 50%; font-weight: bold;
-        width: 26px; height: 26px; margin: 0 auto;
-        justify-content: center; padding: 0;
+        background-color: #30534D; color: white; border-radius: 50%;
+        font-weight: bold; width: 28px; height: 28px; margin: 0 auto; padding: 0;
     }
-    .calendar-day.other-month { color: #ccc; }
+    .calendar-day.other-month { color: #ddd; }
     .calendar-day.has-event::after {
-        content: ''; display: block;
-        width: 5px; height: 5px; border-radius: 50%;
-        background-color: #27ae60; margin-top: 2px;
+        content: ''; display: block; width: 5px; height: 5px;
+        border-radius: 50%; background: #27ae60; margin-top: 2px;
     }
-    .calendar-day.today.has-event::after { background-color: #a8e6cf; }
+    .calendar-day.today.has-event::after { background: #a8e6cf; }
 
-    /* ── Programs Widget ── */
-    .programs-widget {
-        background-color: white; padding: 20px; border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+    /* ── Programs ── */
     .program-item {
-        display: flex; align-items: center; gap: 12px; padding: 12px;
-        border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 10px;
-        transition: border-color 0.3s ease;
+        display: flex; align-items: center; gap: 12px;
+        padding: 12px 16px; border-bottom: 0.5px solid #f5f5f5;
     }
-    .program-item:hover { border-color: #30534D; }
+    .program-item:last-child { border-bottom: none; }
     .program-date-circle {
-        width: 46px; height: 46px; border: 2px solid #30534D; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-weight: bold; font-size: 16px; color: #30534D; flex-shrink: 0;
+        width: 42px; height: 42px; border: 1.5px solid #30534D;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-weight: bold; font-size: 15px; color: #30534D; flex-shrink: 0;
     }
     .program-info { flex: 1; min-width: 0; }
-    .program-name {
-        font-weight: bold; color: #333; margin-bottom: 3px; font-size: 14px;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .program-time { font-size: 12px; color: #666; }
-    .no-programs { color: #aaa; font-style: italic; padding: 10px; font-size: 14px; }
+    .program-name { font-weight: bold; color: #333; font-size: 13px; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .program-time { font-size: 12px; color: #aaa; }
+    .no-programs { color: #bbb; font-style: italic; padding: 14px 16px; font-size: 13px; }
 
-    .force-modal {
-        display: none; position: fixed; z-index: 9999;
-        left: 0; top: 0; width: 100%; height: 100%;
-        background-color: rgba(0,0,0,0.6);
+    /* ── Activity ── */
+    .activity-item {
+        display: flex; align-items: flex-start; gap: 12px;
+        padding: 12px 16px; border-bottom: 0.5px solid #f5f5f5;
     }
-    .force-modal-content {
-        background: white; width: 400px; padding: 30px;
-        border-radius: 8px; text-align: center; margin: 15% auto;
-    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot { width: 9px; height: 9px; background: #30534D; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .activity-info { flex: 1; min-width: 0; }
+    .activity-detail { font-size: 13px; color: #333; line-height: 1.5; }
+    .activity-by { font-size: 12px; color: #aaa; }
+    .activity-time-label { font-size: 12px; color: #bbb; margin-top: 3px; }
+
+    /* ── Force modal ── */
+    .force-modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); }
+    .force-modal-content { background: white; width: 440px; padding: 36px; border-radius: 12px; text-align: center; margin: 15% auto; }
+    .force-modal-content h2 { color: #1e3a35; margin-bottom: 12px; font-size: 22px; }
+    .force-modal-content p { font-size: 15px; }
+    .force-modal-content button { margin-top: 18px; padding: 12px 28px; background: #30534D; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold; }
 
     @media (max-width: 1200px) {
         .dashboard-grid { grid-template-columns: 1fr; }
-        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        .stats-grid { grid-template-columns: repeat(2,1fr); }
+        .charts-row { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 768px) {
         .stats-grid { grid-template-columns: 1fr; }
+        .charts-row { grid-template-columns: 1fr; }
+        .panel { padding: 18px 20px; }
+        .top-bar { padding: 0 20px; height: 58px; }
+        .welcome-text { font-size: 16px; }
     }
 
 </style>
@@ -147,6 +200,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard</title>
@@ -154,7 +208,15 @@
 <body>
 
 <div class="layout">
-<input type="hidden" id="accountStatus" th:value="${currentstatus}">
+
+<input type="hidden" id="accountStatus"   th:value="${currentstatus}">
+<input type="hidden" id="dataCurrentRole" th:value="${currentrole}">
+<input type="hidden" id="dataResolved"    th:value="${resolvedIncidents != null ? resolvedIncidents : 0}">
+<input type="hidden" id="dataUnresolved"  th:value="${unresolvedIncidents != null ? unresolvedIncidents : 0}">
+<input type="hidden" id="dataPending"     th:value="${pendingDocuments != null ? pendingDocuments : 0}">
+<input type="hidden" id="dataResidents"   th:value="${residents != null ? residents : 0}">
+<input type="hidden" id="dataBlotter"     th:value="${blotterCount != null ? blotterCount : 0}">
+<input type="hidden" id="dataAllReports"  th:value="${allreports != null ? allreports : 0}">
 
 <!-- Lock Modal -->
 <div id="forcePasswordModal" class="force-modal">
@@ -173,12 +235,14 @@
 
     <!-- Top Bar -->
     <div class="top-bar">
-        <div class="welcome-text">Welcome back, <span th:text="${currentrole}">Role</span></div>
+        <div class="welcome-text">
+            Welcome back, <span th:text="${currentrole}">Role</span>
+        </div>
         <div class="user-info">
-            <span th:text="${currentUser}">Current User</span>
-            <div class="user-avatar">
-                <span th:text="${currentUser != null and !#strings.isEmpty(currentUser) ? #strings.substring(currentUser, 0, 1) : 'A'}"
-                      onclick="window.location.href='/user-profile'" style="cursor:pointer;"></span>
+            <span class="user-name-label" th:text="${currentUser}">Current User</span>
+            <div class="user-avatar"
+                 onclick="window.location.href='/user-profile'"
+                 th:text="${currentUser != null and !#strings.isEmpty(currentUser) ? #strings.substring(currentUser, 0, 1) : 'A'}">
             </div>
         </div>
     </div>
@@ -187,173 +251,161 @@
     <div class="panel">
         <div class="dashboard-grid">
 
-            <!-- ── Left Column ── -->
+            <!-- ═══════════ LEFT COLUMN ═══════════ -->
             <div>
 
-                <!-- Announcements — ALL roles -->
-                <div class="announcements-box" style="width: 100%;">
-                    <h2 class="section-title">Latest Announcement</h2>
-
-                    <!-- Has announcement -->
+                <!-- Announcement -->
+                <div class="announcements-box">
+                    <div class="announce-header">
+                        <div class="announce-header-title">Latest Announcement</div>
+                        <div class="announce-badge" th:if="${latestAnnouncement != null}">NEW</div>
+                    </div>
                     <div class="announcement-content"
                          th:if="${latestAnnouncement != null}"
                          style="flex-direction:column; align-items:flex-start; padding:0; overflow:hidden;">
-
-                        <!-- Announcement image (optional) -->
                         <img th:if="${latestAnnouncement.image != null and !#strings.isEmpty(latestAnnouncement.image)}"
                              th:src="${latestAnnouncement.image}"
                              alt="Announcement image"
-                             style="width:100%; max-height:300px; object-fit:fill; display:block; border-radius:0;">
-
-                        <div style="width:100%; padding:14px 16px; text-align:left;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                <strong th:text="${latestAnnouncement.title}"
-                                        style="font-size:15px; color:#333;"></strong>
-                                <span style="font-size:12px; color:#aaa; white-space:nowrap; margin-left:10px;"
-                                      th:text="${latestAnnouncement.datePosted != null
-                                                 ? #temporals.format(latestAnnouncement.datePosted, 'MMM dd, yyyy')
-                                                 : ''}"></span>
+                             style="width:100%; max-height:220px; object-fit:cover; display:block;">
+                        <div style="width:100%; padding:14px 18px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <strong th:text="${latestAnnouncement.title}" style="font-size:14px; color:#222;"></strong>
+                                <span style="font-size:11px; color:#bbb; white-space:nowrap; margin-left:10px;"
+                                      th:text="${latestAnnouncement.datePosted != null ? #temporals.format(latestAnnouncement.datePosted, 'MMM dd, yyyy') : ''}"></span>
                             </div>
-                            <p th:text="${latestAnnouncement.content}"
-                               style="font-size:13px; color:#555; margin:0; line-height:1.5;"></p>
+                            <p th:text="${latestAnnouncement.content}" style="font-size:12px; color:#777; margin:0; line-height:1.6;"></p>
                         </div>
                     </div>
-
-                    <!-- No announcement -->
                     <div class="announcement-content" th:if="${latestAnnouncement == null}">
                         No announcements at this time
                     </div>
                 </div>
 
-                <!-- ── Stats Row 1 ── -->
-                <div class="stats-grid" style="margin-bottom: 20px;">
+                <!-- ── Stat cards ── -->
+                <div class="section-label">Overview</div>
+                <div class="stats-grid">
 
-                    <!-- Safety Reports — ADMIN, CAP, SEC -->
-                    <div class="stat-card"
-                         th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
-                        <div class="stat-icon" style="font-size:22px; margin-bottom:6px;">🛡️</div>
-                        <div class="stat-label">January Safety<br>Reports</div>
-                        <div class="stat-number">1</div>
-                    </div>
-
-                    <!-- New Requests — ADMIN, CAP, SEC -->
                     <div class="stat-card">
-                        <div class="stat-icon" style="font-size:22px; margin-bottom:6px;">📬</div>
-                        <div class="stat-label">New Requests<br>this Month</div>
-                        <div class="stat-number">4</div>
+                        <div class="stat-icon-wrap ic-b">👥</div>
+                        <div class="stat-label">Total Registered<br>Residents</div>
+                        <div class="stat-number" th:text="${residents != null ? residents : 0}">0</div>
                     </div>
 
-                    <!-- Total Incidents — ADMIN, CAP, SEC -->
-                    <div class="stat-card"
-                         th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
-                        <div class="stat-icon" style="font-size:22px; margin-bottom:6px;">⚠️</div>
-                        <div class="stat-label">Total Incidents<br>Reported</div>
-                        <div class="stat-number stat-red" th:text="${allreports != null ? allreports : 0}">0</div>
-                    </div>
-
-                    <!-- Program Expenses -->
                     <div class="stat-card">
-                        <div class="stat-icon" style="font-size:22px; margin-bottom:6px;">💰</div>
-                        <div class="stat-label">Program Budget<br>this Month</div>
-                        <div class="stat-number stat-green" th:text="${budget}">₱ 15,000</div>
+                        <div class="stat-icon-wrap ic-r">📄</div>
+                        <div class="stat-label">Pending Document<br>Requests</div>
+                        <div class="stat-number stat-red" th:text="${pendingDocuments != null ? pendingDocuments : 0}">0</div>
                     </div>
 
-                    <!-- Total Residents — ADMIN, CAP, SEC -->
-                    <!--
-                        FIX: Added null-safe fallback → th:text="${residents != null ? residents : 0}"
-                             so the card shows 0 instead of blank when the service returns null.
-                    -->
-                    <div class="stat-card"
-                         >
-                        <div class="stat-icon" style="font-size:22px; margin-bottom:6px;">👥</div>
-                        <div class="stat-label">Total Registered Residents</div>
-                        <div class="stat-number" th:text="${residents}">0</div>
+                    <div class="stat-card">
+                        <div class="stat-icon-wrap ic-g">💰</div>
+                        <div class="stat-label">Program Budget<br>This Month</div>
+                        <div class="stat-number stat-green budget" th:text="${budget}">₱0</div>
                     </div>
 
-                    <!-- Senior / PWD — ADMIN, CAP, SEC -->
-                    <div class="stat-card"
-                        >
-                        <div class="stat-icon" style="font-size:22px; margin-bottom:6px;">♿</div>
-                        <div class="stat-label">Registered Senior and PWD Residents</div>
-                        <div class="stat-number">14</div>
-                    </div>
-
-                    <!-- Blotter — ADMIN, CAP, SEC -->
-                    <div class="stat-card"
-                        >
-                        <div class="stat-icon" style="font-size:22px; margin-bottom:6px;">📋</div>
+                    <div class="stat-card">
+                        <div class="stat-icon-wrap ic-a">📋</div>
                         <div class="stat-label">Blotter Reports<br>Total</div>
                         <div class="stat-number" th:text="${blotterCount != null ? blotterCount : 0}">0</div>
                     </div>
 
-                    <!-- Pending Docs — ALL roles -->
-                    <!--
-                        FIX: Added null-safe fallback → th:text="${pendingDocuments != null ? pendingDocuments : 0}"
-                             This card is visible to ALL roles, so pendingDocuments must never be null.
-                             Make sure documentService.countPending() is always called in the controller
-                             regardless of role (it already is — this is just a safety net).
-                    -->
                     <div class="stat-card">
-                        <div class="stat-icon" style="font-size:22px; margin-bottom:6px;">📄</div>
-                        <div class="stat-label">Pending Document<br>Requests</div>
-                        <div class="stat-number stat-red"
-                             th:text="${pendingDocuments != null ? pendingDocuments : 0}">0</div>
+                        <div class="stat-icon-wrap ic-p">♿</div>
+                        <div class="stat-label">Senior &amp; PWD<br>Residents</div>
+                        <div class="stat-number">14</div>
                     </div>
 
-                </div>
-
-                <!-- ── Stats Row 2 — ADMIN, CAP, SEC only ── -->
-                <div class="stats-grid"
-                     th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
-
                     <div class="stat-card">
-                        <div class="stat-icon" style="font-size:22px; margin-bottom:6px;">🚨</div>
+                        <div class="stat-icon-wrap ic-b">📬</div>
+                        <div class="stat-label">New Requests<br>This Month</div>
+                        <div class="stat-number">4</div>
+                    </div>
+
+                    <div class="stat-card"
+                         th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
+                        <div class="stat-icon-wrap ic-r">🚨</div>
                         <div class="stat-label">SOS Alerts<br>This Month</div>
-                        <div class="stat-number stat-red"
-                             th:text="${sosAlertsThisMonth != null ? sosAlertsThisMonth : 0}">0</div>
+                        <div class="stat-number stat-red" th:text="${sosAlertsThisMonth != null ? sosAlertsThisMonth : 0}">0</div>
                     </div>
 
-                    <div class="stat-card">
-                        <div class="stat-icon" style="font-size:22px; margin-bottom:6px;">✅</div>
-                        <div class="stat-label">Resolved<br>Incidents</div>
-                        <div class="stat-number stat-green"
-                             th:text="${resolvedIncidents != null ? resolvedIncidents : 0}">0</div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-icon" style="font-size:22px; margin-bottom:6px;">⚠️</div>
-                        <div class="stat-label">Unresolved<br>Incidents</div>
-                        <div class="stat-number stat-red"
-                             th:text="${unresolvedIncidents != null ? unresolvedIncidents : 0}">0</div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-icon" style="font-size:22px; margin-bottom:6px;">📊</div>
-                        <div class="stat-label">Resolution<br>Rate</div>
-                        <!--
-                            FIX: Guard both operands with null-checks before the arithmetic
-                                 to avoid a NullPointerException in Thymeleaf expression evaluation.
-                        -->
-                        <div class="stat-number stat-green"
-                             th:text="${(resolvedIncidents != null and unresolvedIncidents != null
-                                         and (resolvedIncidents + unresolvedIncidents) > 0)
-                                        ? #numbers.formatDecimal(resolvedIncidents * 100.0
-                                            / (resolvedIncidents + unresolvedIncidents), 1, 0) + '%'
-                                        : '—'}">—</div>
+                    <div class="stat-card"
+                         th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
+                        <div class="stat-icon-wrap ic-r">⚠️</div>
+                        <div class="stat-label">Total Incidents<br>Reported</div>
+                        <div class="stat-number stat-red" th:text="${allreports != null ? allreports : 0}">0</div>
                     </div>
 
                 </div>
+
+                <!-- ── Charts — ADMIN, CAP, SEC only ── -->
+                <div th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
+
+                    <div class="section-label" style="margin-top:6px;">Analytics</div>
+
+                    <!-- Row: incident breakdown donut + resolution ring + blotter vs incidents bar -->
+                    <div class="charts-row">
+
+                        <!-- Incident breakdown: resolved vs unresolved donut -->
+                        <div class="chart-card" style="margin-bottom:0;">
+                            <div class="chart-title">Incident breakdown</div>
+                            <div class="chart-sub">Resolved vs. unresolved — total</div>
+                            <div style="position:relative; height:160px;">
+                                <canvas id="incidentDonut" role="img"
+                                    aria-label="Donut chart showing resolved vs unresolved incidents">
+                                    Incident resolution breakdown.
+                                </canvas>
+                            </div>
+                            <div class="legend-row">
+                                <div class="legend-item"><div class="legend-dot" style="background:#27ae60;"></div>Resolved</div>
+                                <div class="legend-item"><div class="legend-dot" style="background:#e74c3c;"></div>Unresolved</div>
+                            </div>
+                        </div>
+
+                        <!-- Resolution rate ring -->
+                        <div class="chart-card" style="margin-bottom:0; display:flex; flex-direction:column;">
+                            <div class="chart-title" style="text-align:center;">Resolution rate</div>
+                            <div class="chart-sub" style="text-align:center;">All-time</div>
+                            <div class="rate-center" style="flex:1;">
+                                <div style="position:relative; height:130px; width:130px;">
+                                    <canvas id="rateChart" role="img"
+                                        aria-label="Donut chart showing incident resolution rate percentage">
+                                        Resolution rate.
+                                    </canvas>
+                                </div>
+                                <div class="rate-pct" id="ratePctLabel">—</div>
+                                <div class="rate-sub" id="rateSubLabel">calculating...</div>
+                            </div>
+                        </div>
+
+                        <!-- Pending docs vs total reports bar -->
+                        <div class="chart-card" style="margin-bottom:0; display:flex; flex-direction:column;">
+                            <div class="chart-title">Workload snapshot</div>
+                            <div class="chart-sub">Key pending counts</div>
+                            <div style="position:relative; flex:1; min-height:160px;">
+                                <canvas id="workloadChart" role="img"
+                                    aria-label="Horizontal bar chart of pending workload items">
+                                    Pending workload counts.
+                                </canvas>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
             </div>
 
-            <!-- ── Right Column ── -->
-            <div class="sidebar-widgets" style="max-width: 100%; overflow:hidden;">
+            <!-- ═══════════ RIGHT COLUMN ═══════════ -->
+            <div class="sidebar-widgets">
 
-                <!-- Dynamic Calendar — ALL roles -->
-                <div class="calendar-widget">
-                    <div class="calendar-nav">
-                        <button onclick="changeMonth(-1)">&#8249;</button>
-                        <span class="calendar-nav-title" id="calendarTitle"></span>
-                        <button onclick="changeMonth(1)">&#8250;</button>
+                <!-- Calendar -->
+                <div class="widget-box">
+                    <div class="widget-header">
+                        <div class="widget-title" id="calendarTitle">Loading...</div>
+                        <div class="calendar-nav">
+                            <button onclick="changeMonth(-1)">&#8249;</button>
+                            <button onclick="changeMonth(1)">&#8250;</button>
+                        </div>
                     </div>
                     <div class="calendar-grid" id="calendarGrid">
                         <div class="calendar-day-name">Mo</div>
@@ -366,29 +418,32 @@
                     </div>
                 </div>
 
-                <!-- Upcoming Programs — ALL roles, fetched from API -->
-                <div class="programs-widget">
-                    <h2 class="section-title">Upcoming Programs</h2>
+                <!-- Upcoming Programs -->
+                <div class="widget-box">
+                    <div class="widget-header">
+                        <div class="widget-title">Upcoming Programs</div>
+                    </div>
                     <div id="upcomingProgramsList">
                         <div class="no-programs">Loading...</div>
                     </div>
                 </div>
 
-                <!-- Latest Activity — ADMIN, CAP, SEC only -->
-                <div class="programs-widget"
+                <!-- Latest Activity -->
+                <div class="widget-box"
                      th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
-                    <h2 class="section-title">Latest Activity</h2>
+                    <div class="widget-header">
+                        <div class="widget-title">Latest Activity</div>
+                    </div>
                     <div th:if="${recentLogs != null and not #lists.isEmpty(recentLogs)}">
-                        <div class="program-item" th:each="log : ${recentLogs}">
-                            <div class="program-info">
-                                <div class="program-name">
-                                    <span th:text="${log.details}"></span> -
-                                    <br><span style="color:#8f8f8f;" th:text="'By ' + ${log.UserName}"></span>
+                        <div class="activity-item" th:each="log : ${recentLogs}">
+                            <div class="activity-dot"></div>
+                            <div class="activity-info">
+                                <div class="activity-detail">
+                                    <span th:text="${log.details}"></span>
+                                    <span class="activity-by" th:text="' — By ' + ${log.UserName}"></span>
                                 </div>
-                                <div class="program-time"
-                                     th:text="${log.timestamp != null
-                                                ? #temporals.format(log.timestamp, 'MM/dd/yy - hh:mm a')
-                                                : 'N/A'}">
+                                <div class="activity-time-label"
+                                     th:text="${log.timestamp != null ? #temporals.format(log.timestamp, 'MM/dd/yy · hh:mm a') : 'N/A'}">
                                 </div>
                             </div>
                         </div>
@@ -410,7 +465,6 @@
 <script src="/js/sidebar.js"></script>
 <script>
 
-    // ── Sidebar toggles ──────────────────────────────────────────────────────
     function toggleSection(btn, sectionId) {
         const body = document.getElementById(sectionId);
         const isOpen = body.classList.contains('open');
@@ -425,7 +479,6 @@
         if (arrow) arrow.classList.toggle('open', !isOpen);
     }
 
-    // ── Force password change ────────────────────────────────────────────────
     window.onload = function () {
         const status = document.getElementById('accountStatus').value;
         if (status === 'New' || status === 'Newly Updated') {
@@ -434,19 +487,126 @@
         }
         initCalendar();
         loadUpcomingPrograms();
+
+        const role = document.getElementById('dataCurrentRole').value;
+        if (role === 'ADMIN' || role === 'BARANGAY-CAPTAIN' || role === 'SECRETARY') {
+            initCharts();
+        }
     };
+
     function redirectToPassword() { window.location.href = '/user-profile'; }
 
-    // ── Dynamic Calendar ─────────────────────────────────────────────────────
-    const MONTH_NAMES = [
-        'January','February','March','April','May','June',
-        'July','August','September','October','November','December'
-    ];
+    // ── Charts (only real model data) ────────────────────────
+    function initCharts() {
+        const resolved   = parseInt(document.getElementById('dataResolved').value)   || 0;
+        const unresolved = parseInt(document.getElementById('dataUnresolved').value) || 0;
+        const pending    = parseInt(document.getElementById('dataPending').value)    || 0;
+        const blotter    = parseInt(document.getElementById('dataBlotter').value)    || 0;
+        const allReports = parseInt(document.getElementById('dataAllReports').value) || 0;
 
+        Chart.defaults.font.family = 'Arial, sans-serif';
+        Chart.defaults.font.size   = 11;
+
+        // ── 1. Incident breakdown donut ───────────────────────
+        new Chart(document.getElementById('incidentDonut'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Resolved', 'Unresolved'],
+                datasets: [{
+                    data: [resolved, unresolved],
+                    backgroundColor: ['#27ae60', '#e74c3c'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ' ' + ctx.label + ': ' + ctx.parsed
+                        }
+                    }
+                }
+            }
+        });
+
+        // ── 2. Resolution rate ring ───────────────────────────
+        const total = resolved + unresolved;
+        const rate  = total > 0 ? Math.round(resolved * 100 / total) : 0;
+
+        document.getElementById('ratePctLabel').textContent = rate + '%';
+        document.getElementById('rateSubLabel').textContent =
+            resolved + ' of ' + total + ' resolved';
+
+        new Chart(document.getElementById('rateChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Resolved', 'Remaining'],
+                datasets: [{
+                    data: [rate, 100 - rate],
+                    backgroundColor: ['#27ae60', '#f0f0f0'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '72%',
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // ── 3. Workload snapshot horizontal bar ───────────────
+        // Only uses real data: pending docs, blotter count, total reports
+        new Chart(document.getElementById('workloadChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Pending Docs', 'Blotter Reports', 'Total Incidents'],
+                datasets: [{
+                    data: [pending, blotter, allReports],
+                    backgroundColor: ['#f0c040', '#52887F', '#e74c3c'],
+                    borderRadius: 4,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ' ' + ctx.parsed.x
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: '#f0f0f0' },
+                        ticks: { color: '#aaa', stepSize: 1 },
+                        beginAtZero: true
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { color: '#555' }
+                    }
+                }
+            }
+        });
+    }
+
+    // ── Dynamic Calendar ──────────────────────────────────────
+    const MONTH_NAMES = ['January','February','March','April','May','June',
+                         'July','August','September','October','November','December'];
     const today    = new Date();
     let   calYear  = today.getFullYear();
-    let   calMonth = today.getMonth(); // 0-indexed
-    const eventCache = {};             // keyed by "YYYY-M"
+    let   calMonth = today.getMonth();
+    const eventCache = {};
 
     function changeMonth(delta) {
         calMonth += delta;
@@ -454,7 +614,6 @@
         if (calMonth < 0)  { calMonth = 11; calYear--; }
         renderCalendar();
     }
-
     function initCalendar() { renderCalendar(); }
 
     async function getEventDays(year, month) {
@@ -473,33 +632,26 @@
     }
 
     async function renderCalendar() {
-        document.getElementById('calendarTitle').textContent =
-            `${MONTH_NAMES[calMonth]} ${calYear}`;
-
-        const eventDays    = await getEventDays(calYear, calMonth);
-        const firstDow     = new Date(calYear, calMonth, 1).getDay();
-        const startOffset  = (firstDow + 6) % 7; // Mon-start
-        const daysInMonth  = new Date(calYear, calMonth + 1, 0).getDate();
-        const daysInPrev   = new Date(calYear, calMonth,     0).getDate();
-
+        document.getElementById('calendarTitle').textContent = `${MONTH_NAMES[calMonth]} ${calYear}`;
+        const eventDays   = await getEventDays(calYear, calMonth);
+        const firstDow    = new Date(calYear, calMonth, 1).getDay();
+        const startOffset = (firstDow + 6) % 7;
+        const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+        const daysInPrev  = new Date(calYear, calMonth,     0).getDate();
         const grid = document.getElementById('calendarGrid');
-        // Remove all day cells but keep the 7 day-name headers
         while (grid.children.length > 7) grid.removeChild(grid.lastChild);
 
-        // Trailing days of previous month
         for (let i = startOffset - 1; i >= 0; i--) {
             const d = document.createElement('div');
             d.className   = 'calendar-day other-month';
             d.textContent = daysInPrev - i;
             grid.appendChild(d);
         }
-
-        // Days of current month
         for (let day = 1; day <= daysInMonth; day++) {
             const d = document.createElement('div');
-            const isToday = calYear  === today.getFullYear()
+            const isToday = calYear === today.getFullYear()
                          && calMonth === today.getMonth()
-                         && day      === today.getDate();
+                         && day === today.getDate();
             let cls = 'calendar-day';
             if (isToday)            cls += ' today';
             if (eventDays.has(day)) cls += ' has-event';
@@ -507,8 +659,6 @@
             d.textContent = day;
             grid.appendChild(d);
         }
-
-        // Leading days of next month
         const total         = startOffset + daysInMonth;
         const trailingCount = total % 7 === 0 ? 0 : 7 - (total % 7);
         for (let i = 1; i <= trailingCount; i++) {
@@ -519,26 +669,22 @@
         }
     }
 
-    // ── Upcoming Programs ────────────────────────────────────────────────────
+    // ── Upcoming Programs ─────────────────────────────────────
     async function loadUpcomingPrograms() {
         const container = document.getElementById('upcomingProgramsList');
         try {
             const res  = await fetch('/api/calendar/upcoming');
             const data = await res.json();
-
             if (!data || data.length === 0) {
                 container.innerHTML = '<div class="no-programs">No upcoming programs</div>';
                 return;
             }
-
             container.innerHTML = '';
             data.forEach(program => {
-                // Parse date safely without timezone shift
                 const parts = program.eventDate.split('-');
                 const date  = new Date(+parts[0], +parts[1] - 1, +parts[2]);
                 const day   = date.getDate();
                 const mon   = date.toLocaleString('default', { month: 'short' });
-
                 let timeLabel = mon;
                 if (program.startTime) {
                     const [hStr, mStr] = program.startTime.split(':');
@@ -547,7 +693,6 @@
                     h = h % 12 || 12;
                     timeLabel += ` · ${h}:${mStr} ${ampm}`;
                 }
-
                 const item = document.createElement('div');
                 item.className = 'program-item';
                 item.innerHTML = `
@@ -558,7 +703,6 @@
                     </div>`;
                 container.appendChild(item);
             });
-
         } catch (e) {
             container.innerHTML = '<div class="no-programs">Could not load programs</div>';
         }
