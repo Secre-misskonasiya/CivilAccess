@@ -58,6 +58,33 @@
         margin: 0;
         cursor: pointer;
     }
+    
+    /* Success Toast Modal */
+    .success-toast-modal .modal-content {
+        background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+    }
+    .success-toast-modal .modal-header {
+        background: transparent;
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .success-toast-modal .modal-body {
+        text-align: center;
+        padding: 20px;
+    }
+    .success-toast-modal .modal-footer {
+        border-top: none;
+        justify-content: center;
+        padding-top: 0;
+        background: transparent;
+    }
+    .success-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -76,6 +103,24 @@
         <h2>First Login Detected</h2>
         <p>You must change your password before using the system.</p>
         <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <h5 id="successMessage">Success!</h5>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -114,7 +159,7 @@
                     <div class="action-card-icon"><i class="bi bi-database"></i></div>
                     <div class="action-card-title">BACKUP DATABASE</div>
                     <p style="font-size:13px; color:#888; margin:0;">Download a full backup of the database as a SQL file.</p>
-                    <button class="btn-yellow" id="backupBtn" onclick="backupDatabase()">
+                    <button class="btn-yellow" id="backupBtn" onclick="backupDatabaseWithConfirm()">
                         <i class="bi bi-download"></i> Download Backup
                     </button>
                 </div>
@@ -123,7 +168,7 @@
                     <div class="action-card-icon" style="color:#e74c3c;"><i class="bi bi-broadcast"></i></div>
                     <div class="action-card-title">TEST EMERGENCY ALERT</div>
                     <p style="font-size:13px; color:#888; margin:0;">Send a test alert email to all active admins to verify the emergency system.</p>
-                    <button class="btn-red" id="testAlertBtn" onclick="sendTestAlert()"><i class="bi bi-broadcast"></i> Send Test Alert</button>
+                    <button class="btn-red" id="testAlertBtn" onclick="sendTestAlertWithConfirm()"><i class="bi bi-broadcast"></i> Send Test Alert</button>
                 </div>
             </div>
 
@@ -154,6 +199,134 @@ const SECTIONS = ["Dashboard","Accounts","Blotter","Documents","Announcements","
 let isDirty = false;
 let originalToggles = {};
 
+// ============================================
+// CONFIRMATION & SUCCESS MODAL FUNCTIONS
+// ============================================
+let pendingAction = null;
+let pendingActionData = null;
+
+function showSuccess(message) {
+    document.getElementById('successMessage').innerHTML = message;
+    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+    successModal.show();
+}
+
+function showConfirm(message, title, onConfirm) {
+    // Create dynamic confirmation modal
+    const confirmModalId = 'dynamicConfirmModal_' + Date.now();
+    const confirmModalHtml = `
+        <div id="${confirmModalId}" class="modal fade" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 16px;">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #30534D, #3d6b63);">
+                        <h5 class="modal-title" style="color: white;">${title}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" style="padding: 24px; font-size: 16px;">
+                        ${message}
+                    </div>
+                    <div class="modal-footer" style="border-top: none; padding: 16px 24px;">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirmOkBtn_${confirmModalId}">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove any existing dynamic modals
+    document.querySelectorAll('[id^="dynamicConfirmModal_"]').forEach(modal => modal.remove());
+    
+    // Add new modal to body
+    document.body.insertAdjacentHTML('beforeend', confirmModalHtml);
+    const modalEl = document.getElementById(confirmModalId);
+    const modal = new bootstrap.Modal(modalEl);
+    
+    // Handle confirm button
+    const confirmBtn = document.getElementById(`confirmOkBtn_${confirmModalId}`);
+    confirmBtn.onclick = function() {
+        modal.hide();
+        onConfirm();
+    };
+    
+    // Clean up modal after hidden
+    modalEl.addEventListener('hidden.bs.modal', function() {
+        modalEl.remove();
+    });
+    
+    modal.show();
+}
+
+// ============================================
+// WRAPPER FUNCTIONS WITH CONFIRMATION
+// ============================================
+
+function backupDatabaseWithConfirm() {
+    showConfirm(
+        'Are you sure you want to download a backup of the database?',
+        'Confirm Backup',
+        function() {
+            const btn = document.getElementById('backupBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Preparing...';
+
+            fetch('/api/settings/backup', { method: 'POST' })
+                .then(response => {
+                    if (!response.ok) throw new Error('Backup failed');
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+                    a.href = url;
+                    a.download = `barangay-backup-${timestamp}.sql`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    showSuccess('Backup downloaded successfully!');
+                })
+                .catch(() => {
+                    showToast('❌ Backup failed. Please try again.', true);
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-download"></i> Download Backup';
+                });
+        }
+    );
+}
+
+function sendTestAlertWithConfirm() {
+    showConfirm(
+        'This will send a test emergency alert email to all active admins. Continue?',
+        'Confirm Test Alert',
+        function() {
+            const btn = document.getElementById('testAlertBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
+            fetch('/api/settings/test-alert', { method: 'POST' })
+                .then(r => r.text().then(msg => {
+                    if (r.ok) {
+                        showSuccess('Test alert sent successfully!');
+                    } else {
+                        showToast('❌ Failed to send alert.', true);
+                    }
+                }))
+                .catch(() => showToast('Network error.', true))
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-broadcast"></i> Send Test Alert';
+                });
+        }
+    );
+}
+
+// ============================================
+// ORIGINAL FUNCTIONS (unchanged)
+// ============================================
+
 // ── Load saved notification toggles ─────────────────────────
 function loadNotifications() {
     document.querySelectorAll('.notif-toggle').forEach(input => {
@@ -176,35 +349,6 @@ function discardChanges() {
     });
     isDirty = false;
     document.getElementById('saveBar').classList.remove('show');
-}
-
-function backupDatabase() {
-    const btn = document.getElementById('backupBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Preparing...';
-
-    fetch('/api/settings/backup', { method: 'POST' })
-        .then(response => {
-            if (!response.ok) throw new Error('Backup failed');
-            return response.blob();
-        })
-        .then(blob => {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
-            a.href = url;
-            a.download = `barangay-backup-${timestamp}.sql`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
-            showToast('✅ Backup downloaded successfully.', false);
-        })
-        .catch(() => showToast('❌ Backup failed. Please try again.', true))
-        .finally(() => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-download"></i> Download Backup';
-        });
 }
 
 function saveNotifications() {
@@ -264,24 +408,6 @@ function savePermissions() {
             showToast('Failed to save permissions.', true);
         }
     }).catch(() => showToast('Network error.', true));
-}
-
-// ── Test Alert ───────────────────────────────────────────────
-function sendTestAlert() {
-    const btn = document.getElementById('testAlertBtn');
-    if (!confirm('This will send a test emergency alert email to all active admins. Continue?')) return;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
-    fetch('/api/settings/test-alert', { method: 'POST' })
-        .then(r => r.text().then(msg => {
-            if (r.ok) showToast('✅ ' + msg, false);
-            else showToast('❌ Failed to send alert.', true);
-        }))
-        .catch(() => showToast('Network error.', true))
-        .finally(() => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-broadcast"></i> Send Test Alert';
-        });
 }
 
 // ── Toast ────────────────────────────────────────────────────
