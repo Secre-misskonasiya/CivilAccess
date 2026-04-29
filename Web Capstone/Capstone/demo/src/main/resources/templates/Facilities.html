@@ -257,6 +257,33 @@
         background: white; width: 400px; padding: 30px;
         border-radius: 8px; text-align: center; margin: 15% auto;
     }
+    
+    /* Success Toast Modal */
+    .success-toast-modal .modal-content {
+        background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+    }
+    .success-toast-modal .modal-header {
+        background: transparent;
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .success-toast-modal .modal-body {
+        text-align: center;
+        padding: 20px;
+    }
+    .success-toast-modal .modal-footer {
+        border-top: none;
+        justify-content: center;
+        padding-top: 0;
+        background: transparent;
+    }
+    .success-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
 </style>
 
 <meta charset="UTF-8">
@@ -441,7 +468,7 @@
                 <th>Facility</th>
                 <th>Hotline</th>
                 <th>Actions</th>
-              </tr>
+              </td>
             </thead>
             <tbody id="emergency-tbody">
               <tr th:each="facility : ${emergencyFacilities}" th:if="${not #lists.isEmpty(emergencyFacilities)}">
@@ -472,6 +499,43 @@
     </div>
 
   </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmActionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #30534D, #3d6b63);">
+                <h5 class="modal-title" id="confirmModalTitle" style="color: white;">Confirm Action</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="confirmModalMessage" style="padding: 24px; font-size: 16px;">
+                Are you sure you want to perform this action?
+            </div>
+            <div class="modal-footer" style="border-top: none; padding: 16px 24px;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmActionBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <h5 id="successMessage">Success!</h5>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- View Facility Modal -->
@@ -531,7 +595,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="saveFacility()">Save Facility</button>
+        <button type="button" class="btn btn-primary" onclick="saveFacilityWithConfirm()">Save Facility</button>
       </div>
     </div>
   </div>
@@ -578,7 +642,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="updateFacility()">Update Facility</button>
+        <button type="button" class="btn btn-primary" onclick="updateFacilityWithConfirm()">Update Facility</button>
       </div>
     </div>
   </div>
@@ -591,6 +655,156 @@
     <script src="/js/sidebar.js"></script>
 
 <script>
+  // ============================================
+  // NEW CONFIRMATION & SUCCESS MODAL FUNCTIONS
+  // ============================================
+  let pendingDeleteId = null;
+  let pendingFacilityData = null;
+  let pendingUpdateData = null;
+  
+  function showSuccess(message) {
+      document.getElementById('successMessage').innerHTML = message;
+      const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+      successModal.show();
+  }
+  
+  function closeConfirmModalNew() {
+      const modalEl = document.getElementById('confirmActionModal');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+      pendingDeleteId = null;
+      pendingFacilityData = null;
+      pendingUpdateData = null;
+  }
+  
+  function showConfirm(message, title, onConfirm) {
+      document.getElementById('confirmModalMessage').innerHTML = message;
+      document.getElementById('confirmModalTitle').innerHTML = title;
+      const confirmModalEl = document.getElementById('confirmActionModal');
+      const confirmBtn = document.getElementById('confirmActionBtn');
+      
+      const newConfirmBtn = confirmBtn.cloneNode(true);
+      confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+      
+      newConfirmBtn.onclick = () => {
+          const modal = bootstrap.Modal.getInstance(confirmModalEl);
+          if (modal) modal.hide();
+          onConfirm();
+      };
+      
+      const modal = new bootstrap.Modal(confirmModalEl);
+      modal.show();
+  }
+  
+  // ============================================
+  // WRAPPER FUNCTIONS (calling original functions after confirm)
+  // ============================================
+  
+  function deleteFacilityWithConfirm(id, facilityName) {
+      showConfirm(
+          `Are you sure you want to delete "<strong>${escapeHtml(facilityName)}</strong>"?<br>This action cannot be undone.`,
+          'Delete Facility',
+          function() {
+              fetch('/facilities/' + id, {
+                  method: 'DELETE',
+                  headers: { 'Content-Type': 'application/json' }
+              })
+              .then(response => {
+                  if (response.ok) {
+                      showSuccess('Facility deleted successfully!');
+                      setTimeout(() => window.location.reload(), 1500);
+                  } else {
+                      alert('Error deleting facility');
+                  }
+              });
+          }
+      );
+  }
+  
+  function saveFacilityWithConfirm() {
+      const facility = {
+          facilityName: document.getElementById('facilityName').value,
+          facilityType: document.getElementById('facilityType').value,
+          contactNumber: document.getElementById('contactNumber').value,
+          email: document.getElementById('email').value,
+          address: document.getElementById('address').value,
+          status: document.getElementById('status').value
+      };
+      
+      if (!facility.facilityName) {
+          alert('Please enter facility name');
+          return;
+      }
+      
+      showConfirm(
+          `Add new facility "<strong>${escapeHtml(facility.facilityName)}</strong>"?`,
+          'Add Facility',
+          function() {
+              fetch('/facilities/add', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(facility)
+              })
+              .then(response => {
+                  if (response.ok) {
+                      showSuccess('Facility added successfully!');
+                      setTimeout(() => window.location.reload(), 1500);
+                  } else {
+                      alert('Error adding facility');
+                  }
+              });
+          }
+      );
+  }
+  
+  function updateFacilityWithConfirm() {
+      const id = document.getElementById('editFacilityId').value;
+      const facility = {
+          facilityName: document.getElementById('editFacilityName').value,
+          facilityType: document.getElementById('editFacilityType').value,
+          contactNumber: document.getElementById('editContactNumber').value,
+          email: document.getElementById('editEmail').value,
+          address: document.getElementById('editAddress').value,
+          status: document.getElementById('editStatus').value
+      };
+      
+      if (!facility.facilityName) {
+          alert('Please enter facility name');
+          return;
+      }
+      
+      showConfirm(
+          `Update facility "<strong>${escapeHtml(facility.facilityName)}</strong>" with the new information?`,
+          'Update Facility',
+          function() {
+              fetch('/facilities/' + id, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(facility)
+              })
+              .then(response => {
+                  if (response.ok) {
+                      showSuccess('Facility updated successfully!');
+                      setTimeout(() => window.location.reload(), 1500);
+                  } else {
+                      alert('Error updating facility');
+                  }
+              });
+          }
+      );
+  }
+  
+  function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+  }
+  
+  // ============================================
+  // ORIGINAL FUNCTIONS (unchanged)
+  // ============================================
+  
   // Sorting state and function
   let currentSortMode = 'open-first'; // 'open-first' or 'closed-first'
   
@@ -723,6 +937,7 @@
       });
   }
 
+  // Original updateFacility function - preserved but replaced by wrapper
   function updateFacility() {
     const id = document.getElementById('editFacilityId').value;
     const facility = {
@@ -750,6 +965,7 @@
     });
   }
 
+  // Original deleteFacility function - preserved but replaced by wrapper
   function deleteFacility(id) {
     if (confirm('Are you sure you want to delete this facility?')) {
       fetch('/facilities/' + id, {
@@ -768,6 +984,7 @@
     }
   }
 
+  // Original saveFacility function - preserved but replaced by wrapper
   function saveFacility() {
     const facility = {
       facilityName: document.getElementById('facilityName').value,
@@ -793,6 +1010,7 @@
       }
     });
   }
+  
   window.onload = function() {
         const status = document.getElementById('accountStatus').value;
         if (status === 'New' || status === 'Newly Updated') {

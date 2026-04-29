@@ -4,102 +4,215 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login - Brgy. San Sebastian</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+
 <style>
-  * {
+  *, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: "DM Sans", "Segoe UI", Arial, sans-serif;
+  }
+
+  :root {
+    --teal-dark:  #14504a;
+    --teal-mid:   #1e5a50;
+    --teal-light: #3ca08c;
+    --gold:       #f4c542;
+    --gold-hover: #f5d06a;
+    --text-dark:  #1a3a30;
   }
 
   body {
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #5ab5a0 0%, #4a9d8c 100%);
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    padding: 20px;
+    padding: 28px;
+    background: var(--teal-dark);
+    position: relative;
+    overflow: hidden;
+    /* Increased base font size */
+    font-size: 17px;
+  }
+
+  body::before {
+    content: "";
+    position: fixed; top: -120px; right: -120px;
+    width: 560px; height: 560px;
+    background: rgba(60, 160, 140, 0.16);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  body::after {
+    content: "";
+    position: fixed; bottom: -140px; left: -90px;
+    width: 480px; height: 480px;
+    background: rgba(244, 197, 66, 0.08);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .bg-blob-mid {
+    position: fixed; top: 50%; left: 40%;
+    transform: translate(-50%, -50%);
+    width: 720px; height: 720px;
+    background: rgba(30, 90, 80, 0.25);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
   }
 
   .login-container {
+    position: relative; z-index: 1;
     display: flex;
-    background: white;
-    border-radius: 20px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 28px;
     overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    max-width: 900px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.45);
+    max-width: 980px;
     width: 100%;
+    height: 580px;
+    backdrop-filter: blur(4px);
   }
 
+  /* ── LEFT PANEL ── */
   .left-panel {
-    background: linear-gradient(135deg, #c8e6dc 0%, #a8d5c8 100%);
-    padding: 60px 40px;
+    background-image: url('/images/kawit.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    padding: 48px 40px;
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
+    position: relative;
+  }
+
+  .left-panel::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(20, 80, 70, 0.42) 0%,
+      rgba(30, 90, 80, 0.32) 50%,
+      rgba(20, 70, 60, 0.42) 100%
+    );
+    mix-blend-mode: normal;
+    z-index: 0;
+  }
+
+  .left-panel::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: rgba(60, 160, 140, 0.2);
+    z-index: 0;
+  }
+
+  .left-panel > * { position: relative; z-index: 1; }
+
+  .backbutton {
+    position: relative;
+    text-decoration: none;
+    color: rgba(255,255,255,0.85);
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    z-index: 20;
+    background: rgba(0,0,0,0.3);
+    padding: 8px 16px;
+    border-radius: 40px;
+    backdrop-filter: blur(4px);
+    margin: 0 0 20px 0;
+  }
+
+  .backbutton:hover {
+    color: var(--gold);
+    background: rgba(0,0,0,0.5);
   }
 
   .brgy-title {
-    color: #2d5049;
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 40px;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    position: relative; z-index: 1;
   }
 
   .logo {
-    width: 150px;
-    height: 150px;
-    margin-bottom: 40px;
+    width: 140px; height: 140px;
+    margin-bottom: 32px;
+    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.3));
+    position: relative; z-index: 1;
   }
 
   .welcome-title {
-    color: #2d5049;
-    font-size: 32px;
-    font-weight: bold;
-    margin-bottom: 15px;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+    position: relative; z-index: 2;
   }
 
   .welcome-subtitle {
-    color: #5a7872;
-    font-size: 16px;
+    color: #fff;
+    font-size: 1rem;
+    line-height: 1.6;
+    position: relative; z-index: 5;
   }
 
+  .left-accent {
+    width: 48px; height: 4px;
+    background: var(--gold);
+    border-radius: 3px;
+    margin: 22px auto;
+    position: relative; z-index: 1;
+  }
+
+  /* ── RIGHT PANEL ── */
   .right-panel {
-    background: #3d5650;
-    padding: 60px 50px;
-    flex: 1;
+    background: rgba(255,255,255,0.06);
+    padding: 48px 56px;
+    flex: 1.1;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
   }
 
-  .login-header {
-    margin-bottom: 40px;
-  }
+  .login-header { margin-bottom: 28px; }
 
   .login-title {
-    color: white;
-    font-size: 42px;
-    font-weight: bold;
+    color: #fff;
+    font-size: 2.8rem;
+    font-weight: 700;
     margin-bottom: 10px;
+    line-height: 1.2;
   }
 
   .login-subtitle {
-    color: #b8d4cd;
-    font-size: 16px;
+    color: rgba(255,255,255,0.45);
+    font-size: 1rem;
   }
 
-  .form-group {
-    margin-bottom: 25px;
-  }
+  /* ── FORM ── */
+  .form-group { margin-bottom: 20px; }
 
   label {
     display: block;
-    color: white;
-    font-size: 18px;
+    color: rgba(255,255,255,0.75);
+    font-size: 0.95rem;
     font-weight: 600;
+    letter-spacing: 0.4px;
     margin-bottom: 10px;
   }
 
@@ -108,20 +221,21 @@
   input[type="password"] {
     width: 100%;
     padding: 15px 20px;
-    background: transparent;
-    border: 2px solid #7a9d94;
+    background: rgba(255,255,255,0.07);
+    border: 1.5px solid rgba(255,255,255,0.15);
     border-radius: 12px;
-    color: white;
-    font-size: 16px;
-    transition: all 0.3s ease;
+    color: #fff;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border 0.2s, background 0.2s;
   }
 
-  input::placeholder { color: #7a9d94; }
+  input::placeholder { color: rgba(255,255,255,0.28); font-size: 0.95rem; }
 
   input:focus {
     outline: none;
-    border-color: #b8d4cd;
-    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--teal-light);
+    background: rgba(255,255,255,0.11);
   }
 
   input.valid   { border-color: #4ade80; }
@@ -129,52 +243,55 @@
 
   .forgot-password {
     text-align: right;
-    margin-top: -15px;
-    margin-bottom: 25px;
+    margin-top: -10px;
+    margin-bottom: 28px;
   }
 
   .forgot-password a {
-    color: #b8d4cd;
-    font-size: 14px;
+    color: rgba(255,255,255,0.45);
+    font-size: 0.9rem;
     text-decoration: none;
-    transition: color 0.3s ease;
+    transition: color 0.2s;
     cursor: pointer;
   }
 
-  .forgot-password a:hover { color: white; }
+  .forgot-password a:hover { color: var(--gold); }
 
   .login-button {
     width: 100%;
     padding: 16px;
-    background: #f4c542;
-    color: #2d5049;
-    font-size: 20px;
-    font-weight: bold;
+    background: var(--gold);
+    color: var(--text-dark);
+    font-size: 1.1rem;
+    font-weight: 700;
     border: none;
     border-radius: 12px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    font-family: inherit;
+    transition: background 0.25s, transform 0.2s, box-shadow 0.25s;
+    letter-spacing: 0.3px;
   }
 
   .login-button:hover {
-    background: #f5d06a;
+    background: var(--gold-hover);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(244, 197, 66, 0.3);
+    box-shadow: 0 8px 28px rgba(244, 197, 66, 0.35);
   }
 
   .login-button:active  { transform: translateY(0); }
 
   .login-button:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
   }
 
   .error-message {
     color: #ff8a8a;
     text-align: center;
-    margin-top: 15px;
-    font-size: 14px;
+    margin-top: 18px;
+    font-size: 0.9rem;
     display: none;
   }
 
@@ -182,46 +299,36 @@
 
   .field-error {
     color: #ff8a8a;
-    font-size: 13px;
-    margin-top: 5px;
+    font-size: 0.85rem;
+    margin-top: 6px;
     display: none;
   }
 
   .field-error.show { display: block; }
 
-  /* Password wrapper */
-  .password-wrapper {
-    position: relative;
-  }
-
-  .password-wrapper input {
-    padding-right: 50px;
-  }
+  /* Password toggle */
+  .password-wrapper { position: relative; }
+  .password-wrapper input { padding-right: 56px; }
 
   .toggle-password {
     position: absolute;
-    right: 15px;
-    top: 50%;
+    right: 16px; top: 50%;
     transform: translateY(-50%);
-    background: none;
-    border: none;
+    background: none; border: none;
     cursor: pointer;
-    color: #7a9d94;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    transition: color 0.2s ease;
+    color: rgba(255,255,255,0.35);
+    padding: 0; display: flex; align-items: center;
+    transition: color 0.2s;
   }
 
-  .toggle-password:hover { color: #b8d4cd; }
-  .toggle-password svg { width: 20px; height: 20px; }
+  .toggle-password:hover { color: rgba(255,255,255,0.7); }
+  .toggle-password svg   { width: 22px; height: 22px; }
 
-  /* Modal Styles */
+  /* ── MODAL OVERLAY ── */
   .modal-overlay {
     display: none;
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
     z-index: 1000;
     justify-content: center;
     align-items: center;
@@ -230,263 +337,204 @@
 
   .modal-overlay.show { display: flex; }
 
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-
+  @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
   @keyframes slideUp {
-    from { transform: translateY(50px); opacity: 0; }
+    from { transform: translateY(40px); opacity: 0; }
     to   { transform: translateY(0);    opacity: 1; }
   }
 
   .modal {
-    background: white;
-    border-radius: 20px;
-    padding: 40px;
-    max-width: 500px;
+    background: #fff;
+    border-radius: 24px;
+    padding: 48px;
+    max-width: 540px;
     width: 90%;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 28px 72px rgba(0,0,0,0.35);
     animation: slideUp 0.3s ease;
     position: relative;
   }
 
   .modal-close {
-    position: absolute;
-    top: 20px; right: 20px;
-    background: none;
-    border: none;
-    font-size: 28px;
-    color: #7a9d94;
-    cursor: pointer;
-    transition: color 0.3s ease;
+    position: absolute; top: 22px; right: 24px;
+    background: none; border: none;
+    font-size: 30px; color: #7a9d94;
+    cursor: pointer; transition: color 0.2s;
   }
 
   .modal-close:hover { color: #2d5049; }
 
-  .modal-header {
-    text-align: center;
-    margin-bottom: 30px;
-  }
+  .modal-header { text-align: center; margin-bottom: 32px; }
 
   .modal-icon {
-    width: 80px; height: 80px;
-    background: linear-gradient(135deg, #5ab5a0 0%, #4a9d8c 100%);
+    width: 84px; height: 84px;
+    background: linear-gradient(135deg, #5ab5a0, #4a9d8c);
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-    font-size: 40px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 22px;
+    font-size: 42px;
   }
 
-  .modal-title {
-    color: #2d5049;
-    font-size: 28px;
-    font-weight: bold;
-    margin-bottom: 10px;
-  }
+  .modal-title   { color: #2d5049; font-size: 1.8rem; font-weight: 700; margin-bottom: 10px; }
+  .modal-subtitle { color: #5a7872; font-size: 1rem; }
 
-  .modal-subtitle {
-    color: #5a7872;
-    font-size: 14px;
-  }
-
-  .modal-form-group { margin-bottom: 20px; }
+  .modal-form-group { margin-bottom: 22px; }
 
   .modal-form-group label {
-    display: block;
-    color: #2d5049;
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 8px;
+    color: #2d5049; font-size: 0.95rem; font-weight: 600; margin-bottom: 8px;
   }
 
   .modal-form-group input {
-    width: 100%;
-    padding: 14px 18px;
-    background: #f5f5f5;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    color: #2d5049;
-    font-size: 16px;
-    transition: all 0.3s ease;
+    width: 100%; padding: 15px 18px;
+    background: #f5f5f5; border: 2px solid #e0e0e0;
+    border-radius: 12px; color: #2d5049; font-size: 1rem;
+    transition: all 0.2s;
   }
 
   .modal-form-group input:focus {
-    outline: none;
-    border-color: #5ab5a0;
-    background: white;
+    outline: none; border-color: #5ab5a0; background: #fff;
   }
 
   .modal-button {
-    width: 100%;
-    padding: 14px;
-    background: #5ab5a0;
-    color: white;
-    font-size: 18px;
-    font-weight: bold;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 10px;
+    width: 100%; padding: 15px;
+    background: #5ab5a0; color: #fff;
+    font-size: 1.05rem; font-weight: 700;
+    border: none; border-radius: 12px;
+    cursor: pointer; font-family: inherit;
+    transition: all 0.25s; margin-top: 10px;
   }
 
   .modal-button:hover {
     background: #4a9d8c;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(90, 181, 160, 0.3);
+    box-shadow: 0 8px 20px rgba(90,181,160,0.35);
   }
 
-  .modal-button:disabled {
-    background: #b8d4cd;
-    cursor: not-allowed;
-    transform: none;
-  }
+  .modal-button:disabled { background: #b8d4cd; cursor: not-allowed; transform: none; }
 
   .resend-text {
-    text-align: center;
-    margin-top: 15px;
-    color: #7a9d94;
-    font-size: 14px;
+    text-align: center; margin-top: 18px;
+    color: #7a9d94; font-size: 0.9rem;
   }
 
-  .resend-link {
-    color: #5ab5a0;
-    cursor: pointer;
-    text-decoration: none;
-    font-weight: 600;
-  }
-
+  .resend-link { color: #5ab5a0; cursor: pointer; font-weight: 600; font-size: 0.95rem; }
   .resend-link:hover { text-decoration: underline; }
   .resend-link.disabled { color: #b8d4cd; cursor: not-allowed; }
 
   .success-message, .modal-error-message {
-    text-align: center;
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    display: none;
+    text-align: center; padding: 12px;
+    border-radius: 10px; margin-bottom: 18px; display: none;
+    font-size: 0.95rem;
   }
 
-  .success-message {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-  }
-
-  .modal-error-message {
-    background: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-  }
-
+  .success-message       { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+  .modal-error-message   { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
   .success-message.show, .modal-error-message.show { display: block; }
 
-  .step         { display: none; }
-  .step.active  { display: block; }
+  .step        { display: none; }
+  .step.active { display: block; }
 
   .done-icon {
-    width: 90px; height: 90px;
+    width: 92px; height: 92px;
     background: linear-gradient(135deg, #5ab5a0, #4a9d8c);
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-    font-size: 48px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 22px; font-size: 48px;
   }
 
-  /* Admin Login OTP Modal */
+  /* ── OTP MODAL ── */
   #otpModal {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
     z-index: 1000;
-    justify-content: center;
-    align-items: center;
+    justify-content: center; align-items: center;
   }
 
   #otpModal.show { display: flex; }
 
   .otp-modal-content {
-    background: white;
-    padding: 40px;
-    border-radius: 20px;
+    background: #fff;
+    padding: 48px;
+    border-radius: 24px;
     text-align: center;
-    max-width: 400px;
-    width: 90%;
+    max-width: 440px; width: 90%;
     animation: slideUp 0.3s ease;
+    box-shadow: 0 28px 72px rgba(0,0,0,0.35);
   }
 
-  .otp-modal-content h2 { color: #2d5049; margin-bottom: 10px; }
-  .otp-modal-content p  { color: #5a7872; margin-bottom: 20px; }
+  .otp-modal-content h2 { color: #2d5049; margin-bottom: 10px; font-size: 1.7rem; }
+  .otp-modal-content p  { color: #5a7872; margin-bottom: 24px; font-size: 1rem; }
 
   #otp-single-input {
-    width: 100%;
-    padding: 15px;
-    border: 2px solid #a8d5c8;
-    border-radius: 12px;
-    font-size: 20px;
-    text-align: center;
-    margin-bottom: 20px;
-    color: #1a1a1a;
+    width: 100%; padding: 16px;
+    border: 2px solid #a8d5c8; border-radius: 12px;
+    font-size: 1.6rem; text-align: center;
+    margin-bottom: 24px; color: #1a1a1a;
+    letter-spacing: 8px; font-weight: 700;
   }
 
-  /* Forgot password OTP input */
-  #forgotOtpInput {
-    color: #1a1a1a !important;
-  }
+  #forgotOtpInput { color: #1a1a1a !important; }
 
   .otp-verify-btn {
-    width: 100%;
-    padding: 15px;
-    background: #f4c542;
-    color: #2d5049;
-    border: none;
-    border-radius: 12px;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    width: 100%; padding: 16px;
+    background: var(--gold); color: var(--text-dark);
+    border: none; border-radius: 12px;
+    font-size: 1.05rem; font-weight: 700;
+    cursor: pointer; transition: background 0.2s;
+    font-family: inherit;
   }
 
-  .otp-verify-btn:hover { background: #f5d06a; }
+  .otp-verify-btn:hover { background: var(--gold-hover); }
 
   .otp-cancel-btn {
-    margin-top: 15px;
-    background: none;
-    border: none;
-    color: #5a7872;
-    cursor: pointer;
-    text-decoration: underline;
+    margin-top: 18px; background: none;
+    border: none; color: #5a7872;
+    cursor: pointer; text-decoration: underline;
+    font-size: 0.95rem;
   }
 
+  /* ── RESPONSIVE ── */
   @media (max-width: 768px) {
-    .login-container  { flex-direction: column; }
-    .left-panel       { padding: 40px 30px; }
-    .right-panel      { padding: 40px 30px; }
-    .login-title      { font-size: 32px; }
-    .welcome-title    { font-size: 26px; }
-    .backbutton       { position: absolute; left: 20px; font-size: 14px; }
-    .modal            { padding: 30px 20px; }
+    .login-container { flex-direction: column; height: auto; max-width: 100%; }
+    .left-panel      { padding: 48px 32px; }
+    .right-panel     { padding: 42px 32px; }
+    .login-title     { font-size: 2.2rem; }
+    .welcome-title   { font-size: 1.7rem; }
+    .backbutton      { font-size: 0.85rem; padding: 6px 14px; }
+    .modal           { padding: 32px 24px; }
+    .logo            { width: 110px; height: 110px; }
+    body             { font-size: 15px; padding: 20px; }
+    .login-container { border-radius: 24px; }
+    .modal-title     { font-size: 1.5rem; }
+  }
+
+  @media (max-width: 480px) {
+    .right-panel { padding: 32px 24px; }
+    .login-title { font-size: 1.9rem; }
+    .welcome-title { font-size: 1.5rem; }
+    .modal { padding: 28px 20px; }
+    .otp-modal-content { padding: 32px 24px; }
+    .otp-modal-content h2 { font-size: 1.4rem; }
+    #otp-single-input { letter-spacing: 4px; font-size: 1.4rem; }
   }
 </style>
+
 </head>
 <body>
 
+<div class="bg-blob-mid"></div>
+
 <div class="login-container">
   <input type="hidden" th:text="${empstatus}" id="empstatus">
+
   <!-- Left Panel -->
   <div class="left-panel">
-    <a th:href="@{/landing-page}" style="text-decoration: none; color: #2d5049; font-weight: bold;" class="backbutton">&larr; Back to Landing Page</a>
+    <a th:href="@{/landing-page}" href="/landing-page" class="backbutton">&larr; Back</a>
     <div class="brgy-title">Brgy. San Sebastian</div>
-    <img src="/images/seal.png" alt="Barangay Seal" class="logo">
+    <img src="/images/seal.png" alt="Barangay Seal" class="logo"
+         onerror="this.style.display='none'">
     <div class="welcome-title">Welcome Back</div>
-    <div class="welcome-subtitle">Sign In to access the dashboard</div>
+    <div class="left-accent"></div>
+    <div class="welcome-subtitle">Sign in to access<br>the admin dashboard</div>
   </div>
 
   <!-- Right Panel -->
@@ -499,14 +547,14 @@
     <form th:action="@{/login}" method="post" id="loginForm">
       <div class="form-group">
         <label for="email">Email</label>
-        <input type="email" id="email" name="email" required autocomplete="email">
+        <input type="email" id="email" name="email" placeholder="your.email@example.com" required autocomplete="email">
         <div class="field-error" id="email-error">Please enter a valid email address</div>
       </div>
 
       <div class="form-group">
         <label for="password">Password</label>
         <div class="password-wrapper">
-          <input type="password" id="password" name="password" required autocomplete="current-password">
+          <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
           <button type="button" class="toggle-password" id="togglePassword" aria-label="Toggle password visibility">
             <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -538,8 +586,8 @@
 <div id="otpModal">
   <div class="otp-modal-content">
     <h2>Verification Code</h2>
-    <p>A code has been sent to <br><strong id="displayEmail"></strong></p>
-    <input type="text" id="otp-single-input" placeholder="Enter 6-digit code" maxlength="6" inputmode="numeric">
+    <p>A code has been sent to<br><strong id="displayEmail"></strong></p>
+    <input type="text" id="otp-single-input" placeholder="000000" maxlength="6" inputmode="numeric">
     <button type="button" onclick="verifyLoginOTP()" class="otp-verify-btn">Verify &amp; Sign In</button>
     <button type="button" onclick="closeOtpModal()" class="otp-cancel-btn">Cancel</button>
   </div>
@@ -550,49 +598,43 @@
   <div class="modal">
     <button class="modal-close" id="closeModal">&times;</button>
 
-    <!-- Step 1: Enter Email -->
+    <!-- Step 1 -->
     <div class="step active" id="step1">
       <div class="modal-header">
         <h2 class="modal-title">Forgot Password?</h2>
         <p class="modal-subtitle">Enter your email to receive a verification code</p>
       </div>
-
       <div class="success-message" id="emailSuccess"></div>
       <div class="modal-error-message" id="emailError"></div>
-
       <div class="modal-form-group">
         <label for="resetEmail">Email Address</label>
         <input type="email" id="resetEmail" placeholder="your.email@example.com">
       </div>
-
       <button class="modal-button" id="sendOtpBtn">Send Verification Code</button>
     </div>
 
-    <!-- Step 2: Enter OTP -->
+    <!-- Step 2 -->
     <div class="step" id="step2">
       <div class="modal-header">
         <div class="modal-icon">🔐</div>
         <h2 class="modal-title">Enter Verification Code</h2>
         <p class="modal-subtitle">We've sent a 6-digit code to <strong><span id="emailDisplay"></span></strong></p>
       </div>
-
       <div class="success-message" id="otpSuccess"></div>
       <div class="modal-error-message" id="otpError"></div>
-
       <input type="text" id="forgotOtpInput"
-             placeholder="Enter 6-digit code" maxlength="6" inputmode="numeric"
-             style="width:100%; padding:15px; border:2px solid #a8d5c8; border-radius:12px;
-                    font-size:20px; text-align:center; margin:20px 0; color:#1a1a1a;">
-
+             placeholder="000000" maxlength="6" inputmode="numeric"
+             style="width:100%;padding:15px;border:2px solid #a8d5c8;border-radius:10px;
+                    font-size:1.4rem;text-align:center;margin:18px 0;color:#1a1a1a;letter-spacing:6px;font-weight:700;">
       <button class="modal-button" id="verifyOtpBtn">Verify Code</button>
-
       <div class="resend-text">
-        Didn't receive code? <a class="resend-link" id="resendLink">Resend</a>
+        Didn't receive code?
+        <a class="resend-link" id="resendLink">Resend</a>
         <span id="timerText" style="display:none;"> (Wait <span id="timer">60</span>s)</span>
       </div>
     </div>
 
-    <!-- Step 3: Done -->
+    <!-- Step 3 -->
     <div class="step" id="step3">
       <div class="modal-header">
         <div class="done-icon">✅</div>
@@ -605,11 +647,9 @@
       </div>
       <button class="modal-button" id="doneBtn">Back to Login</button>
     </div>
-
   </div>
 </div>
 
-</body>
 <script>
   // ============================================
   // LOGIN FORM VALIDATION & ADMIN 2FA OTP
@@ -642,7 +682,7 @@
   function updateLoginButton() {
     const isEmailValid    = emailInput.classList.contains('valid');
     loginButton.disabled  = !isEmailValid;
-    loginButton.style.opacity = isEmailValid ? '1' : '0.6';
+    loginButton.style.opacity = isEmailValid ? '1' : '0.55';
   }
 
   function showLoginError(msg) {
@@ -677,19 +717,15 @@
       );
 
       if (response.ok) {
-        // Valid admin with correct password → send OTP
         handleAdmin2FA(email);
       } else if (response.status === 403) {
-        // Archived account
         const message = await response.text();
         alert(message);
         resetLoginButton();
       } else if (response.status === 401) {
-        // Wrong password (admin found but password mismatch)
         showLoginError("Invalid email or password.");
         resetLoginButton();
       } else {
-        // 404 — not an admin, let Spring Security handle login normally
         isOtpVerified = true;
         loginForm.submit();
       }
@@ -744,7 +780,7 @@
   }
 
   loginButton.disabled      = true;
-  loginButton.style.opacity = '0.6';
+  loginButton.style.opacity = '0.55';
 
   // ============================================
   // SHOW / HIDE PASSWORD TOGGLE
@@ -801,8 +837,8 @@
 
   function resetModal() {
     showStep(1);
-    resetEmailInput.value  = '';
-    forgotOtpInput.value   = '';
+    resetEmailInput.value = '';
+    forgotOtpInput.value  = '';
     hideAllMessages();
     clearInterval(resendTimer);
   }
@@ -840,27 +876,21 @@
   modal.addEventListener('click', e => { if (e.target === modal) hideModal(); });
   doneBtn.addEventListener('click', hideModal);
 
-  // Step 1: Send OTP
   sendOtpBtn.addEventListener('click', async () => {
     const email = resetEmailInput.value.trim();
-
     if (!emailRegex.test(email)) {
       showMessage('emailError', 'Please enter a valid email address', true);
       return;
     }
-
     sendOtpBtn.disabled    = true;
     sendOtpBtn.textContent = 'Sending...';
-
     try {
       const response = await fetch('/api/forgot-password/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
-
       const data = await response.json();
-
       if (response.ok) {
         document.getElementById('emailDisplay').textContent = email;
         showStep(2);
@@ -876,29 +906,21 @@
     }
   });
 
-  // Step 2: Verify OTP → backend generates & emails new password
   verifyOtpBtn.addEventListener('click', async () => {
     const otp = forgotOtpInput.value.trim();
     if (otp.length !== 6) {
       showMessage('otpError', 'Please enter the complete 6-digit code', true);
       return;
     }
-
     verifyOtpBtn.disabled    = true;
     verifyOtpBtn.textContent = 'Verifying...';
-
     try {
       const response = await fetch('/api/forgot-password/verify-and-reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: resetEmailInput.value.trim(),
-          otp
-        })
+        body: JSON.stringify({ email: resetEmailInput.value.trim(), otp })
       });
-
       const data = await response.json();
-
       if (response.ok) {
         document.getElementById('doneEmailDisplay').textContent = resetEmailInput.value.trim();
         showStep(3);
@@ -914,17 +936,14 @@
     }
   });
 
-  // Resend OTP
   resendLink.addEventListener('click', async () => {
     if (resendLink.classList.contains('disabled')) return;
-
     try {
       const response = await fetch('/api/forgot-password/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: resetEmailInput.value.trim() })
       });
-
       if (response.ok) {
         showMessage('otpSuccess', 'New code sent successfully!');
         startResendTimer();
