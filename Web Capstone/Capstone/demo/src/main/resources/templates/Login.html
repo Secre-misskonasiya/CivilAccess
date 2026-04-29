@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login - Brgy. San Sebastian</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+
 <style>
   *, *::before, *::after {
     margin: 0;
@@ -27,16 +28,18 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 24px;
+    padding: 28px;
     background: var(--teal-dark);
     position: relative;
     overflow: hidden;
+    /* Increased base font size */
+    font-size: 17px;
   }
 
   body::before {
     content: "";
     position: fixed; top: -120px; right: -120px;
-    width: 480px; height: 480px;
+    width: 560px; height: 560px;
     background: rgba(60, 160, 140, 0.16);
     border-radius: 50%;
     pointer-events: none;
@@ -45,7 +48,7 @@
   body::after {
     content: "";
     position: fixed; bottom: -140px; left: -90px;
-    width: 400px; height: 400px;
+    width: 480px; height: 480px;
     background: rgba(244, 197, 66, 0.08);
     border-radius: 50%;
     pointer-events: none;
@@ -54,7 +57,7 @@
   .bg-blob-mid {
     position: fixed; top: 50%; left: 40%;
     transform: translate(-50%, -50%);
-    width: 600px; height: 600px;
+    width: 720px; height: 720px;
     background: rgba(30, 90, 80, 0.25);
     border-radius: 50%;
     pointer-events: none;
@@ -65,12 +68,12 @@
     position: relative; z-index: 1;
     display: flex;
     background: rgba(255,255,255,0.04);
-    border-radius: 22px;
+    border-radius: 28px;
     overflow: hidden;
     box-shadow: 0 32px 80px rgba(0,0,0,0.45);
-    max-width: 880px;
+    max-width: 980px;
     width: 100%;
-    height: 520px;
+    height: 580px;
     backdrop-filter: blur(4px);
   }
 
@@ -80,7 +83,7 @@
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    padding: 40px 36px;
+    padding: 48px 40px;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -95,9 +98,9 @@
     position: absolute; inset: 0;
     background: linear-gradient(
       to bottom,
-      rgba(20, 80, 70, 0.38) 0%,
-      rgba(30, 90, 80, 0.28) 50%,
-      rgba(20, 70, 60, 0.38) 100%
+      rgba(20, 80, 70, 0.42) 0%,
+      rgba(30, 90, 80, 0.32) 50%,
+      rgba(20, 70, 60, 0.42) 100%
     );
     mix-blend-mode: normal;
     z-index: 0;
@@ -112,23 +115,23 @@
 
   .left-panel > * { position: relative; z-index: 1; }
 
- .backbutton {
+  .backbutton {
     position: relative;
     text-decoration: none;
     color: rgba(255,255,255,0.85);
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     font-weight: 500;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     transition: all 0.2s;
     z-index: 20;
     background: rgba(0,0,0,0.3);
-    padding: 6px 12px;
-    border-radius: 30px;
+    padding: 8px 16px;
+    border-radius: 40px;
     backdrop-filter: blur(4px);
-    margin: 0 0 15px 0;
-}
+    margin: 0 0 20px 0;
+  }
 
   .backbutton:hover {
     color: var(--gold);
@@ -137,48 +140,48 @@
 
   .brgy-title {
     color: #fff;
-    font-size: 0.82rem;
+    font-size: 0.95rem;
     font-weight: 600;
-    letter-spacing: 1.2px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    margin-bottom: 28px;
+    margin-bottom: 32px;
     position: relative; z-index: 1;
   }
 
   .logo {
-    width: 120px; height: 120px;
-    margin-bottom: 28px;
+    width: 140px; height: 140px;
+    margin-bottom: 32px;
     filter: drop-shadow(0 8px 24px rgba(0,0,0,0.3));
     position: relative; z-index: 1;
   }
 
   .welcome-title {
     color: #fff;
-    font-size: 1.7rem;
+    font-size: 2rem;
     font-weight: 700;
-    margin-bottom: 10px;
+    margin-bottom: 14px;
     position: relative; z-index: 2;
   }
 
   .welcome-subtitle {
     color: #fff;
-    font-size: 0.88rem;
+    font-size: 1rem;
     line-height: 1.6;
     position: relative; z-index: 5;
   }
 
   .left-accent {
-    width: 40px; height: 3px;
+    width: 48px; height: 4px;
     background: var(--gold);
-    border-radius: 2px;
-    margin: 18px auto;
+    border-radius: 3px;
+    margin: 22px auto;
     position: relative; z-index: 1;
   }
 
   /* ── RIGHT PANEL ── */
   .right-panel {
     background: rgba(255,255,255,0.06);
-    padding: 40px 48px;
+    padding: 48px 56px;
     flex: 1.1;
     display: flex;
     flex-direction: column;
@@ -186,48 +189,48 @@
     overflow: hidden;
   }
 
-  .login-header { margin-bottom: 22px; }
+  .login-header { margin-bottom: 28px; }
 
   .login-title {
     color: #fff;
-    font-size: 2.4rem;
+    font-size: 2.8rem;
     font-weight: 700;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     line-height: 1.2;
   }
 
   .login-subtitle {
     color: rgba(255,255,255,0.45);
-    font-size: 0.9rem;
+    font-size: 1rem;
   }
 
   /* ── FORM ── */
-  .form-group { margin-bottom: 16px; }
+  .form-group { margin-bottom: 20px; }
 
   label {
     display: block;
     color: rgba(255,255,255,0.75);
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     font-weight: 600;
     letter-spacing: 0.4px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
 
   input[type="text"],
   input[type="email"],
   input[type="password"] {
     width: 100%;
-    padding: 13px 18px;
+    padding: 15px 20px;
     background: rgba(255,255,255,0.07);
     border: 1.5px solid rgba(255,255,255,0.15);
-    border-radius: 10px;
+    border-radius: 12px;
     color: #fff;
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-family: inherit;
     transition: border 0.2s, background 0.2s;
   }
 
-  input::placeholder { color: rgba(255,255,255,0.28); }
+  input::placeholder { color: rgba(255,255,255,0.28); font-size: 0.95rem; }
 
   input:focus {
     outline: none;
@@ -240,13 +243,13 @@
 
   .forgot-password {
     text-align: right;
-    margin-top: -12px;
-    margin-bottom: 22px;
+    margin-top: -10px;
+    margin-bottom: 28px;
   }
 
   .forgot-password a {
     color: rgba(255,255,255,0.45);
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     text-decoration: none;
     transition: color 0.2s;
     cursor: pointer;
@@ -256,23 +259,23 @@
 
   .login-button {
     width: 100%;
-    padding: 14px;
+    padding: 16px;
     background: var(--gold);
     color: var(--text-dark);
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 700;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     cursor: pointer;
     font-family: inherit;
     transition: background 0.25s, transform 0.2s, box-shadow 0.25s;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.3px;
   }
 
   .login-button:hover {
     background: var(--gold-hover);
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(244, 197, 66, 0.3);
+    box-shadow: 0 8px 28px rgba(244, 197, 66, 0.35);
   }
 
   .login-button:active  { transform: translateY(0); }
@@ -287,8 +290,8 @@
   .error-message {
     color: #ff8a8a;
     text-align: center;
-    margin-top: 14px;
-    font-size: 0.85rem;
+    margin-top: 18px;
+    font-size: 0.9rem;
     display: none;
   }
 
@@ -296,8 +299,8 @@
 
   .field-error {
     color: #ff8a8a;
-    font-size: 0.78rem;
-    margin-top: 5px;
+    font-size: 0.85rem;
+    margin-top: 6px;
     display: none;
   }
 
@@ -305,11 +308,11 @@
 
   /* Password toggle */
   .password-wrapper { position: relative; }
-  .password-wrapper input { padding-right: 50px; }
+  .password-wrapper input { padding-right: 56px; }
 
   .toggle-password {
     position: absolute;
-    right: 14px; top: 50%;
+    right: 16px; top: 50%;
     transform: translateY(-50%);
     background: none; border: none;
     cursor: pointer;
@@ -319,13 +322,13 @@
   }
 
   .toggle-password:hover { color: rgba(255,255,255,0.7); }
-  .toggle-password svg   { width: 20px; height: 20px; }
+  .toggle-password svg   { width: 22px; height: 22px; }
 
   /* ── MODAL OVERLAY ── */
   .modal-overlay {
     display: none;
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.65);
+    background: rgba(0,0,0,0.7);
     z-index: 1000;
     justify-content: center;
     align-items: center;
@@ -342,48 +345,48 @@
 
   .modal {
     background: #fff;
-    border-radius: 18px;
-    padding: 40px;
-    max-width: 480px;
+    border-radius: 24px;
+    padding: 48px;
+    max-width: 540px;
     width: 90%;
-    box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+    box-shadow: 0 28px 72px rgba(0,0,0,0.35);
     animation: slideUp 0.3s ease;
     position: relative;
   }
 
   .modal-close {
-    position: absolute; top: 18px; right: 20px;
+    position: absolute; top: 22px; right: 24px;
     background: none; border: none;
-    font-size: 26px; color: #7a9d94;
+    font-size: 30px; color: #7a9d94;
     cursor: pointer; transition: color 0.2s;
   }
 
   .modal-close:hover { color: #2d5049; }
 
-  .modal-header { text-align: center; margin-bottom: 28px; }
+  .modal-header { text-align: center; margin-bottom: 32px; }
 
   .modal-icon {
-    width: 72px; height: 72px;
+    width: 84px; height: 84px;
     background: linear-gradient(135deg, #5ab5a0, #4a9d8c);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 18px;
-    font-size: 36px;
+    margin: 0 auto 22px;
+    font-size: 42px;
   }
 
-  .modal-title   { color: #2d5049; font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
-  .modal-subtitle { color: #5a7872; font-size: 0.88rem; }
+  .modal-title   { color: #2d5049; font-size: 1.8rem; font-weight: 700; margin-bottom: 10px; }
+  .modal-subtitle { color: #5a7872; font-size: 1rem; }
 
-  .modal-form-group { margin-bottom: 18px; }
+  .modal-form-group { margin-bottom: 22px; }
 
   .modal-form-group label {
-    color: #2d5049; font-size: 0.88rem; font-weight: 600; margin-bottom: 7px;
+    color: #2d5049; font-size: 0.95rem; font-weight: 600; margin-bottom: 8px;
   }
 
   .modal-form-group input {
-    width: 100%; padding: 13px 16px;
+    width: 100%; padding: 15px 18px;
     background: #f5f5f5; border: 2px solid #e0e0e0;
-    border-radius: 10px; color: #2d5049; font-size: 0.95rem;
+    border-radius: 12px; color: #2d5049; font-size: 1rem;
     transition: all 0.2s;
   }
 
@@ -392,35 +395,35 @@
   }
 
   .modal-button {
-    width: 100%; padding: 13px;
+    width: 100%; padding: 15px;
     background: #5ab5a0; color: #fff;
-    font-size: 1rem; font-weight: 700;
-    border: none; border-radius: 10px;
+    font-size: 1.05rem; font-weight: 700;
+    border: none; border-radius: 12px;
     cursor: pointer; font-family: inherit;
-    transition: all 0.25s; margin-top: 8px;
+    transition: all 0.25s; margin-top: 10px;
   }
 
   .modal-button:hover {
     background: #4a9d8c;
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(90,181,160,0.3);
+    box-shadow: 0 8px 20px rgba(90,181,160,0.35);
   }
 
   .modal-button:disabled { background: #b8d4cd; cursor: not-allowed; transform: none; }
 
   .resend-text {
-    text-align: center; margin-top: 14px;
-    color: #7a9d94; font-size: 0.85rem;
+    text-align: center; margin-top: 18px;
+    color: #7a9d94; font-size: 0.9rem;
   }
 
-  .resend-link { color: #5ab5a0; cursor: pointer; font-weight: 600; }
+  .resend-link { color: #5ab5a0; cursor: pointer; font-weight: 600; font-size: 0.95rem; }
   .resend-link:hover { text-decoration: underline; }
   .resend-link.disabled { color: #b8d4cd; cursor: not-allowed; }
 
   .success-message, .modal-error-message {
-    text-align: center; padding: 11px;
-    border-radius: 8px; margin-bottom: 14px; display: none;
-    font-size: 0.88rem;
+    text-align: center; padding: 12px;
+    border-radius: 10px; margin-bottom: 18px; display: none;
+    font-size: 0.95rem;
   }
 
   .success-message       { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
@@ -431,17 +434,17 @@
   .step.active { display: block; }
 
   .done-icon {
-    width: 80px; height: 80px;
+    width: 92px; height: 92px;
     background: linear-gradient(135deg, #5ab5a0, #4a9d8c);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 18px; font-size: 42px;
+    margin: 0 auto 22px; font-size: 48px;
   }
 
   /* ── OTP MODAL ── */
   #otpModal {
     display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.75);
+    background: rgba(0,0,0,0.8);
     z-index: 1000;
     justify-content: center; align-items: center;
   }
@@ -450,31 +453,32 @@
 
   .otp-modal-content {
     background: #fff;
-    padding: 40px; border-radius: 18px;
+    padding: 48px;
+    border-radius: 24px;
     text-align: center;
-    max-width: 380px; width: 90%;
+    max-width: 440px; width: 90%;
     animation: slideUp 0.3s ease;
-    box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+    box-shadow: 0 28px 72px rgba(0,0,0,0.35);
   }
 
-  .otp-modal-content h2 { color: #2d5049; margin-bottom: 8px; font-size: 1.4rem; }
-  .otp-modal-content p  { color: #5a7872; margin-bottom: 20px; font-size: 0.9rem; }
+  .otp-modal-content h2 { color: #2d5049; margin-bottom: 10px; font-size: 1.7rem; }
+  .otp-modal-content p  { color: #5a7872; margin-bottom: 24px; font-size: 1rem; }
 
   #otp-single-input {
-    width: 100%; padding: 14px;
-    border: 2px solid #a8d5c8; border-radius: 10px;
-    font-size: 1.4rem; text-align: center;
-    margin-bottom: 18px; color: #1a1a1a;
-    letter-spacing: 6px; font-weight: 700;
+    width: 100%; padding: 16px;
+    border: 2px solid #a8d5c8; border-radius: 12px;
+    font-size: 1.6rem; text-align: center;
+    margin-bottom: 24px; color: #1a1a1a;
+    letter-spacing: 8px; font-weight: 700;
   }
 
   #forgotOtpInput { color: #1a1a1a !important; }
 
   .otp-verify-btn {
-    width: 100%; padding: 14px;
+    width: 100%; padding: 16px;
     background: var(--gold); color: var(--text-dark);
-    border: none; border-radius: 10px;
-    font-size: 1rem; font-weight: 700;
+    border: none; border-radius: 12px;
+    font-size: 1.05rem; font-weight: 700;
     cursor: pointer; transition: background 0.2s;
     font-family: inherit;
   }
@@ -482,23 +486,38 @@
   .otp-verify-btn:hover { background: var(--gold-hover); }
 
   .otp-cancel-btn {
-    margin-top: 14px; background: none;
+    margin-top: 18px; background: none;
     border: none; color: #5a7872;
     cursor: pointer; text-decoration: underline;
-    font-size: 0.88rem;
+    font-size: 0.95rem;
   }
 
   /* ── RESPONSIVE ── */
   @media (max-width: 768px) {
-    .login-container { flex-direction: column; height: auto; }
-    .left-panel      { padding: 40px 28px; }
-    .right-panel     { padding: 36px 28px; }
-    .login-title     { font-size: 1.9rem; }
-    .welcome-title   { font-size: 1.4rem; }
-    .backbutton      { font-size: 0.8rem; }
-    .modal           { padding: 28px 20px; }
+    .login-container { flex-direction: column; height: auto; max-width: 100%; }
+    .left-panel      { padding: 48px 32px; }
+    .right-panel     { padding: 42px 32px; }
+    .login-title     { font-size: 2.2rem; }
+    .welcome-title   { font-size: 1.7rem; }
+    .backbutton      { font-size: 0.85rem; padding: 6px 14px; }
+    .modal           { padding: 32px 24px; }
+    .logo            { width: 110px; height: 110px; }
+    body             { font-size: 15px; padding: 20px; }
+    .login-container { border-radius: 24px; }
+    .modal-title     { font-size: 1.5rem; }
+  }
+
+  @media (max-width: 480px) {
+    .right-panel { padding: 32px 24px; }
+    .login-title { font-size: 1.9rem; }
+    .welcome-title { font-size: 1.5rem; }
+    .modal { padding: 28px 20px; }
+    .otp-modal-content { padding: 32px 24px; }
+    .otp-modal-content h2 { font-size: 1.4rem; }
+    #otp-single-input { letter-spacing: 4px; font-size: 1.4rem; }
   }
 </style>
+
 </head>
 <body>
 
