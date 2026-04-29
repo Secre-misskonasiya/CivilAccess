@@ -570,9 +570,9 @@
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
-                                    <button class="approve-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'APPROVED\')'">Approve</button>
-                                    <button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button>
+                                    <button class="view-btn" th:onclick="|viewReport(${report.id})|">View</button>
+                                    <button class="approve-btn" th:onclick="|updateStatus(${report.id}, 'APPROVED')|">Approve</button>
+                                    <button class="archive-btn" th:onclick="|confirmArchive(${report.id})|">Archive</button>
                                 </div>
                              </td>
                         </tr>
@@ -597,7 +597,7 @@
                             <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="process-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'IN_PROGRESS\')'">Process</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="|viewReport(${report.id})|">View</button><button class="process-btn" th:onclick="|updateStatus(${report.id}, 'IN_PROGRESS')|">Process</button><button class="archive-btn" th:onclick="|confirmArchive(${report.id})|">Archive</button></div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -618,7 +618,7 @@
                             <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'openResolutionModal(' + ${report.id} + ')'">Resolve</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="|viewReport(${report.id})|">View</button><button class="resolve-btn" th:onclick="|openResolutionModal(${report.id})|">Resolve</button><button class="archive-btn" th:onclick="|confirmArchive(${report.id})|">Archive</button></div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -642,7 +642,7 @@
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
                             <td><span th:if="${report.resolvedBy != null}" class="resolved-by-badge"><i class="bi bi-person-check"></i> <span th:text="${report.resolvedBy}"></span></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="|viewReport(${report.id})|">View</button><button class="view-resolution-btn" th:onclick="|viewResolutionDetails(${report.id})|">View Resolution</button><button class="archive-btn" th:onclick="|confirmArchive(${report.id})|">Archive</button></div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -666,7 +666,7 @@
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
                             <td><span th:if="${report.resolvedBy != null}" class="resolved-by-badge"><i class="bi bi-person-check"></i> <span th:text="${report.resolvedBy}"></span></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button></div></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="|viewReport(${report.id})|">View</button><button class="view-resolution-btn" th:onclick="|viewResolutionDetails(${report.id})|">View Resolution</button></div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -746,6 +746,57 @@
     let pendingArchiveId = null;
     let currentModalReportId = null;
     let currentModalReportStatus = null;
+
+    // ============================================================
+    // SIDEBAR TOGGLE FUNCTIONS (FIX FOR CLICKABLE SIDEBAR)
+    // ============================================================
+    function toggleSection(sectionId) {
+        try {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                // Toggle display
+                if (section.style.display === 'none' || section.style.display === '') {
+                    section.style.display = 'block';
+                } else {
+                    section.style.display = 'none';
+                }
+                // Also toggle class for styling
+                if (section.classList) {
+                    section.classList.toggle('collapsed');
+                    section.classList.toggle('expanded');
+                }
+            } else {
+                // Try to find any sidebar menu item with this ID
+                const menuItem = document.querySelector('.sidebar-menu-item[data-target="' + sectionId + '"]');
+                if (menuItem) {
+                    menuItem.classList.toggle('active');
+                }
+                // Try to toggle a dropdown in sidebar
+                const dropdown = document.querySelector('.sidebar-dropdown, .dropdown-menu');
+                if (dropdown) {
+                    dropdown.classList.toggle('show');
+                }
+            }
+        } catch (err) {
+            console.warn('toggleSection error:', err);
+        }
+    }
+
+    function toggleSubmenu(element) {
+        try {
+            const parentLi = element.closest('li');
+            if (parentLi) {
+                parentLi.classList.toggle('open');
+            }
+            const submenu = element.nextElementSibling;
+            if (submenu && submenu.classList) {
+                submenu.classList.toggle('show');
+            }
+        } catch (err) {
+            console.warn('toggleSubmenu error:', err);
+        }
+    }
+    // ============================================================
 
     // Archive Confirmation Functions
     function confirmArchive(id) {
