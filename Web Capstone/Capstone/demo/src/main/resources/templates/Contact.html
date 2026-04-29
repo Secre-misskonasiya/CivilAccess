@@ -190,14 +190,14 @@
         flex-shrink: 0;
     }
     .row-date {
-        width: 150px;
-        flex-shrink: 0;
-        font-size: 13px;
-        color: #999;
-        text-align: right;
-        padding-right: 10px;
-        white-space: nowrap;
-    }
+    width: 150px;
+    flex-shrink: 0;
+    font-size: 13px;
+    color: #999;
+    text-align: right;
+    padding-right: 0px;
+    white-space: nowrap;
+}
     .row-actions {
         display: none;
         align-items: center;
@@ -363,6 +363,23 @@
     .type-option { padding: 10px 16px; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
     .type-option:hover { background-color: #f5f5f5; }
     .type-check { color: #2d4a44; display: none; }
+    
+    /* Custom Modals */
+    .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: none; justify-content: center; align-items: center; }
+    .custom-modal { background: white; border-radius: 12px; width: 380px; max-width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: modalFadeIn 0.2s ease; overflow: hidden; }
+    .custom-modal-header { padding: 18px 24px 0 24px; font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 12px; }
+    .custom-modal-body { padding: 16px 24px; font-size: 15px; color: #444; line-height: 1.5; }
+    .custom-modal-footer { padding: 16px 24px 24px 24px; display: flex; justify-content: flex-end; gap: 12px; }
+    .custom-btn { padding: 8px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .custom-btn-primary { background-color: #2d4a44; color: white; }
+    .custom-btn-primary:hover { background-color: #1f3631; }
+    .custom-btn-secondary { background-color: #e0e0e0; color: #333; }
+    .custom-btn-secondary:hover { background-color: #d0d0d0; }
+    .custom-btn-danger { background-color: #e74c3c; color: white; }
+    .custom-btn-danger:hover { background-color: #c0392b; }
+    .success-icon { color: #27ae60; font-size: 28px; }
+    .warning-icon { color: #e67e22; font-size: 28px; }
+    @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 </style>
 
 <meta charset="UTF-8">
@@ -444,14 +461,16 @@
                                 <span class="status-incoming">Incoming</span>
                             </div>
                             <div class="row-message" th:text="${request.message != null ? request.message : 'No message provided'}">I would like to ask about the barangay clearance requirements.</div>
+                            
                             <div class="row-date">
                                 <span th:text="${request.createdAt != null ? #temporals.format(request.createdAt, 'MMM dd, yyyy hh:mm a') : 'No date'}">Mar 15, 2026 02:30 PM</span>
-                                <span class="new-msg-badge" th:style="${unreadStatus[request.id]} ? 'display: inline-block;' : 'display: none;'">NEW</span>
+                               
                             </div>
+                             <span class="new-msg-badge" th:style="${unreadStatus[request.id]} ? 'display: inline-block;' : 'display: none;'">NEW</span>
                             <div class="row-actions">
                                 <button class="view-btn" th:onclick="'openChatModal(' + ${request.id} + ', \'incoming\')'">View</button>
-                                <button class="resolve-btn" th:onclick="'updateStatus(' + ${request.id} + ', \'RESOLVED\')'">Resolve</button>
-                                <button class="archive-btn" th:onclick="'updateStatus(' + ${request.id} + ', \'ARCHIVED\')'">Archive</button>
+                                <button class="resolve-btn" th:onclick="'showConfirmModal(' + ${request.id} + ', \'RESOLVED\')'">Resolve</button>
+                                <button class="archive-btn" th:onclick="'showConfirmModal(' + ${request.id} + ', \'ARCHIVED\')'">Archive</button>
                             </div>
                         </div>
                     </div>
@@ -495,7 +514,7 @@
                             <div class="row-date" th:text="${request.resolvedAt != null ? #temporals.format(request.resolvedAt, 'MMM dd, yyyy hh:mm a') : (request.createdAt != null ? #temporals.format(request.createdAt, 'MMM dd, yyyy hh:mm a') : 'No date')}">Mar 10, 2026 03:45 PM</div>
                             <div class="row-actions">
                                 <button class="view-btn" th:onclick="'openChatModal(' + ${request.id} + ', \'resolved\')'">View</button>
-                                <button class="archive-btn" th:onclick="'updateStatus(' + ${request.id} + ', \'ARCHIVED\')'">Archive</button>
+                                <button class="archive-btn" th:onclick="'showConfirmModal(' + ${request.id} + ', \'ARCHIVED\')'">Archive</button>
                             </div>
                         </div>
                     </div>
@@ -589,6 +608,35 @@
     </div>
 </div>
 
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="custom-modal-overlay">
+    <div class="custom-modal">
+        <div class="custom-modal-header">
+            <i class="bi bi-exclamation-triangle-fill warning-icon"></i>
+            <span>Confirm Action</span>
+        </div>
+        <div class="custom-modal-body" id="confirmModalBody">Are you sure you want to proceed?</div>
+        <div class="custom-modal-footer">
+            <button class="custom-btn custom-btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+            <button class="custom-btn custom-btn-primary" id="confirmActionBtn">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="custom-modal-overlay">
+    <div class="custom-modal">
+        <div class="custom-modal-header">
+            <i class="bi bi-check-circle-fill success-icon"></i>
+            <span>Success</span>
+        </div>
+        <div class="custom-modal-body" id="successModalBody">Action completed successfully!</div>
+        <div class="custom-modal-footer">
+            <button class="custom-btn custom-btn-primary" onclick="closeSuccessModalAndReload()">OK</button>
+        </div>
+    </div>
+</div>
+
 <!-- Logout Modal -->
 <div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
 
@@ -605,6 +653,8 @@
     let activeTypeFilter = '';
     let residentAvatarUrl = null;
     let residentName = '';
+    
+    let pendingAction = { id: null, status: null };
 
     function syncBadges() {
         Object.keys(lastMessageInfo).forEach(requestId => {
@@ -646,6 +696,54 @@
             }
         }).catch(err => console.error('Error marking as read:', err));
     }
+
+    function showConfirmModal(id, status) {
+        pendingAction = { id: id, status: status };
+        const modalBody = document.getElementById('confirmModalBody');
+        const actionText = status === 'RESOLVED' ? 'resolve' : 'archive';
+        modalBody.innerHTML = `Are you sure you want to ${actionText} this contact request? This action cannot be undone.`;
+        document.getElementById('confirmModal').style.display = 'flex';
+    }
+    
+    function closeConfirmModal() {
+        document.getElementById('confirmModal').style.display = 'none';
+        pendingAction = { id: null, status: null };
+    }
+    
+    function showSuccessModal(message) {
+        document.getElementById('successModalBody').textContent = message;
+        document.getElementById('successModal').style.display = 'flex';
+    }
+    
+    function closeSuccessModalAndReload() {
+        document.getElementById('successModal').style.display = 'none';
+        window.location.reload();
+    }
+    
+    function executePendingAction() {
+        if (!pendingAction.id || !pendingAction.status) return;
+        const id = pendingAction.id;
+        const status = pendingAction.status;
+        
+        fetch('/contact-help/' + id + '/status?status=' + status, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' }
+        }).then(response => {
+            if (response.ok) {
+                closeConfirmModal();
+                const successMsg = status === 'RESOLVED' ? 'Request resolved successfully!' : 'Request archived successfully!';
+                showSuccessModal(successMsg);
+            } else {
+                alert('Error updating status');
+                closeConfirmModal();
+            }
+        }).catch(() => {
+            alert('Error updating status');
+            closeConfirmModal();
+        });
+    }
+    
+    document.getElementById('confirmActionBtn').addEventListener('click', executePendingAction);
 
     function updateStatus(id, status) {
         fetch('/contact-help/' + id + '/status?status=' + status, {
@@ -1037,8 +1135,8 @@
             <div class="row-date"><span>${escapeHtml(dateStr)}</span><span class="new-msg-badge" style="display: inline-block;">NEW</span></div>
             <div class="row-actions">
                 <button class="view-btn" onclick="openChatModal(${req.id}, 'incoming')">View</button>
-                <button class="resolve-btn" onclick="updateStatus(${req.id}, 'RESOLVED')">Resolve</button>
-                <button class="archive-btn" onclick="updateStatus(${req.id}, 'ARCHIVED')">Archive</button>
+                <button class="resolve-btn" onclick="showConfirmModal(${req.id}, 'RESOLVED')">Resolve</button>
+                <button class="archive-btn" onclick="showConfirmModal(${req.id}, 'ARCHIVED')">Archive</button>
             </div>
         `;
         list.prepend(row);

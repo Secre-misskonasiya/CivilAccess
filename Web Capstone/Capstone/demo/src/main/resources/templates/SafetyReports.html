@@ -405,54 +405,31 @@
         white-space: pre-wrap;
     }
     
-    /* Custom Confirmation Modal */
-    .confirm-modal-overlay {
-        display: none;
-        position: fixed;
-        z-index: 10000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.5);
-        align-items: center;
-        justify-content: center;
-    }
-    .confirm-modal-content {
-        background: white;
-        width: 380px;
-        border-radius: 12px;
-        text-align: center;
-        padding: 24px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-    }
-    .confirm-modal-content h4 {
-        margin-bottom: 12px;
-        color: #2d4a44;
-    }
-    .confirm-modal-content p {
-        margin-bottom: 24px;
-        color: #666;
-    }
-    .confirm-modal-buttons {
-        display: flex;
-        gap: 12px;
-        justify-content: center;
-    }
-    .confirm-modal-buttons button {
-        padding: 8px 24px;
-        border-radius: 6px;
-        border: none;
-        cursor: pointer;
-        font-weight: bold;
-    }
-    .confirm-cancel {
-        background-color: #e0e0e0;
-        color: #333;
-    }
-    .confirm-ok {
-        background-color: #e74c3c;
+    /* Success Toast Modal */
+    .success-toast-modal .modal-content {
+        background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
         color: white;
+        border: none;
+        border-radius: 16px;
+    }
+    .success-toast-modal .modal-header {
+        background: transparent;
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .success-toast-modal .modal-body {
+        text-align: center;
+        padding: 20px;
+    }
+    .success-toast-modal .modal-footer {
+        border-top: none;
+        justify-content: center;
+        padding-top: 0;
+        background: transparent;
+    }
+    .success-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
     }
 </style>
 
@@ -484,14 +461,20 @@
     </div>
 </div>
 
-<!-- Custom Confirmation Modal for Archive -->
-<div id="archiveConfirmModal" class="confirm-modal-overlay">
-    <div class="confirm-modal-content">
-        <h4><i class="bi bi-archive"></i> Archive Report</h4>
-        <p>Are you sure you want to archive this safety report?</p>
-        <div class="confirm-modal-buttons">
-            <button class="confirm-cancel" onclick="closeArchiveConfirm()">Cancel</button>
-            <button class="confirm-ok" id="confirmArchiveBtn">Archive</button>
+<!-- Success Modal -->
+<div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <h5 id="successMessage">Success!</h5>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">OK</button>
+            </div>
         </div>
     </div>
 </div>
@@ -572,10 +555,10 @@
                                 <div class="d-flex gap-2">
                                     <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
                                     <button class="approve-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'APPROVED\')'">Approve</button>
-                                    <button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button>
+                                    <button class="archive-btn" th:onclick="'confirmArchiveWithSuccess(' + ${report.id} + ', \'' + ${escapeHtml(report.title)} + '\')'">Archive</button>
                                 </div>
-                             </td>
-                        </tr>
+                              </td>
+                         </tr>
                     </tbody>
                 </table>
                 <div class="text-center p-4" th:if="${#lists.isEmpty(incomingReports)}">
@@ -597,8 +580,8 @@
                             <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="process-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'IN_PROGRESS\')'">Process</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></td>
-                        </tr>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="process-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'IN_PROGRESS\')'">Process</button><button class="archive-btn" th:onclick="'confirmArchiveWithSuccess(' + ${report.id} + ', \'' + ${escapeHtml(report.title)} + '\')'">Archive</button></div></td>
+                         </tr>
                     </tbody>
                 </table>
                 <div class="text-center p-4" th:if="${#lists.isEmpty(approvedReports)}"><p class="text-muted">No approved reports</p></div>
@@ -618,8 +601,8 @@
                             <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'openResolutionModal(' + ${report.id} + ')'">Resolve</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></td>
-                        </tr>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'openResolutionModal(' + ${report.id} + ')'">Resolve</button><button class="archive-btn" th:onclick="'confirmArchiveWithSuccess(' + ${report.id} + ', \'' + ${escapeHtml(report.title)} + '\')'">Archive</button></div></td>
+                         </tr>
                     </tbody>
                 </table>
                 <div class="text-center p-4" th:if="${#lists.isEmpty(inProgressReports)}"><p class="text-muted">No in progress reports</p></div>
@@ -642,8 +625,8 @@
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
                             <td><span th:if="${report.resolvedBy != null}" class="resolved-by-badge"><i class="bi bi-person-check"></i> <span th:text="${report.resolvedBy}"></span></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></td>
-                        </tr>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button><button class="archive-btn" th:onclick="'confirmArchiveWithSuccess(' + ${report.id} + ', \'' + ${escapeHtml(report.title)} + '\')'">Archive</button></div></td>
+                         </tr>
                     </tbody>
                 </table>
                 <div class="text-center p-4" th:if="${#lists.isEmpty(resolvedReports)}"><p class="text-muted">No resolved reports</p></div>
@@ -667,7 +650,7 @@
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
                             <td><span th:if="${report.resolvedBy != null}" class="resolved-by-badge"><i class="bi bi-person-check"></i> <span th:text="${report.resolvedBy}"></span></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></td>
                             <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button></div></td>
-                        </tr>
+                         </tr>
                     </tbody>
                 </table>
                 <div class="text-center p-4" th:if="${#lists.isEmpty(archivedReports)}"><p class="text-muted">No archived reports</p></div>
@@ -738,7 +721,6 @@
 
 <!-- Logout Modal -->
 <div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
-
 <script src="/js/sidebar.js"></script>
 <script>
     let currentMap = null;
@@ -746,6 +728,7 @@
     let pendingArchiveId = null;
     let currentModalReportId = null;
     let currentModalReportStatus = null;
+
 
     // Archive Confirmation Functions
     function confirmArchive(id) {
@@ -812,7 +795,6 @@
         });
     });
     
-    // Updated viewReport with Approve button inside modal for incoming status
     function viewReport(id) {
         currentModalReportId = id;
         fetch('/safety-reports/' + id)
@@ -838,7 +820,6 @@
                     <div class="detail-card"><div class="detail-card-header"><div class="detail-avatar">📍</div><div class="detail-header-info"><div class="detail-card-title">Incident Location</div><div class="detail-sub">📍 ${escapeHtml(data.location || 'No address provided')}</div></div></div>${hasLocation ? '<div id="viewMap"></div>' : '<div style="height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#aaa;gap:6px;margin-bottom:12px;">🗺️ <span style="font-size:13px;">No location coordinates</span></div>'}</div>
                     <div class="detail-card"><div class="detail-card-header"><div class="detail-avatar">📄</div><div class="detail-header-info"><div class="detail-card-title">Description</div><div class="detail-value">${escapeHtml(data.title) || 'Untitled'}</div></div><span class="badge-priority ${priorityClass}" style="margin-left:8px">${data.priority || 'N/A'}</span><span style="background-color:${getStatusColor(data.status)};color:white;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;margin-left:6px">${data.status || 'Pending'}</span></div><p class="detail-description">${escapeHtml(data.description) || 'No description provided.'}</p><div class="detail-date-row"><span>Reported on: ${data.dateSubmitted || 'N/A'}</span>${data.resolvedBy ? `<span><i class="bi bi-person-check"></i> Resolved by: ${escapeHtml(data.resolvedBy)}</span>` : ''}</div>${data.resolutionActions ? `<div class="detail-date-row"><strong>Actions Taken:</strong><br>${escapeHtml(data.resolutionActions)}</div>` : ''}${data.resolutionResponseTime ? `<div class="detail-date-row"><strong>Response Time:</strong> ${escapeHtml(data.resolutionResponseTime)}</div>` : ''}${data.resolutionNotes ? `<div class="detail-date-row"><strong>Additional Notes:</strong><br>${escapeHtml(data.resolutionNotes)}</div>` : ''}</div>
                 `;
-                // Show/hide approve button based on status
                 const approveBtn = document.getElementById('modalApproveBtn');
                 if (data.status === 'INCOMING') {
                     approveBtn.style.display = 'inline-block';
@@ -873,13 +854,6 @@
             const modal = bootstrap.Modal.getInstance(modalEl);
             if (modal) modal.hide();
         }
-    }
-    
-    function escapeHtml(text) {
-        if (!text) return text;
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
     }
     
     function updateStatus(id, status) {

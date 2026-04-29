@@ -385,6 +385,33 @@
     .upload-progress .progress-bar { height: 4px; background-color: #44C375; width: 0%; transition: width 0.3s ease; border-radius: 2px; }
     .remove-image-btn { background-color: #e74c3c; color: white; border: none; padding: 4px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; margin-top: 8px; display: none; }
     .remove-image-btn:hover { background-color: #c0392b; }
+    
+    /* Success Toast Modal */
+    .success-toast-modal .modal-content {
+        background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+    }
+    .success-toast-modal .modal-header {
+        background: transparent;
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .success-toast-modal .modal-body {
+        text-align: center;
+        padding: 20px;
+    }
+    .success-toast-modal .modal-footer {
+        border-top: none;
+        justify-content: center;
+        padding-top: 0;
+        background: transparent;
+    }
+    .success-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
 </style>
 
 <meta charset="UTF-8">
@@ -482,7 +509,7 @@
                   <div class="row-actions">
                     <button class="view-btn" th:attr="onclick='viewAnnouncement(' + ${announcement.id} + ')'">View</button>
                     <button class="edit-btn" th:attr="onclick='editAnnouncement(' + ${announcement.id} + ')'">Edit</button>
-                    <button class="archive-btn" th:attr="onclick='archiveAnnouncement(' + ${announcement.id} + ')'">Archive</button>
+                    <button class="archive-btn" th:attr="onclick='archiveAnnouncementWithConfirm(' + ${announcement.id} + ')'">Archive</button>
                   </div>
 
                 </div>
@@ -535,7 +562,7 @@
 
                   <div class="row-actions">
                     <button class="view-btn" th:attr="onclick='viewAnnouncement(' + ${announcement.id} + ')'">View</button>
-                    <button class="restore-btn" th:attr="onclick='restoreAnnouncement(' + ${announcement.id} + ')'">Restore</button>
+                    <button class="restore-btn" th:attr="onclick='restoreAnnouncementWithConfirm(' + ${announcement.id} + ')'">Restore</button>
                   </div>
 
                 </div>
@@ -555,6 +582,43 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmActionModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmModalTitle">Confirm Action</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="confirmModalMessage">
+        Are you sure you want to perform this action?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmActionBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+        <h5 id="successMessage">Success!</h5>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -616,7 +680,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="createAnnouncement()">Create</button>
+        <button type="button" class="btn btn-primary" onclick="createAnnouncementWithConfirm()">Create</button>
       </div>
     </div>
   </div>
@@ -664,7 +728,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="updateAnnouncement()">Update</button>
+        <button type="button" class="btn btn-primary" onclick="updateAnnouncementWithConfirm()">Update</button>
       </div>
     </div>
   </div>
@@ -681,6 +745,8 @@
   const SUPABASE_ANON_KEY = 'sb_publishable_tZyxrTJrpd_OD5-TKUkT8Q__DnuY0tj';
   
   let supabaseClient = null;
+  let pendingAction = null;
+  let pendingId = null;
   
   function initSupabase() {
     if (typeof supabase !== 'undefined' && supabase.createClient) {
@@ -695,6 +761,100 @@
   supabaseScript.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
   supabaseScript.onload = initSupabase;
   document.head.appendChild(supabaseScript);
+  
+  function showSuccess(message) {
+    document.getElementById('successMessage').innerHTML = message;
+    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+    successModal.show();
+  }
+  
+  function showConfirm(message, title, onConfirm) {
+    document.getElementById('confirmModalMessage').innerHTML = message;
+    document.getElementById('confirmModalTitle').innerHTML = title;
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmActionModal'));
+    const confirmBtn = document.getElementById('confirmActionBtn');
+    const oldClick = confirmBtn.onclick;
+    confirmBtn.onclick = () => {
+      onConfirm();
+      confirmModal.hide();
+      confirmBtn.onclick = oldClick;
+    };
+    confirmModal.show();
+  }
+  
+  function archiveAnnouncementWithConfirm(id) {
+    showConfirm('Are you sure you want to archive this announcement?', 'Archive Announcement', () => {
+      fetch('/announcements/' + id + '/archive', { method: 'PUT' })
+      .then(response => { 
+        if (response.ok) {
+          showSuccess('Announcement archived successfully!');
+          setTimeout(() => window.location.reload(), 1500);
+        }
+      });
+    });
+  }
+  
+  function restoreAnnouncementWithConfirm(id) {
+    showConfirm('Are you sure you want to restore this announcement?', 'Restore Announcement', () => {
+      fetch('/announcements/' + id + '/restore', { method: 'PUT' })
+      .then(response => { 
+        if (response.ok) {
+          showSuccess('Announcement restored successfully!');
+          setTimeout(() => window.location.reload(), 1500);
+        }
+      });
+    });
+  }
+  
+  function createAnnouncementWithConfirm() {
+    const announcement = {
+      title: document.getElementById('title').value,
+      priority: document.getElementById('priority').value,
+      content: document.getElementById('content').value,
+      image: document.getElementById('imageUrl').value
+    };
+    if (!announcement.title || !announcement.content) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    showConfirm('Create this new announcement?', 'Create Announcement', () => {
+      fetch('/announcements/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(announcement)
+      })
+      .then(response => {
+        if (response.ok) {
+          showSuccess('Announcement created successfully!');
+          setTimeout(() => window.location.reload(), 1500);
+        } else alert('Error creating announcement');
+      })
+      .catch(error => { console.error('Error:', error); });
+    });
+  }
+  
+  function updateAnnouncementWithConfirm() {
+    const id = document.getElementById('editId').value;
+    const announcement = {
+      title: document.getElementById('editTitle').value,
+      priority: document.getElementById('editPriority').value,
+      content: document.getElementById('editContent').value,
+      image: document.getElementById('editImageUrl').value
+    };
+    showConfirm('Update this announcement with the new changes?', 'Update Announcement', () => {
+      fetch('/announcements/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(announcement)
+      })
+      .then(response => {
+        if (response.ok) {
+          showSuccess('Announcement updated successfully!');
+          setTimeout(() => window.location.reload(), 1500);
+        } else alert('Error updating announcement');
+      });
+    });
+  }
   
   function toggleDropdown(el) {
     const dropdown = document.getElementById('requests-dropdown');
@@ -922,29 +1082,6 @@
       .catch(error => { console.error('Error viewing announcement:', error); });
   }
 
-  function createAnnouncement() {
-    const announcement = {
-      title: document.getElementById('title').value,
-      priority: document.getElementById('priority').value,
-      content: document.getElementById('content').value,
-      image: document.getElementById('imageUrl').value
-    };
-    if (!announcement.title || !announcement.content) {
-      alert('Please fill in all required fields');
-      return;
-    }
-    fetch('/announcements/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(announcement)
-    })
-    .then(response => {
-      if (response.ok) window.location.reload();
-      else alert('Error creating announcement');
-    })
-    .catch(error => { console.error('Error:', error); });
-  }
-
   function editAnnouncement(id) {
     fetch('/announcements/' + id)
       .then(response => response.json())
@@ -968,39 +1105,6 @@
         }
         new bootstrap.Modal(document.getElementById('editAnnouncementModal')).show();
       });
-  }
-
-  function updateAnnouncement() {
-    const id = document.getElementById('editId').value;
-    const announcement = {
-      title: document.getElementById('editTitle').value,
-      priority: document.getElementById('editPriority').value,
-      content: document.getElementById('editContent').value,
-      image: document.getElementById('editImageUrl').value
-    };
-    fetch('/announcements/' + id, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(announcement)
-    })
-    .then(response => {
-      if (response.ok) window.location.reload();
-      else alert('Error updating announcement');
-    });
-  }
-
-  function archiveAnnouncement(id) {
-    if (confirm('Are you sure you want to archive this announcement?')) {
-      fetch('/announcements/' + id + '/archive', { method: 'PUT' })
-      .then(response => { if (response.ok) window.location.reload(); });
-    }
-  }
-
-  function restoreAnnouncement(id) {
-    if (confirm('Are you sure you want to restore this announcement?')) {
-      fetch('/announcements/' + id + '/restore', { method: 'PUT' })
-      .then(response => { if (response.ok) window.location.reload(); });
-    }
   }
 
   function escapeHtml(text) {

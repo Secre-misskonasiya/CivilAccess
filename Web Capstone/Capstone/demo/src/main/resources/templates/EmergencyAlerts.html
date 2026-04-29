@@ -340,6 +340,33 @@
     .map-wrapper.hidden {
         display: none;
     }
+    
+    /* Success Toast Modal */
+    .success-toast-modal .modal-content {
+        background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+    }
+    .success-toast-modal .modal-header {
+        background: transparent;
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .success-toast-modal .modal-body {
+        text-align: center;
+        padding: 20px;
+    }
+    .success-toast-modal .modal-footer {
+        border-top: none;
+        justify-content: center;
+        padding-top: 0;
+        background: transparent;
+    }
+    .success-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
 </style>
 
 <meta charset="UTF-8">
@@ -437,7 +464,7 @@
                 <label class="mb-1" style="font-size:14px; font-weight:bold;">Message</label>
                 <textarea class="form-control mb-3" id="message" rows="5" placeholder="Type your alert message here..."></textarea>
                 <div class="d-flex justify-content-end">
-                    <button class="proceed-btn" onclick="createAlert()">Post Alert</button>
+                    <button class="proceed-btn" onclick="createAlertWithConfirm()">Post Alert</button>
                 </div>
             </div>
         </div>
@@ -463,7 +490,7 @@
                         <p class="alert-card-msg" th:text="${alert.message != null ? alert.message : 'No message'}">Flooding reported near Purok 3.</p>
                         <div class="d-flex justify-content-end">
                             <button class="view-btn" th:attr="onclick='viewAlert(\'' + ${alert.id} + '\')'">View</button>
-                            <button class="archive-btn" th:attr="onclick='archiveAlert(\'' + ${alert.id} + '\')'">Archive</button>
+                            <button class="archive-btn" th:attr="onclick='archiveAlertWithConfirm(\'' + ${alert.id} + '\')'">Archive</button>
                         </div>
                     </div>
                 </div>
@@ -511,6 +538,43 @@
 
 </div>
 
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmActionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #30534D, #3d6b63);">
+                <h5 class="modal-title" id="confirmModalTitle" style="color: white;">Confirm Action</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="confirmModalMessage" style="padding: 24px; font-size: 16px;">
+                Are you sure you want to perform this action?
+            </div>
+            <div class="modal-footer" style="border-top: none; padding: 16px 24px;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmActionBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <h5 id="successMessage">Success!</h5>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- View Alert Modal (Social Post Style) -->
 <div class="modal fade" id="viewAlertModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-scrollable">
@@ -537,6 +601,157 @@
     let createMap = null;
     let createMarker = null;
     let viewMap = null;
+    
+    // ============================================
+    // NEW CONFIRMATION & SUCCESS MODAL FUNCTIONS
+    // ============================================
+    let pendingArchiveId = null;
+    let pendingCreateData = null;
+    
+    function showSuccess(message) {
+        document.getElementById('successMessage').innerHTML = message;
+        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+        successModal.show();
+    }
+    
+    function closeConfirmModalNew() {
+        const modalEl = document.getElementById('confirmActionModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+        pendingArchiveId = null;
+        pendingCreateData = null;
+    }
+    
+    function showConfirm(message, title, onConfirm, isArchive = true) {
+        document.getElementById('confirmModalMessage').innerHTML = message;
+        document.getElementById('confirmModalTitle').innerHTML = title;
+        const confirmModalEl = document.getElementById('confirmActionModal');
+        const confirmBtn = document.getElementById('confirmActionBtn');
+        
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+        
+        newConfirmBtn.onclick = () => {
+            const modal = bootstrap.Modal.getInstance(confirmModalEl);
+            if (modal) modal.hide();
+            onConfirm();
+        };
+        
+        const modal = new bootstrap.Modal(confirmModalEl);
+        modal.show();
+    }
+    
+    // ============================================
+    // WRAPPER FUNCTIONS (calling original functions after confirm)
+    // ============================================
+    
+    function archiveAlertWithConfirm(id) {
+        showConfirm(
+            'Are you sure you want to archive this alert?',
+            'Archive Alert',
+            function() {
+                // Call the original archiveAlert function
+                fetch('/emergency-alerts/' + id + '/archive', { method: 'PUT' })
+                    .then(response => {
+                        if (response.ok) {
+                            showSuccess('Alert archived successfully!');
+                            setTimeout(() => window.location.reload(), 1500);
+                        } else {
+                            alert('Error archiving alert');
+                        }
+                    });
+            }
+        );
+    }
+    
+    function createAlertWithConfirm() {
+        const alertData = {
+            type: document.getElementById('alertType').value,
+            priority: document.getElementById('priority').value,
+            title: document.getElementById('title').value,
+            location: document.getElementById('location').value,
+            message: document.getElementById('message').value,
+            latitude: document.getElementById('latitude').value,
+            longitude: document.getElementById('longitude').value
+        };
+        
+        if (!alertData.type || !alertData.priority || !alertData.title || !alertData.message) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        if (!alertData.latitude || !alertData.longitude) {
+            alert('Please select a valid location within Barangay San Sebastian');
+            return;
+        }
+        
+        showConfirm(
+            'Post this emergency alert to all residents?',
+            'Post Alert',
+            function() {
+                fetch('/emergency-alerts/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(alertData)
+                }).then(response => {
+                    if (response.ok) {
+                        showSuccess('Alert posted successfully!');
+                        setTimeout(() => window.location.href = '/emergency-alerts?tab=current', 1500);
+                    } else {
+                        alert('Error creating alert');
+                    }
+                });
+            }
+        );
+    }
+    
+    // ============================================
+    // ORIGINAL FUNCTIONS (unchanged but kept for reference)
+    // ============================================
+    
+    // Original archiveAlert - preserved but replaced by wrapper
+    function archiveAlert(id) {
+        if (confirm('Archive this alert?')) {
+            fetch('/emergency-alerts/' + id + '/archive', { method: 'PUT' }).then(response => {
+                if (response.ok) window.location.reload();
+                else alert('Error archiving alert');
+            });
+        }
+    }
+    
+    // Original createAlert - preserved but replaced by wrapper
+    function createAlert() {
+        const alertData = {
+            type: document.getElementById('alertType').value,
+            priority: document.getElementById('priority').value,
+            title: document.getElementById('title').value,
+            location: document.getElementById('location').value,
+            message: document.getElementById('message').value,
+            latitude: document.getElementById('latitude').value,
+            longitude: document.getElementById('longitude').value
+        };
+        
+        if (!alertData.type || !alertData.priority || !alertData.title || !alertData.message) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        if (!alertData.latitude || !alertData.longitude) {
+            alert('Please select a valid location within Barangay San Sebastian');
+            return;
+        }
+        
+        fetch('/emergency-alerts/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(alertData)
+        }).then(response => {
+            if (response.ok) window.location.href = '/emergency-alerts?tab=current';
+            else alert('Error creating alert');
+        });
+    }
+    
+    // ============================================
+    // REST OF ORIGINAL FUNCTIONS (COMPLETELY UNCHANGED)
+    // ============================================
     
     // Barangay San Sebastian boundary polygon
     const BARANGAY_BOUNDARY = [
@@ -786,95 +1001,57 @@
         }
     }
     
-    function createAlert() {
-        const alertData = {
-            type: document.getElementById('alertType').value,
-            priority: document.getElementById('priority').value,
-            title: document.getElementById('title').value,
-            location: document.getElementById('location').value,
-            message: document.getElementById('message').value,
-            latitude: document.getElementById('latitude').value,
-            longitude: document.getElementById('longitude').value
-        };
-        
-        if (!alertData.type || !alertData.priority || !alertData.title || !alertData.message) {
-            alert('Please fill in all required fields');
-            return;
-        }
-        if (!alertData.latitude || !alertData.longitude) {
-            alert('Please select a valid location within Barangay San Sebastian');
-            return;
-        }
-        
-        fetch('/emergency-alerts/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(alertData)
-        }).then(response => {
-            if (response.ok) window.location.href = '/emergency-alerts?tab=current';
-            else alert('Error creating alert');
-        });
-    }
     function viewAlert(id) {
-    fetch('/emergency-alerts/' + id).then(response => response.json()).then(data => {
-        const modalBody = document.getElementById('viewModalBody');
-        const hasLocation = data.latitude && data.longitude && data.latitude !== 0 && data.longitude !== 0;
-        const priorityClass = data.priority === 'Level 4' ? 'high' : '';
-        
-        modalBody.innerHTML = `
-            <div class="view-post-header">
-                <div class="view-post-avatar"><i class="bi bi-megaphone-fill"></i></div>
-                <div class="view-post-meta">
-                    <div class="view-post-author">${escapeHtml(data.createdByName || 'Barangay San Sebastian')}</div>
-                    <div class="view-post-date">${data.dateCreated ? new Date(data.dateCreated).toLocaleString() : 'N/A'}</div>
+        fetch('/emergency-alerts/' + id).then(response => response.json()).then(data => {
+            const modalBody = document.getElementById('viewModalBody');
+            const hasLocation = data.latitude && data.longitude && data.latitude !== 0 && data.longitude !== 0;
+            const priorityClass = data.priority === 'Level 4' ? 'high' : '';
+            
+            modalBody.innerHTML = `
+                <div class="view-post-header">
+                    <div class="view-post-avatar"><i class="bi bi-megaphone-fill"></i></div>
+                    <div class="view-post-meta">
+                        <div class="view-post-author">${escapeHtml(data.createdByName || 'Barangay San Sebastian')}</div>
+                        <div class="view-post-date">${data.dateCreated ? new Date(data.dateCreated).toLocaleString() : 'N/A'}</div>
+                    </div>
+                    <span class="view-post-badge ${priorityClass}">${escapeHtml(data.priority || 'N/A')}</span>
                 </div>
-                <span class="view-post-badge ${priorityClass}">${escapeHtml(data.priority || 'N/A')}</span>
-            </div>
-            <div class="view-post-title">${escapeHtml(data.title || 'Untitled')}</div>
-            <div class="view-post-content">${escapeHtml(data.message || 'No message')}</div>
-            <div class="view-post-location"><i class="bi bi-geo-alt-fill"></i> ${escapeHtml(data.location || 'No location')}</div>
-            ${hasLocation ? '<div class="view-map-container"><div id="viewMapModal" style="width:100%; height:200px; border-radius:8px; border:1px solid #E4E6EB; background:#F7F8FA;"></div></div>' : ''}
-            <hr class="view-post-divider">
-            <div class="view-post-footer">
-                <i class="bi bi-info-circle"></i> Type: ${escapeHtml(data.type || 'N/A')} &nbsp;|&nbsp;
-                <i class="bi bi-person-badge"></i> Role: ${escapeHtml(data.createdByRole || 'N/A')}
-            </div>
-        `;
-        
-        const modal = new bootstrap.Modal(document.getElementById('viewAlertModal'));
-        if (hasLocation) {
-            document.getElementById('viewAlertModal').addEventListener('shown.bs.modal', function handler() {
-                this.removeEventListener('shown.bs.modal', handler);
-                setTimeout(function() {
-                    if (viewMap) viewMap.remove();
-                    const mapContainer = document.getElementById('viewMapModal');
-                    if (mapContainer) {
-                        viewMap = L.map('viewMapModal').setView([data.latitude, data.longitude], 16);
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
-                            attribution: '© OpenStreetMap contributors' 
-                        }).addTo(viewMap);
-                        L.marker([data.latitude, data.longitude])
-                            .addTo(viewMap)
-                            .bindPopup(`<b>${escapeHtml(data.title || 'Alert Location')}</b>`)
-                            .openPopup();
-                        setTimeout(function() {
-                            viewMap.invalidateSize();
-                        }, 100);
-                    }
-                }, 200);
-            });
-        }
-        modal.show();
-    });
-}
-    
-    function archiveAlert(id) {
-        if (confirm('Archive this alert?')) {
-            fetch('/emergency-alerts/' + id + '/archive', { method: 'PUT' }).then(response => {
-                if (response.ok) window.location.reload();
-                else alert('Error archiving alert');
-            });
-        }
+                <div class="view-post-title">${escapeHtml(data.title || 'Untitled')}</div>
+                <div class="view-post-content">${escapeHtml(data.message || 'No message')}</div>
+                <div class="view-post-location"><i class="bi bi-geo-alt-fill"></i> ${escapeHtml(data.location || 'No location')}</div>
+                ${hasLocation ? '<div class="view-map-container"><div id="viewMapModal" style="width:100%; height:200px; border-radius:8px; border:1px solid #E4E6EB; background:#F7F8FA;"></div></div>' : ''}
+                <hr class="view-post-divider">
+                <div class="view-post-footer">
+                    <i class="bi bi-info-circle"></i> Type: ${escapeHtml(data.type || 'N/A')} &nbsp;|&nbsp;
+                    <i class="bi bi-person-badge"></i> Role: ${escapeHtml(data.createdByRole || 'N/A')}
+                </div>
+            `;
+            
+            const modal = new bootstrap.Modal(document.getElementById('viewAlertModal'));
+            if (hasLocation) {
+                document.getElementById('viewAlertModal').addEventListener('shown.bs.modal', function handler() {
+                    this.removeEventListener('shown.bs.modal', handler);
+                    setTimeout(function() {
+                        if (viewMap) viewMap.remove();
+                        const mapContainer = document.getElementById('viewMapModal');
+                        if (mapContainer) {
+                            viewMap = L.map('viewMapModal').setView([data.latitude, data.longitude], 16);
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+                                attribution: '© OpenStreetMap contributors' 
+                            }).addTo(viewMap);
+                            L.marker([data.latitude, data.longitude])
+                                .addTo(viewMap)
+                                .bindPopup(`<b>${escapeHtml(data.title || 'Alert Location')}</b>`)
+                                .openPopup();
+                            setTimeout(function() {
+                                viewMap.invalidateSize();
+                            }, 100);
+                        }
+                    }, 200);
+                });
+            }
+            modal.show();
+        });
     }
     
     function escapeHtml(text) {
