@@ -570,9 +570,9 @@
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <button class="view-btn" th:onclick="|viewReport(${report.id})|">View</button>
-                                    <button class="approve-btn" th:onclick="|updateStatus(${report.id}, 'APPROVED')|">Approve</button>
-                                    <button class="archive-btn" th:onclick="|confirmArchive(${report.id})|">Archive</button>
+                                    <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
+                                    <button class="approve-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'APPROVED\')'">Approve</button>
+                                    <button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button>
                                 </div>
                              </td>
                         </tr>
@@ -597,7 +597,7 @@
                             <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="|viewReport(${report.id})|">View</button><button class="process-btn" th:onclick="|updateStatus(${report.id}, 'IN_PROGRESS')|">Process</button><button class="archive-btn" th:onclick="|confirmArchive(${report.id})|">Archive</button></div></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="process-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'IN_PROGRESS\')'">Process</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -618,7 +618,7 @@
                             <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="|viewReport(${report.id})|">View</button><button class="resolve-btn" th:onclick="|openResolutionModal(${report.id})|">Resolve</button><button class="archive-btn" th:onclick="|confirmArchive(${report.id})|">Archive</button></div></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'openResolutionModal(' + ${report.id} + ')'">Resolve</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -642,7 +642,7 @@
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
                             <td><span th:if="${report.resolvedBy != null}" class="resolved-by-badge"><i class="bi bi-person-check"></i> <span th:text="${report.resolvedBy}"></span></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="|viewReport(${report.id})|">View</button><button class="view-resolution-btn" th:onclick="|viewResolutionDetails(${report.id})|">View Resolution</button><button class="archive-btn" th:onclick="|confirmArchive(${report.id})|">Archive</button></div></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -666,7 +666,7 @@
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
                             <td><span th:if="${report.resolvedBy != null}" class="resolved-by-badge"><i class="bi bi-person-check"></i> <span th:text="${report.resolvedBy}"></span></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="|viewReport(${report.id})|">View</button><button class="view-resolution-btn" th:onclick="|viewResolutionDetails(${report.id})|">View Resolution</button></div></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button></div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -738,7 +738,6 @@
 
 <!-- Logout Modal -->
 <div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
-
 <script src="/js/sidebar.js"></script>
 <script>
     let currentMap = null;
@@ -747,56 +746,28 @@
     let currentModalReportId = null;
     let currentModalReportStatus = null;
 
-    // ============================================================
-    // SIDEBAR TOGGLE FUNCTIONS (FIX FOR CLICKABLE SIDEBAR)
-    // ============================================================
+    // SIMPLE SIDEBAR TOGGLE - Match what works in other files
     function toggleSection(sectionId) {
-        try {
-            const section = document.getElementById(sectionId);
-            if (section) {
-                // Toggle display
-                if (section.style.display === 'none' || section.style.display === '') {
-                    section.style.display = 'block';
-                } else {
-                    section.style.display = 'none';
-                }
-                // Also toggle class for styling
-                if (section.classList) {
-                    section.classList.toggle('collapsed');
-                    section.classList.toggle('expanded');
-                }
+        const element = document.getElementById(sectionId);
+        if (element) {
+            if (element.style.display === 'none' || element.style.display === '') {
+                element.style.display = 'block';
             } else {
-                // Try to find any sidebar menu item with this ID
-                const menuItem = document.querySelector('.sidebar-menu-item[data-target="' + sectionId + '"]');
-                if (menuItem) {
-                    menuItem.classList.toggle('active');
-                }
-                // Try to toggle a dropdown in sidebar
-                const dropdown = document.querySelector('.sidebar-dropdown, .dropdown-menu');
-                if (dropdown) {
-                    dropdown.classList.toggle('show');
-                }
+                element.style.display = 'none';
             }
-        } catch (err) {
-            console.warn('toggleSection error:', err);
         }
     }
 
     function toggleSubmenu(element) {
-        try {
-            const parentLi = element.closest('li');
-            if (parentLi) {
-                parentLi.classList.toggle('open');
-            }
-            const submenu = element.nextElementSibling;
-            if (submenu && submenu.classList) {
-                submenu.classList.toggle('show');
-            }
-        } catch (err) {
-            console.warn('toggleSubmenu error:', err);
+        const parent = element.closest('li');
+        if (parent) {
+            parent.classList.toggle('open');
+        }
+        const next = element.nextElementSibling;
+        if (next && next.classList) {
+            next.classList.toggle('show');
         }
     }
-    // ============================================================
 
     // Archive Confirmation Functions
     function confirmArchive(id) {
@@ -863,7 +834,6 @@
         });
     });
     
-    // Updated viewReport with Approve button inside modal for incoming status
     function viewReport(id) {
         currentModalReportId = id;
         fetch('/safety-reports/' + id)
@@ -889,7 +859,6 @@
                     <div class="detail-card"><div class="detail-card-header"><div class="detail-avatar">📍</div><div class="detail-header-info"><div class="detail-card-title">Incident Location</div><div class="detail-sub">📍 ${escapeHtml(data.location || 'No address provided')}</div></div></div>${hasLocation ? '<div id="viewMap"></div>' : '<div style="height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#aaa;gap:6px;margin-bottom:12px;">🗺️ <span style="font-size:13px;">No location coordinates</span></div>'}</div>
                     <div class="detail-card"><div class="detail-card-header"><div class="detail-avatar">📄</div><div class="detail-header-info"><div class="detail-card-title">Description</div><div class="detail-value">${escapeHtml(data.title) || 'Untitled'}</div></div><span class="badge-priority ${priorityClass}" style="margin-left:8px">${data.priority || 'N/A'}</span><span style="background-color:${getStatusColor(data.status)};color:white;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;margin-left:6px">${data.status || 'Pending'}</span></div><p class="detail-description">${escapeHtml(data.description) || 'No description provided.'}</p><div class="detail-date-row"><span>Reported on: ${data.dateSubmitted || 'N/A'}</span>${data.resolvedBy ? `<span><i class="bi bi-person-check"></i> Resolved by: ${escapeHtml(data.resolvedBy)}</span>` : ''}</div>${data.resolutionActions ? `<div class="detail-date-row"><strong>Actions Taken:</strong><br>${escapeHtml(data.resolutionActions)}</div>` : ''}${data.resolutionResponseTime ? `<div class="detail-date-row"><strong>Response Time:</strong> ${escapeHtml(data.resolutionResponseTime)}</div>` : ''}${data.resolutionNotes ? `<div class="detail-date-row"><strong>Additional Notes:</strong><br>${escapeHtml(data.resolutionNotes)}</div>` : ''}</div>
                 `;
-                // Show/hide approve button based on status
                 const approveBtn = document.getElementById('modalApproveBtn');
                 if (data.status === 'INCOMING') {
                     approveBtn.style.display = 'inline-block';

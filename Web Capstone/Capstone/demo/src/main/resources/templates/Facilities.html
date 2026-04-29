@@ -376,9 +376,9 @@
                 <td th:text="${facility.contactNumber != null ? facility.contactNumber : 'N/A'}">(046) 481-0100</td>
                 <td>
                   <div class="d-flex gap-2">
-                    <button class="contact-btn" th:onclick="'viewFacility(' + ${facility.id} + ')'">View</button>
-                    <button class="update-btn" th:onclick="'editFacility(' + ${facility.id} + ')'">Update</button>
-                    <button class="delete-btn" th:onclick="'deleteFacility(' + ${facility.id} + ')'">Remove</button>
+                    <button class="contact-btn" th:onclick="|viewFacility(${facility.id})|">View</button>
+                    <button class="update-btn" th:onclick="|editFacility(${facility.id})|">Update</button>
+                    <button class="delete-btn" th:onclick="|deleteFacility(${facility.id})|">Remove</button>
                   </div>
                 </td>
               </tr>
@@ -414,9 +414,9 @@
                 <td th:text="${facility.contactNumber != null ? facility.contactNumber : 'N/A'}">(046) 481-0200</td>
                 <td>
                   <div class="d-flex gap-2">
-                    <button class="contact-btn" th:onclick="'viewFacility(' + ${facility.id} + ')'">View</button>
-                    <button class="update-btn" th:onclick="'editFacility(' + ${facility.id} + ')'">Update</button>
-                    <button class="delete-btn" th:onclick="'deleteFacility(' + ${facility.id} + ')'">Remove</button>
+                    <button class="contact-btn" th:onclick="|viewFacility(${facility.id})|">View</button>
+                    <button class="update-btn" th:onclick="|editFacility(${facility.id})|">Update</button>
+                    <button class="delete-btn" th:onclick="|deleteFacility(${facility.id})|">Remove</button>
                   </div>
                 </td>
               </tr>
@@ -452,9 +452,9 @@
                 <td th:text="${facility.contactNumber != null ? facility.contactNumber : 'N/A'}">(046) 481-0911</td>
                 <td>
                   <div class="d-flex gap-2">
-                    <button class="contact-btn" th:onclick="'viewFacility(' + ${facility.id} + ')'">View</button>
-                    <button class="update-btn" th:onclick="'editFacility(' + ${facility.id} + ')'">Update</button>
-                    <button class="delete-btn" th:onclick="'deleteFacility(' + ${facility.id} + ')'">Remove</button>
+                    <button class="contact-btn" th:onclick="|viewFacility(${facility.id})|">View</button>
+                    <button class="update-btn" th:onclick="|editFacility(${facility.id})|">Update</button>
+                    <button class="delete-btn" th:onclick="|deleteFacility(${facility.id})|">Remove</button>
                   </div>
                 </td>
               </tr>
