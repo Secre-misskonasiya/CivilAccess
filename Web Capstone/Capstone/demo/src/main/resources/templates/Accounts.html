@@ -368,7 +368,7 @@
                 onclick="triggerResidentDelete(this)">Archive</button>
         </div>
     </td>
-</tr>                  
+                  
                     </tbody>
                 </table>
                 <div class="table-footer">
@@ -817,15 +817,20 @@
 </div>
 
 <!-- ═══════════════════════════════════════════ -->
-<!-- CONFIRM MODAL                               -->
+<!-- CONFIRM MODAL (Enhanced for Archive)        -->
 <!-- ═══════════════════════════════════════════ -->
 <div id="confirmModal" class="modal">
-    <div class="modal-content" style="width:420px;height:200px;text-align:center;">
-        <h3 id="confirmTitle" style="margin-bottom:10px;">Confirmation</h3>
-        <p id="confirmMessage" style="margin-bottom:25px;">Are you sure?</p>
-        <div style="display:flex;justify-content:center;gap:15px;">
-            <button id="confirmContinue" style="padding:10px 25px;background-color:#27ae60;color:white;border:none;border-radius:4px;cursor:pointer;">Continue</button>
-            <button onclick="closeConfirmModal()" style="padding:10px 25px;background-color:#30534D;color:white;border:none;border-radius:4px;cursor:pointer;">Cancel</button>
+    <div class="modal-content" style="width:450px; text-align:center; padding:20px;">
+        <div class="modal-header" style="border-radius:12px 12px 0 0; padding:15px;">
+            <h3 id="confirmTitle" style="margin:0; color:white;">Confirm Archive</h3>
+            <span class="close-btn" onclick="closeConfirmModal()" style="color:white;">&times;</span>
+        </div>
+        <div style="padding:20px;">
+            <p id="confirmMessage" style="margin-bottom:25px; font-size:16px;">Are you sure you want to archive this account?</p>
+            <div style="display:flex; justify-content:center; gap:15px;">
+                <button id="confirmContinue" style="padding:10px 25px; background-color:#e74c3c; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Archive</button>
+                <button onclick="closeConfirmModal()" style="padding:10px 25px; background-color:#95a5a6; color:white; border:none; border-radius:4px; cursor:pointer;">Cancel</button>
+            </div>
         </div>
     </div>
 </div>
@@ -958,19 +963,14 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
 }
 
     // ── Core filter+search logic (shared) ─────────────────────
-    // FIX 4: extracted into own function so both search and filter can call it
     function filterRows(tableSelector, q, tabKey) {
         const { value: filterVal, colIndex } = activeFilters[tabKey];
         document.querySelectorAll(tableSelector + ' tbody tr').forEach(row => {
             const cells = row.querySelectorAll('td');
-
-            // FIX 4: empty query matches all rows
             const matchesSearch = !q || Array.from(cells).slice(0, -1)
                 .some(cell => cell.textContent.toLowerCase().includes(q));
-
             const cellVal       = cells[colIndex] ? cells[colIndex].textContent.trim() : '';
             const matchesFilter = !filterVal || cellVal === filterVal;
-
             row.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
         });
     }
@@ -1001,6 +1001,8 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
         if (logoutModal && event.target === logoutModal) closeLogoutModal();
         const residentModal = document.getElementById('residentModal');
         if (residentModal && event.target === residentModal) closeResidentModal();
+        const confirmModal = document.getElementById('confirmModal');
+        if (confirmModal && event.target === confirmModal) closeConfirmModal();
     };
 
     // ── Password helpers ───────────────────────────────────────
@@ -1334,29 +1336,40 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
     function closeResidentModal() { const rm = document.getElementById("residentModal"); if (rm) rm.style.display = "none"; }
     function handleResidentFormSubmit(event) { event.preventDefault(); activeResidentForm = event.currentTarget; activeResidentForm.submit(); }
 
-    // ── Confirm modal ──────────────────────────────────────────
+    // ── Confirm modal (with onConfirm callback) ─────────────────
+    let pendingArchiveAction = null;
     function openConfirmModal(title, message, onConfirm) {
         document.getElementById('confirmTitle').textContent   = title;
         document.getElementById('confirmMessage').textContent = message;
-        const btn = document.getElementById('confirmContinue'), newBtn = btn.cloneNode(true);
+        const btn = document.getElementById('confirmContinue');
+        const newBtn = btn.cloneNode(true);
         btn.parentNode.replaceChild(newBtn, btn);
-        newBtn.addEventListener('click', function () { onConfirm(); closeConfirmModal(); });
+        pendingArchiveAction = onConfirm;
+        newBtn.addEventListener('click', function () {
+            if (pendingArchiveAction) pendingArchiveAction();
+            closeConfirmModal();
+        });
         document.getElementById('confirmModal').style.display = 'block';
     }
-    function closeConfirmModal() { document.getElementById('confirmModal').style.display = 'none'; }
+    function closeConfirmModal() { 
+        document.getElementById('confirmModal').style.display = 'none';
+        pendingArchiveAction = null;
+    }
+
     function openLogoutModal()   { document.getElementById('logoutModal').style.display  = 'block'; }
     function closeLogoutModal()  { document.getElementById('logoutModal').style.display  = 'none'; }
     function confirmLogout()     { window.location.href = '/logout'; }
 
+    // ── Archive triggers with confirmation ─────────────────────
     function triggerAdminDelete(btn) {
         const deleteUrl = btn.getAttribute('data-url'), email = btn.getAttribute('data-email');
         if (!email || email === "undefined") { alert("Error: Could not retrieve admin email."); return; }
-        openConfirmModal("Archive Account", "Are you sure you want to archive this account?\n(" + email + ")", function () { window.location.href = deleteUrl; });
+        openConfirmModal("Archive Employee Account", `Are you sure you want to archive the account of ${email}? This action can be reverted from the Archives tab.`, function () { window.location.href = deleteUrl; });
     }
     function triggerResidentDelete(btn) {
         const deleteUrl = btn.getAttribute('data-url'), fullname = btn.getAttribute('data-fullname');
         if (!fullname || fullname.trim() === '' || fullname === 'null undefined') { alert("Error: Could not retrieve resident name."); return; }
-        openConfirmModal("Archive Resident", "Are you sure you want to archive this account of " + fullname + "?", function () { window.location.href = deleteUrl; });
+        openConfirmModal("Archive Resident Account", `Are you sure you want to archive the resident account of ${fullname}? This action can be reverted from the Residents Archives tab.`, function () { window.location.href = deleteUrl; });
     }
 
     // ── Export to PDF ──────────────────────────────────────────
