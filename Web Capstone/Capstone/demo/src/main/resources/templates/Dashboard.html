@@ -309,12 +309,6 @@
                     </div>
 
                     <div class="stat-card">
-                        <div class="stat-icon-wrap ic-a">📋</div>
-                        <div class="stat-label">Blotter Reports<br>Total</div>
-                        <div class="stat-number" th:text="${blotterCount != null ? blotterCount : 0}">0</div>
-                    </div>
-
-                    <div class="stat-card">
                         <div class="stat-icon-wrap ic-p">♿</div>
                         <div class="stat-label">Senior &amp; PWD<br>Residents</div>
                         <div class="stat-number">14</div>
@@ -506,7 +500,6 @@
         const resolved   = parseInt(document.getElementById('dataResolved').value)   || 0;
         const unresolved = parseInt(document.getElementById('dataUnresolved').value) || 0;
         const pending    = parseInt(document.getElementById('dataPending').value)    || 0;
-        const blotter    = parseInt(document.getElementById('dataBlotter').value)    || 0;
         const allReports = parseInt(document.getElementById('dataAllReports').value) || 0;
 
         Chart.defaults.font.family = 'Arial, sans-serif';
@@ -570,9 +563,9 @@
         new Chart(document.getElementById('workloadChart'), {
             type: 'bar',
             data: {
-                labels: ['Pending Docs', 'Blotter Reports', 'Total Incidents'],
+                labels: ['Pending Docs', 'Total Incidents'],
                 datasets: [{
-                    data: [pending, blotter, allReports],
+                    data: [pending, allReports],
                     backgroundColor: ['#f0c040', '#52887F', '#e74c3c'],
                     borderRadius: 4,
                     borderSkipped: false
