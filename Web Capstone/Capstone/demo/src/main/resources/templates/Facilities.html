@@ -284,6 +284,13 @@
         font-size: 48px;
         margin-bottom: 12px;
     }
+    #confirmActionModal {
+    z-index: 10500 !important;
+    }
+    #confirmActionModal + .modal-backdrop,
+    .modal-backdrop ~ .modal-backdrop {
+        z-index: 10400 !important;
+    }
 </style>
 
 <meta charset="UTF-8">

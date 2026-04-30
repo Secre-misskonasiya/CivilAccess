@@ -852,150 +852,106 @@
     }
     else {
       html = `
-        <div class="doc-template ${wm}" style="max-width: 850px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #2d4a44 0%, #1e3330 100%); color: white; padding: 15px 25px; border-radius: 10px 10px 0 0;">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-              <div style="display: flex; align-items: center; gap: 15px;">
-                <img src="images/brgy.png" style="width: 60px; height: 60px; filter: brightness(0) invert(1);" alt="Logo"/>
-                <div>
-                  <div style="font-size: 12px; letter-spacing: 1px;">Republic of the Philippines</div>
-                  <div style="font-size: 18px; font-weight: bold;">Barangay San Sebastian</div>
-                  <div style="font-size: 11px;">City/Municipality of ___________</div>
-                </div>
-              </div>
-              <div style="text-align: right;">
-                <div style="font-size: 16px; font-weight: bold; background: #FED734; color: #2d4a44; padding: 6px 16px; border-radius: 25px;">
-                  OFFICIAL ID
-                </div>
-              </div>
+      <div class="doc-template ${wm}" style="font-family: 'Times New Roman', serif; max-width: 700px; margin: 0 auto;">
+
+        <!-- Header -->
+        <div style="background: #2d4a44; color: white; padding: 10px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 3px solid #FED734; border-radius: 8px 8px 0 0;">
+          <img src="/images/brgy.png" style="width: 44px; height: 44px; filter: brightness(0) invert(1);" alt="Logo" onerror="this.style.display='none'"/>
+          <div>
+            <div style="font-size: 10px; letter-spacing: 1px; opacity: 0.8; font-family: Arial, sans-serif;">Republic of the Philippines</div>
+            <div style="font-size: 15px; font-weight: bold; font-family: Arial, sans-serif;">Barangay San Sebastian</div>
+            <div style="font-size: 10px; opacity: 0.7; font-family: Arial, sans-serif;">Barangay Identification Card</div>
+          </div>
+          <div style="margin-left: auto; background: #FED734; color: #2d4a44; font-size: 10px; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-family: Arial, sans-serif;">OFFICIAL ID</div>
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 16px 20px; border: 2px solid #2d4a44; border-top: none; border-radius: 0 0 8px 8px;">
+
+          <!-- Name Row -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+            <div class="doc-field">
+              <label>First Name</label>
+              <input type="text" value="${safeFullName.split(' ')[0] || ''}" ${ro}/>
+            </div>
+            <div class="doc-field">
+              <label>Middle Name</label>
+              <input type="text" ${ro}/>
+            </div>
+            <div class="doc-field">
+              <label>Last Name</label>
+              <input type="text" value="${safeFullName.split(' ').slice(-1)[0] || ''}" ${ro}/>
             </div>
           </div>
-          
-          <div style="background: white; padding: 25px; border-radius: 0 0 10px 10px; border: 1px solid #ddd; border-top: none;">
-            <div style="text-align: center; margin-bottom: 20px;">
-              <div style="font-size: 18px; font-weight: bold; color: #2d4a44; border-bottom: 3px solid #FED734; display: inline-block; padding-bottom: 6px;">
-                BARANGAY IDENTIFICATION CARD
+
+          <!-- Main body: left fields + right picture -->
+          <div style="display: flex; gap: 16px; align-items: flex-start;">
+
+            <!-- Left column -->
+            <div style="flex: 1;">
+
+              <div class="doc-field">
+                <label>Address</label>
+                <input type="text" ${ro}/>
               </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div class="doc-field" style="margin-bottom: 0;">
+                  <label>Birthdate</label>
+                  <input type="text" ${ro} placeholder="MM/DD/YYYY"/>
+                </div>
+                <div class="doc-field" style="margin-bottom: 0;">
+                  <label>Contact No.</label>
+                  <input type="text" value="${safeContactNumber}" ${ro}/>
+                </div>
+              </div>
+
+              <!-- In Case of Emergency -->
+              <div style="border: 1.5px solid #e74c3c; border-radius: 6px; padding: 10px 12px; margin-top: 6px; margin-bottom: 14px;">
+                <div style="font-size: 11px; font-weight: bold; color: #e74c3c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-family: Arial, sans-serif;">In Case of Emergency</div>
+                <div class="doc-field" style="margin-bottom: 8px;">
+                  <label>Name</label>
+                  <input type="text" ${ro}/>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                  <div class="doc-field" style="margin-bottom: 0;">
+                    <label>Address</label>
+                    <input type="text" ${ro}/>
+                  </div>
+                  <div class="doc-field" style="margin-bottom: 0;">
+                    <label>Contact No.</label>
+                    <input type="text" ${ro}/>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Signature (bottom-left) -->
+              <div class="doc-field" style="margin-bottom: 6px;">
+                <label>Signature</label>
+                <div style="border-bottom: 1.5px solid #333; min-height: 40px;"></div>
+              </div>
+
+              <!-- Control No. (below signature) -->
+              <div class="doc-field" style="margin-bottom: 0;">
+                <label>Control No.</label>
+                <input type="text" ${ro} placeholder="BSS-2026-XXXXX"/>
+              </div>
+
             </div>
-            
-            <div style="display: flex; gap: 30px;">
-              <div style="flex: 0.9;">
-                <div style="display: flex; justify-content: center; margin-bottom: 20px;">
-                  <div style="width: 150px; height: 170px; border: 2px solid #2d4a44; background: #f5f5f5; display: flex; align-items: center; justify-content: center; border-radius: 6px;">
-                    <i class="bi bi-person" style="font-size: 80px; color: #aaa;"></i>
-                  </div>
-                </div>
-                
-                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px;">
-                  <div style="margin-bottom: 10px;">
-                    <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 4px;">ID Number</div>
-                    <div style="font-size: 15px; font-weight: bold; color: #2d4a44;">
-                      <input type="text" ${ro} style="border: none; background: transparent; font-weight: bold; width: 100%; font-size: 15px;" placeholder="BSS-2026-XXXXX"/>
-                    </div>
-                  </div>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div>
-                      <div style="font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 3px;">Date Issued</div>
-                      <div style="font-size: 12px;">
-                        <input type="text" value="${today}" ${ro} style="border: none; background: transparent; width: 100%; font-size: 12px;"/>
-                      </div>
-                    </div>
-                    <div>
-                      <div style="font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 3px;">Valid Until</div>
-                      <div style="font-size: 12px; font-weight: bold; color: #e74c3c;">
-                        <input type="text" ${ro} style="border: none; background: transparent; font-weight: bold; width: 100%; font-size: 12px;" placeholder="Dec 31, 2028"/>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div style="display: flex; justify-content: center; margin-top: 20px;">
-                  <div style="width: 90px; height: 90px; border: 1px solid #ddd; background: white; display: flex; align-items: center; justify-content: center; border-radius: 6px;">
-                    <i class="bi bi-qr-code" style="font-size: 65px; color: #888;"></i>
-                  </div>
-                </div>
-              </div>
-              
-              <div style="flex: 2.1;">
-                <div style="margin-bottom: 15px;">
-                  <div style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Full Name</div>
-                  <div style="font-size: 18px; font-weight: bold; color: #333; border-bottom: 2px solid #2d4a44; padding: 8px 0;">
-                    <input type="text" value="${safeFullName}" ${ro} style="border: none; width: 100%; font-weight: bold; font-size: 18px; background: transparent;" placeholder="_________________________"/>
-                  </div>
-                </div>
-                
-                <div style="margin-bottom: 15px;">
-                  <div style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Address</div>
-                  <div style="font-size: 14px; border-bottom: 1px solid #ddd; padding: 6px 0;">
-                    <input type="text" ${ro} style="border: none; width: 100%; background: transparent; font-size: 14px;" placeholder="___________________________________"/>
-                  </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
-                  <div>
-                    <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 5px;">Civil Status</div>
-                    <select ${ro} style="width: 100%; border: none; border-bottom: 1px solid #ddd; padding: 6px 0; font-size: 13px; background: transparent;">
-                      <option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option>
-                    </select>
-                  </div>
-                  <div>
-                    <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 5px;">Blood Type</div>
-                    <select ${ro} style="width: 100%; border: none; border-bottom: 1px solid #ddd; padding: 6px 0; font-size: 13px; background: transparent;">
-                      <option value="">--</option>
-                      <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
-                      <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 12px;">
-                  <div>
-                    <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 5px;">Date of Birth</div>
-                    <input type="text" ${ro} style="width: 100%; border: none; border-bottom: 1px solid #ddd; padding: 6px 0; font-size: 12px;" placeholder="MM/DD/YYYY"/>
-                  </div>
-                  <div>
-                    <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 5px;">Height (cm)</div>
-                    <input type="text" ${ro} style="width: 100%; border: none; border-bottom: 1px solid #ddd; padding: 6px 0; font-size: 12px;" placeholder="165"/>
-                  </div>
-                  <div>
-                    <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 5px;">Weight (kg)</div>
-                    <input type="text" ${ro} style="width: 100%; border: none; border-bottom: 1px solid #ddd; padding: 6px 0; font-size: 12px;" placeholder="60"/>
-                  </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
-                  <div>
-                    <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 5px;">Place of Birth</div>
-                    <input type="text" ${ro} style="width: 100%; border: none; border-bottom: 1px solid #ddd; padding: 6px 0; font-size: 12px;" placeholder="City/Municipality"/>
-                  </div>
-                  <div>
-                    <div style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 5px;">Contact Number</div>
-                    <input type="text" value="${safeContactNumber}" ${ro} style="width: 100%; border: none; border-bottom: 1px solid #ddd; padding: 6px 0; font-size: 12px;"/>
-                  </div>
+
+            <!-- Right column: picture only -->
+            <div style="flex-shrink: 0; display: flex; flex-direction: column; align-items: center; padding-top: 4px;">
+              <div style="width: 100px; height: 120px; border: 1.5px solid #2d4a44; display: flex; align-items: center; justify-content: center; background: #f5f5f5; border-radius: 4px;">
+                <div style="text-align: center; color: #aaa;">
+                  <i class="bi bi-person" style="font-size: 48px;"></i>
+                  <div style="font-size: 10px; font-family: Arial, sans-serif; margin-top: 4px;">Picture 1x1</div>
                 </div>
               </div>
             </div>
-            
-            <div style="display: flex; justify-content: space-between; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee;">
-              <div style="text-align: center; flex: 1;">
-                <div style="border-top: 2px solid #333; padding-top: 12px; width: 85%; margin: 0 auto;"></div>
-                <div style="font-size: 11px; color: #666; margin-top: 8px;">Signature of Holder</div>
-              </div>
-              <div style="text-align: center; flex: 1;">
-                <div style="border-top: 2px solid #333; padding-top: 12px; width: 85%; margin: 0 auto;"></div>
-                <div style="font-size: 11px; color: #666; margin-top: 8px;">Punong Barangay</div>
-              </div>
-              <div style="text-align: center; flex: 1;">
-                <div style="border-top: 2px solid #333; padding-top: 12px; width: 85%; margin: 0 auto;"></div>
-                <div style="font-size: 11px; color: #666; margin-top: 8px;">Barangay Secretary</div>
-              </div>
-            </div>
-            
-            <div style="text-align: center; margin-top: 15px; font-size: 9px; color: #999;">
-              This is an official government-issued ID. Report if found. | www.barangaysansebastian.gov.ph
-            </div>
+
           </div>
-        </div>`;
+        </div>
+      </div>`;
     }
 
     document.getElementById('printable-area').innerHTML = html;

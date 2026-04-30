@@ -147,7 +147,13 @@
         background-color: #fffbe0;
         box-shadow: inset 3px 0 0 #FED734;
     }
-
+    #confirmActionModal {
+    z-index: 10500 !important;
+    }
+    #confirmActionModal + .modal-backdrop,
+    .modal-backdrop ~ .modal-backdrop {
+        z-index: 10400 !important;
+    }
     /* pin icon col */
     .row-pin {
         width: 28px;
@@ -339,10 +345,10 @@
     .modal-body input, .modal-body select, .modal-body textarea { margin-bottom: 15px; }
 
     /* View modal */
-    #viewAnnouncementModal .modal-dialog { max-width: 500px; }
+    #viewAnnouncementModal .modal-dialog { max-width: 500px; z-index: 10000; }
     #viewAnnouncementModal .modal-content { border-radius: 12px; border: none; overflow: hidden; }
     #viewAnnouncementModal .modal-header { background-color: #30534D; border-bottom: 2px solid #FED734; padding: 12px 16px; }
-    #viewAnnouncementModal .modal-body { padding: 0; }
+    #viewAnnouncementModal .modal-body { padding: 0;  }
     #viewAnnouncementModal .modal-footer { border-top: 1px solid #f0f0f0; padding: 10px 16px; }
     .view-post-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px 16px; }
     .view-post-avatar { width: 42px; height: 42px; border-radius: 50%; background-color: #30534D; display: flex; align-items: center; justify-content: center; color: #FED734; font-size: 18px; flex-shrink: 0; }
