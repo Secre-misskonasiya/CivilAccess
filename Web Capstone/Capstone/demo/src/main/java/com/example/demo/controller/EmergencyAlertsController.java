@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.model.AdminUser;
 import com.example.demo.model.EmergencyAlerts;
 import com.example.demo.services.AdminUserServices;
+import com.example.demo.services.ActivityLogService;
 import com.example.demo.services.EmergencyAlertService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -10,9 +11,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.security.Principal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,129 +23,136 @@ import java.util.stream.Collectors;
 @RequestMapping("/emergency-alerts")
 public class EmergencyAlertsController {
 
-    @Autowired
-    private EmergencyAlertService emergencyAlertService;
-    
-    @Autowired
-    private AdminUserServices adminUserService;
+    @Autowired private EmergencyAlertService emergencyAlertService;
+    @Autowired private AdminUserServices adminUserService;
+    @Autowired private ActivityLogService activityLogService;
 
     @GetMapping
     public String viewEmergencyAlerts(
             @RequestParam(defaultValue = "create") String tab,
             Principal principal,
             Model model) {
-        
-        // Get the logged-in user information
-        String username = principal.getName();
-        AdminUser admin = adminUserService.getAdminByEmail(username);
-        
-        String name = admin.getName();
-        String role = admin.getRole();
 
-        // Add user info to model
-        model.addAttribute("newAdmin", new AdminUser());
-        model.addAttribute("currentUser", name);
-        model.addAttribute("currentrole", role);
-        
-        // Get all alerts
-        List<EmergencyAlerts> allAlerts = emergencyAlertService.getAllAlerts();
-        
-        // Filter alerts by status
-        List<EmergencyAlerts> currentAlerts = allAlerts.stream()
-        .filter(a -> !a.isArchived())
-        .sorted((a, b) -> b.getDateCreated().compareTo(a.getDateCreated()))
-        .collect(Collectors.toList());
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
 
-        List<EmergencyAlerts> archivedAlerts = allAlerts.stream()
-        .filter(EmergencyAlerts::isArchived)
-        .sorted((a, b) -> b.getDateCreated().compareTo(a.getDateCreated()))
-        .collect(Collectors.toList());
-        
-        // Add alert lists to the model
-        model.addAttribute("currentAlerts", currentAlerts);
-        model.addAttribute("archivedAlerts", archivedAlerts);
-        
+        model.addAttribute("newAdmin",     new AdminUser());
+        model.addAttribute("currentUser",  admin.getName());
+        model.addAttribute("currentrole",  admin.getRole());
+
+        List<EmergencyAlerts> all = emergencyAlertService.getAllAlerts();
+
+        model.addAttribute("currentAlerts", all.stream()
+                .filter(a -> !a.isArchived())
+                .sorted((a, b) -> b.getDateCreated().compareTo(a.getDateCreated()))
+                .collect(Collectors.toList()));
+
+        model.addAttribute("archivedAlerts", all.stream()
+                .filter(EmergencyAlerts::isArchived)
+                .sorted((a, b) -> b.getDateCreated().compareTo(a.getDateCreated()))
+                .collect(Collectors.toList()));
+
         model.addAttribute("currentTab", tab);
-        
         return "EmergencyAlerts";
     }
 
     @GetMapping("/{id}")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getAlert(@PathVariable UUID id) {
-        EmergencyAlerts alert = emergencyAlertService.getAlertById(id);
-        if (alert == null) {
-            return ResponseEntity.notFound().build();
-        }
-        
+        EmergencyAlerts a = emergencyAlertService.getAlertById(id);
+        if (a == null) return ResponseEntity.notFound().build();
+
         Map<String, Object> response = new HashMap<>();
-        response.put("id", alert.getId());
-        response.put("title", alert.getTitle() != null ? alert.getTitle() : "N/A");
-        response.put("message", alert.getMessage() != null ? alert.getMessage() : "N/A");
-        response.put("location", alert.getLocation() != null ? alert.getLocation() : "N/A");
-        response.put("type", alert.getType() != null ? alert.getType() : "N/A");
-        response.put("priority", alert.getPriority() != null ? alert.getPriority() : "N/A");
-        response.put("status", alert.getStatus() != null ? alert.getStatus() : "N/A");
-        response.put("dateCreated", alert.getDateCreated() != null ? alert.getDateCreated().toString() : null);
-        response.put("archived", alert.isArchived());
-        response.put("createdByName", alert.getCreatedByName() != null ? alert.getCreatedByName() : "N/A");
-        response.put("createdByRole", alert.getCreatedByRole() != null ? alert.getCreatedByRole() : "N/A");
-        response.put("latitude", alert.getLatitude() != null ? alert.getLatitude() : null);
-        response.put("longitude", alert.getLongitude() != null ? alert.getLongitude() : null);
-        
+        response.put("id",            a.getId());
+        response.put("title",         a.getTitle()         != null ? a.getTitle()         : "N/A");
+        response.put("message",       a.getMessage()       != null ? a.getMessage()       : "N/A");
+        response.put("location",      a.getLocation()      != null ? a.getLocation()      : "N/A");
+        response.put("type",          a.getType()          != null ? a.getType()          : "N/A");
+        response.put("priority",      a.getPriority()      != null ? a.getPriority()      : "N/A");
+        response.put("status",        a.getStatus()        != null ? a.getStatus()        : "N/A");
+        response.put("dateCreated",   a.getDateCreated()   != null ? a.getDateCreated().toString() : null);
+        response.put("archived",      a.isArchived());
+        response.put("createdByName", a.getCreatedByName() != null ? a.getCreatedByName() : "N/A");
+        response.put("createdByRole", a.getCreatedByRole() != null ? a.getCreatedByRole() : "N/A");
+        response.put("latitude",      a.getLatitude());
+        response.put("longitude",     a.getLongitude());
+
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/create")
     @ResponseBody
-    public ResponseEntity<?> createAlert(@RequestBody EmergencyAlerts alert, Principal principal) {
-        String username = principal.getName();
-        AdminUser admin = adminUserService.getAdminByEmail(username);
-        
-        // Set status to ACTIVE
+    public ResponseEntity<?> createAlert(
+            @RequestBody EmergencyAlerts alert,
+            Principal principal,
+            HttpServletRequest request) {
+
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+
         alert.setStatus("ACTIVE");
-        
-        // Assign creator
         alert.assignCreator(admin);
-        
+
         EmergencyAlerts saved = emergencyAlertService.saveAlert(alert);
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Alert created successfully");
-        response.put("id", saved.getId());
-        return ResponseEntity.ok(response);
+
+        activityLogService.log(
+            admin.getName(), admin.getRole(), "CREATED", "Emergency Alerts",
+            truncate("Created emergency alert: " + saved.getTitle()
+                + (saved.getType() != null ? " [" + saved.getType() + "]" : "")),
+            request.getRemoteAddr(), "Success"
+        );
+
+        return ResponseEntity.ok(Map.of("message", "Alert created successfully", "id", saved.getId()));
     }
 
     @PutMapping("/{id}/archive")
     @ResponseBody
-    public ResponseEntity<?> archiveAlert(@PathVariable UUID id) {
-        EmergencyAlerts alert = emergencyAlertService.getAlertById(id);
-        if (alert == null) {
-            return ResponseEntity.notFound().build();
-        }
-        
-        alert.setArchived(true);
-        alert.setStatus("ARCHIVED");
-        
-        emergencyAlertService.saveAlert(alert);
-        
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Alert archived successfully");
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> archiveAlert(
+            @PathVariable UUID id,
+            Principal principal,
+            HttpServletRequest request) {
+
+        EmergencyAlerts a = emergencyAlertService.getAlertById(id);
+        if (a == null) return ResponseEntity.notFound().build();
+
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+
+        a.setArchived(true);
+        a.setStatus("ARCHIVED");
+        emergencyAlertService.saveAlert(a);
+
+        activityLogService.log(
+            admin.getName(), admin.getRole(), "ARCHIVED", "Emergency Alerts",
+            truncate("Archived emergency alert: " + a.getTitle()),
+            request.getRemoteAddr(), "Success"
+        );
+
+        return ResponseEntity.ok(Map.of("message", "Alert archived successfully"));
     }
 
     @DeleteMapping("/{id}")
     @ResponseBody
-    public ResponseEntity<?> deleteAlert(@PathVariable UUID id) {
-        EmergencyAlerts alert = emergencyAlertService.getAlertById(id);
-        if (alert == null) {
-            return ResponseEntity.notFound().build();
-        }
-        
+    public ResponseEntity<?> deleteAlert(
+            @PathVariable UUID id,
+            Principal principal,
+            HttpServletRequest request) {
+
+        EmergencyAlerts a = emergencyAlertService.getAlertById(id);
+        if (a == null) return ResponseEntity.notFound().build();
+
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+
+        activityLogService.log(
+            admin.getName(), admin.getRole(), "DELETED", "Emergency Alerts",
+            truncate("Deleted emergency alert: " + a.getTitle()),
+            request.getRemoteAddr(), "Success"
+        );
+
         emergencyAlertService.deleteAlert(id);
-        
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Alert deleted successfully");
-        return ResponseEntity.ok(response);
+
+        return ResponseEntity.ok(Map.of("message", "Alert deleted successfully"));
+    }
+
+    private String truncate(String text) {
+        if (text == null) return null;
+        return text.length() > 250 ? text.substring(0, 250) + "..." : text;
     }
 }

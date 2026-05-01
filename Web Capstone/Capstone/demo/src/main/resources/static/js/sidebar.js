@@ -65,9 +65,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (entry.sub) {
                 const subMenu = document.getElementById(entry.sub);
                 if (subMenu) {
-                    subMenu.style.display = 'block';
-                }
-
+                        subMenu.classList.add('open');
+                        subMenu.style.display = 'block';  // keep as fallback
+                    }
                 // Also rotate/activate the parent <li>'s dropdown arrow
                 const parentLi = subMenu.previousElementSibling;
                 if (parentLi) {
