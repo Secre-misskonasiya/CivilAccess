@@ -81,10 +81,12 @@
         padding-top: 0;
         background: transparent;
     }
+    
     .success-icon {
-        font-size: 48px;
+        font-size: 60px;
         margin-bottom: 12px;
     }
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -96,7 +98,8 @@
 <title>System Settings</title>
 </head>
 <body>
-
+    <script src="/js/notif.js"></script>
+<div class="toast-container" id="toastContainer"></div>
 <input type="hidden" id="accountStatus" th:value="${currentstatus}">
 <div id="forcePasswordModal" class="force-modal">
     <div class="force-modal-content">
@@ -111,7 +114,7 @@
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
             <div class="modal-header border-0 pb-0">
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                
             </div>
             <div class="modal-body">
                 <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
@@ -471,6 +474,28 @@ function toggleDropdown(el) {
     arrow.classList.toggle('open', !isOpen);
 }
 </script>
-
+<script>
+(function() {
+    function isModalOpen() {
+        var dynamicModals = document.querySelectorAll('[id^="dynamicConfirmModal_"]');
+        for (var i = 0; i < dynamicModals.length; i++) {
+            if (dynamicModals[i].classList.contains('show')) return true;
+        }
+        var successModal = document.getElementById('successModal');
+        if (successModal && successModal.classList.contains('show')) return true;
+        var forceModal = document.getElementById('forcePasswordModal');
+        if (forceModal && forceModal.style.display === 'block') return true;
+        var logoutModal = document.getElementById('logoutModal');
+        if (logoutModal && (logoutModal.style.display === 'block' || logoutModal.style.display === 'flex')) return true;
+        return false;
+    }
+    
+    function poll() {
+        if (isModalOpen()) return;
+        // System Settings is static - no data changes to poll for
+        // Polling is minimal here since settings are saved manually
+    }
+})();
+</script>
 </body>
 </html>

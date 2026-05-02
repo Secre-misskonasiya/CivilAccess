@@ -320,7 +320,8 @@
 <title>Requests</title>
 </head>
 <body>
-
+  <script src="/js/notif.js"></script>
+<div class="toast-container" id="toastContainer"></div>
 <div class="layout">
 
 <!-- Lock Modal -->
@@ -1087,6 +1088,43 @@ window.onload = function() {
         window.location.href = '/user-profile';
     }
 </script>
-
+<script>
+(function() {
+    var lastSnapshot = '';
+    
+    function isModalOpen() {
+        var docModal = document.getElementById('docModalOverlay');
+        if (docModal && docModal.style.display === 'block') return true;
+        var logoutModal = document.getElementById('logoutModal');
+        if (logoutModal && (logoutModal.style.display === 'block' || logoutModal.style.display === 'flex')) return true;
+        return false;
+    }
+    
+    function poll() {
+        if (isModalOpen()) return;
+        
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/requests-document/api/poll?t=' + Date.now(), true);
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    var snapshot = JSON.stringify(data);
+                    
+                    if (lastSnapshot === '') {
+                        lastSnapshot = snapshot;
+                    } else if (snapshot !== lastSnapshot) {
+                        location.reload();
+                    }
+                } catch(e) {}
+            }
+        };
+        xhr.send();
+    }
+    
+    poll();
+    setInterval(poll, 5000);
+})();
+</script>
 </body>
 </html>

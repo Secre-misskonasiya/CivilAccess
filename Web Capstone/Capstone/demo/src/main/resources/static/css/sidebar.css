@@ -1,7 +1,54 @@
 * {
   box-sizing: border-box !important;
 }
+/* Toast Notification Popups */
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+.toast-popup {
+    pointer-events: all;
+    background: white;
+    border-radius: 10px;
+    padding: 14px 18px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    border-left: 4px solid #2d4a44;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 300px;
+    max-width: 380px;
+    animation: slideInRight 0.3s ease;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.toast-popup:hover { background: #f9f9f9; }
+.toast-popup.removing { animation: slideOutRight 0.3s ease forwards; }
+.toast-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.toast-body { flex: 1; }
+.toast-title { font-size: 13px; font-weight: bold; color: #1a1a1a; margin-bottom: 3px; }
+.toast-msg { font-size: 12px; color: #666; }
+.toast-close {
+    background: none; border: none; color: #aaa;
+    cursor: pointer; font-size: 16px; padding: 0;
+    line-height: 1; margin-top: 2px;
+}
+.toast-close:hover { color: #333; }
 
+@keyframes slideInRight {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideOutRight {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(120%); opacity: 0; }
+}
 .sidebar {
     min-width: 250px;
     max-width: 250px;
@@ -65,25 +112,63 @@
         margin-left: -10px;
     }
 
-    /* ── Section toggle buttons ── */
     .section-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-        padding: 8px 10px;
-        margin-top: 6px;
-        background: none;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        color: #998e8e;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            padding: 8px 10px;
+            margin-top: 6px;
+            background: none;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #998e8e;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            transition: background-color 0.2s;
+            box-sizing: border-box;
+    }
+
+    .section-toggle:hover {
+        background-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .section-notif-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            min-width: 8px;
+            background: #e74c3c;
+            border-radius: 50%;
+            flex-shrink: 0;
+            transform: scale(0);
+            transition: transform 0.2s;
+            animation: none;
+        }
+
+        .section-notif-dot.visible {
+            transform: scale(1);
+            animation: sidebar-dot-pulse 1.8s infinite;
+        }
+
+    /* arrow always stays at the far right */
+    .section-toggle .section-arrow {
+        margin-left: auto;
         font-size: 10px;
-        font-weight: bold;
-        letter-spacing: 1.2px;
-        text-transform: uppercase;
-        transition: background-color 0.2s;
-        box-sizing: border-box;
+        color: #FED734;
+        transition: transform 0.2s;
+        flex-shrink: 0;
+    }
+
+    .section-toggle.open .section-arrow {
+        transform: rotate(180deg);
+    }
+    /* When dot is hidden, arrow takes the auto margin instead */
+    .section-toggle:not(:has(.section-notif-dot.visible)) .section-arrow {
+        margin-left: auto;
     }
 
     .section-toggle:hover {
@@ -216,3 +301,50 @@
         background-color: #52887F;
         color: white;
     }
+
+/* ─── Sidebar notification dots & badges ─────────────────────────────────────
+   Append this to your existing notif.css or sidebar.css
+   ─────────────────────────────────────────────────────────────────────────── */
+
+
+@keyframes sidebar-dot-pulse {
+    0%, 100% { opacity: 1;   transform: scale(1);   }
+    50%       { opacity: 0.5; transform: scale(1.35); }
+}
+
+/* Count badge on individual menu items */
+.sidebar-count-badge {
+    display: none;
+    background: #e74c3c;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    margin-left: auto;
+    line-height: 16px;
+    min-width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+}
+.sidebar-count-badge.visible {
+    display: inline-block;
+}
+
+/* Make menu items flex so badges sit at the far right */
+.menu li,
+.sub-menu li,
+.section-toggle {
+    display: flex !important;
+    align-items: center;
+}
+.menu li .icon,
+.section-toggle .icon {
+    flex-shrink: 0;
+}
+.section-toggle .section-arrow {
+    margin-left: auto;
+}
+.menu li .dropdown-arrow {
+    margin-left: auto;
+}

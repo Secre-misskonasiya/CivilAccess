@@ -118,7 +118,8 @@
 </style>
 </head>
 <body>
-
+    <script src="/js/notif.js"></script>
+<div class="toast-container" id="toastContainer"></div>
 <div class="layout">
     <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
@@ -285,7 +286,10 @@
                 </div>
                 <div class="input-wrapper" style="position:relative">
                     <input type="password" id="newPassword" placeholder="New Password" style="width:100%;padding:10px 40px 10px 12px;border:1px solid #d0d5dd;border-radius:6px;">
-                    <button type="button" onclick="togglePwd('newPassword')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;">👁️</button>
+                    <button type="button" onclick="togglePwd('newPassword')" 
+                            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#666;padding:0;margin:0;line-height:1;">
+                        <i class="bi bi-eye-slash" id="newPasswordIcon"></i>
+                    </button>
                 </div>
                 <div id="password-requirements" class="password-requirements">
                     <div class="requirement-item" id="req-length">At least 8 characters</div>
@@ -296,7 +300,10 @@
                 </div>
                 <div class="input-wrapper" style="margin-top:8px;position:relative">
                     <input type="password" id="confirmPassword" placeholder="Confirm New Password" style="width:100%;padding:10px 40px 10px 12px;border:1px solid #d0d5dd;border-radius:6px;">
-                    <button type="button" onclick="togglePwd('confirmPassword')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;">👁️</button>
+                    <button type="button" onclick="togglePwd('confirmPassword')" 
+                            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#666;padding:0;margin:0;line-height:1;">
+                        <i class="bi bi-eye-slash" id="confirmPasswordIcon"></i>
+                    </button>
                 </div>
                 <small class="err" id="confirm-password-error">Passwords do not match</small>
             </div>
@@ -640,8 +647,30 @@
         document.getElementById('pwdHiddenPhoneNumber').value = document.getElementById('phone').value.trim();
     }
 
-    function togglePwd(inputId) { const input = document.getElementById(inputId); if (input) input.type = input.type === 'password' ? 'text' : 'password'; }
+        function togglePwd(inputId) { 
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            // Get the corresponding icon
+            const iconId = inputId === 'newPassword' ? 'newPasswordIcon' : 'confirmPasswordIcon';
+            const icon = document.getElementById(iconId);
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (icon) {
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                }
+            } else {
+                input.type = 'password';
+                if (icon) {
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                }
+            }
+        }
 
+        
     window.addEventListener('load', () => {
         ['fullname','username','email','phone'].forEach(id => document.getElementById(id)?.dispatchEvent(new Event('input')));
         if (birthdateEl) birthdateEl.dispatchEvent(new Event('input'));

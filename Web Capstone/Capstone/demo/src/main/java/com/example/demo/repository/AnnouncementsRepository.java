@@ -11,4 +11,5 @@ import org.springframework.stereotype.Repository;
 public interface AnnouncementsRepository extends JpaRepository<Announcements, Long> {
     Optional<Announcements> findTopByOrderByDatePostedDesc();
     Optional<Announcements> findTopByStatusNotIgnoreCaseOrderByDatePostedDesc(String status);
+    long countByStatusNotIgnoreCase(String status);
 }

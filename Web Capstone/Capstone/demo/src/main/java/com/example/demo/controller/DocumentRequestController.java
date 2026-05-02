@@ -5,13 +5,17 @@ import com.example.demo.model.DocumentRequest;
 import com.example.demo.services.AdminUserServices;
 import com.example.demo.services.ActivityLogService;
 import com.example.demo.services.DocumentRequestService;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Controller
@@ -57,59 +61,83 @@ public class DocumentRequestController {
         return "Requests-document";
     }
 
-    @PostMapping("/{id}/process")
-    public String processRequest(
-            @PathVariable Long id,
-            Principal principal,
-            HttpServletRequest request) {
+    // Instead of doc.getRequesterName() and doc.getRequestType()
+// Use the actual field names from your DocumentRequest model
 
-        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
-        service.updateStatus(id, "PROCESSING", admin.getName());
+        @PostMapping("/{id}/process")
+        public String processRequest(
+                @PathVariable Long id,
+                Principal principal,
+                HttpServletRequest request) {
 
-        activityLogService.log(
-            admin.getName(), admin.getRole(), "UPDATED", "Document Requests",
-            "Moved document request #" + id + " to PROCESSING",
-            request.getRemoteAddr(), "Success"
-        );
+            AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
 
-        return "redirect:/requests-document";
-    }
+            if ("ARCHIVED".equalsIgnoreCase(admin.getEmpstatus())) {
+                return "redirect:/logout";
+            }
 
-    @PostMapping("/{id}/ready")
-    public String markReady(
-            @PathVariable Long id,
-            Principal principal,
-            HttpServletRequest request) {
+            DocumentRequest doc = service.getById(id);
+            
+            // Use the correct field names - likely these:
+            String requesterName = doc != null ? doc.getFullName() : "#" + id;  // Changed from getRequesterName()
+            String requestType   = doc != null ? doc.getDocumentType() : "Document";  // Changed from getRequestType()
 
-        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
-        service.updateStatus(id, "READY", admin.getName());
+            service.updateStatus(id, "PROCESSING", admin.getName());
 
-        activityLogService.log(
-            admin.getName(), admin.getRole(), "UPDATED", "Document Requests",
-            "Marked document request #" + id + " as READY",
-            request.getRemoteAddr(), "Success"
-        );
+            activityLogService.log(
+                admin.getName(), admin.getRole(), "UPDATED", "Document Requests",
+                "Started processing " + requestType + " request for " + requesterName,
+                request.getRemoteAddr(), "Success"
+            );
 
-        return "redirect:/requests-document";
-    }
+            return "redirect:/requests-document";
+        }
 
-    @PostMapping("/{id}/archive")
-    public String archiveRequest(
-            @PathVariable Long id,
-            Principal principal,
-            HttpServletRequest request) {
+        @PostMapping("/{id}/ready")
+        public String markReady(
+                @PathVariable Long id,
+                Principal principal,
+                HttpServletRequest request) {
 
-        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
-        service.archiveRequest(id, admin.getName());
+            AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
 
-        activityLogService.log(
-            admin.getName(), admin.getRole(), "ARCHIVED", "Document Requests",
-            "Archived document request #" + id,
-            request.getRemoteAddr(), "Success"
-        );
+            DocumentRequest doc = service.getById(id);
+            String requesterName = doc != null ? doc.getFullName() : "#" + id;  // Fixed
+            String requestType   = doc != null ? doc.getDocumentType() : "Document";  // Fixed
 
-        return "redirect:/requests-document";
-    }
+            service.updateStatus(id, "READY", admin.getName());
+
+            activityLogService.log(
+                admin.getName(), admin.getRole(), "UPDATED", "Document Requests",
+                requestType + " request for " + requesterName + " is ready for pickup",
+                request.getRemoteAddr(), "Success"
+            );
+
+            return "redirect:/requests-document";
+        }
+
+        @PostMapping("/{id}/archive")
+        public String archiveRequest(
+                @PathVariable Long id,
+                Principal principal,
+                HttpServletRequest request) {
+
+            AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+
+            DocumentRequest doc = service.getById(id);
+            String requesterName = doc != null ? doc.getFullName() : "#" + id;  // Fixed
+            String requestType   = doc != null ? doc.getDocumentType() : "Document";  // Fixed
+
+            service.archiveRequest(id, admin.getName());
+
+            activityLogService.log(
+                admin.getName(), admin.getRole(), "ARCHIVED", "Document Requests",
+                "Archived " + requestType + " request for " + requesterName,
+                request.getRemoteAddr(), "Success"
+            );
+
+            return "redirect:/requests-document";
+        }
 
     @GetMapping("/search")
     @ResponseBody
@@ -124,5 +152,15 @@ public class DocumentRequestController {
             return principal.getName();
         }
         return "System";
+    }
+    @GetMapping("/api/poll")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> pollRequests() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("incoming", service.getByStatus("INCOMING").size());
+        response.put("processing", service.getByStatus("PROCESSING").size());
+        response.put("ready", service.getByStatus("READY").size());
+        response.put("archived", service.getByStatus("RESOLVED").size());
+        return ResponseEntity.ok(response);
     }
 }

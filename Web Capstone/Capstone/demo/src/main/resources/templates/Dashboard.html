@@ -59,6 +59,12 @@
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+    .stat-card.updating { animation: pulse 0.5s ease-in-out; }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.02); background-color: #f8fff8; }
+        100% { transform: scale(1); }
+    }
     .stat-icon-wrap {
         width: 36px; height: 36px; border-radius: 8px;
         display: flex; align-items: center; justify-content: center;
@@ -95,7 +101,9 @@
     .announcements-box {
         background: white; border-radius: 12px; border: 0.5px solid #e0e0e0;
         margin-bottom: 20px; overflow: hidden;
+        transition: box-shadow 0.3s ease;
     }
+    .announcements-box.new-content { box-shadow: 0 0 0 2px #FED734; }
     .announce-header {
         padding: 16px 22px; border-bottom: 0.5px solid #f0f0f0;
         display: flex; align-items: center; justify-content: space-between;
@@ -167,8 +175,13 @@
     .activity-item {
         display: flex; align-items: flex-start; gap: 12px;
         padding: 12px 16px; border-bottom: 0.5px solid #f5f5f5;
+        animation: slideIn 0.3s ease-out;
     }
     .activity-item:last-child { border-bottom: none; }
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
     .activity-dot { width: 9px; height: 9px; background: #30534D; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
     .activity-info { flex: 1; min-width: 0; }
     .activity-detail { font-size: 13px; color: #333; line-height: 1.5; }
@@ -194,7 +207,58 @@
         .top-bar { padding: 0 20px; height: 58px; }
         .welcome-text { font-size: 16px; }
     }
+    /* Notification Bell */
+    .notification-bell {
+        position: relative;
+        cursor: pointer;
+        margin-right: 16px;
+        font-size: 20px;
+        color: #555;
+        transition: color 0.2s;
+    }
+    .notification-bell:hover { color: #2d4a44; }
+    .notification-bell .badge {
+        position: absolute;
+        top: -4px;
+        right: -6px;
+        background: #e74c3c;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        padding: 0;
+        min-width: 10px;
+        font-size: 0;
+    }
+    .notification-bell .badge:empty { display: none; }
 
+    /* Notification Modal */
+    .notif-modal .modal-dialog { max-width: 420px; }
+    .notif-modal .modal-content { border-radius: 12px; overflow: hidden; }
+    .notif-modal .modal-header { background: #2d4a44; color: white; border-bottom: 2px solid #FED734; }
+    .notif-modal .modal-body { padding: 0; max-height: 400px; overflow-y: auto; }
+    .notif-item {
+        display: flex; align-items: flex-start; gap: 12px;
+        padding: 14px 18px; border-bottom: 1px solid #f0f0f0;
+        cursor: pointer; transition: background 0.2s; text-decoration: none; color: inherit;
+    }
+    .notif-item:hover { background: #f5faf8; }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-icon {
+        width: 36px; height: 36px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px; flex-shrink: 0;
+    }
+    .notif-icon.accounts { background: #eaf0fb; color: #3498db; }
+    .notif-icon.announcements { background: #fef8e6; color: #f39c12; }
+    .notif-icon.documents { background: #fef0ee; color: #e74c3c; }
+    .notif-icon.safety { background: #fff0f0; color: #e74c3c; }
+    .notif-icon.emergency { background: #ffeaea; color: #c0392b; }
+    .notif-icon.programs { background: #eaf5f0; color: #27ae60; }
+    .notif-info { flex: 1; min-width: 0; }
+    .notif-title { font-size: 13px; font-weight: bold; color: #1a1a1a; margin-bottom: 2px; }
+    .notif-desc { font-size: 12px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .notif-time { font-size: 11px; color: #aaa; margin-top: 3px; }
+    .no-notifs { text-align: center; padding: 30px; color: #aaa; }
 </style>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
@@ -206,7 +270,8 @@
 <title>Dashboard</title>
 </head>
 <body>
-
+    <script src="/js/notif.js"></script>
+<div class="toast-container" id="toastContainer"></div>
 <div class="layout">
 
 <input type="hidden" id="accountStatus"   th:value="${currentstatus}">
@@ -239,6 +304,11 @@
             Welcome back, <span th:text="${currentrole}">Role</span>
         </div>
         <div class="user-info">
+            <!-- Notification Bell -->
+            <div class="notification-bell" onclick="openNotificationModal()" title="Notifications">
+                <i class="bi bi-bell-fill"></i>
+                <span class="badge" id="notifBadge" style="display:none;">0</span>
+            </div>
             <span th:text="${currentUser}">Current User</span>
             <div class="user-avatar" onclick="window.location.href='/user-profile'" style="cursor:pointer; overflow:hidden; padding:0;">
                 <img th:if="${currentAdminProfilePicture != null and !#strings.isEmpty(currentAdminProfilePicture)}"
@@ -260,84 +330,84 @@
             <div>
 
                 <!-- Announcement -->
-                <div class="announcements-box">
+                <div class="announcements-box" id="announcementBox">
                     <div class="announce-header">
                         <div class="announce-header-title">Latest Announcement</div>
-                        <div class="announce-badge" th:if="${latestAnnouncement != null}">NEW</div>
+                        <div class="announce-badge" id="announceBadge" th:if="${latestAnnouncement != null}">NEW</div>
                     </div>
-                    <div class="announcement-content"
+                    <div class="announcement-content" id="announcementContent"
                          th:if="${latestAnnouncement != null}"
                          style="flex-direction:column; align-items:flex-start; padding:0; overflow:hidden;">
-                        <img th:if="${latestAnnouncement.image != null and !#strings.isEmpty(latestAnnouncement.image)}"
+                        <img id="announceImage" th:if="${latestAnnouncement.image != null and !#strings.isEmpty(latestAnnouncement.image)}"
                              th:src="${latestAnnouncement.image}"
                              alt="Announcement image"
                              style="width:100%; max-height:220px; object-fit:cover; display:block;">
                         <div style="width:100%; padding:14px 18px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                                <strong th:text="${latestAnnouncement.title}" style="font-size:14px; color:#222;"></strong>
-                                <span style="font-size:11px; color:#bbb; white-space:nowrap; margin-left:10px;"
+                                <strong id="announceTitle" th:text="${latestAnnouncement.title}" style="font-size:14px; color:#222;"></strong>
+                                <span id="announceDate" style="font-size:11px; color:#bbb; white-space:nowrap; margin-left:10px;"
                                       th:text="${latestAnnouncement.datePosted != null ? #temporals.format(latestAnnouncement.datePosted, 'MMM dd, yyyy') : ''}"></span>
                             </div>
-                            <p th:text="${latestAnnouncement.content}" style="font-size:12px; color:#777; margin:0; line-height:1.6;"></p>
+                            <p id="announceContent" th:text="${latestAnnouncement.content}" style="font-size:12px; color:#777; margin:0; line-height:1.6;"></p>
                         </div>
                     </div>
-                    <div class="announcement-content" th:if="${latestAnnouncement == null}">
+                    <div class="announcement-content" id="noAnnouncement" th:if="${latestAnnouncement == null}">
                         No announcements at this time
                     </div>
                 </div>
 
                 <!-- ── Stat cards ── -->
                 <div class="section-label">Overview</div>
-                <div class="stats-grid">
+                <div class="stats-grid" id="statsGrid">
 
-                    <div class="stat-card">
+                    <div class="stat-card" id="statResidents">
                         <div class="stat-icon-wrap ic-b">👥</div>
                         <div class="stat-label">Total Registered<br>Residents</div>
-                        <div class="stat-number" th:text="${residents != null ? residents : 0}">0</div>
+                        <div class="stat-number" id="numResidents" th:text="${residents != null ? residents : 0}">0</div>
                     </div>
 
-                    <div class="stat-card">
+                    <div class="stat-card" id="statPendingDocs">
                         <div class="stat-icon-wrap ic-r">📄</div>
                         <div class="stat-label">Pending Document<br>Requests</div>
-                        <div class="stat-number stat-red" th:text="${pendingDocuments != null ? pendingDocuments : 0}">0</div>
+                        <div class="stat-number stat-red" id="numPendingDocs" th:text="${pendingDocuments != null ? pendingDocuments : 0}">0</div>
                     </div>
 
-                    <div class="stat-card">
+                    <div class="stat-card" id="statBudget">
                         <div class="stat-icon-wrap ic-g">💰</div>
                         <div class="stat-label">Program Budget<br>This Month</div>
-                        <div class="stat-number stat-green budget" th:text="${budget}">₱0</div>
+                        <div class="stat-number stat-green budget" id="numBudget" th:text="${budget}">₱0</div>
                     </div>
 
-                    <div class="stat-card">
+                    <div class="stat-card" id="statSenior">
                         <div class="stat-icon-wrap ic-p">♿</div>
                         <div class="stat-label">Senior &amp; PWD<br>Residents</div>
-                        <div class="stat-number">14</div>
+                        <div class="stat-number" id="numSenior">14</div>
                     </div>
 
-                    <div class="stat-card">
+                    <div class="stat-card" id="statNewRequests">
                         <div class="stat-icon-wrap ic-b">📬</div>
                         <div class="stat-label">New Requests<br>This Month</div>
-                        <div class="stat-number">4</div>
+                        <div class="stat-number" id="numNewRequests">4</div>
                     </div>
 
-                    <div class="stat-card"
+                    <div class="stat-card" id="statSOS"
                          th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
                         <div class="stat-icon-wrap ic-r">🚨</div>
                         <div class="stat-label">SOS Alerts<br>This Month</div>
-                        <div class="stat-number stat-red" th:text="${sosAlertsThisMonth != null ? sosAlertsThisMonth : 0}">0</div>
+                        <div class="stat-number stat-red" id="numSOS" th:text="${sosAlertsThisMonth != null ? sosAlertsThisMonth : 0}">0</div>
                     </div>
 
-                    <div class="stat-card"
+                    <div class="stat-card" id="statIncidents"
                          th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
                         <div class="stat-icon-wrap ic-r">⚠️</div>
                         <div class="stat-label">Total Incidents<br>Reported</div>
-                        <div class="stat-number stat-red" th:text="${allreports != null ? allreports : 0}">0</div>
+                        <div class="stat-number stat-red" id="numIncidents" th:text="${allreports != null ? allreports : 0}">0</div>
                     </div>
 
                 </div>
 
                 <!-- ── Charts — ADMIN, CAP, SEC only ── -->
-                <div th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
+                <div id="chartsSection" th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
 
                     <div class="section-label" style="margin-top:6px;">Analytics</div>
 
@@ -428,27 +498,29 @@
                 </div>
 
                 <!-- Latest Activity -->
-                <div class="widget-box"
+                <div class="widget-box" id="activityBox"
                      th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
                     <div class="widget-header">
                         <div class="widget-title">Latest Activity</div>
                     </div>
-                    <div th:if="${recentLogs != null and not #lists.isEmpty(recentLogs)}">
-                        <div class="activity-item" th:each="log : ${recentLogs}">
-                            <div class="activity-dot"></div>
-                            <div class="activity-info">
-                                <div class="activity-detail">
-                                    <span th:text="${log.details}"></span>
-                                    <span class="activity-by" th:text="' — By ' + ${log.UserName}"></span>
-                                </div>
-                                <div class="activity-time-label"
-                                     th:text="${log.timestamp != null ? #temporals.format(log.timestamp, 'MM/dd/yy · hh:mm a') : 'N/A'}">
+                    <div id="activityList">
+                        <div th:if="${recentLogs != null and not #lists.isEmpty(recentLogs)}">
+                            <div class="activity-item" th:each="log : ${recentLogs}">
+                                <div class="activity-dot"></div>
+                                <div class="activity-info">
+                                    <div class="activity-detail">
+                                        <span th:text="${log.details}"></span>
+                                        <span class="activity-by" th:text="' — By ' + ${log.UserName}"></span>
+                                    </div>
+                                    <div class="activity-time-label"
+                                         th:text="${log.timestamp != null ? #temporals.format(log.timestamp, 'MM/dd/yy · hh:mm a') : 'N/A'}">
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div th:if="${recentLogs == null or #lists.isEmpty(recentLogs)}" class="no-programs">
-                        No recent activity
+                        <div th:if="${recentLogs == null or #lists.isEmpty(recentLogs)}" class="no-programs" id="noActivity">
+                            No recent activity
+                        </div>
                     </div>
                 </div>
 
@@ -457,27 +529,444 @@
     </div>
 </div>
 </div>
-
+<!-- Notification Modal (Dropdown style - positioned below bell) -->
+<div id="notificationModal" style="display:none; position:fixed; z-index:10000; top:0; left:0; width:100%; height:100%;" onclick="closeNotificationModal()">
+    <div style="position:absolute; top:64px; right:180px; background:white; border-radius:12px; width:400px; max-width:90vw; max-height:60vh; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.2); border:1px solid #e0e0e0;" onclick="event.stopPropagation()">
+        <!-- Arrow pointing up to bell -->
+        <div style="position:absolute; top:-8px; right:24px; width:16px; height:16px; background:white; transform:rotate(45deg); border-left:1px solid #e0e0e0; border-top:1px solid #e0e0e0;"></div>
+        
+        <div style="background:#2d4a44; color:white; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #FED734;">
+            <h5 style="margin:0; font-size:14px;"><i class="bi bi-bell-fill me-2"></i>Notifications</h5>
+            <button onclick="closeNotificationModal()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer; line-height:1;">&times;</button>
+        </div>
+        <div id="notifList" style="max-height:350px; overflow-y:auto; padding:0;">
+            <div style="text-align:center; padding:30px; color:#aaa;">Loading...</div>
+        </div>
+    </div>
+</div>
 <!-- Logout Modal -->
 <div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
 
 <script src="/js/sidebar.js"></script>
 <script>
 
-    function toggleSection(btn, sectionId) {
-        const body = document.getElementById(sectionId);
-        const isOpen = body.classList.contains('open');
-        body.classList.toggle('open', !isOpen);
-        btn.classList.toggle('open', !isOpen);
-    }
-    function toggleSubMenu(li, subMenuId) {
-        const sub   = document.getElementById(subMenuId);
-        const arrow = li.querySelector('.dropdown-arrow');
-        const isOpen = sub.classList.contains('open');
-        sub.classList.toggle('open', !isOpen);
-        if (arrow) arrow.classList.toggle('open', !isOpen);
+// ============================================
+// CHECK FOR NEW DATA AND SHOW TOAST
+// ============================================
+// let previousNotifSnapshot = '';
+
+// function checkAndToastNotifications() {
+//     fetch('/api/dashboard/notifications')
+//         .then(function(r) { return r.json(); })
+//         .then(function(notifs) {
+//             if (!notifs || notifs.length === 0) return;
+            
+//             // Filter out "All Clear"
+//             var realNotifs = notifs.filter(function(n) { return n.link !== '#'; });
+//             var currentSnapshot = JSON.stringify(realNotifs);
+            
+//             // Only show toast if data changed
+//             if (previousNotifSnapshot && currentSnapshot !== previousNotifSnapshot) {
+//                 // Find new items
+//                 var prevData = JSON.parse(previousNotifSnapshot);
+//                 realNotifs.forEach(function(n) {
+//                     var exists = prevData.some(function(p) { 
+//                         return p.title === n.title && p.description === n.description; 
+//                     });
+//                     if (!exists) {
+//                         showToast(n.title, n.description, n.link, 
+//                             '<i class="bi ' + (n.icon || 'bi-bell') + '" style="font-size:18px;"></i>');
+//                     }
+//                 });
+//             }
+            
+//             previousNotifSnapshot = currentSnapshot;
+//         })
+//         .catch(function() {});
+// }
+
+// // Run every 10 seconds
+// setInterval(checkAndToastNotifications, 10000);
+
+function openNotificationModal() {
+    var modal = document.getElementById('notificationModal');
+    modal.style.display = 'block';
+    loadNotifications();
+}
+
+function closeNotificationModal() {
+    document.getElementById('notificationModal').style.display = 'none';
+}
+
+// Close when clicking background
+document.getElementById('notificationModal').addEventListener('click', function(e) {
+    if (e.target === this) closeNotificationModal();
+});
+
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeNotificationModal();
+});
+
+function loadNotifications() {
+    fetch('/api/dashboard/notifications')
+        .then(r => r.json())
+        .then(notifs => {
+            const list = document.getElementById('notifList');
+            if (!notifs || notifs.length === 0) {
+                list.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa;"><i class="bi bi-bell-slash" style="font-size:28px;display:block;margin-bottom:8px;"></i>No new notifications</div>';
+            } else {
+                list.innerHTML = notifs.map(n => `
+                    <a href="${n.link}" style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-bottom:1px solid #f0f0f0;text-decoration:none;color:inherit;cursor:pointer;transition:background 0.2s;" 
+                       onmouseover="this.style.background='#f5faf8'" onmouseout="this.style.background='white'"
+                       onclick="closeNotificationModal()">
+                        <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;background:${getIconBg(n.iconClass)};color:${getIconColor(n.iconClass)};">
+                            <i class="bi ${n.icon || 'bi-bell'}"></i>
+                        </div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:13px;font-weight:bold;color:#1a1a1a;margin-bottom:2px;">${esc(n.title)}</div>
+                            <div style="font-size:12px;color:#666;">${esc(n.description)}</div>
+                            <div style="font-size:11px;color:#aaa;margin-top:3px;">${n.timeAgo || 'Just now'}</div>
+                        </div>
+                    </a>
+                `).join('');
+            }
+        })
+        .catch(() => {
+            document.getElementById('notifList').innerHTML = '<div style="text-align:center;padding:30px;color:#aaa;">Could not load notifications</div>';
+        });
+}
+
+function getIconBg(cls) {
+    const map = { accounts: '#eaf0fb', announcements: '#fef8e6', documents: '#fef0ee', safety: '#fff0f0', emergency: '#ffeaea', programs: '#eaf5f0' };
+    return map[cls] || '#eaf0fb';
+}
+
+function getIconColor(cls) {
+    const map = { accounts: '#3498db', announcements: '#f39c12', documents: '#e74c3c', safety: '#e74c3c', emergency: '#c0392b', programs: '#27ae60' };
+    return map[cls] || '#3498db';
+}
+
+// ============================================
+// NOTIFICATION POLLING
+// ============================================
+function pollNotifications() {
+    fetch('/api/dashboard/notifications?countOnly=true')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var badge = document.getElementById('notifBadge');
+            var count = data.count || 0;
+            badge.style.display = count > 0 ? 'inline' : 'none';
+        })
+        .catch(function() {
+            document.getElementById('notifBadge').style.display = 'none';
+        });
+}
+
+// Also refresh notifications when opening the modal
+function openNotificationModal() {
+    var modal = document.getElementById('notificationModal');
+    modal.style.display = 'block';
+    loadNotifications();
+    // Refresh badge after loading
+    pollNotifications();
+}
+
+// Start notification polling immediately
+pollNotifications();
+setInterval(pollNotifications, 30000); // Poll every 30 seconds
+    // ============================================
+    // POLLING FOR REAL-TIME UPDATES (No Popup)
+    // ============================================
+    let pollingInterval = null;
+    let lastUpdateTimestamp = Date.now();
+    let isModalOpen = false;
+    let pendingUpdates = false;
+    let chartInstances = {};
+    let lastAnnouncementId = null;
+    let lastActivityId = null;
+    let currentStats = {};
+
+    // Initialize current stats from the page
+    function initCurrentStats() {
+        currentStats = {
+            residents: document.getElementById('numResidents')?.textContent?.trim() || '0',
+            pendingDocs: document.getElementById('numPendingDocs')?.textContent?.trim() || '0',
+            budget: document.getElementById('numBudget')?.textContent?.trim() || '₱0',
+            senior: document.getElementById('numSenior')?.textContent?.trim() || '0',
+            newRequests: document.getElementById('numNewRequests')?.textContent?.trim() || '0',
+            sosAlerts: document.getElementById('numSOS')?.textContent?.trim() || '0',
+            incidents: document.getElementById('numIncidents')?.textContent?.trim() || '0'
+        };
+        
+        // Get current announcement title as initial reference
+        const announceTitle = document.getElementById('announceTitle');
+        if (announceTitle) {
+            lastAnnouncementId = announceTitle.textContent?.trim() || null;
+        }
+        
+        // Get latest activity as initial reference
+        const firstActivity = document.querySelector('.activity-detail span');
+        if (firstActivity) {
+            lastActivityId = firstActivity.textContent?.trim() || null;
+        }
     }
 
+    // Track modal state
+    function trackModalState() {
+        document.addEventListener('show.bs.modal', () => { isModalOpen = true; });
+        document.addEventListener('hidden.bs.modal', () => { 
+            isModalOpen = false; 
+            if (pendingUpdates) {
+                pendingUpdates = false;
+                pollDashboard(true); // Force immediate poll
+            }
+        });
+        
+        const forceModal = document.getElementById('forcePasswordModal');
+        if (forceModal) {
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    isModalOpen = (mutation.target.style.display === 'block');
+                    if (!isModalOpen && pendingUpdates) {
+                        pendingUpdates = false;
+                        pollDashboard(true);
+                    }
+                });
+            });
+            observer.observe(forceModal, { attributes: true, attributeFilter: ['style'] });
+        }
+    }
+
+    async function pollDashboard(forceUpdate = false) {
+        try {
+            const response = await fetch('/api/dashboard/poll?t=' + Date.now());
+            if (!response.ok) return;
+            const data = await response.json();
+            
+            // Check if there's actually new data
+            const hasChanges = checkForChanges(data);
+            
+            if (!hasChanges && !forceUpdate) return;
+            // Inside pollDashboard function, after getting new data:
+            if (data.newNotifications) {
+                data.newNotifications.forEach(function(n) {
+                    showToast(n.title, n.description, n.link, '<i class="bi ' + n.icon + '"></i>');
+                });
+            }
+            if (isModalOpen && !forceUpdate) {
+                pendingUpdates = true;
+                return;
+            }
+
+            // Update all components with new data silently
+            updateStatCard('numResidents', data.residents, 'statResidents', currentStats.residents);
+            updateStatCard('numPendingDocs', data.pendingDocuments, 'statPendingDocs', currentStats.pendingDocs);
+            updateStatCard('numBudget', data.budget, 'statBudget', currentStats.budget);
+            updateStatCard('numSenior', data.seniorPwdCount, 'statSenior', currentStats.senior);
+            updateStatCard('numNewRequests', data.newRequestsThisMonth, 'statNewRequests', currentStats.newRequests);
+            updateStatCard('numSOS', data.sosAlertsThisMonth, 'statSOS', currentStats.sosAlerts);
+            updateStatCard('numIncidents', data.allReports, 'statIncidents', currentStats.incidents);
+
+            // Update announcement if changed
+            if (data.latestAnnouncement) {
+                updateAnnouncement(data.latestAnnouncement);
+            }
+
+            // Update activity logs if changed
+            if (data.recentLogs && data.recentLogs.length > 0) {
+                updateActivityLogs(data.recentLogs);
+            }
+
+            // Update upcoming programs
+            if (data.upcomingProgramsChanged) {
+                loadUpcomingPrograms();
+            }
+
+            // Update charts if data changed
+            const role = document.getElementById('dataCurrentRole').value;
+            if (role === 'ADMIN' || role === 'BARANGAY-CAPTAIN' || role === 'SECRETARY') {
+                if (data.resolvedIncidents !== undefined || data.unresolvedIncidents !== undefined) {
+                    updateCharts(data.resolvedIncidents || 0, data.unresolvedIncidents || 0, 
+                               data.pendingDocuments || 0, data.allReports || 0);
+                }
+            }
+
+            // Update hidden inputs for chart data
+            if (data.resolvedIncidents !== undefined) {
+                document.getElementById('dataResolved').value = data.resolvedIncidents;
+            }
+            if (data.unresolvedIncidents !== undefined) {
+                document.getElementById('dataUnresolved').value = data.unresolvedIncidents;
+            }
+
+        } catch (error) {
+            console.error("Polling error:", error);
+        }
+    }
+
+    function checkForChanges(data) {
+        // Check if announcement changed
+        if (data.latestAnnouncement && data.latestAnnouncement.title !== lastAnnouncementId) {
+            return true;
+        }
+        
+        // Check if activity logs changed
+        if (data.recentLogs && data.recentLogs.length > 0) {
+            const newFirstActivity = data.recentLogs[0]?.details;
+            if (newFirstActivity !== lastActivityId) {
+                return true;
+            }
+        }
+        
+        // Check if any stat changed
+        if (data.residents !== undefined && String(data.residents) !== currentStats.residents) return true;
+        if (data.pendingDocuments !== undefined && String(data.pendingDocuments) !== currentStats.pendingDocs) return true;
+        if (data.sosAlertsThisMonth !== undefined && String(data.sosAlertsThisMonth) !== currentStats.sosAlerts) return true;
+        if (data.allReports !== undefined && String(data.allReports) !== currentStats.incidents) return true;
+        
+        return false;
+    }
+
+    function updateStatCard(elementId, newValue, cardId, oldValue) {
+        if (newValue === undefined || newValue === null) return false;
+        const element = document.getElementById(elementId);
+        if (!element) return false;
+        
+        const newValueStr = String(newValue);
+        
+        if (oldValue !== newValueStr) {
+            element.textContent = newValueStr;
+            
+            // Update current stats
+            const statKey = elementId.replace('num', '').toLowerCase();
+            currentStats[statKey] = newValueStr;
+            
+            // Add pulse animation
+            const card = document.getElementById(cardId);
+            if (card) {
+                card.classList.add('updating');
+                setTimeout(() => card.classList.remove('updating'), 500);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    function updateAnnouncement(announcement) {
+        if (!announcement || !announcement.title) return false;
+        
+        // Check if announcement actually changed
+        if (announcement.title === lastAnnouncementId) return false;
+        
+        lastAnnouncementId = announcement.title;
+        
+        const announceBox = document.getElementById('announcementBox');
+        const noAnnouncement = document.getElementById('noAnnouncement');
+        const announcementContent = document.getElementById('announcementContent');
+        
+        // Hide "no announcements" message if it exists
+        if (noAnnouncement) {
+            noAnnouncement.style.display = 'none';
+        }
+        
+        // Show announcement content
+        if (announcementContent) {
+            announcementContent.style.display = 'flex';
+        }
+        
+        // Update title
+        const titleEl = document.getElementById('announceTitle');
+        if (titleEl) titleEl.textContent = announcement.title;
+        
+        // Update content
+        const contentEl = document.getElementById('announceContent');
+        if (contentEl) contentEl.textContent = announcement.content || '';
+        
+        // Update date
+        const dateEl = document.getElementById('announceDate');
+        if (dateEl) dateEl.textContent = formatDate(announcement.datePosted);
+        
+        // Update image if exists
+        const imageEl = document.getElementById('announceImage');
+        if (announcement.image) {
+            if (imageEl) {
+                imageEl.src = announcement.image;
+                imageEl.style.display = 'block';
+            }
+        } else if (imageEl) {
+            imageEl.style.display = 'none';
+        }
+        
+        // Update badge
+        const badge = document.getElementById('announceBadge');
+        if (badge) {
+            badge.style.display = 'inline-block';
+            badge.textContent = 'NEW';
+        }
+        
+        // Add visual feedback
+        if (announceBox) {
+            announceBox.classList.add('new-content');
+            setTimeout(() => announceBox.classList.remove('new-content'), 3000);
+        }
+        
+        return true;
+    }
+
+    function updateActivityLogs(logs) {
+        if (!logs || logs.length === 0) return false;
+        
+        // Check if first activity changed
+        const newFirstActivity = logs[0]?.details;
+        if (newFirstActivity === lastActivityId) return false;
+        
+        lastActivityId = newFirstActivity;
+        
+        const activityList = document.getElementById('activityList');
+        if (!activityList) return false;
+        
+        let html = '';
+        logs.forEach(log => {
+            const time = log.timestamp ? new Date(log.timestamp).toLocaleString('en-US', {
+                month: '2-digit', day: '2-digit', year: '2-digit',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            }) : 'N/A';
+            
+            html += `
+                <div class="activity-item" style="animation: slideIn 0.3s ease-out;">
+                    <div class="activity-dot"></div>
+                    <div class="activity-info">
+                        <div class="activity-detail">
+                            ${esc(log.details || '')}
+                            <span class="activity-by"> — By ${esc(log.UserName || 'Unknown')}</span>
+                        </div>
+                        <div class="activity-time-label">${time}</div>
+                    </div>
+                </div>`;
+        });
+        
+        activityList.innerHTML = html || '<div class="no-programs">No recent activity</div>';
+        return true;
+    }
+
+    function startPolling() {
+        if (pollingInterval) clearInterval(pollingInterval);
+        initCurrentStats(); // Initialize current state
+        pollingInterval = setInterval(() => pollDashboard(false), 5000); // Poll every 5 seconds
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return `${months[date.getMonth()]} ${String(date.getDate()).padStart(2, '0')}, ${date.getFullYear()}`;
+    }
+
+    // ============================================
+    // CHARTS
+    // ============================================
     window.onload = function () {
         const status = document.getElementById('accountStatus').value;
         if (status === 'New' || status === 'Newly Updated') {
@@ -486,11 +975,15 @@
         }
         initCalendar();
         loadUpcomingPrograms();
+        trackModalState();
 
         const role = document.getElementById('dataCurrentRole').value;
         if (role === 'ADMIN' || role === 'BARANGAY-CAPTAIN' || role === 'SECRETARY') {
             initCharts();
         }
+
+        // Start polling after initial load
+        startPolling();
     };
 
     function redirectToPassword() { window.location.href = '/user-profile'; }
@@ -502,11 +995,20 @@
         const pending    = parseInt(document.getElementById('dataPending').value)    || 0;
         const allReports = parseInt(document.getElementById('dataAllReports').value) || 0;
 
+        createCharts(resolved, unresolved, pending, allReports);
+    }
+
+    function createCharts(resolved, unresolved, pending, allReports) {
         Chart.defaults.font.family = 'Arial, sans-serif';
         Chart.defaults.font.size   = 11;
 
+        // Destroy existing charts if any
+        if (chartInstances.incidentDonut) chartInstances.incidentDonut.destroy();
+        if (chartInstances.rateChart) chartInstances.rateChart.destroy();
+        if (chartInstances.workloadChart) chartInstances.workloadChart.destroy();
+
         // ── 1. Incident breakdown donut ───────────────────────
-        new Chart(document.getElementById('incidentDonut'), {
+        chartInstances.incidentDonut = new Chart(document.getElementById('incidentDonut'), {
             type: 'doughnut',
             data: {
                 labels: ['Resolved', 'Unresolved'],
@@ -540,7 +1042,7 @@
         document.getElementById('rateSubLabel').textContent =
             resolved + ' of ' + total + ' resolved';
 
-        new Chart(document.getElementById('rateChart'), {
+        chartInstances.rateChart = new Chart(document.getElementById('rateChart'), {
             type: 'doughnut',
             data: {
                 labels: ['Resolved', 'Remaining'],
@@ -559,8 +1061,7 @@
         });
 
         // ── 3. Workload snapshot horizontal bar ───────────────
-        // Only uses real data: pending docs, blotter count, total reports
-        new Chart(document.getElementById('workloadChart'), {
+        chartInstances.workloadChart = new Chart(document.getElementById('workloadChart'), {
             type: 'bar',
             data: {
                 labels: ['Pending Docs', 'Total Incidents'],
@@ -596,6 +1097,10 @@
                 }
             }
         });
+    }
+
+    function updateCharts(resolved, unresolved, pending, allReports) {
+        createCharts(resolved, unresolved, pending, allReports);
     }
 
     // ── Dynamic Calendar ──────────────────────────────────────
@@ -711,6 +1216,11 @@
         return str.replace(/&/g,'&amp;').replace(/</g,'&lt;')
                   .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
+
+    // Clean up polling on page unload
+    window.addEventListener('beforeunload', function() {
+        if (pollingInterval) clearInterval(pollingInterval);
+    });
 
 </script>
 

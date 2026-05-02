@@ -335,6 +335,39 @@
         border-radius: 8px; text-align: center; margin: 15% auto;
     }
     
+    /* Success Toast Modal */
+    .success-toast-modal .modal-content {
+        background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+    }
+    .success-toast-modal .modal-header {
+        background: transparent;
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .success-toast-modal .modal-body {
+        text-align: center;
+        padding: 20px;
+    }
+    .success-toast-modal .modal-footer {
+        border-top: none;
+        justify-content: center;
+        padding-top: 0;
+        background: transparent;
+    }
+    .success-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
+    .success-toast-modal {
+        z-index: 10600 !important;
+    }
+    .success-toast-modal + .modal-backdrop {
+        z-index: 10590 !important;
+    }
+    
     /* Resolution Modal Styles */
     #resolutionModal textarea, #resolutionModal input {
         border: 1px solid #d0d5dd;
@@ -471,7 +504,8 @@
 <title>Safety Reports</title>
 </head>
 <body>
-
+    <script src="/js/notif.js"></script>
+<div class="toast-container" id="toastContainer"></div>
 <div class="layout">
 
 <!-- Lock Modal -->
@@ -481,6 +515,24 @@
         <h2>🔒First Login Detected</h2>
         <p>You must change your password before using the system.</p>
         <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+               
+            </div>
+            <div class="modal-body">
+                <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <h5 id="successMessage">Success!</h5>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" id="successOkBtn">OK</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -551,7 +603,7 @@
         <div id="tab-incoming" class="panel-inner" th:classappend="${currentTab != 'incoming' ? 'd-none' : ''}">
             <div class="panel-header">Incoming Safety Reports</div>
             <div class="panel-content">
-                <table class="table table-bordered table-hover mb-0" id="incoming-table">
+            <table class="table table-bordered table-hover mb-0" id="incoming-table">
                     <thead>
                         <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date</th><th>Actions</th></tr>
                     </thead>
@@ -571,11 +623,11 @@
                             <td>
                                 <div class="d-flex gap-2">
                                     <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
-                                    <button class="approve-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'APPROVED\')'">Approve</button>
+                                    <button class="approve-btn" th:onclick="'updateStatusWithSuccess(' + ${report.id} + ', \'APPROVED\')'">Approve</button>
                                     <button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button>
                                 </div>
-                             </td>
-                        </tr>
+                              </nav>
+                          </tr>
                     </tbody>
                 </table>
                 <div class="text-center p-4" th:if="${#lists.isEmpty(incomingReports)}">
@@ -592,13 +644,13 @@
                     <thead><tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date</th><th>Actions</th></tr></thead>
                     <tbody id="approved-tbody">
                         <tr th:each="report : ${approvedReports}" th:if="${not #lists.isEmpty(approvedReports)}" th:attr="data-id=${report.id}">
-                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></td>
-                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
-                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
-                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
-                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="process-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'IN_PROGRESS\')'">Process</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></td>
-                        </tr>
+                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></nav>
+                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></nav>
+                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></nav>
+                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></nav>
+                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></nav>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="process-btn" th:onclick="'updateStatusWithSuccess(' + ${report.id} + ', \'IN_PROGRESS\')'">Process</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></nav>
+                          </td>
                     </tbody>
                 </table>
                 <div class="text-center p-4" th:if="${#lists.isEmpty(approvedReports)}"><p class="text-muted">No approved reports</p></div>
@@ -613,15 +665,15 @@
                     <thead><tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date</th><th>Actions</th></tr></thead>
                     <tbody id="inprogress-tbody">
                         <tr th:each="report : ${inProgressReports}" th:if="${not #lists.isEmpty(inProgressReports)}" th:attr="data-id=${report.id}">
-                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></td>
-                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
-                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
-                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
-                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'openResolutionModal(' + ${report.id} + ')'">Resolve</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></td>
-                        </tr>
+                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></nav>
+                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></nav>
+                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></nav>
+                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></nav>
+                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></nav>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'openResolutionModal(' + ${report.id} + ')'">Resolve</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></nav>
+                          </tr>
                     </tbody>
-                </table>
+                <table>
                 <div class="text-center p-4" th:if="${#lists.isEmpty(inProgressReports)}"><p class="text-muted">No in progress reports</p></div>
             </div>
         </div>
@@ -636,14 +688,14 @@
                     </thead>
                     <tbody id="resolved-tbody">
                         <tr th:each="report : ${resolvedReports}" th:if="${not #lists.isEmpty(resolvedReports)}" th:attr="data-id=${report.id}">
-                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></td>
-                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
-                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
-                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
-                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
-                            <td><span th:if="${report.resolvedBy != null}" class="resolved-by-badge"><i class="bi bi-person-check"></i> <span th:text="${report.resolvedBy}"></span></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></td>
-                        </tr>
+                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></nav>
+                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></nav>
+                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></nav>
+                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></nav>
+                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></nav>
+                            <td><span th:if="${report.resolvedBy != null}" class="resolved-by-badge"><i class="bi bi-person-check"></i> <span th:text="${report.resolvedBy}"></span></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></nav>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></nav>
+                          </tr>
                     </tbody>
                 </table>
                 <div class="text-center p-4" th:if="${#lists.isEmpty(resolvedReports)}"><p class="text-muted">No resolved reports</p></div>
@@ -654,20 +706,20 @@
         <div id="tab-archive" class="panel-inner" th:classappend="${currentTab != 'archive' ? 'd-none' : ''}">
             <div class="panel-header">Archived Safety Reports</div>
             <div class="panel-content">
-                <table class="table table-bordered table-hover mb-0" id="archive-table">
+                    <table class="table table-bordered table-hover mb-0" id="archive-table">
                     <thead>
                         <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date</th><th>Resolved By</th><th>Actions</th></tr>
                     </thead>
                     <tbody id="archive-tbody">
                         <tr th:each="report : ${archivedReports}" th:if="${not #lists.isEmpty(archivedReports)}" th:attr="data-id=${report.id}">
-                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></td>
-                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
-                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
-                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
-                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
-                            <td><span th:if="${report.resolvedBy != null}" class="resolved-by-badge"><i class="bi bi-person-check"></i> <span th:text="${report.resolvedBy}"></span></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button></div></td>
-                        </tr>
+                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></nav>
+                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></nav>
+                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></nav>
+                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></nav>
+                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></nav>
+                            <td><span th:if="${report.resolvedBy != null}" class="resolved-by-badge"><i class="bi bi-person-check"></i> <span th:text="${report.resolvedBy}"></span></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></nav>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button></div></nav>
+                          </tr>
                     </tbody>
                 </table>
                 <div class="text-center p-4" th:if="${#lists.isEmpty(archivedReports)}"><p class="text-muted">No archived reports</p></div>
@@ -691,7 +743,6 @@
             <div class="modal-body" id="viewModalBody"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <!-- Approve button inside modal for incoming reports -->
                 <button type="button" class="btn btn-success" id="modalApproveBtn" style="display: none;" onclick="modalApproveAction()">Approve Report</button>
             </div>
         </div>
@@ -746,21 +797,46 @@
     let pendingArchiveId = null;
     let currentModalReportId = null;
     let currentModalReportStatus = null;
+    let isAnyModalOpen = false;
+    let pollingInterval = null;
+    let lastSeenId = 0;
+
+    // ============================================
+    // SUCCESS MODAL WITH RELOAD ON OK
+    // ============================================
+    function showSuccessWithReload(message) {
+        document.getElementById('successMessage').innerHTML = message;
+        const successModalEl = document.getElementById('successModal');
+        const successModal = new bootstrap.Modal(successModalEl);
+        
+        const okButton = document.getElementById('successOkBtn');
+        const newOkButton = okButton.cloneNode(true);
+        okButton.parentNode.replaceChild(newOkButton, okButton);
+        
+        newOkButton.onclick = function() {
+            successModal.hide();
+            window.location.reload();
+        };
+        
+        successModal.show();
+    }
 
     // Archive Confirmation Functions
     function confirmArchive(id) {
         pendingArchiveId = id;
         document.getElementById('archiveConfirmModal').style.display = 'flex';
+        updateModalState(true);
     }
     
     function closeArchiveConfirm() {
         pendingArchiveId = null;
         document.getElementById('archiveConfirmModal').style.display = 'none';
+        updateModalState(false);
     }
     
     document.getElementById('confirmArchiveBtn').addEventListener('click', function() {
         if (pendingArchiveId) {
-            updateStatus(pendingArchiveId, 'ARCHIVED');
+            updateStatusWithSuccess(pendingArchiveId, 'ARCHIVED');
             closeArchiveConfirm();
         }
     });
@@ -812,7 +888,31 @@
         });
     });
     
-    // Updated viewReport with Approve button inside modal for incoming status
+    function updateStatusWithSuccess(id, status) {
+        let statusText = '';
+        switch(status) {
+            case 'APPROVED': statusText = 'approved'; break;
+            case 'IN_PROGRESS': statusText = 'moved to In Progress'; break;
+            case 'ARCHIVED': statusText = 'archived'; break;
+            default: statusText = 'updated';
+        }
+        fetch('/safety-reports/' + id + '/status?status=' + status, { 
+            method: 'PUT', 
+            headers: { 'Content-Type': 'application/json' } 
+        })
+        .then(response => { 
+            if (response.ok) {
+                showSuccessWithReload(`Report ${statusText} successfully!`);
+            } else {
+                alert('Error updating status');
+            }
+        });
+    }
+    
+    function updateStatus(id, status) {
+        updateStatusWithSuccess(id, status);
+    }
+    
     function viewReport(id) {
         currentModalReportId = id;
         fetch('/safety-reports/' + id)
@@ -838,7 +938,6 @@
                     <div class="detail-card"><div class="detail-card-header"><div class="detail-avatar">📍</div><div class="detail-header-info"><div class="detail-card-title">Incident Location</div><div class="detail-sub">📍 ${escapeHtml(data.location || 'No address provided')}</div></div></div>${hasLocation ? '<div id="viewMap"></div>' : '<div style="height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#aaa;gap:6px;margin-bottom:12px;">🗺️ <span style="font-size:13px;">No location coordinates</span></div>'}</div>
                     <div class="detail-card"><div class="detail-card-header"><div class="detail-avatar">📄</div><div class="detail-header-info"><div class="detail-card-title">Description</div><div class="detail-value">${escapeHtml(data.title) || 'Untitled'}</div></div><span class="badge-priority ${priorityClass}" style="margin-left:8px">${data.priority || 'N/A'}</span><span style="background-color:${getStatusColor(data.status)};color:white;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;margin-left:6px">${data.status || 'Pending'}</span></div><p class="detail-description">${escapeHtml(data.description) || 'No description provided.'}</p><div class="detail-date-row"><span>Reported on: ${data.dateSubmitted || 'N/A'}</span>${data.resolvedBy ? `<span><i class="bi bi-person-check"></i> Resolved by: ${escapeHtml(data.resolvedBy)}</span>` : ''}</div>${data.resolutionActions ? `<div class="detail-date-row"><strong>Actions Taken:</strong><br>${escapeHtml(data.resolutionActions)}</div>` : ''}${data.resolutionResponseTime ? `<div class="detail-date-row"><strong>Response Time:</strong> ${escapeHtml(data.resolutionResponseTime)}</div>` : ''}${data.resolutionNotes ? `<div class="detail-date-row"><strong>Additional Notes:</strong><br>${escapeHtml(data.resolutionNotes)}</div>` : ''}</div>
                 `;
-                // Show/hide approve button based on status
                 const approveBtn = document.getElementById('modalApproveBtn');
                 if (data.status === 'INCOMING') {
                     approveBtn.style.display = 'inline-block';
@@ -868,7 +967,7 @@
     
     function modalApproveAction() {
         if (currentModalReportId && currentModalReportStatus === 'INCOMING') {
-            updateStatus(currentModalReportId, 'APPROVED');
+            updateStatusWithSuccess(currentModalReportId, 'APPROVED');
             const modalEl = document.getElementById('viewReportModal');
             const modal = bootstrap.Modal.getInstance(modalEl);
             if (modal) modal.hide();
@@ -880,11 +979,6 @@
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
-    }
-    
-    function updateStatus(id, status) {
-        fetch('/safety-reports/' + id + '/status?status=' + status, { method: 'PUT', headers: { 'Content-Type': 'application/json' } })
-            .then(response => { if (response.ok) window.location.reload(); else alert('Error updating status'); });
     }
     
     function viewResolutionDetails(id) {
@@ -933,27 +1027,127 @@
         const resolutionData = { actions: document.getElementById('resolutionActions').value, notes: document.getElementById('resolutionNotes').value, responseTime: document.getElementById('resolutionResponseTime').value };
         fetch('/safety-reports/' + pendingResolveId + '/resolution', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(resolutionData) })
             .then(response => { if (response.ok) return fetch('/safety-reports/' + pendingResolveId + '/status?status=RESOLVED', { method: 'PUT', headers: { 'Content-Type': 'application/json' } }); else throw new Error('Failed to save resolution'); })
-            .then(response => { if (response.ok) window.location.reload(); else alert('Error updating status'); })
+            .then(response => { if (response.ok) showSuccessWithReload('Report resolved successfully!'); else alert('Error updating status'); })
             .catch(error => { console.error(error); alert('Error saving resolution'); });
     });
     
     function exportToPDF() { const { jsPDF } = window.jspdf; const doc = new jsPDF(); const activePanel = document.querySelector('.panel-inner:not(.d-none)'); const title = activePanel.querySelector('.panel-header').innerText; doc.text(title, 14, 15); doc.autoTable({ html: activePanel.querySelector('table'), startY: 20, margin: { top: 20 } }); doc.save(title.replace(/\s+/g, '_') + '.pdf'); }
     function redirectToPassword() { window.location.href = '/user-profile'; }
     
-    let lastSeenId = 0, pollingInterval = null;
-    function initLastSeenId() { let maxId = 0; document.querySelectorAll('.panel-inner tbody tr').forEach(row => { const viewBtn = row.querySelector('.view-btn'); if (viewBtn && viewBtn.getAttribute('onclick')) { const match = viewBtn.getAttribute('onclick').match(/viewReport\((\d+)\)/); if (match && match[1]) maxId = Math.max(maxId, parseInt(match[1])); } }); lastSeenId = maxId; }
-    async function pollReports() { try { const response = await fetch('/safety-reports/api/poll?lastId=' + lastSeenId + '&t=' + Date.now()); if (!response.ok) return; const data = await response.json(); if (data.counts) { const badges = ['incoming', 'approved', 'inprogress', 'resolved', 'archive']; badges.forEach(badge => { const el = document.getElementById('badge-' + badge); if (el) el.textContent = data.counts[badge] || 0; }); } if (data.newReports && data.newReports.length > 0) { lastSeenId = Math.max(lastSeenId, ...data.newReports.map(r => r.id)); window.location.reload(); } } catch (error) { console.error("Polling error:", error); } }
-    function startPolling() { if (pollingInterval) clearInterval(pollingInterval); pollingInterval = setInterval(pollReports, 5000); }
+    // Enhanced modal state tracking
+    function updateModalState(isOpen) {
+        isAnyModalOpen = isOpen;
+    }
+    
+    function initLastSeenId() { 
+        let maxId = 0; 
+        document.querySelectorAll('.panel-inner tbody tr').forEach(row => { 
+            const viewBtn = row.querySelector('.view-btn'); 
+            if (viewBtn && viewBtn.getAttribute('onclick')) { 
+                const match = viewBtn.getAttribute('onclick').match(/viewReport\((\d+)\)/); 
+                if (match && match[1]) maxId = Math.max(maxId, parseInt(match[1])); 
+            } 
+        }); 
+        lastSeenId = maxId; 
+    }
+
+    // Comprehensive modal tracking for all Bootstrap modals and custom overlays
+    function trackAllModals() {
+        // Track Bootstrap modals
+        const bootstrapModals = ['viewReportModal', 'resolutionModal', 'viewResolutionModal', 'successModal'];
+        bootstrapModals.forEach(modalId => {
+            const modalEl = document.getElementById(modalId);
+            if (modalEl) {
+                modalEl.addEventListener('show.bs.modal', () => updateModalState(true));
+                modalEl.addEventListener('hidden.bs.modal', () => updateModalState(false));
+            }
+        });
+        
+        // Track custom archive modal
+        const archiveModal = document.getElementById('archiveConfirmModal');
+        if (archiveModal) {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                        updateModalState(archiveModal.style.display === 'flex');
+                    }
+                });
+            });
+            observer.observe(archiveModal, { attributes: true, attributeFilter: ['style'] });
+        }
+        
+        // Track force password modal
+        const forceModal = document.getElementById('forcePasswordModal');
+        if (forceModal) {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                        updateModalState(forceModal.style.display === 'block');
+                    }
+                });
+            });
+            observer.observe(forceModal, { attributes: true, attributeFilter: ['style'] });
+        }
+        
+        // Track any backdrop elements that might indicate modal is open
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.modal') && !isAnyModalOpen) {
+                updateModalState(true);
+            }
+        });
+    }
+
+    async function pollReports() { 
+    // Don't reload if any modal is open
+        if (isAnyModalOpen) return;
+        
+        try { 
+            const response = await fetch('/safety-reports/api/poll?lastId=' + lastSeenId + '&t=' + Date.now()); 
+            if (!response.ok) return; 
+            const data = await response.json(); 
+            
+            // Store old badge values to compare
+            const oldIncoming = document.getElementById('badge-incoming')?.textContent || '0';
+            
+            // Update badge counts
+            if (data.counts) { 
+                ['incoming', 'approved', 'inprogress', 'resolved', 'archive'].forEach(function(badge) { 
+                    var el = document.getElementById('badge-' + badge); 
+                    if (el) el.textContent = data.counts[badge] || 0; 
+                }); 
+            }
+            
+            const newIncoming = document.getElementById('badge-incoming')?.textContent || '0';
+            
+            // RELOAD if incoming count increased OR server reports new reports
+            if (parseInt(newIncoming) > parseInt(oldIncoming) || (data.newReports && data.newReports.length > 0)) {
+                window.location.reload();
+            }
+        } catch (error) { 
+            console.error("Polling error:", error); 
+        } 
+    }
+    
+    function startPolling() { 
+        if (pollingInterval) clearInterval(pollingInterval); 
+        pollingInterval = setInterval(pollReports, 5000); 
+    }
+    
     document.addEventListener('DOMContentLoaded', function() {
-        const status = document.getElementById('accountStatus');
+        var status = document.getElementById('accountStatus');
         if (status && (status.value === 'New' || status.value === 'Newly Updated')) {
             document.getElementById('forcePasswordModal').style.display = 'block';
             document.body.style.overflow = 'hidden';
+            updateModalState(true);
         }
+        trackAllModals();
         initLastSeenId();
         startPolling();
     });
-    window.addEventListener('beforeunload', function() { if (pollingInterval) clearInterval(pollingInterval); });
+    
+    window.addEventListener('beforeunload', function() { 
+        if (pollingInterval) clearInterval(pollingInterval); 
+    });
 </script>
 
 </body>

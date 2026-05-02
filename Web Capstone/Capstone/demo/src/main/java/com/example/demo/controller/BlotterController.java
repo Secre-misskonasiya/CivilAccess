@@ -32,7 +32,8 @@ public class BlotterController {
             if (admin != null) {
                 model.addAttribute("currentUser", admin.getName());
                 model.addAttribute("currentrole", admin.getRole());
-            } else {
+            } 
+            else {
                 model.addAttribute("currentUser", username);
                 model.addAttribute("currentrole", "USER");
             }
@@ -46,7 +47,7 @@ public class BlotterController {
         model.addAttribute("archivedBlotters",   service.getByStatus("ARCHIVE"));
         return "Requests-Blotter";
     }
-
+    
     @PostMapping("/{id}/process")
     public String processBlotter(@PathVariable Long id, Principal principal) {
         service.updateStatus(id, "PROCESSING", getCurrentUserName(principal));

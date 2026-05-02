@@ -147,6 +147,8 @@
 <title>Accounts</title>
 </head>
 <body>
+<script src="/js/notif.js"></script>
+<div class="toast-container" id="toastContainer"></div>
 
 <div class="layout">
 
@@ -315,7 +317,7 @@
                 <table class="table table-bordered table-hover mb-0" id="resident-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>Resident ID</th>
                             <th>First Name</th>
                             <th>Last Name</th>
                             <th>Gender</th>
@@ -1424,41 +1426,63 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
         arrow.classList.toggle('open', !isOpen);
     }
 
-// ============================================
-// SIMPLE POLLING - Reload when ANY change detected
-// ============================================
+console.log("=== POLLING SCRIPT STARTED ===");
 
-let lastPageLoadTime = Date.now();
-let pollingInterval = null;
-
-async function pollForChanges() {
-    try {
-        const response = await fetch('/accounts/api/poll?t=' + Date.now());
-        if (!response.ok) return;
-        const data = await response.json();
-        
-        // Store current timestamps to compare
-        if (data.lastModified) {
-            if (data.lastModified > lastPageLoadTime) {
-                console.log('Changes detected, reloading...');
-                location.reload();
-            }
+(function() {
+    var lastDataSnapshot = '';
+    
+    function checkModals() {
+        var ids = ['accountModal','viewModal','residentModal','confirmModal','residentViewModal','verifyModal','sendPasswordModal','imageEnlargeModal','forcePasswordModal','logoutModal'];
+        for (var i = 0; i < ids.length; i++) {
+            var m = document.getElementById(ids[i]);
+            if (m && (m.style.display === 'block' || m.style.display === 'flex')) return true;
         }
-    } catch (error) {
-        console.error("Polling error:", error);
+        return false;
     }
-}
-
-function startPolling() {
-    if (pollingInterval) clearInterval(pollingInterval);
-    pollingInterval = setInterval(pollForChanges, 5000);
-}
-
-// Start polling
-startPolling();
-
+    
+    function poll() {
+        if (checkModals()) {
+            console.log("[Poll] Modal open, skipped");
+            return;
+        }
+        
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/accounts/api/poll?t=' + Date.now(), true);
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    
+                    // Create a snapshot of the data (ignore lastModified for comparison)
+                    var snapshot = JSON.stringify({
+                        employees: data.employeeAccounts ? data.employeeAccounts.length : 0,
+                        archivedEmployees: data.archivedEmployeeAccounts ? data.archivedEmployeeAccounts.length : 0,
+                        residents: data.residentAccounts ? data.residentAccounts.length : 0,
+                        archivedResidents: data.archivedResidentAccounts ? data.archivedResidentAccounts.length : 0
+                    });
+                    
+                    if (lastDataSnapshot === '') {
+                        // First poll - store baseline
+                        lastDataSnapshot = snapshot;
+                        console.log("[Poll] Baseline set: " + snapshot);
+                    } else if (snapshot !== lastDataSnapshot) {
+                        console.log("[Poll] CHANGE DETECTED! Old: " + lastDataSnapshot + " New: " + snapshot);
+                        location.reload();
+                    }
+                } catch(e) {
+                    console.log("[Poll] Error: " + e.message);
+                }
+            }
+        };
+        xhr.onerror = function() { console.log("[Poll] Network error"); };
+        xhr.send();
+    }
+    
+    console.log("[Poll] Running first poll...");
+    poll();
+    setInterval(poll, 5000);
+})();
 </script>
-
 <script th:inline="javascript">
     /*<![CDATA[*/
     const rawEmails    = /*[[${emailList}]]*/ [];

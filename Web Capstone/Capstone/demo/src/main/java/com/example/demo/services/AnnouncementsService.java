@@ -33,4 +33,8 @@ public class AnnouncementsService {
             .findTopByStatusNotIgnoreCaseOrderByDatePostedDesc("ARCHIVED")
             .orElse(null);
     }
+
+    public long countActive() {
+        return repository.countByStatusNotIgnoreCase("ARCHIVED");
+    }
 }

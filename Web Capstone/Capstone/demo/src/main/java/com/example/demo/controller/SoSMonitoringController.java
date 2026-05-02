@@ -60,7 +60,9 @@ public class SoSMonitoringController {
         if (!allowedRoles.contains(role)) return "redirect:/home";
 
         int pageSize = 10;
-
+            if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+                return "redirect:/logout";
+            }
         // Get all counts for badges
         model.addAttribute("incomingCount",   sosReportsService.countByStatus("INCOMING"));
         model.addAttribute("processingCount", sosReportsService.countByStatus("PROCESSING"));
@@ -248,47 +250,61 @@ public class SoSMonitoringController {
     }
 
     @PutMapping("/{id}/status")
-    @ResponseBody
-    public ResponseEntity<?> updateStatus(
-            @PathVariable Long id,
-            @RequestParam String status,
-            @RequestParam(required = false) String responderName,
-            Principal principal,
-            HttpServletRequest request) {
+        @ResponseBody
+        public ResponseEntity<?> updateStatus(
+                @PathVariable Long id,
+                @RequestParam String status,
+                @RequestParam(required = false) String responderName,
+                Principal principal,
+                HttpServletRequest request) {
 
-        SosReports report = sosReportsService.getReportById(id);
-        if (report == null) {
-            activityLogService.log(
-                    principal.getName(), "ADMIN", "UPDATED", "SosReports",
-                    "Attempted to update status of SOS report ID: " + id + " — not found",
+            SosReports report = sosReportsService.getReportById(id);
+            if (report == null) {
+                activityLogService.log(
+                    principal.getName(), "ADMIN", "UPDATED", "SOS Monitoring",
+                    "Tried to update SOS report #" + id + " but it was not found",
                     request.getRemoteAddr(), "Failed"
-            );
-            return ResponseEntity.notFound().build();
-        }
+                );
+                return ResponseEntity.notFound().build();
+            }
 
-        String previousStatus = report.getStatus();
-        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+            AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
 
-        report.setStatus(status);
+            // Set the new status
+            report.setStatus(status);
 
-        if ("PROCESSING".equals(status) && responderName != null && !responderName.isEmpty()) {
-            report.setResponderName(responderName);
-        }
+            // Set timestamps and responder based on status
+            switch (status) {
+                case "PROCESSING" -> {
+                    if (responderName != null && !responderName.isEmpty()) {
+                        report.setResponderName(responderName);
+                    }
+                }
+                case "RESOLVED" -> {
+                    report.setDateResolved(LocalDateTime.now());
+                }
+            }
 
-        if ("RESOLVED".equals(status) && report.getDateResolved() == null) {
-            report.setDateResolved(LocalDateTime.now());
-        }
+            // Save the report
+            sosReportsService.saveReport(report);
 
-        sosReportsService.saveReport(report);
+            String sosActionLabel = switch (status) {
+                case "PROCESSING" -> "Dispatched a responder"
+                    + (responderName != null && !responderName.isEmpty() ? ": " + responderName : "");
+                case "RESOLVED"   -> "Marked the SOS alert as resolved";
+                case "CANCELLED"  -> "Cancelled the SOS alert";
+                case "ARCHIVED"   -> "Archived the SOS alert";
+                default           -> "Updated status to " + status;
+            };
 
-        activityLogService.log(
-                principal.getName(), admin.getRole(), "UPDATED", "SosReports",
-                "Updated status of SOS report ID: " + id + " (\"" + report.getReporterName() + "\") from " + previousStatus + " to " + report.getStatus(),
+            activityLogService.log(
+                principal.getName(), admin.getRole(), "UPDATED", "SOS Monitoring",
+                "SOS from " + report.getReporterName() + " — " + sosActionLabel,
                 request.getRemoteAddr(), "Success"
-        );
+            );
 
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Status updated successfully");
-        return ResponseEntity.ok(response);
-    }
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Status updated successfully");
+            return ResponseEntity.ok(response);
+        }
 }

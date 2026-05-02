@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,9 @@ public class AnnouncementsController {
 
         String username = principal.getName();
         AdminUser admin = adminUserService.getAdminByEmail(username);
-
+                if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+                return "redirect:/logout";
+            }
         model.addAttribute("newAdmin", new AdminUser());
         model.addAttribute("currentUser", admin.getName());
         model.addAttribute("currentrole", admin.getRole());
@@ -43,15 +46,94 @@ public class AnnouncementsController {
 
         List<Announcements> all = announcementsService.getAllAnnouncements();
 
-        model.addAttribute("announcements", all.stream()
+        // Sort active announcements: HIGH priority first, then by date newest first
+        List<Announcements> active = all.stream()
                 .filter(a -> !"ARCHIVED".equalsIgnoreCase(a.getStatus()))
-                .collect(Collectors.toList()));
-        model.addAttribute("archivedAnnouncements", all.stream()
+                .sorted(Comparator
+                    .comparing(Announcements::getPriority, 
+                        (p1, p2) -> {
+                            // HIGH priority first
+                            if ("HIGH".equals(p1) && !"HIGH".equals(p2)) return -1;
+                            if (!"HIGH".equals(p1) && "HIGH".equals(p2)) return 1;
+                            return 0;
+                        })
+                    .thenComparing(Announcements::getDatePosted, 
+                        Comparator.nullsLast(Comparator.reverseOrder()))) // newest first
+                .collect(Collectors.toList());
+
+        // Sort archived announcements: by date newest first
+        List<Announcements> archived = all.stream()
                 .filter(a -> "ARCHIVED".equalsIgnoreCase(a.getStatus()))
-                .collect(Collectors.toList()));
+                .sorted(Comparator.comparing(Announcements::getDatePosted, 
+                    Comparator.nullsLast(Comparator.reverseOrder()))) // newest first
+                .collect(Collectors.toList());
+
+        model.addAttribute("announcements", active);
+        model.addAttribute("archivedAnnouncements", archived);
         model.addAttribute("currentTab", tab);
 
         return "Announcements";
+    }
+
+    // =========================================================
+    // POLLING ENDPOINT - Sorted by date/time
+    // =========================================================
+    @GetMapping("/api/poll")
+    @ResponseBody
+    public Map<String, Object> pollAnnouncements() {
+        Map<String, Object> response = new HashMap<>();
+        
+        List<Announcements> all = announcementsService.getAllAnnouncements();
+        
+        // Active announcements - sorted: HIGH priority first, then newest date first
+        List<Announcements> active = all.stream()
+                .filter(a -> !"ARCHIVED".equalsIgnoreCase(a.getStatus()))
+                .sorted(Comparator
+                    .comparing(Announcements::getPriority, 
+                        (p1, p2) -> {
+                            if ("HIGH".equals(p1) && !"HIGH".equals(p2)) return -1;
+                            if (!"HIGH".equals(p1) && "HIGH".equals(p2)) return 1;
+                            return 0;
+                        })
+                    .thenComparing(Announcements::getDatePosted, 
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .collect(Collectors.toList());
+        
+        // Archived announcements - sorted: newest date first
+        List<Announcements> archived = all.stream()
+                .filter(a -> "ARCHIVED".equalsIgnoreCase(a.getStatus()))
+                .sorted(Comparator.comparing(Announcements::getDatePosted, 
+                    Comparator.nullsLast(Comparator.reverseOrder())))
+                .collect(Collectors.toList());
+        
+        response.put("activeAnnouncements", active.stream().map(a -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", a.getId());
+            map.put("title", a.getTitle());
+            map.put("content", a.getContent());
+            map.put("priority", a.getPriority());
+            map.put("datePosted", a.getDatePosted() != null ? a.getDatePosted().toString() : null);
+            map.put("image", a.getImage());
+            map.put("status", a.getStatus());
+            return map;
+        }).collect(Collectors.toList()));
+        
+        response.put("archivedAnnouncements", archived.stream().map(a -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", a.getId());
+            map.put("title", a.getTitle());
+            map.put("content", a.getContent());
+            map.put("priority", a.getPriority());
+            map.put("datePosted", a.getDatePosted() != null ? a.getDatePosted().toString() : null);
+            map.put("image", a.getImage());
+            map.put("status", a.getStatus());
+            return map;
+        }).collect(Collectors.toList()));
+        
+        response.put("activeCount", active.size());
+        response.put("archivedCount", archived.size());
+        
+        return response;
     }
 
     @GetMapping("/{id}")
@@ -90,7 +172,7 @@ public class AnnouncementsController {
 
         activityLogService.log(
             admin.getName(), admin.getRole(), "UPDATED", "Announcements",
-            truncate("Updated priority of announcement '" + a.getTitle() + "' to " + priority),
+            truncate("Changed priority of \"" + a.getTitle() + "\" to " + priority),
             request.getRemoteAddr(), "Success"
         );
 
@@ -115,7 +197,7 @@ public class AnnouncementsController {
 
         activityLogService.log(
             admin.getName(), admin.getRole(), "CREATED", "Announcements",
-            truncate("Created announcement: " + saved.getTitle()),
+            truncate("Posted a new announcement: \"" + saved.getTitle() + "\""),
             request.getRemoteAddr(), "Success"
         );
 
@@ -143,7 +225,7 @@ public class AnnouncementsController {
 
         activityLogService.log(
             admin.getName(), admin.getRole(), "UPDATED", "Announcements",
-            truncate("Updated announcement: " + existing.getTitle()),
+            truncate("Edited the announcement: \"" + existing.getTitle() + "\""),
             request.getRemoteAddr(), "Success"
         );
 
@@ -166,7 +248,7 @@ public class AnnouncementsController {
 
         activityLogService.log(
             admin.getName(), admin.getRole(), "ARCHIVED", "Announcements",
-            truncate("Archived announcement: " + a.getTitle()),
+            truncate("Archived the announcement: \"" + a.getTitle() + "\""),
             request.getRemoteAddr(), "Success"
         );
 
@@ -189,7 +271,7 @@ public class AnnouncementsController {
 
         activityLogService.log(
             admin.getName(), admin.getRole(), "RESTORED", "Announcements",
-            truncate("Restored announcement: " + a.getTitle()),
+            truncate("Restored the announcement: \"" + a.getTitle() + "\""),
             request.getRemoteAddr(), "Success"
         );
 

@@ -47,6 +47,11 @@ public class SystemSettingsController {
     public String settingsPage(Principal principal, Model model) {
         AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
         if (admin != null) {
+            // 🔴 Check if user is archived - redirect to home
+            if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+                return "redirect:/logout";
+            }
+            
             model.addAttribute("currentUser",    admin.getName());
             model.addAttribute("currentrole",    admin.getRole());
             model.addAttribute("currentstatus",  admin.getEmpstatus());
@@ -76,9 +81,13 @@ public class SystemSettingsController {
             Principal principal,
             HttpServletRequest request) {
 
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+        if (admin == null || "Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+            return ResponseEntity.status(403).body("Account archived");
+        }
+        
         settingsService.saveAll(body);
 
-        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
         activityLogService.log(
             admin.getName(), admin.getRole(), "UPDATED", "System Settings",
             "Updated notification settings",
@@ -95,9 +104,13 @@ public class SystemSettingsController {
             Principal principal,
             HttpServletRequest request) {
 
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+        if (admin == null || "Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+            return ResponseEntity.status(403).body("Account archived");
+        }
+        
         settingsService.saveAll(body);
 
-        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
         activityLogService.log(
             admin.getName(), admin.getRole(), "UPDATED", "System Settings",
             "Updated role permissions",
@@ -113,12 +126,17 @@ public class SystemSettingsController {
             Principal principal,
             HttpServletRequest request) {
 
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+        if (admin == null || "Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+            return ResponseEntity.status(403).body("Account archived");
+        }
+        
         List<AdminUser> admins = adminUserRepository.findAll();
         int sent = 0;
-        for (AdminUser admin : admins) {
-            if (!"Archived".equalsIgnoreCase(admin.getEmpstatus()) && admin.getEmail() != null) {
+        for (AdminUser a : admins) {
+            if (!"Archived".equalsIgnoreCase(a.getEmpstatus()) && a.getEmail() != null) {
                 try {
-                    emailService.sendTestAlert(admin.getEmail(), admin.getName());
+                    emailService.sendTestAlert(a.getEmail(), a.getName());
                     sent++;
                 } catch (Exception e) {
                     // continue
@@ -126,7 +144,6 @@ public class SystemSettingsController {
             }
         }
 
-        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
         activityLogService.log(
             admin.getName(), admin.getRole(), "CREATED", "System Settings",
             "Sent test emergency alert to " + sent + " admin(s)",
@@ -143,6 +160,11 @@ public class SystemSettingsController {
             @Value("${spring.datasource.password}") String dbPass,
             Principal principal,
             HttpServletRequest request) {
+
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+        if (admin == null || "Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+            return ResponseEntity.status(403).build();
+        }
 
         try {
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
@@ -191,7 +213,6 @@ public class SystemSettingsController {
                 }
             }
 
-            AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
             activityLogService.log(
                 admin.getName(), admin.getRole(), "CREATED", "System Settings",
                 "Generated database backup: " + filename,
@@ -207,7 +228,6 @@ public class SystemSettingsController {
         } catch (Exception e) {
             e.printStackTrace();
 
-            AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
             activityLogService.log(
                 admin != null ? admin.getName() : principal.getName(),
                 admin != null ? admin.getRole() : "ADMIN",

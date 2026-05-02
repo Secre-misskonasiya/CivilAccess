@@ -30,7 +30,9 @@ public class UserProfileController {
         List<String> emails = new java.util.ArrayList<>();
         List<String> usernames = new java.util.ArrayList<>();
         List<String> phones = new java.util.ArrayList<>();
-        
+        if ("Archived".equalsIgnoreCase(currentAdmin.getEmpstatus())) {
+                return "redirect:/logout";
+            }
         for (AdminUserDTO a : allAdmins) {
             if (a.email() != null && !a.email().equalsIgnoreCase(currentAdmin.getEmail())) {
                 emails.add(a.email());

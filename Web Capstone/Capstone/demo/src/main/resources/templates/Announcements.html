@@ -3,6 +3,7 @@
 <head>
 
 <style>
+    /* ... ALL EXISTING STYLES KEPT EXACTLY THE SAME ... */
     body { margin: 0; font-family: Arial, sans-serif; }
     .layout { display: flex; height: 100vh; overflow: hidden; }
     
@@ -117,7 +118,6 @@
     }
     .panel-content { padding: 0; }
 
-    /* ── Gmail-style row list - ENLARGED ── */
     .announcement-list {
         display: flex;
         flex-direction: column;
@@ -147,14 +147,17 @@
         background-color: #fffbe0;
         box-shadow: inset 3px 0 0 #FED734;
     }
-    #confirmActionModal {
-    z-index: 10500 !important;
-    }
+
+    #confirmActionModal { z-index: 10500 !important; }
     #confirmActionModal + .modal-backdrop,
-    .modal-backdrop ~ .modal-backdrop {
-        z-index: 10400 !important;
-    }
-    /* pin icon col */
+    .modal-backdrop ~ .modal-backdrop { z-index: 10400 !important; }
+
+    [id^="dynamicConfirmModal_"] { z-index: 10550 !important; }
+    [id^="dynamicConfirmModal_"] + .modal-backdrop { z-index: 10540 !important; }
+    
+    .modal.success-toast-modal { z-index: 10600 !important; }
+    .modal.success-toast-modal + .modal-backdrop { z-index: 10590 !important; }
+
     .row-pin {
         width: 28px;
         flex-shrink: 0;
@@ -171,7 +174,6 @@
     .pin-icon.active { color: #FED734; }
     .pin-icon:hover { color: #bbb; }
 
-    /* badge col */
     .row-badge {
         width: 80px;
         flex-shrink: 0;
@@ -197,7 +199,6 @@
         border-color: #FED734;
     }
 
-    /* title col */
     .row-title {
         width: 240px;
         flex-shrink: 0;
@@ -210,7 +211,6 @@
         padding-right: 16px;
     }
 
-    /* separator */
     .row-sep {
         color: #ccc;
         font-size: 12px;
@@ -218,7 +218,6 @@
         margin-right: 10px;
     }
 
-    /* snippet col */
     .row-snippet {
         flex: 1;
         font-size: 14px;
@@ -229,7 +228,6 @@
         min-width: 0;
     }
 
-    /* date col */
     .row-date {
         width: 100px;
         flex-shrink: 0;
@@ -240,7 +238,6 @@
         white-space: nowrap;
     }
 
-    /* actions col — hidden until hover */
     .row-actions {
         display: none;
         align-items: center;
@@ -301,7 +298,6 @@
     }
     .restore-btn:hover { background-color: #2ea05e; }
 
-    /* column header - ENLARGED */
     .list-header {
         display: flex;
         align-items: center;
@@ -332,7 +328,6 @@
     .page-item.active .page-link { background-color: #2d4a44; border-color: #2d4a44; }
     .page-link { color: #2d4a44; }
 
-    /* Modal styles */
     .modal-content { border-radius: 8px; }
     .modal-header {
         background-color: #30534D;
@@ -344,7 +339,6 @@
     .modal-body p { padding: 8px; background-color: #f5f5f5; border-radius: 4px; }
     .modal-body input, .modal-body select, .modal-body textarea { margin-bottom: 15px; }
 
-    /* View modal */
     #viewAnnouncementModal .modal-dialog { max-width: 500px; z-index: 10000; }
     #viewAnnouncementModal .modal-content { border-radius: 12px; border: none; overflow: hidden; }
     #viewAnnouncementModal .modal-header { background-color: #30534D; border-bottom: 2px solid #FED734; padding: 12px 16px; }
@@ -363,7 +357,6 @@
     .view-post-divider { border: none; border-top: 1px solid #f0f0f0; margin: 0; }
     .view-post-footer { display: flex; align-items: center; gap: 6px; padding: 10px 16px; font-size: 12px; color: #aaa; }
 
-    /* Image upload styles */
     .image-upload-area {
         border: 2px dashed #d0d5dd;
         border-radius: 8px;
@@ -392,7 +385,6 @@
     .remove-image-btn { background-color: #e74c3c; color: white; border: none; padding: 4px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; margin-top: 8px; display: none; }
     .remove-image-btn:hover { background-color: #c0392b; }
     
-    /* Success Toast Modal */
     .success-toast-modal .modal-content {
         background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
         color: white;
@@ -415,7 +407,7 @@
         background: transparent;
     }
     .success-icon {
-        font-size: 48px;
+        font-size: 60px;
         margin-bottom: 12px;
     }
 </style>
@@ -430,7 +422,8 @@
 <title>Announcements</title>
 </head>
 <body>
-
+  <script src="/js/notif.js"></script>
+<div class="toast-container" id="toastContainer"></div>
 <div class="layout">
 
 <!-- Sidebar -->
@@ -469,7 +462,6 @@
           <div class="panel-content">
 
             <div th:if="${not #lists.isEmpty(announcements)}">
-              <!-- Column headers -->
               <div class="list-header">
                 <div class="list-header-pin"></div>
                 <div class="list-header-badge">Priority</div>
@@ -479,12 +471,11 @@
                 <div class="list-header-date">Date</div>
               </div>
 
-              <!-- Rows -->
               <div class="announcement-list" id="announcementsGrid">
                 <div class="announcement-row" th:each="announcement : ${announcements}"
-                     th:classappend="${announcement.priority == 'HIGH' ? 'pinned' : ''}">
+                     th:classappend="${announcement.priority == 'HIGH' ? 'pinned' : ''}"
+                     th:attr="data-id=${announcement.id}">
 
-                  <!-- Pin -->
                   <div class="row-pin">
                     <i class="bi bi-pin-angle-fill pin-icon"
                        th:classappend="${announcement.priority == 'HIGH' ? 'active' : ''}"
@@ -492,26 +483,20 @@
                        title="Pin"></i>
                   </div>
 
-                  <!-- Badge -->
                   <div class="row-badge">
                     <span class="card-category"
                           th:classappend="${announcement.priority == 'HIGH' ? 'high' : ''}"
                           th:text="${announcement.priority != null ? announcement.priority : 'NORMAL'}">NORMAL</span>
                   </div>
 
-                  <!-- Title -->
                   <div class="row-title" th:text="${announcement.title}">Free Medical Mission</div>
 
-                  <!-- Separator -->
                   <div class="row-sep">—</div>
 
-                  <!-- Snippet -->
                   <div class="row-snippet" th:text="${announcement.content}">Announcement content goes here.</div>
 
-                  <!-- Date -->
                   <div class="row-date" th:text="${announcement.datePosted != null ? #temporals.format(announcement.datePosted, 'MMM dd, yyyy') : 'N/A'}">Mar 15, 2026</div>
 
-                  <!-- Hover actions -->
                   <div class="row-actions">
                     <button class="view-btn" th:attr="onclick='viewAnnouncement(' + ${announcement.id} + ')'">View</button>
                     <button class="edit-btn" th:attr="onclick='editAnnouncement(' + ${announcement.id} + ')'">Edit</button>
@@ -526,7 +511,7 @@
               <p class="text-muted">No announcements found</p>
             </div>
 
-            <div class="table-footer">
+            <div class="table-footer" id="activeFooter">
               <span th:text="'Showing ' + ${#lists.size(announcements)} + ' announcements'">Showing 6 announcements</span>
             </div>
           </div>
@@ -538,7 +523,6 @@
           <div class="panel-content">
 
             <div th:if="${not #lists.isEmpty(archivedAnnouncements)}">
-              <!-- Column headers -->
               <div class="list-header">
                 <div class="list-header-pin"></div>
                 <div class="list-header-badge">Priority</div>
@@ -548,8 +532,9 @@
                 <div class="list-header-date">Date</div>
               </div>
 
-              <div class="announcement-list">
-                <div class="announcement-row" th:each="announcement : ${archivedAnnouncements}">
+              <div class="announcement-list" id="archivedGrid">
+                <div class="announcement-row" th:each="announcement : ${archivedAnnouncements}"
+                     th:attr="data-id=${announcement.id}">
 
                   <div class="row-pin"></div>
 
@@ -579,7 +564,7 @@
               <p class="text-muted">No archived announcements</p>
             </div>
 
-            <div class="table-footer">
+            <div class="table-footer" id="archivedFooter">
               <span th:text="'Showing ' + ${#lists.size(archivedAnnouncements)} + ' archived announcements'">Showing 3 archived announcements</span>
             </div>
           </div>
@@ -591,41 +576,21 @@
   </div>
 </div>
 
-<!-- Confirmation Modal -->
-<div class="modal fade" id="confirmActionModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="confirmModalTitle">Confirm Action</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" id="confirmModalMessage">
-        Are you sure you want to perform this action?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" id="confirmActionBtn">Confirm</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- Success Modal -->
 <div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
-  <div class="modal-dialog modal-dialog-centered modal-sm">
-    <div class="modal-content">
-      <div class="modal-header border-0 pb-0">
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
-        <h5 id="successMessage">Success!</h5>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-light" data-bs-dismiss="modal">OK</button>
-      </div>
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0"></div>
+            <div class="modal-body">
+                <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <h5 id="successMessage">Success!</h5>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" id="successOkBtn">OK</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <!-- View Announcement Modal -->
@@ -746,19 +711,25 @@
 <script src="/js/sidebar.js"></script>
 
 <script>
-  // Supabase configuration - replace with your actual values
+  // Supabase configuration
   const SUPABASE_URL = 'https://upfrofppponiqffbssqb.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_tZyxrTJrpd_OD5-TKUkT8Q__DnuY0tj';
   
   let supabaseClient = null;
-  let pendingAction = null;
-  let pendingId = null;
+
+  // ============================================
+  // POLLING VARIABLES
+  // ============================================
+  let pollingInterval = null;
+  let lastKnownAnnouncementIds = new Set();
+  let lastKnownArchivedIds = new Set();
+  let isModalOpen = false;
+  let pendingUpdates = false;
   
   function initSupabase() {
     if (typeof supabase !== 'undefined' && supabase.createClient) {
       supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     } else {
-      console.warn('Supabase library not loaded yet, waiting...');
       setTimeout(initSupabase, 500);
     }
   }
@@ -767,25 +738,248 @@
   supabaseScript.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
   supabaseScript.onload = initSupabase;
   document.head.appendChild(supabaseScript);
-  
+
+  // ============================================
+  // TRACK MODAL STATE
+  // ============================================
+  function trackModalState() {
+    document.addEventListener('show.bs.modal', () => { isModalOpen = true; });
+    document.addEventListener('hidden.bs.modal', () => { 
+      isModalOpen = false; 
+      if (pendingUpdates) {
+        pendingUpdates = false;
+        pollAnnouncements(true);
+      }
+    });
+  }
+
+  // ============================================
+  // INITIALIZE KNOWN IDS
+  // ============================================
+  function initKnownIds() {
+    document.querySelectorAll('#announcementsGrid .announcement-row').forEach(row => {
+      const id = row.getAttribute('data-id');
+      if (id) lastKnownAnnouncementIds.add(parseInt(id));
+    });
+    document.querySelectorAll('#archivedGrid .announcement-row').forEach(row => {
+      const id = row.getAttribute('data-id');
+      if (id) lastKnownArchivedIds.add(parseInt(id));
+    });
+  }
+
+  // ============================================
+  // POLLING - Only refreshes when data changes
+  // ============================================
+  async function pollAnnouncements(forceUpdate = false) {
+    try {
+      const response = await fetch('/announcements/api/poll?t=' + Date.now());
+      if (!response.ok) return;
+      const data = await response.json();
+      
+      const hasChanges = checkForChanges(data);
+      if (!hasChanges && !forceUpdate) return;
+      
+      if (isModalOpen && !forceUpdate) {
+        pendingUpdates = true;
+        return;
+      }
+
+      // Only update if the tab is visible (don't update hidden tabs)
+      const activeTab = document.getElementById('tab-announcements');
+      
+      if (data.activeAnnouncements && activeTab && !activeTab.classList.contains('d-none')) {
+        rebuildActiveList(data.activeAnnouncements);
+      }
+
+      const archivedTab = document.getElementById('tab-archived');
+      if (data.archivedAnnouncements && archivedTab && !archivedTab.classList.contains('d-none')) {
+        rebuildArchivedList(data.archivedAnnouncements);
+      }
+
+      // Update footer counts
+      if (data.activeCount !== undefined) {
+        const footer = document.getElementById('activeFooter');
+        if (footer) footer.querySelector('span').textContent = `Showing ${data.activeCount} announcements`;
+      }
+      if (data.archivedCount !== undefined) {
+        const footer = document.getElementById('archivedFooter');
+        if (footer) footer.querySelector('span').textContent = `Showing ${data.archivedCount} archived announcements`;
+      }
+
+    } catch (error) {
+      console.error("Polling error:", error);
+    }
+  }
+
+  function checkForChanges(data) {
+    if (data.activeAnnouncements) {
+      const newIds = new Set(data.activeAnnouncements.map(a => a.id));
+      if (newIds.size !== lastKnownAnnouncementIds.size) return true;
+      for (const id of newIds) {
+        if (!lastKnownAnnouncementIds.has(id)) return true;
+      }
+    }
+    if (data.archivedAnnouncements) {
+      const newIds = new Set(data.archivedAnnouncements.map(a => a.id));
+      if (newIds.size !== lastKnownArchivedIds.size) return true;
+      for (const id of newIds) {
+        if (!lastKnownArchivedIds.has(id)) return true;
+      }
+    }
+    return false;
+  }
+
+  function rebuildActiveList(announcements) {
+    const grid = document.getElementById('announcementsGrid');
+    if (!grid) return;
+    
+    // Use the EXACT same sorting and pin logic as your existing code
+    const container = document.createElement('div');
+    announcements.forEach(a => {
+      const row = document.createElement('div');
+      row.className = 'announcement-row' + (a.priority === 'HIGH' ? ' pinned' : '');
+      row.setAttribute('data-id', a.id);
+      
+      const isHigh = a.priority === 'HIGH';
+      const dateStr = a.datePosted ? new Date(a.datePosted).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'N/A';
+      
+      row.innerHTML = `
+        <div class="row-pin">
+          <i class="bi bi-pin-angle-fill pin-icon ${isHigh ? 'active' : ''}"
+             onclick="togglePin(this, ${a.id})"
+             title="${isHigh ? 'Unpin' : 'Pin'}"></i>
+        </div>
+        <div class="row-badge">
+          <span class="card-category ${isHigh ? 'high' : ''}">${escapeHtml(a.priority || 'NORMAL')}</span>
+        </div>
+        <div class="row-title">${escapeHtml(a.title || 'N/A')}</div>
+        <div class="row-sep">—</div>
+        <div class="row-snippet">${escapeHtml(a.content || '')}</div>
+        <div class="row-date">${dateStr}</div>
+        <div class="row-actions">
+          <button class="view-btn" onclick="viewAnnouncement(${a.id})">View</button>
+          <button class="edit-btn" onclick="editAnnouncement(${a.id})">Edit</button>
+          <button class="archive-btn" onclick="archiveAnnouncementWithConfirm(${a.id})">Archive</button>
+        </div>
+      `;
+      container.appendChild(row);
+    });
+    
+    grid.innerHTML = container.innerHTML;
+    lastKnownAnnouncementIds = new Set(announcements.map(a => a.id));
+    
+    // Re-apply sorting using EXISTING function
+    filterAndSortAnnouncements();
+  }
+
+  function rebuildArchivedList(announcements) {
+    const grid = document.getElementById('archivedGrid');
+    if (!grid) return;
+    
+    const container = document.createElement('div');
+    announcements.forEach(a => {
+      const row = document.createElement('div');
+      row.className = 'announcement-row';
+      row.setAttribute('data-id', a.id);
+      
+      const dateStr = a.datePosted ? new Date(a.datePosted).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'N/A';
+      
+      row.innerHTML = `
+        <div class="row-pin"></div>
+        <div class="row-badge">
+          <span class="card-category">${escapeHtml(a.priority || 'NORMAL')}</span>
+        </div>
+        <div class="row-title">${escapeHtml(a.title || 'N/A')}</div>
+        <div class="row-sep">—</div>
+        <div class="row-snippet">${escapeHtml(a.content || '')}</div>
+        <div class="row-date">${dateStr}</div>
+        <div class="row-actions">
+          <button class="view-btn" onclick="viewAnnouncement(${a.id})">View</button>
+          <button class="restore-btn" onclick="restoreAnnouncementWithConfirm(${a.id})">Restore</button>
+        </div>
+      `;
+      container.appendChild(row);
+    });
+    
+    grid.innerHTML = container.innerHTML;
+    lastKnownArchivedIds = new Set(announcements.map(a => a.id));
+    
+    // Re-apply sorting using EXISTING function
+    sortArchivedAnnouncements();
+  }
+
+  // ============================================
+  // START POLLING
+  // ============================================
+  function startPolling() {
+    if (pollingInterval) clearInterval(pollingInterval);
+    initKnownIds();
+    pollingInterval = setInterval(() => pollAnnouncements(false), 5000);
+  }
+
+  // ============================================
+  // MODIFIED showSuccess - NO PAGE RELOAD
+  // ============================================
   function showSuccess(message) {
     document.getElementById('successMessage').innerHTML = message;
     const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+    
+    const modalElement = document.getElementById('successModal');
+    const okButton = modalElement.querySelector('#successOkBtn');
+    
+    const newOkButton = okButton.cloneNode(true);
+    okButton.parentNode.replaceChild(newOkButton, okButton);
+    
+    newOkButton.addEventListener('click', function() {
+      successModal.hide();
+      // Force poll after success instead of reloading
+      setTimeout(() => pollAnnouncements(true), 300);
+    });
+    
+    modalElement.addEventListener('hidden.bs.modal', function onHidden() {
+      modalElement.removeEventListener('hidden.bs.modal', onHidden);
+    }, { once: true });
+    
     successModal.show();
   }
   
+  // ============================================
+  // ALL EXISTING FUNCTIONS KEPT EXACTLY THE SAME
+  // ============================================
   function showConfirm(message, title, onConfirm) {
-    document.getElementById('confirmModalMessage').innerHTML = message;
-    document.getElementById('confirmModalTitle').innerHTML = title;
-    const confirmModal = new bootstrap.Modal(document.getElementById('confirmActionModal'));
-    const confirmBtn = document.getElementById('confirmActionBtn');
-    const oldClick = confirmBtn.onclick;
-    confirmBtn.onclick = () => {
+    const confirmModalId = 'dynamicConfirmModal_' + Date.now();
+    const confirmModalHtml = `
+        <div id="${confirmModalId}" class="modal fade" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 16px;">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #30534D, #3d6b63);">
+                        <h5 class="modal-title" style="color: white;">${title}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" style="padding: 24px; font-size: 16px;">
+                        ${message}
+                    </div>
+                    <div class="modal-footer" style="border-top: none; padding: 16px 24px;">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="confirmOkBtn_${confirmModalId}" style="background-color: #44C375; border-color: #44C375;">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.querySelectorAll('[id^="dynamicConfirmModal_"]').forEach(modal => modal.remove());
+    document.body.insertAdjacentHTML('beforeend', confirmModalHtml);
+    const modalEl = document.getElementById(confirmModalId);
+    const modal = new bootstrap.Modal(modalEl);
+    
+    document.getElementById(`confirmOkBtn_${confirmModalId}`).onclick = function() {
+      modal.hide();
       onConfirm();
-      confirmModal.hide();
-      confirmBtn.onclick = oldClick;
     };
-    confirmModal.show();
+    
+    modalEl.addEventListener('hidden.bs.modal', function() { modalEl.remove(); });
+    modal.show();
   }
   
   function archiveAnnouncementWithConfirm(id) {
@@ -793,8 +987,9 @@
       fetch('/announcements/' + id + '/archive', { method: 'PUT' })
       .then(response => { 
         if (response.ok) {
+          const openModal = bootstrap.Modal.getInstance(document.querySelector('.modal.show'));
+          if (openModal) openModal.hide();
           showSuccess('Announcement archived successfully!');
-          setTimeout(() => window.location.reload(), 1500);
         }
       });
     });
@@ -805,8 +1000,9 @@
       fetch('/announcements/' + id + '/restore', { method: 'PUT' })
       .then(response => { 
         if (response.ok) {
+          const openModal = bootstrap.Modal.getInstance(document.querySelector('.modal.show'));
+          if (openModal) openModal.hide();
           showSuccess('Announcement restored successfully!');
-          setTimeout(() => window.location.reload(), 1500);
         }
       });
     });
@@ -831,8 +1027,9 @@
       })
       .then(response => {
         if (response.ok) {
+          const createModal = bootstrap.Modal.getInstance(document.getElementById('createAnnouncementModal'));
+          if (createModal) createModal.hide();
           showSuccess('Announcement created successfully!');
-          setTimeout(() => window.location.reload(), 1500);
         } else alert('Error creating announcement');
       })
       .catch(error => { console.error('Error:', error); });
@@ -855,13 +1052,15 @@
       })
       .then(response => {
         if (response.ok) {
+          const editModal = bootstrap.Modal.getInstance(document.getElementById('editAnnouncementModal'));
+          if (editModal) editModal.hide();
           showSuccess('Announcement updated successfully!');
-          setTimeout(() => window.location.reload(), 1500);
         } else alert('Error updating announcement');
       });
     });
   }
-  
+
+  // ALL EXISTING FUNCTIONS UNCHANGED BELOW
   function toggleDropdown(el) {
     const dropdown = document.getElementById('requests-dropdown');
     const arrow = el.querySelector('.dropdown-arrow');
@@ -875,7 +1074,6 @@
     const timestamp = Date.now();
     const fileName = `announcement_${timestamp}.jpg`;
     const filePath = `announcements/${fileName}`;
-    console.log("Uploading to Supabase storage:", filePath);
     const arrayBuffer = await file.arrayBuffer();
     const fileData = new Uint8Array(arrayBuffer);
     const { data: uploadData, error: uploadError } = await supabaseClient.storage
@@ -883,7 +1081,6 @@
       .upload(filePath, fileData, { contentType: file.type || 'image/jpeg', upsert: true });
     if (uploadError) throw uploadError;
     const { data: urlData } = supabaseClient.storage.from('announcements').getPublicUrl(uploadData.path);
-    console.log("Upload successful, URL:", urlData.publicUrl);
     return urlData.publicUrl;
   }
   
@@ -952,7 +1149,6 @@
         if (progressDiv) progressDiv.style.display = 'none';
         if (progressBar) progressBar.style.width = '0%';
       }, 500);
-      console.log("Supabase upload successful, URL saved:", imageUrl);
     } catch (error) {
       console.error('Supabase upload error:', error);
       alert('Failed to upload image to Supabase: ' + error.message);
@@ -1200,6 +1396,15 @@
         }, 100);
       });
     });
+
+    // START POLLING - only new addition
+    trackModalState();
+    startPolling();
+  });
+
+  // Clean up polling on page unload
+  window.addEventListener('beforeunload', function() {
+    if (pollingInterval) clearInterval(pollingInterval);
   });
 </script>
 

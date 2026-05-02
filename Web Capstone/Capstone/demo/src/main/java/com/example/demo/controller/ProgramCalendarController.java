@@ -64,7 +64,14 @@ public class ProgramCalendarController {
         response.put("totalBudget", total != null ? total : 0.0);
         return ResponseEntity.ok(response);
     }
-
+    @GetMapping("/poll")
+    public ResponseEntity<Map<String, Object>> pollCalendar() {
+        Map<String, Object> response = new HashMap<>();
+        List<ProgramCalendar> allEvents = calendarService.getAllEvents();
+        response.put("eventCount", allEvents.size());
+        response.put("lastEventId", allEvents.isEmpty() ? 0 : allEvents.stream().mapToLong(ProgramCalendar::getId).max().orElse(0));
+        return ResponseEntity.ok(response);
+    }
     @PostMapping("/budget/add")
     public ResponseEntity<?> addManualBudget(
             @RequestBody ProgramBudget budget,

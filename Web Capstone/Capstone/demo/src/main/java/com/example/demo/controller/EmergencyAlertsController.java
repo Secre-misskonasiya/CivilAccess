@@ -34,7 +34,9 @@ public class EmergencyAlertsController {
             Model model) {
 
         AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
-
+                if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+                return "redirect:/logout";
+            }
         model.addAttribute("newAdmin",     new AdminUser());
         model.addAttribute("currentUser",  admin.getName());
         model.addAttribute("currentrole",  admin.getRole());
@@ -54,7 +56,15 @@ public class EmergencyAlertsController {
         model.addAttribute("currentTab", tab);
         return "EmergencyAlerts";
     }
-
+    @GetMapping("/api/poll")
+    @ResponseBody
+    public ResponseEntity<Map<String, Long>> pollAlerts() {
+        Map<String, Long> counts = new HashMap<>();
+        List<EmergencyAlerts> all = emergencyAlertService.getAllAlerts();
+        counts.put("current", all.stream().filter(a -> !a.isArchived()).count());
+        counts.put("archived", all.stream().filter(EmergencyAlerts::isArchived).count());
+        return ResponseEntity.ok(counts);
+    }
     @GetMapping("/{id}")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getAlert(@PathVariable UUID id) {
@@ -95,8 +105,8 @@ public class EmergencyAlertsController {
 
         activityLogService.log(
             admin.getName(), admin.getRole(), "CREATED", "Emergency Alerts",
-            truncate("Created emergency alert: " + saved.getTitle()
-                + (saved.getType() != null ? " [" + saved.getType() + "]" : "")),
+            truncate("Issued a new emergency alert: \"" + saved.getTitle() + "\""
+                + (saved.getType() != null ? " (" + saved.getType() + ")" : "")),
             request.getRemoteAddr(), "Success"
         );
 
@@ -121,7 +131,7 @@ public class EmergencyAlertsController {
 
         activityLogService.log(
             admin.getName(), admin.getRole(), "ARCHIVED", "Emergency Alerts",
-            truncate("Archived emergency alert: " + a.getTitle()),
+            truncate("Archived the emergency alert: \"" + a.getTitle() + "\""),
             request.getRemoteAddr(), "Success"
         );
 
@@ -142,9 +152,10 @@ public class EmergencyAlertsController {
 
         activityLogService.log(
             admin.getName(), admin.getRole(), "DELETED", "Emergency Alerts",
-            truncate("Deleted emergency alert: " + a.getTitle()),
+            truncate("Permanently deleted the emergency alert: \"" + a.getTitle() + "\""),
             request.getRemoteAddr(), "Success"
         );
+
 
         emergencyAlertService.deleteAlert(id);
 

@@ -544,7 +544,8 @@
 <title>Program Calendar</title>
 </head>
 <body>
-
+    <script src="/js/notif.js"></script>
+<div class="toast-container" id="toastContainer"></div>
 <div class="layout">
 
 <!-- Lock Modal -->
@@ -1169,6 +1170,46 @@
   document.addEventListener('DOMContentLoaded', loadEvents);
 
 </script>
-
+<script>
+(function() {
+    var lastSnapshot = '';
+    
+    function isModalOpen() {
+        var ids = ['addEventModal','viewEventsModal','forcePasswordModal','logoutModal'];
+        for (var i = 0; i < ids.length; i++) {
+            var m = document.getElementById(ids[i]);
+            if (m && m.style.display === 'block') return true;
+        }
+        return false;
+    }
+    
+    function poll() {
+        if (isModalOpen()) return;
+        
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/calendar/poll?t=' + Date.now(), true);
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    var snapshot = JSON.stringify(data);
+                    if (lastSnapshot === '') {
+                        lastSnapshot = snapshot;
+                    } else if (snapshot !== lastSnapshot) {
+                        loadEvents();
+                        lastSnapshot = snapshot;
+                    }
+                } catch(e) {}
+            }
+        };
+        xhr.send();
+    }
+    
+    setTimeout(function() {
+        poll();
+        setInterval(poll, 5000);
+    }, 2000);
+})();
+</script>
 </body>
 </html>
