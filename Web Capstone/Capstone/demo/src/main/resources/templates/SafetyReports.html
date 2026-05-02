@@ -626,7 +626,6 @@
                                     <button class="approve-btn" th:onclick="'updateStatusWithSuccess(' + ${report.id} + ', \'APPROVED\')'">Approve</button>
                                     <button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button>
                                 </div>
-                              </nav>
                           </tr>
                     </tbody>
                 </table>
@@ -673,7 +672,7 @@
                             <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'openResolutionModal(' + ${report.id} + ')'">Resolve</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></nav>
                           </tr>
                     </tbody>
-                <table>
+                </table>
                 <div class="text-center p-4" th:if="${#lists.isEmpty(inProgressReports)}"><p class="text-muted">No in progress reports</p></div>
             </div>
         </div>
@@ -1098,7 +1097,7 @@
     }
 
     async function pollReports() { 
-    // Don't reload if any modal is open
+    // Don't reload if any modal is open        
         if (isAnyModalOpen) return;
         
         try { 
