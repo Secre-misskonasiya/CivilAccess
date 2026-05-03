@@ -487,6 +487,176 @@
         background-color: #e74c3c;
         color: white;
     }
+
+    /* ============================================
+       VIEW REPORT MODAL — Two-column layout
+       Left: stacked info cards | Right: map
+       ============================================ */
+    #viewReportModal .modal-dialog {
+        max-width: 1020px;
+    }
+    #viewReportModal .modal-body {
+        padding: 16px;
+    }
+
+    .vr-layout {
+        display: flex;
+        gap: 0;
+        height: 520px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #e0e0e0;
+    }
+
+    /* Left column — stacked info cards */
+    .vr-left {
+        width: 380px;
+        min-width: 380px;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        border-right: 1px solid #e0e0e0;
+        overflow-y: auto;
+    }
+
+    /* Right column — map fills full height */
+    .vr-right {
+        flex: 1;
+        position: relative;
+        background-color: #f0f0f0;
+    }
+
+    #viewMap {
+        width: 100%;
+        height: 100%;
+        border: none;
+        border-radius: 0;
+    }
+
+    .vr-no-map {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #aaa;
+        gap: 10px;
+        font-size: 14px;
+    }
+    .vr-no-map i {
+        font-size: 44px;
+        color: #ccc;
+    }
+
+    /* Info card shared styles */
+    .vr-card {
+        border-bottom: 1px solid #e8e8e8;
+        padding: 20px 22px;
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        background: white;
+    }
+    .vr-card:last-child {
+        border-bottom: none;
+    }
+    .vr-card-icon {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        border-radius: 10px;
+        background-color: #eaf2f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2d4a44;
+        font-size: 20px;
+    }
+    .vr-card-body {
+        flex: 1;
+        min-width: 0;
+    }
+    .vr-card-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        margin-bottom: 5px;
+    }
+    .vr-card-value {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1a1a1a;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .vr-card-sub {
+        font-size: 13px;
+        color: #888;
+        margin-top: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Description card — no fixed ellipsis, allow wrapping */
+    .vr-card-value.wrap {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+        font-size: 13px;
+        font-weight: 400;
+        color: #333;
+        line-height: 1.6;
+    }
+
+    /* Status + priority pill row */
+    .vr-pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-top: 8px;
+    }
+    .vr-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+    }
+
+    /* Resolution details inside card */
+    .vr-resolution-block {
+        background-color: #f8faf9;
+        border: 1px solid #d8ede5;
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin-top: 14px;
+    }
+    .vr-resolution-block .vr-res-row {
+        font-size: 13px;
+        color: #555;
+        margin-bottom: 10px;
+        line-height: 1.5;
+    }
+    .vr-resolution-block .vr-res-row:last-child {
+        margin-bottom: 0;
+    }
+    .vr-resolution-block .vr-res-label {
+        font-weight: 700;
+        color: #2d4a44;
+        font-size: 11px;
+        display: block;
+        margin-bottom: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 </style>
 
 <meta charset="UTF-8">
@@ -731,15 +901,19 @@
 
 </div>
 
-<!-- View Report Modal -->
+<!-- ============================================================
+     View Report Modal — Two-column layout (cards left, map right)
+     ============================================================ -->
 <div class="modal fade" id="viewReportModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Safety Report Details</h5>
+                <h5 class="modal-title"><i class="bi bi-file-earmark-text me-2"></i>Safety Report Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="viewModalBody"></div>
+            <div class="modal-body" id="viewModalBody">
+                <!-- Populated by JS -->
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-success" id="modalApproveBtn" style="display: none;" onclick="modalApproveAction()">Approve Report</button>
@@ -912,53 +1086,156 @@
         updateStatusWithSuccess(id, status);
     }
     
+    function escapeHtml(text) {
+        if (!text) return text;
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function getStatusColor(status) {
+        switch (status?.toUpperCase()) {
+            case 'INCOMING':   return '#FF9800';
+            case 'APPROVED':   return '#FF9800';
+            case 'IN_PROGRESS': return '#2bb6f7';
+            case 'RESOLVED':   return '#44C375';
+            default:           return '#888';
+        }
+    }
+
     function viewReport(id) {
         currentModalReportId = id;
         fetch('/safety-reports/' + id)
             .then(response => response.json())
             .then(data => {
                 currentModalReportStatus = data.status;
-                const modalBody = document.getElementById('viewModalBody');
+
                 const hasLocation = data.latitude && data.longitude && data.latitude !== 0 && data.longitude !== 0;
                 const priorityClass = data.priority === 'HIGH' ? 'priority-high' : data.priority === 'MEDIUM' ? 'priority-medium' : 'priority-low';
-                const getStatusColor = (status) => {
-                    switch (status?.toUpperCase()) {
-                        case 'INCOMING': return '#FF9800';
-                        case 'APPROVED': return '#FF9800';
-                        case 'IN_PROGRESS': return '#2bb6f7';
-                        case 'RESOLVED': return '#44C375';
-                        default: return '#888';
-                    }
-                };
-                modalBody.innerHTML = `
-                    <style>.detail-card{background:white;border-radius:12px;margin-bottom:12px;border:1px solid #E4E6EB;overflow:hidden}.detail-card-header{display:flex;align-items:flex-start;padding:12px;gap:12px}.detail-avatar{width:50px;height:50px;min-width:50px;border-radius:50%;background-color:#E4E6EB;display:flex;align-items:center;justify-content:center;font-size:22px}.detail-header-info{flex:1}.detail-card-title{font-size:11px;font-weight:600;color:#65676B;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px}.detail-value{font-size:15px;font-weight:600;color:#050505;margin:0}.detail-sub{font-size:13px;color:#65676B}.detail-type-tag{display:inline-flex;align-items:center;background-color:#F0F8F7;padding:4px 10px;border-radius:6px;font-size:14px;font-weight:500;color:#386660;gap:5px}.detail-description{font-size:14px;color:#050505;line-height:1.6;padding:0 12px 12px 12px}.detail-date-row{display:flex;justify-content:space-between;align-items:center;padding:6px 12px 10px 12px;font-size:11px;color:#65676B}#viewMap{width:calc(100% - 24px);height:250px;border-radius:8px;margin:0 12px 12px 12px;border:1px solid #E4E6EB}</style>
-                    <div class="detail-card"><div class="detail-card-header"><div class="detail-avatar">👤</div><div class="detail-header-info"><div class="detail-card-title">Submitted By</div><div class="detail-value">${escapeHtml(data.reporterName || 'Anonymous')}</div><div class="detail-sub">${escapeHtml(data.reporterContact || 'No contact info')}</div></div></div></div>
-                    <div class="detail-card"><div class="detail-card-header"><div class="detail-avatar">⚠️</div><div class="detail-header-info"><div class="detail-card-title">Alert Type</div><span class="detail-type-tag">⚠️ ${escapeHtml(data.type || 'General Incident')}</span></div></div></div>
-                    <div class="detail-card"><div class="detail-card-header"><div class="detail-avatar">📍</div><div class="detail-header-info"><div class="detail-card-title">Incident Location</div><div class="detail-sub">📍 ${escapeHtml(data.location || 'No address provided')}</div></div></div>${hasLocation ? '<div id="viewMap"></div>' : '<div style="height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#aaa;gap:6px;margin-bottom:12px;">🗺️ <span style="font-size:13px;">No location coordinates</span></div>'}</div>
-                    <div class="detail-card"><div class="detail-card-header"><div class="detail-avatar">📄</div><div class="detail-header-info"><div class="detail-card-title">Description</div><div class="detail-value">${escapeHtml(data.title) || 'Untitled'}</div></div><span class="badge-priority ${priorityClass}" style="margin-left:8px">${data.priority || 'N/A'}</span><span style="background-color:${getStatusColor(data.status)};color:white;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;margin-left:6px">${data.status || 'Pending'}</span></div><p class="detail-description">${escapeHtml(data.description) || 'No description provided.'}</p><div class="detail-date-row"><span>Reported on: ${data.dateSubmitted || 'N/A'}</span>${data.resolvedBy ? `<span><i class="bi bi-person-check"></i> Resolved by: ${escapeHtml(data.resolvedBy)}</span>` : ''}</div>${data.resolutionActions ? `<div class="detail-date-row"><strong>Actions Taken:</strong><br>${escapeHtml(data.resolutionActions)}</div>` : ''}${data.resolutionResponseTime ? `<div class="detail-date-row"><strong>Response Time:</strong> ${escapeHtml(data.resolutionResponseTime)}</div>` : ''}${data.resolutionNotes ? `<div class="detail-date-row"><strong>Additional Notes:</strong><br>${escapeHtml(data.resolutionNotes)}</div>` : ''}</div>
-                `;
-                const approveBtn = document.getElementById('modalApproveBtn');
-                if (data.status === 'INCOMING') {
-                    approveBtn.style.display = 'inline-block';
-                } else {
-                    approveBtn.style.display = 'none';
+                const statusColor = getStatusColor(data.status);
+
+                // Build resolution block if resolved
+                let resolutionBlock = '';
+                if (data.resolutionActions || data.resolutionResponseTime || data.resolutionNotes) {
+                    resolutionBlock = `
+                        <div class="vr-resolution-block">
+                            ${data.resolutionResponseTime ? `<div class="vr-res-row"><span class="vr-res-label">Response Time</span>${escapeHtml(data.resolutionResponseTime)}</div>` : ''}
+                            ${data.resolutionActions    ? `<div class="vr-res-row"><span class="vr-res-label">Actions Taken</span>${escapeHtml(data.resolutionActions)}</div>` : ''}
+                            ${data.resolutionNotes      ? `<div class="vr-res-row"><span class="vr-res-label">Additional Notes</span>${escapeHtml(data.resolutionNotes)}</div>` : ''}
+                        </div>`;
                 }
+
+                // -----------------------------------------------
+                // Two-column layout
+                // Left  → 3 stacked cards (Reporter, Incident, Description)
+                // Right → Leaflet map (or no-map placeholder)
+                // -----------------------------------------------
+                document.getElementById('viewModalBody').innerHTML = `
+                    <div class="vr-layout">
+
+                        <!-- LEFT: stacked info cards -->
+                        <div class="vr-left">
+
+                            <!-- Card 1: Reporter -->
+                            <div class="vr-card">
+                                <div class="vr-card-icon">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <div class="vr-card-body">
+                                    <div class="vr-card-label">Submitted By</div>
+                                    <div class="vr-card-value">${escapeHtml(data.reporterName) || 'Anonymous'}</div>
+                                    <div class="vr-card-sub">${escapeHtml(data.reporterContact) || 'No contact info'}</div>
+                                </div>
+                            </div>
+
+                            <!-- Card 2: Incident type + location -->
+                            <div class="vr-card">
+                                <div class="vr-card-icon">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                </div>
+                                <div class="vr-card-body">
+                                    <div class="vr-card-label">Incident Type &amp; Location</div>
+                                    <div class="vr-card-value">${escapeHtml(data.type) || 'General Incident'}</div>
+                                    <div class="vr-card-sub"><i class="bi bi-geo-alt-fill" style="color:#e74c3c;font-size:12px;"></i> ${escapeHtml(data.location) || 'No address provided'}</div>
+                                </div>
+                            </div>
+
+                            <!-- Card 3: Description + status/priority + resolution -->
+                            <div class="vr-card" style="flex-direction: column; align-items: stretch;">
+                                <div style="display:flex; gap:16px; align-items:flex-start;">
+                                    <div class="vr-card-icon" style="flex-shrink:0;">
+                                        <i class="bi bi-file-text-fill"></i>
+                                    </div>
+                                    <div class="vr-card-body">
+                                        <div class="vr-card-label">Report Details</div>
+                                        <div class="vr-card-value" style="font-size:14px;font-weight:600;margin-bottom:6px;">${escapeHtml(data.title) || 'Untitled'}</div>
+                                        <div class="vr-pill-row">
+                                            <span class="badge-priority ${priorityClass}">${data.priority || 'N/A'}</span>
+                                            <span class="vr-status-pill" style="background-color:${statusColor};">
+                                                <i class="bi bi-circle-fill" style="font-size:7px;"></i>
+                                                ${data.status || 'Pending'}
+                                            </span>
+                                        </div>
+                                        <div class="vr-card-value wrap" style="margin-top:10px;">${escapeHtml(data.description) || 'No description provided.'}</div>
+                                        <div style="font-size:12px;color:#aaa;margin-top:10px;line-height:1.6;">
+                                            <i class="bi bi-calendar3"></i> ${data.dateSubmitted || 'N/A'}
+                                            ${data.resolvedBy ? `&nbsp;&nbsp;<i class="bi bi-person-check-fill"></i> Resolved by: ${escapeHtml(data.resolvedBy)}` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                                ${resolutionBlock}
+                            </div>
+
+                        </div>
+
+                        <!-- RIGHT: map -->
+                        <div class="vr-right">
+                            ${hasLocation
+                                ? `<div id="viewMap"></div>`
+                                : `<div class="vr-no-map">
+                                       <i class="bi bi-map"></i>
+                                       <span>No location coordinates available</span>
+                                   </div>`
+                            }
+                        </div>
+
+                    </div>
+                `;
+
+                // Show / hide Approve button
+                const approveBtn = document.getElementById('modalApproveBtn');
+                approveBtn.style.display = data.status === 'INCOMING' ? 'inline-block' : 'none';
+
+                // Destroy previous map
                 if (currentMap) { currentMap.remove(); currentMap = null; }
+
                 const modalEl = document.getElementById('viewReportModal');
                 const modal = new bootstrap.Modal(modalEl);
+
                 if (hasLocation) {
                     modalEl.addEventListener('shown.bs.modal', function handler() {
                         modalEl.removeEventListener('shown.bs.modal', handler);
                         const mapContainer = document.getElementById('viewMap');
                         if (!mapContainer) return;
                         const map = L.map('viewMap').setView([data.latitude, data.longitude], 16);
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
-                        const redIcon = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
-                        L.marker([data.latitude, data.longitude], { icon: redIcon }).addTo(map).bindPopup(`<b>${escapeHtml(data.title || 'Report Location')}</b>`).openPopup();
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors'
+                        }).addTo(map);
+                        const redIcon = L.icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                            iconSize: [25, 41], iconAnchor: [12, 41],
+                            popupAnchor: [1, -34], shadowSize: [41, 41]
+                        });
+                        L.marker([data.latitude, data.longitude], { icon: redIcon })
+                            .addTo(map)
+                            .bindPopup(`<b>${escapeHtml(data.title || 'Report Location')}</b>`)
+                            .openPopup();
                         map.invalidateSize();
                         currentMap = map;
                     });
                 }
+
                 modal.show();
             })
             .catch(error => { console.error(error); alert("Error loading report details"); });
@@ -971,13 +1248,6 @@
             const modal = bootstrap.Modal.getInstance(modalEl);
             if (modal) modal.hide();
         }
-    }
-    
-    function escapeHtml(text) {
-        if (!text) return text;
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
     }
     
     function viewResolutionDetails(id) {
@@ -1033,7 +1303,6 @@
     function exportToPDF() { const { jsPDF } = window.jspdf; const doc = new jsPDF(); const activePanel = document.querySelector('.panel-inner:not(.d-none)'); const title = activePanel.querySelector('.panel-header').innerText; doc.text(title, 14, 15); doc.autoTable({ html: activePanel.querySelector('table'), startY: 20, margin: { top: 20 } }); doc.save(title.replace(/\s+/g, '_') + '.pdf'); }
     function redirectToPassword() { window.location.href = '/user-profile'; }
     
-    // Enhanced modal state tracking
     function updateModalState(isOpen) {
         isAnyModalOpen = isOpen;
     }
@@ -1050,9 +1319,7 @@
         lastSeenId = maxId; 
     }
 
-    // Comprehensive modal tracking for all Bootstrap modals and custom overlays
     function trackAllModals() {
-        // Track Bootstrap modals
         const bootstrapModals = ['viewReportModal', 'resolutionModal', 'viewResolutionModal', 'successModal'];
         bootstrapModals.forEach(modalId => {
             const modalEl = document.getElementById(modalId);
@@ -1062,7 +1329,6 @@
             }
         });
         
-        // Track custom archive modal
         const archiveModal = document.getElementById('archiveConfirmModal');
         if (archiveModal) {
             const observer = new MutationObserver((mutations) => {
@@ -1075,7 +1341,6 @@
             observer.observe(archiveModal, { attributes: true, attributeFilter: ['style'] });
         }
         
-        // Track force password modal
         const forceModal = document.getElementById('forcePasswordModal');
         if (forceModal) {
             const observer = new MutationObserver((mutations) => {
@@ -1088,7 +1353,6 @@
             observer.observe(forceModal, { attributes: true, attributeFilter: ['style'] });
         }
         
-        // Track any backdrop elements that might indicate modal is open
         document.addEventListener('click', function(e) {
             if (e.target.closest('.modal') && !isAnyModalOpen) {
                 updateModalState(true);
@@ -1097,18 +1361,14 @@
     }
 
     async function pollReports() { 
-    // Don't reload if any modal is open        
         if (isAnyModalOpen) return;
-        
         try { 
             const response = await fetch('/safety-reports/api/poll?lastId=' + lastSeenId + '&t=' + Date.now()); 
             if (!response.ok) return; 
             const data = await response.json(); 
             
-            // Store old badge values to compare
             const oldIncoming = document.getElementById('badge-incoming')?.textContent || '0';
             
-            // Update badge counts
             if (data.counts) { 
                 ['incoming', 'approved', 'inprogress', 'resolved', 'archive'].forEach(function(badge) { 
                     var el = document.getElementById('badge-' + badge); 
@@ -1118,7 +1378,6 @@
             
             const newIncoming = document.getElementById('badge-incoming')?.textContent || '0';
             
-            // RELOAD if incoming count increased OR server reports new reports
             if (parseInt(newIncoming) > parseInt(oldIncoming) || (data.newReports && data.newReports.length > 0)) {
                 window.location.reload();
             }

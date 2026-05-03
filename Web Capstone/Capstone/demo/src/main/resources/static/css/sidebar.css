@@ -348,3 +348,12 @@
 .menu li .dropdown-arrow {
     margin-left: auto;
 }
+/* Fix badges inside sub-menu items */
+.sub-menu li {
+    justify-content: flex-start;
+}
+
+.sub-menu li .sidebar-count-badge {
+    margin-left: auto;
+    flex-shrink: 0;
+}

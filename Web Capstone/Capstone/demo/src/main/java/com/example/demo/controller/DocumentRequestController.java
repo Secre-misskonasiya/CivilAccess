@@ -156,11 +156,14 @@ public class DocumentRequestController {
     @GetMapping("/api/poll")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> pollRequests() {
+        Map<String, Object> counts = new HashMap<>();
+        counts.put("incoming",   service.getByStatus("INCOMING").size());
+        counts.put("processing", service.getByStatus("PROCESSING").size());
+        counts.put("ready",      service.getByStatus("READY").size());
+        counts.put("archive",    service.getByStatus("RESOLVED").size());
+
         Map<String, Object> response = new HashMap<>();
-        response.put("incoming", service.getByStatus("INCOMING").size());
-        response.put("processing", service.getByStatus("PROCESSING").size());
-        response.put("ready", service.getByStatus("READY").size());
-        response.put("archived", service.getByStatus("RESOLVED").size());
+        response.put("counts", counts);
         return ResponseEntity.ok(response);
     }
 }
