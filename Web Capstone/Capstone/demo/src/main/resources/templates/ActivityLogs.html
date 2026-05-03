@@ -307,7 +307,8 @@
 <title>Activity Logs</title>
 </head>
 <body>
-
+    <script src="/js/notif.js"></script>
+<div class="toast-container" id="toastContainer"></div>
 <div class="layout">
 <input type="hidden" id="accountStatus" th:value="${currentstatus}">
       <div id="forcePasswordModal" class="force-modal">
@@ -414,7 +415,7 @@
       <div id="tab-police" class="panel-inner">
         <div class="panel-header">Employee Activity Log</div>
         <div class="panel-content">
-          <table class="table table-bordered table-hover mb-0">
+          <table class="table table-bordered table-hover mb-0" id="activity-log-table">
             <thead>
               <tr>
                 <th>ID</th>
@@ -448,7 +449,7 @@
                 
             </tbody>
           </table>
-          <div class="table-footer">
+          <div class="table-footer" id="footer-logs">
             <span>Showing recent activities</span>
             <nav>
               <ul class="pagination pagination-sm mb-0">
@@ -643,6 +644,139 @@
         arrow.classList.toggle('open', !isOpen);
     }
 </script>
+<script>
+(function() {
+  const PAGE_SIZE = 10;
 
+  function initPagination(tableId, footerId) {
+    const tbody = document.querySelector('#' + tableId + ' tbody');
+    const footer = document.getElementById(footerId);
+    if (!tbody || !footer) return;
+
+    let currentPage = 1;
+
+    function getVisibleRows() {
+      return Array.from(tbody.querySelectorAll('tr')).filter(r => r.getAttribute('data-filtered') !== 'hidden');
+    }
+
+    function render() {
+      const all = getVisibleRows();
+      const total = all.length;
+      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const end   = start + PAGE_SIZE;
+
+      // Show/hide rows for current page
+      Array.from(tbody.querySelectorAll('tr')).forEach(r => {
+        if (r.getAttribute('data-filtered') === 'hidden') {
+          r.style.display = 'none';
+          return;
+        }
+        const idx = all.indexOf(r);
+        r.style.display = (idx >= start && idx < end) ? '' : 'none';
+      });
+
+      // Build footer
+      const fromNum = total === 0 ? 0 : start + 1;
+      const toNum   = Math.min(end, total);
+
+      let paginationHtml = '<ul class="pagination pagination-sm mb-0">';
+
+      // Prev — hidden on first page
+      if (currentPage > 1) {
+        paginationHtml += `<li class="page-item">
+          <a class="page-link" href="#" data-action="prev"><i class="bi bi-arrow-left"></i> Prev</a>
+        </li>`;
+      }
+
+      // Page numbers
+      for (let p = 1; p <= totalPages; p++) {
+        paginationHtml += `<li class="page-item${p === currentPage ? ' active' : ''}">
+          <a class="page-link" href="#" data-action="goto" data-page="${p}">${p}</a>
+        </li>`;
+      }
+
+      // Next — hidden on last page
+      if (currentPage < totalPages) {
+        paginationHtml += `<li class="page-item">
+          <a class="page-link" href="#" data-action="next">Next <i class="bi bi-arrow-right"></i></a>
+        </li>`;
+      }
+
+      paginationHtml += '</ul>';
+
+      footer.innerHTML = `<span>Showing ${fromNum}–${toNum} of ${total}</span><nav>${paginationHtml}</nav>`;
+    }
+
+    // Single delegated listener on the footer — no re-attachment on render
+    footer.addEventListener('click', function(e) {
+      e.preventDefault();
+      const link = e.target.closest('a[data-action]');
+      if (!link) return;
+
+      const all = getVisibleRows();
+      const totalPages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+      const action = link.getAttribute('data-action');
+
+      if (action === 'prev' && currentPage > 1) currentPage--;
+      else if (action === 'next' && currentPage < totalPages) currentPage++;
+      else if (action === 'goto') currentPage = parseInt(link.getAttribute('data-page'));
+
+      render();
+    });
+
+    // Watch for filter changes — use data-filtered attribute instead of style
+    new MutationObserver(() => {
+      currentPage = 1;
+      render();
+    }).observe(tbody, { attributes: true, subtree: true, attributeFilter: ['data-filtered'] });
+
+    render();
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initPagination('activity-log-table',      'footer-logs');
+  });
+})();
+</script>
+<script>
+(function() {
+    var lastSnapshot = '';
+    
+    function isModalOpen() {
+        var forceModal = document.getElementById('forcePasswordModal');
+        if (forceModal && forceModal.style.display === 'block') return true;
+        var logoutModal = document.getElementById('logoutModal');
+        if (logoutModal && (logoutModal.style.display === 'block' || logoutModal.style.display === 'flex')) return true;
+        return false;
+    }
+    
+    function poll() {
+        if (isModalOpen()) return;
+        
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/Activity-logs/api/poll?t=' + Date.now(), true);
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    var snapshot = JSON.stringify(data);
+                    if (lastSnapshot === '') {
+                        lastSnapshot = snapshot;
+                    } else if (snapshot !== lastSnapshot) {
+                        location.reload();
+                    }
+                } catch(e) {}
+            }
+        };
+        xhr.send();
+    }
+    
+    poll();
+    setInterval(poll, 5000);
+})();
+</script>   
 </body>
 </html>

@@ -147,6 +147,8 @@
 <title>Accounts</title>
 </head>
 <body>
+<script src="/js/notif.js"></script>
+<div class="toast-container" id="toastContainer"></div>
 
 <div class="layout">
 
@@ -239,7 +241,8 @@
                                                 data-birth=${admin.birthDate},
                                                 data-address=${admin.address},
                                                 data-phone=${admin.phoneNumber},
-                                                data-status=${admin.empstatus}"
+                                                data-status=${admin.empstatus},
+                                                data-picture=${admin.profilePicture}"
                                         onclick="openViewModalFromButton(this)">View</button>
                                     <button class="update-btn"
                                         th:onclick="openEditModal(
@@ -263,7 +266,7 @@
                         </tr>
                     </tbody>
                 </table>
-                <div class="table-footer">
+                <div class="table-footer" id="footer-employee">
                     <span>Showing employee accounts</span>
                     <nav><ul class="pagination pagination-sm mb-0">
                         <li class="page-item"><a class="page-link" href="#"><i class="bi bi-arrow-left"></i> Prev</a></li>
@@ -314,7 +317,7 @@
                 <table class="table table-bordered table-hover mb-0" id="resident-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>Resident ID</th>
                             <th>First Name</th>
                             <th>Last Name</th>
                             <th>Gender</th>
@@ -371,7 +374,7 @@
                   
                     </tbody>
                 </table>
-                <div class="table-footer">
+                <div class="table-footer" id="footer-residents">
                     <span>Showing resident accounts</span>
                     <nav><ul class="pagination pagination-sm mb-0">
                         <li class="page-item"><a class="page-link" href="#"><i class="bi bi-arrow-left"></i> Prev</a></li>
@@ -434,24 +437,25 @@
                                 <div class="action-buttons">
                                     <button class="view-btn"
                                         th:attr="data-id=${admin.id},
-                                                data-employee=${admin.employeeId},
-                                                data-fname=${admin.firstName},
-                                                data-lname=${admin.lastName},
-                                                data-username=${admin.username},
-                                                data-email=${admin.email},
-                                                data-role=${admin.role},
-                                                data-gender=${admin.gender},
-                                                data-birth=${admin.birthDate},
-                                                data-address=${admin.address},
-                                                data-phone=${admin.phoneNumber},
-                                                data-status=${admin.empstatus}"
+                                            data-employee=${admin.employeeId},
+                                            data-fname=${admin.firstName},
+                                            data-lname=${admin.lastName},
+                                            data-username=${admin.username},
+                                            data-email=${admin.email},
+                                            data-role=${admin.role},
+                                            data-gender=${admin.gender},
+                                            data-birth=${admin.birthDate},
+                                            data-address=${admin.address},
+                                            data-phone=${admin.phoneNumber},
+                                            data-status=${admin.empstatus},
+                                            data-picture=${admin.profilePicture}"
                                         onclick="openViewModalFromButton(this)">View</button>
                                 </div>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-                <div class="table-footer">
+                <div class="table-footer" id="footer-archive">
                     <span>Showing archived employee accounts</span>
                     <nav><ul class="pagination pagination-sm mb-0">
                         <li class="page-item"><a class="page-link" href="#"><i class="bi bi-arrow-left"></i> Prev</a></li>
@@ -517,7 +521,7 @@
                         </tr>
                     </tbody>
                 </table>
-                <div class="table-footer">
+                <div class="table-footer" id="footer-resarchive">
                     <span>Showing archived resident accounts</span>
                     <nav><ul class="pagination pagination-sm mb-0">
                         <li class="page-item"><a class="page-link" href="#"><i class="bi bi-arrow-left"></i> Prev</a></li>
@@ -698,8 +702,11 @@
       </div>
 
       <div style="display:flex; align-items:flex-end; gap:16px; margin-top:20px;">
-        <div style="width:72px; height:72px; bottom:10%; border-radius:50%; background:#3d6b63; border:2px solid #9fd4c8; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom: 10px;">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="#9fd4c8"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <div id="view-avatar" style="width:72px; height:72px; border-radius:50%; background:#3d6b63; border:2px solid #9fd4c8; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:10px; overflow:hidden;">
+            <img id="view-avatar-img" src="" alt="Profile" style="width:100%; height:100%; object-fit:cover; display:none; border-radius:50%;">
+            <svg id="view-avatar-svg" width="36" height="36" viewBox="0 0 24 24" fill="#9fd4c8">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
         </div>
         <div style="padding-bottom:20px;">
           <p style="color:white; font-size:18px; font-weight:500; margin:0;" id="view-fullname"></p>
@@ -958,7 +965,7 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
             matchesStatus = statusCell === value;
         }
         
-        row.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+       row.setAttribute('data-filtered', (matchesSearch && matchesStatus) ? '' : 'hidden');
     });
 }
 
@@ -968,12 +975,15 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
         document.querySelectorAll(tableSelector + ' tbody tr').forEach(row => {
             const cells = row.querySelectorAll('td');
             const matchesSearch = !q || Array.from(cells).slice(0, -1)
-                .some(cell => cell.textContent.toLowerCase().includes(q));
+            .some(cell => cell.textContent.toLowerCase().includes(q));
             const cellVal       = cells[colIndex] ? cells[colIndex].textContent.trim() : '';
             const matchesFilter = !filterVal || cellVal === filterVal;
-            row.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
+            const visible = matchesSearch && matchesFilter;
+
+            // Use data-filtered attribute instead of style.display
+            row.setAttribute('data-filtered', visible ? '' : 'hidden');
         });
-    }
+        }
 
     // ── Search (shared, filter-aware) ─────────────────────────
     function setupSearch(inputId, tableSelector, tabKey) {
@@ -1296,6 +1306,8 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
     function openViewModalFromButton(button) {
         const fname = button.getAttribute('data-fname');
         const lname = button.getAttribute('data-lname');
+        const picture = button.getAttribute('data-picture');
+
         document.getElementById('view-id').textContent       = button.getAttribute('data-employee') || '';
         document.getElementById('view-fullname').textContent = (fname || '') + ' ' + (lname || '');
         document.getElementById('view-role').textContent     = button.getAttribute('data-role')     || '';
@@ -1305,7 +1317,21 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
         document.getElementById('view-gender').textContent   = button.getAttribute('data-gender')   || '';
         document.getElementById('view-birth').textContent    = button.getAttribute('data-birth')    || '';
         document.getElementById('view-address').textContent  = button.getAttribute('data-address')  || '';
-        document.getElementById('view-status').textContent  = button.getAttribute('data-status')  || '';
+        document.getElementById('view-status').textContent   = button.getAttribute('data-status')   || '';
+
+        // Show profile picture or fallback to SVG icon
+        const img = document.getElementById('view-avatar-img');
+        const svg = document.getElementById('view-avatar-svg');
+        if (picture && picture !== 'null' && picture.trim() !== '') {
+            img.src          = picture;
+            img.style.display = 'block';
+            svg.style.display = 'none';
+        } else {
+            img.src          = '';
+            img.style.display = 'none';
+            svg.style.display = 'block';
+        }
+
         viewModal.style.display = "block";
     }
     function closeViewModal() { viewModal.style.display = "none"; }
@@ -1400,41 +1426,63 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
         arrow.classList.toggle('open', !isOpen);
     }
 
-// ============================================
-// SIMPLE POLLING - Reload when ANY change detected
-// ============================================
+console.log("=== POLLING SCRIPT STARTED ===");
 
-let lastPageLoadTime = Date.now();
-let pollingInterval = null;
-
-async function pollForChanges() {
-    try {
-        const response = await fetch('/accounts/api/poll?t=' + Date.now());
-        if (!response.ok) return;
-        const data = await response.json();
-        
-        // Store current timestamps to compare
-        if (data.lastModified) {
-            if (data.lastModified > lastPageLoadTime) {
-                console.log('Changes detected, reloading...');
-                location.reload();
-            }
+(function() {
+    var lastDataSnapshot = '';
+    
+    function checkModals() {
+        var ids = ['accountModal','viewModal','residentModal','confirmModal','residentViewModal','verifyModal','sendPasswordModal','imageEnlargeModal','forcePasswordModal','logoutModal'];
+        for (var i = 0; i < ids.length; i++) {
+            var m = document.getElementById(ids[i]);
+            if (m && (m.style.display === 'block' || m.style.display === 'flex')) return true;
         }
-    } catch (error) {
-        console.error("Polling error:", error);
+        return false;
     }
-}
-
-function startPolling() {
-    if (pollingInterval) clearInterval(pollingInterval);
-    pollingInterval = setInterval(pollForChanges, 5000);
-}
-
-// Start polling
-startPolling();
-
+    
+    function poll() {
+        if (checkModals()) {
+            console.log("[Poll] Modal open, skipped");
+            return;
+        }
+        
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/accounts/api/poll?t=' + Date.now(), true);
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    
+                    // Create a snapshot of the data (ignore lastModified for comparison)
+                    var snapshot = JSON.stringify({
+                        employees: data.employeeAccounts ? data.employeeAccounts.length : 0,
+                        archivedEmployees: data.archivedEmployeeAccounts ? data.archivedEmployeeAccounts.length : 0,
+                        residents: data.residentAccounts ? data.residentAccounts.length : 0,
+                        archivedResidents: data.archivedResidentAccounts ? data.archivedResidentAccounts.length : 0
+                    });
+                    
+                    if (lastDataSnapshot === '') {
+                        // First poll - store baseline
+                        lastDataSnapshot = snapshot;
+                        console.log("[Poll] Baseline set: " + snapshot);
+                    } else if (snapshot !== lastDataSnapshot) {
+                        console.log("[Poll] CHANGE DETECTED! Old: " + lastDataSnapshot + " New: " + snapshot);
+                        location.reload();
+                    }
+                } catch(e) {
+                    console.log("[Poll] Error: " + e.message);
+                }
+            }
+        };
+        xhr.onerror = function() { console.log("[Poll] Network error"); };
+        xhr.send();
+    }
+    
+    console.log("[Poll] Running first poll...");
+    poll();
+    setInterval(poll, 5000);
+})();
 </script>
-
 <script th:inline="javascript">
     /*<![CDATA[*/
     const rawEmails    = /*[[${emailList}]]*/ [];
@@ -1492,9 +1540,11 @@ startPolling();
             </div>
           </div>
           <div style="display:flex; align-items:flex-end; gap:16px; margin-top:20px;">
-            <div style="width:72px; height:72px; border-radius:50%; background:#3d6b63; border:2px solid #9fd4c8; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:10px; overflow:hidden;">
-              <img id="rv_avatar" src="" style="width:100%; height:100%; object-fit:cover; display:none;">
-              <svg id="rv_avatar_placeholder" width="36" height="36" viewBox="0 0 24 24" fill="#9fd4c8"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            <div id="view-avatar" style="width:72px; height:72px; border-radius:50%; background:#3d6b63; border:2px solid #9fd4c8; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:10px; overflow:hidden;">
+                <img id="view-avatar-img" src="" alt="Profile" style="width:100%; height:100%; object-fit:cover; display:none; border-radius:50%;">
+                <svg id="view-avatar-svg" width="36" height="36" viewBox="0 0 24 24" fill="#9fd4c8">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
             </div>
             <div style="padding-bottom:20px;">
               <p style="color:white; font-size:18px; font-weight:500; margin:0;" id="rv_fullname"></p>
@@ -1619,16 +1669,17 @@ viewBtn.onclick = function() {
     
     // Handle avatar
     var avatarUrl = row.getAttribute('data-avatar');
-    var avatarImg = document.getElementById('rv_avatar');
-    var avatarPlaceholder = document.getElementById('rv_avatar_placeholder');
-    
+        var avatarImg = document.querySelector('#residentViewModal #view-avatar-img');
+    var avatarSvg = document.querySelector('#residentViewModal #view-avatar-svg');
+
     if (avatarUrl && avatarUrl !== 'null' && avatarUrl !== '') {
         avatarImg.src = avatarUrl;
         avatarImg.style.display = 'block';
-        avatarPlaceholder.style.display = 'none';
+        avatarSvg.style.display = 'none';
     } else {
+        avatarImg.src = '';
         avatarImg.style.display = 'none';
-        avatarPlaceholder.style.display = 'block';
+        avatarSvg.style.display = 'block';
     }
     
     document.getElementById('residentViewModal').style.display = 'block';
@@ -1718,6 +1769,106 @@ if (verifyBtnConfirm) {
 }
 })();
 </script>
+<script>
+(function() {
+  const PAGE_SIZE = 10;
 
+  function initPagination(tableId, footerId) {
+    const tbody = document.querySelector('#' + tableId + ' tbody');
+    const footer = document.getElementById(footerId);
+    if (!tbody || !footer) return;
+
+    let currentPage = 1;
+
+    function getVisibleRows() {
+      return Array.from(tbody.querySelectorAll('tr')).filter(r => r.getAttribute('data-filtered') !== 'hidden');
+    }
+
+    function render() {
+      const all = getVisibleRows();
+      const total = all.length;
+      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const end   = start + PAGE_SIZE;
+
+      // Show/hide rows for current page
+      Array.from(tbody.querySelectorAll('tr')).forEach(r => {
+        if (r.getAttribute('data-filtered') === 'hidden') {
+          r.style.display = 'none';
+          return;
+        }
+        const idx = all.indexOf(r);
+        r.style.display = (idx >= start && idx < end) ? '' : 'none';
+      });
+
+      // Build footer
+      const fromNum = total === 0 ? 0 : start + 1;
+      const toNum   = Math.min(end, total);
+
+      let paginationHtml = '<ul class="pagination pagination-sm mb-0">';
+
+      // Prev — hidden on first page
+      if (currentPage > 1) {
+        paginationHtml += `<li class="page-item">
+          <a class="page-link" href="#" data-action="prev"><i class="bi bi-arrow-left"></i> Prev</a>
+        </li>`;
+      }
+
+      // Page numbers
+      for (let p = 1; p <= totalPages; p++) {
+        paginationHtml += `<li class="page-item${p === currentPage ? ' active' : ''}">
+          <a class="page-link" href="#" data-action="goto" data-page="${p}">${p}</a>
+        </li>`;
+      }
+
+      // Next — hidden on last page
+      if (currentPage < totalPages) {
+        paginationHtml += `<li class="page-item">
+          <a class="page-link" href="#" data-action="next">Next <i class="bi bi-arrow-right"></i></a>
+        </li>`;
+      }
+
+      paginationHtml += '</ul>';
+
+      footer.innerHTML = `<span>Showing ${fromNum}–${toNum} of ${total}</span><nav>${paginationHtml}</nav>`;
+    }
+
+    // Single delegated listener on the footer — no re-attachment on render
+    footer.addEventListener('click', function(e) {
+      e.preventDefault();
+      const link = e.target.closest('a[data-action]');
+      if (!link) return;
+
+      const all = getVisibleRows();
+      const totalPages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+      const action = link.getAttribute('data-action');
+
+      if (action === 'prev' && currentPage > 1) currentPage--;
+      else if (action === 'next' && currentPage < totalPages) currentPage++;
+      else if (action === 'goto') currentPage = parseInt(link.getAttribute('data-page'));
+
+      render();
+    });
+
+    // Watch for filter changes — use data-filtered attribute instead of style
+    new MutationObserver(() => {
+      currentPage = 1;
+      render();
+    }).observe(tbody, { attributes: true, subtree: true, attributeFilter: ['data-filtered'] });
+
+    render();
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initPagination('employee-table',          'footer-employee');
+    initPagination('archived-employee-table', 'footer-archive');
+    initPagination('resident-table',          'footer-residents');
+    initPagination('resarchive-table',        'footer-resarchive');
+    initPagination('activity-log-table',      'footer-logs');
+  });
+})();
+</script>
 </body>
 </html>

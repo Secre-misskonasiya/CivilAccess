@@ -46,7 +46,9 @@ public class SafetyReportsController {
 
         String name = admin.getName();
         String role = admin.getRole();
-
+            if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+                return "redirect:/logout";
+            }
         model.addAttribute("newAdmin", new AdminUser());
         model.addAttribute("currentUser", name);
         model.addAttribute("currentrole", role);
@@ -220,13 +222,9 @@ public class SafetyReportsController {
         safetyReportService.saveReport(report);
 
         activityLogService.log(
-                principal.getName(),
-                admin.getRole(),
-                "RESOLVED",
-                "SafetyReports",
-                "Resolved report ID: " + id + " (\"" + report.getTitle() + "\") with resolution details",
-                request.getRemoteAddr(),
-                "Success"
+            principal.getName(), admin.getRole(), "RESOLVED", "Safety Reports",
+            "Resolved the safety report: \"" + report.getTitle() + "\" and submitted resolution details",
+            request.getRemoteAddr(), "Success"
         );
 
         Map<String, String> response = new HashMap<>();
@@ -245,53 +243,39 @@ public class SafetyReportsController {
         SafetyReports report = safetyReportService.getReportById(id);
         if (report == null) {
             activityLogService.log(
-                    principal.getName(),
-                    "ADMIN",
-                    "UPDATED",
-                    "SafetyReports",
-                    "Attempted to update status of report ID: " + id + " — not found",
-                    request.getRemoteAddr(),
-                    "Failed"
+                principal.getName(), "ADMIN", "UPDATED", "Safety Reports",
+                "Tried to update status of safety report #" + id + " but it was not found",
+                request.getRemoteAddr(), "Failed"
             );
             return ResponseEntity.notFound().build();
         }
 
         String username = principal.getName();
         AdminUser admin = adminUserService.getAdminByEmail(username);
-        String previousStatus = report.getStatus();
 
-        if ("APPROVED".equalsIgnoreCase(status)) {
-            report.setStatus("APPROVED");
-            report.assignHandler(admin);
+        // Set the new status and timestamp
+        report.setStatus(status);
+        report.setDateHandled(LocalDateTime.now());
 
-        } else if ("IN_PROGRESS".equalsIgnoreCase(status) || "INPROGRESS".equalsIgnoreCase(status)) {
-            report.setStatus("IN_PROGRESS");
-
-        } else if ("RESOLVED".equalsIgnoreCase(status)) {
-            report.setStatus("RESOLVED");
-            report.setDateHandled(LocalDateTime.now());
-            // Set who resolved the report
-            report.setResolvedBy(admin.getName());
-
-        } else if ("ARCHIVED".equalsIgnoreCase(status)) {
-            boolean wasResolved = "RESOLVED".equalsIgnoreCase(previousStatus);
-            report.setStatus(wasResolved ? "ARCHIVED_RESOLVED" : "ARCHIVED_UNRESOLVED");
-            report.setDateHandled(LocalDateTime.now());
-
-        } else {
-            report.setStatus(status);
-        }
+        // Set handler info
+        report.setHandledByName(admin.getName());
+        report.setHandledByRole(admin.getRole());
 
         safetyReportService.saveReport(report);
 
+        String actionLabel = switch (status) {
+            case "APPROVED"             -> "Approved the report and assigned a handler";
+            case "IN_PROGRESS"          -> "Moved the report to In Progress";
+            case "RESOLVED"             -> "Marked the report as resolved";
+            case "ARCHIVED_RESOLVED"    -> "Archived the resolved report";
+            case "ARCHIVED_UNRESOLVED"  -> "Archived the unresolved report";
+            default                     -> "Updated the report status to " + status;
+        };
+
         activityLogService.log(
-                principal.getName(),
-                admin.getRole(),
-                "UPDATED",
-                "SafetyReports",
-                "Updated status of report ID: " + id + " (\"" + report.getTitle() + "\") from " + previousStatus + " to " + report.getStatus(),
-                request.getRemoteAddr(),
-                "Success"
+            principal.getName(), admin.getRole(), "UPDATED", "Safety Reports",
+            "\"" + report.getTitle() + "\" — " + actionLabel,
+            request.getRemoteAddr(), "Success"
         );
 
         Map<String, String> response = new HashMap<>();
@@ -310,13 +294,9 @@ public class SafetyReportsController {
         SafetyReports report = safetyReportService.getReportById(id);
         if (report == null) {
             activityLogService.log(
-                    principal.getName(),
-                    "ADMIN",
-                    "UPDATED",
-                    "SafetyReports",
-                    "Attempted to add remarks to report ID: " + id + " — not found",
-                    request.getRemoteAddr(),
-                    "Failed"
+                principal.getName(), "ADMIN", "UPDATED", "Safety Reports",
+                "Tried to add remarks to safety report #" + id + " but it was not found",
+                request.getRemoteAddr(), "Failed"
             );
             return ResponseEntity.notFound().build();
         }
@@ -325,14 +305,10 @@ public class SafetyReportsController {
         safetyReportService.saveReport(report);
 
         activityLogService.log(
-                principal.getName(),
-                "ADMIN",
-                "UPDATED",
-                "SafetyReports",
-                "Added remarks to report ID: " + id + " (\"" + report.getTitle() + "\")",
-                request.getRemoteAddr(),
-                "Success"
-        );
+                principal.getName(), "ADMIN", "UPDATED", "Safety Reports",
+                "Added handler remarks to the report: \"" + report.getTitle() + "\"",
+                request.getRemoteAddr(), "Success"
+            );
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "Remarks added successfully");

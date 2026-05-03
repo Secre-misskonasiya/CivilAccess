@@ -18,10 +18,12 @@ public interface ResidentUserRepository extends JpaRepository<ResidentUser, UUID
 
     Optional<ResidentUser> findByEmail(String email);
 
-    // Repository — replace the existing query
     @Query("SELECT COUNT(r) FROM ResidentUser r WHERE r.status IS NULL OR r.status != 'DEACTIVATED'")
     long countActiveResidents();
 
-    // ✅ Add this
-    List<ResidentUser> findByStatus(String status);
+    @Query("SELECT r FROM ResidentUser r ORDER BY r.residentId DESC")
+    List<ResidentUser> findAllSortedByNewest();
+
+    @Query("SELECT r FROM ResidentUser r WHERE r.status = :status ORDER BY r.residentId DESC")
+    List<ResidentUser> findByStatusSorted(@Param("status") String status);
 }

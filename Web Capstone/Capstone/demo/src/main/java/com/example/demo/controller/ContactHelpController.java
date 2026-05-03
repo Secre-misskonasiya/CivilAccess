@@ -4,6 +4,7 @@ import com.example.demo.model.AdminUser;
 import com.example.demo.model.ContactHelpRequest;
 import com.example.demo.model.ContactMessage;
 import com.example.demo.services.AdminUserServices;
+import com.example.demo.services.ActivityLogService;
 import com.example.demo.services.ContactHelpService;
 import com.example.demo.services.ContactMessageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
+import jakarta.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,17 +27,15 @@ import java.util.stream.Collectors;
 @RequestMapping("/contact-help")
 public class ContactHelpController {
 
-    @Autowired
-    private ContactHelpService service;
-
-    @Autowired
-    private AdminUserServices adminUserService;
-
-    @Autowired
-    private ContactMessageService messageService;
+    @Autowired private ContactHelpService service;
+    @Autowired private AdminUserServices adminUserService;
+    @Autowired private ContactMessageService messageService;
+    @Autowired private ActivityLogService activityLogService;
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    // ── GET: main view ─────────────────────────────────────────────────────────
 
     @GetMapping
     public String viewContactHelp(
@@ -48,7 +48,9 @@ public class ContactHelpController {
         AdminUser admin = adminUserService.getAdminByEmail(username);
         String name = admin.getName();
         String role = admin.getRole();
-
+        if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+                        return "redirect:/logout";
+                    }
         model.addAttribute("newAdmin", new AdminUser());
         model.addAttribute("currentUser", name);
         model.addAttribute("currentrole", role);
@@ -125,33 +127,7 @@ public class ContactHelpController {
         return "Contact";
     }
 
-    // Helper method to check if there are unread messages
-    private boolean hasUnreadMessages(ContactHelpRequest request) {
-        LocalDateTime lastViewed = request.getAdminLastViewedAt();
-
-        if (lastViewed == null) return true;
-
-        List<ContactMessage> messages = messageService.getMessagesByRequestId(request.getId());
-
-        LocalDateTime latestResidentMessageTime = null;
-        if (messages != null && !messages.isEmpty()) {
-            for (ContactMessage msg : messages) {
-                if ("RESIDENT".equals(msg.getSenderType()) && msg.getCreatedAt() != null) {
-                    if (latestResidentMessageTime == null || msg.getCreatedAt().isAfter(latestResidentMessageTime)) {
-                        latestResidentMessageTime = msg.getCreatedAt();
-                    }
-                }
-            }
-        }
-
-        if (latestResidentMessageTime == null && request.getCreatedAt() != null) {
-            latestResidentMessageTime = request.getCreatedAt();
-        }
-
-        if (latestResidentMessageTime == null) return false;
-
-        return latestResidentMessageTime.isAfter(lastViewed);
-    }
+    // ── GET: single request ────────────────────────────────────────────────────
 
     @GetMapping("/{id}")
     @ResponseBody
@@ -173,12 +149,22 @@ public class ContactHelpController {
 
         return ResponseEntity.ok(response);
     }
+    @GetMapping("/api/counts")
+    @ResponseBody
+    public ResponseEntity<Map<String, Long>> getCounts() {
+        Map<String, Long> counts = new HashMap<>();
+        counts.put("incoming", service.countByStatus("INCOMING"));
+        counts.put("resolved", service.countByStatus("RESOLVED"));
+        counts.put("archived", service.countByStatus("ARCHIVED"));
+        return ResponseEntity.ok(counts);
+    }
+    // ── GET: resident avatar ───────────────────────────────────────────────────
 
     @GetMapping("/{id}/resident-avatar")
     @ResponseBody
     public ResponseEntity<Map<String, String>> getResidentAvatar(@PathVariable Long id) {
         Map<String, String> response = new HashMap<>();
-        
+
         try {
             ContactHelpRequest request = service.getRequestById(id);
             if (request == null) {
@@ -187,21 +173,21 @@ public class ContactHelpController {
                 response.put("error", "Request not found");
                 return ResponseEntity.ok(response);
             }
-            
+
             String email = request.getEmail();
             System.out.println("getResidentAvatar: Looking for avatar with email: " + email);
-            
+
             if (email == null || email.isEmpty()) {
                 System.out.println("getResidentAvatar: No email found in contact request");
                 response.put("avatar_url", "");
                 response.put("error", "No email");
                 return ResponseEntity.ok(response);
             }
-            
+
             // Try different column names that might contain the avatar
             String[] possibleColumns = {"avatar_url", "profile_picture", "avatar", "profile_pic", "image_url"};
             String avatarUrl = null;
-            
+
             for (String column : possibleColumns) {
                 try {
                     String sql = "SELECT " + column + " FROM residents WHERE email = :email";
@@ -214,11 +200,10 @@ public class ContactHelpController {
                         break;
                     }
                 } catch (Exception e) {
-                    // Column doesn't exist or no result, try next column
                     System.out.println("getResidentAvatar: Column '" + column + "' not found or no value");
                 }
             }
-            
+
             if (avatarUrl != null && !avatarUrl.isEmpty()) {
                 response.put("avatar_url", avatarUrl);
                 return ResponseEntity.ok(response);
@@ -228,7 +213,7 @@ public class ContactHelpController {
                 response.put("error", "No avatar found");
                 return ResponseEntity.ok(response);
             }
-            
+
         } catch (Exception e) {
             System.err.println("getResidentAvatar: Error - " + e.getMessage());
             e.printStackTrace();
@@ -237,32 +222,33 @@ public class ContactHelpController {
             return ResponseEntity.ok(response);
         }
     }
-    
-    // Debug endpoint to check residents table structure
+
+    // ── GET: debug residents table ─────────────────────────────────────────────
+
     @GetMapping("/debug/residents-table")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> debugResidentsTable() {
         Map<String, Object> debug = new HashMap<>();
-        
+
         try {
-            // Get column names
             String sql = "SELECT column_name FROM information_schema.columns WHERE table_name = 'residents'";
             Query query = entityManager.createNativeQuery(sql);
             List<String> columns = query.getResultList();
             debug.put("columns", columns);
-            
-            // Get sample data
+
             String sampleSql = "SELECT * FROM residents LIMIT 5";
             Query sampleQuery = entityManager.createNativeQuery(sampleSql);
             List<Object[]> sampleData = sampleQuery.getResultList();
             debug.put("sample_data", sampleData);
-            
+
         } catch (Exception e) {
             debug.put("error", e.getMessage());
         }
-        
+
         return ResponseEntity.ok(debug);
     }
+
+    // ── POST: mark as read ─────────────────────────────────────────────────────
 
     @PostMapping("/{id}/mark-read")
     @ResponseBody
@@ -276,35 +262,53 @@ public class ContactHelpController {
         return ResponseEntity.ok(Map.of("message", "Marked as read"));
     }
 
+    // ── PUT: update status (with activity logging) ─────────────────────────────
+
     @PutMapping("/{id}/status")
     @ResponseBody
-    public ResponseEntity<?> updateStatus(@PathVariable Long id, @RequestParam String status, Principal principal) {
-        ContactHelpRequest request = service.getRequestById(id);
-        if (request == null) return ResponseEntity.notFound().build();
+    public ResponseEntity<?> updateStatus(
+            @PathVariable Long id,
+            @RequestParam String status,
+            Principal principal,
+            HttpServletRequest request) {
 
-        request.setStatus(status);
-        if ("RESOLVED".equals(status) && request.getResolvedAt() == null) {
-            request.setResolvedAt(LocalDateTime.now());
-            // Set who resolved it
-            if (principal != null) {
-                AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
-                request.setResolvedBy(admin.getName());
-            }
+        ContactHelpRequest req = service.getRequestById(id);
+        if (req == null) return ResponseEntity.notFound().build();
+
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+                
+        req.setStatus(status);
+        if ("RESOLVED".equals(status) && req.getResolvedAt() == null) {
+            req.setResolvedAt(LocalDateTime.now());
+            req.setResolvedBy(admin.getName());
         }
-        service.saveRequest(request);
+        service.saveRequest(req);
+        
+        String action = "RESOLVED".equals(status) ? "RESOLVED" : "UPDATED";
+            String description = "RESOLVED".equals(status)
+                ? truncate("Marked the contact request from " + nvl(req.getName(), "Unknown") + " as resolved")
+                : truncate("Updated the contact request from " + nvl(req.getName(), "Unknown") + " to " + status);
+
+            activityLogService.log(
+                admin.getName(), admin.getRole(), action, "Contact Help",
+                description, request.getRemoteAddr(), "Success"
+            );
 
         return ResponseEntity.ok(Map.of("message", "Status updated successfully"));
     }
+
+    // ── POST: send message (with activity logging) ─────────────────────────────
 
     @PostMapping("/{id}/messages")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> sendMessage(
             @PathVariable Long id,
             @RequestBody Map<String, String> payload,
-            Principal principal) {
+            Principal principal,
+            HttpServletRequest request) {
 
-        ContactHelpRequest request = service.getRequestById(id);
-        if (request == null) return ResponseEntity.notFound().build();
+        ContactHelpRequest req = service.getRequestById(id);
+        if (req == null) return ResponseEntity.notFound().build();
 
         String messageText = payload.get("message");
         if (messageText == null || messageText.isBlank()) return ResponseEntity.badRequest().build();
@@ -312,8 +316,16 @@ public class ContactHelpController {
         AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
         ContactMessage saved = messageService.saveMessage(id, messageText, "ADMIN", admin.getName());
 
+        activityLogService.log(
+            admin.getName(), admin.getRole(), "REPLIED", "Contact Help",
+            truncate("Sent a reply to " + nvl(req.getName(), "Unknown") + " on their contact request"),
+            request.getRemoteAddr(), "Success"
+        );
+
         return ResponseEntity.ok(messageToMap(saved));
     }
+
+    // ── GET: messages list ─────────────────────────────────────────────────────
 
     @GetMapping("/{id}/messages")
     @ResponseBody
@@ -330,6 +342,8 @@ public class ContactHelpController {
         return ResponseEntity.ok(messages);
     }
 
+    // ── GET: count by tab ──────────────────────────────────────────────────────
+
     @GetMapping("/api/count")
     @ResponseBody
     public ResponseEntity<Map<String, Long>> getCount(@RequestParam String tab) {
@@ -341,6 +355,8 @@ public class ContactHelpController {
         };
         return ResponseEntity.ok(Map.of("count", count));
     }
+
+    // ── GET: incoming requests (API) ───────────────────────────────────────────
 
     @GetMapping("/api/incoming-requests")
     @ResponseBody
@@ -363,6 +379,8 @@ public class ContactHelpController {
         return ResponseEntity.ok(result);
     }
 
+    // ── GET: unread status ─────────────────────────────────────────────────────
+
     @GetMapping("/{id}/unread-status")
     @ResponseBody
     public ResponseEntity<Map<String, Boolean>> getUnreadStatus(@PathVariable Long id) {
@@ -371,6 +389,8 @@ public class ContactHelpController {
 
         return ResponseEntity.ok(Map.of("hasUnread", hasUnreadMessages(request)));
     }
+
+    // ── GET: check new messages ────────────────────────────────────────────────
 
     @GetMapping("/{id}/check-new-messages")
     @ResponseBody
@@ -400,6 +420,8 @@ public class ContactHelpController {
 
         return ResponseEntity.ok(Map.of("hasNewResidentMessage", hasNewResidentMessage));
     }
+
+    // ── GET: debug unread ──────────────────────────────────────────────────────
 
     @GetMapping("/{id}/debug")
     @ResponseBody
@@ -431,8 +453,32 @@ public class ContactHelpController {
         return ResponseEntity.ok(debug);
     }
 
+    // ── helpers ────────────────────────────────────────────────────────────────
+
+    private boolean hasUnreadMessages(ContactHelpRequest req) {
+        LocalDateTime lastViewed = req.getAdminLastViewedAt();
+        if (lastViewed == null) return true;
+
+        List<ContactMessage> messages = messageService.getMessagesByRequestId(req.getId());
+        LocalDateTime latest = null;
+        if (messages != null) {
+            for (ContactMessage msg : messages) {
+                if ("RESIDENT".equals(msg.getSenderType()) && msg.getCreatedAt() != null) {
+                    if (latest == null || msg.getCreatedAt().isAfter(latest)) latest = msg.getCreatedAt();
+                }
+            }
+        }
+        if (latest == null && req.getCreatedAt() != null) latest = req.getCreatedAt();
+        return latest != null && latest.isAfter(lastViewed);
+    }
+
     private String nvl(String value, String fallback) {
         return value != null ? value : fallback;
+    }
+
+    private String truncate(String text) {
+        if (text == null) return null;
+        return text.length() > 250 ? text.substring(0, 250) + "..." : text;
     }
 
     private Map<String, Object> messageToMap(ContactMessage msg) {

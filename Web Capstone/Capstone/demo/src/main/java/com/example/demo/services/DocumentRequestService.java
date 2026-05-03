@@ -42,10 +42,14 @@ public class DocumentRequestService {
     public void archiveRequest(Long id, String processedBy) {
         updateStatus(id, "RESOLVED", processedBy);
     }
-
+    
     public long countPending() {
-    return repository.countByStatusNotIn(List.of("RESOLVED", "ARCHIVED"));
-}
+        return repository.countByStatusNotIn(List.of("RESOLVED", "ARCHIVED"));
+    }
+    public DocumentRequest getById(Long id) {
+        return repository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Request not found: " + id));
+    }
 } 
     
 

@@ -14,8 +14,11 @@
     </div>
 
     <!-- MAIN -->
+     
     <button class="section-toggle" onclick="toggleSection(this, 'sec-main')">
-        Main <i class="bi bi-chevron-down section-arrow"></i>
+        <span class="section-notif-dot" id="dot-main"></span>
+        Main
+        <i class="bi bi-chevron-down section-arrow"></i>
     </button>
     <div class="section-body" id="sec-main">
         <ul class="menu">
@@ -24,18 +27,23 @@
             </li>
             <li onclick="window.location.href='/announcements'">
                 <img src="/icons/announcements.svg" class="icon"> Announcements
+                <span class="sidebar-count-badge" id="badge-announcements"></span>
             </li>
         </ul>
     </div>
 
-    <!-- MANAGEMENT -->
+   <!-- MANAGEMENT -->
     <button class="section-toggle" onclick="toggleSection(this, 'sec-management')">
-        Management <i class="bi bi-chevron-down section-arrow"></i>
+        <span class="section-notif-dot" id="dot-management"></span>
+        Management
+        <i class="bi bi-chevron-down section-arrow"></i>
     </button>
     <div class="section-body" id="sec-management">
         <ul class="menu">
-            <li th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY'}" onclick="window.location.href='/account'">
+            <li th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY'}"
+                onclick="window.location.href='/account'">
                 <img src="/icons/accounts.svg" class="icon"> Accounts
+                <span class="sidebar-count-badge" id="badge-accounts"></span>
             </li>
             <li onclick="window.location.href='/user-profile'">
                 <img src="/icons/user.svg" class="icon"> User Profile
@@ -45,67 +53,88 @@
 
     <!-- RESIDENT SERVICES -->
     <button class="section-toggle" onclick="toggleSection(this, 'sec-resident')">
-        Resident Services <i class="bi bi-chevron-down section-arrow"></i>
+        <span class="section-notif-dot" id="dot-resident"></span>
+        Resident Services
+        <i class="bi bi-chevron-down section-arrow"></i>
     </button>
     <div class="section-body" id="sec-resident">
         <ul class="menu">
             <li onclick="toggleSubMenu(this, 'sub-requests')">
                 <img src="/icons/requests.svg" class="icon"> Requests
+                <span class="sidebar-count-badge" id="badge-requests"></span>
                 <i class="bi bi-chevron-down dropdown-arrow"></i>
             </li>
             <ul class="sub-menu" id="sub-requests">
-                <li onclick="window.location.href='/requests-blotter'">Blotter</li>
-                <li onclick="window.location.href='/requests-document'">Documents</li>
+                <li onclick="window.location.href='/requests-document'">
+                    Documents
+                    <span class="sidebar-count-badge" id="badge-documents"></span>
+                </li>
             </ul>
-            <li onclick="window.location.href='/contact-help'" th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY'}">
+            <li onclick="window.location.href='/contact-help'"
+                th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY'}">
                 <img src="/icons/help.svg" class="icon"> Contact Help
             </li>
             <li onclick="window.location.href='/facilities'">
                 <img src="/icons/facilities.svg" class="icon"> Facilities &amp; Hotlines
+                <span class="sidebar-count-badge" id="badge-facilities"></span>
             </li>
         </ul>
     </div>
 
     <!-- COMMUNITY SAFETY -->
-    <button class="section-toggle" onclick="toggleSection(this, 'sec-safety')" th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY'}">
-        Community Safety <i class="bi bi-chevron-down section-arrow"></i>
-    </button>
-    <div class="section-body" id="sec-safety">
-        <ul class="menu">
-            <li onclick="window.location.href='/safety-reports'">
-                <img src="/icons/safety.svg" class="icon"> Reports &amp; Alerts
-            </li>
-            <li onclick="window.location.href='/sos-monitoring'">
-                <img src="/icons/sos.svg" class="icon"> SOS Monitoring
-            </li>
-        </ul>
-    </div>
+        <button class="section-toggle" onclick="toggleSection(this, 'sec-safety')"
+                th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY'}">
+            <span class="section-notif-dot" id="dot-safety"></span>
+            Community Safety
+            <i class="bi bi-chevron-down section-arrow"></i>
+        </button>
+        <div class="section-body" id="sec-safety">
+            <ul class="menu">
+                <li onclick="window.location.href='/safety-reports'">
+                    <img src="/icons/safety.svg" class="icon"> Reports &amp; Alerts
+                    <span class="sidebar-count-badge" id="badge-safety-reports"></span>  <!-- ADD THIS LINE -->
+                </li>
+                <li onclick="window.location.href='/sos-monitoring'">
+                    <img src="/icons/sos.svg" class="icon"> SOS Monitoring
+                    <span class="sidebar-count-badge" id="badge-sos"></span>
+                </li>
+            </ul>
+        </div>
 
-    <!-- PROGRAMS (ADMIN only) -->
+    <!-- PROGRAMS -->
     <button class="section-toggle" onclick="toggleSection(this, 'sec-programs')">
-        Programs <i class="bi bi-chevron-down section-arrow"></i>
+        <span class="section-notif-dot" id="dot-programs"></span>
+        Programs
+        <i class="bi bi-chevron-down section-arrow"></i>
     </button>
     <div class="section-body" id="sec-programs">
         <ul class="menu">
             <li onclick="window.location.href='/program-calendar'">
                 <img src="/icons/calendar.svg" class="icon"> Program Calendar
+                <span class="sidebar-count-badge" id="badge-programs"></span>
             </li>
             <li onclick="window.location.href='/program-planner'">
                 <img src="/icons/planner.svg" class="icon"> Program Planner
+                
             </li>
         </ul>
     </div>
 
     <!-- SYSTEM -->
-    <button class="section-toggle" onclick="toggleSection(this, 'sec-system')" th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY'}">
-        System <i class="bi bi-chevron-down section-arrow"></i>
+    <button class="section-toggle" onclick="toggleSection(this, 'sec-system')"
+            th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY'}">
+        <span class="section-notif-dot" id="dot-system"></span>
+        System
+        <i class="bi bi-chevron-down section-arrow"></i>
     </button>
     <div class="section-body" id="sec-system">
         <ul class="menu">
             <li onclick="window.location.href='/Activity-logs'">
                 <img src="/icons/monitor.svg" class="icon"> Activity Logs
+                <span class="sidebar-count-badge" id="badge-activity-logs"></span>
             </li>
-            <li th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY'}" onclick="window.location.href='/system-settings'">
+            <li th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY'}"
+                onclick="window.location.href='/system-settings'">
                 <img src="/icons/settings.svg" class="icon"> System Settings
             </li>
         </ul>
@@ -118,6 +147,9 @@
     </div>
 
 </div>
+
+<script src="/js/sidebar.js"></script>
+<script src="/js/notif.js"></script>
+<script src="/js/sos-global-alert.js"></script>
 </body>
 </html>
-<script src="/js/sos-global-alert.js"></script>

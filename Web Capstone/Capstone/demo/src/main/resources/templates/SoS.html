@@ -301,6 +301,47 @@
         font-size: 11px;
         color: #65676B;
     }
+
+    /* Success Toast Modal - from system settings */
+    .success-toast-modal .modal-content {
+        background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+    }
+    .success-toast-modal .modal-header {
+        background: transparent;
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .success-toast-modal .modal-body {
+        text-align: center;
+        padding: 20px;
+    }
+    .success-toast-modal .modal-footer {
+        border-top: none;
+        justify-content: center;
+        padding-top: 0;
+        background: transparent;
+    }
+    .success-icon {
+        font-size: 60px;
+        margin-bottom: 12px;
+    }
+
+    /* Modal z-index stacking */
+    .modal.success-toast-modal {
+        z-index: 10600 !important;
+    }
+    .modal.success-toast-modal + .modal-backdrop {
+        z-index: 10590 !important;
+    }
+    [id^="dynamicConfirmModal_"] {
+        z-index: 10550 !important;
+    }
+    [id^="dynamicConfirmModal_"] + .modal-backdrop {
+        z-index: 10540 !important;
+    }
 </style>
 
 <meta charset="UTF-8">
@@ -318,7 +359,8 @@
 <title>SoS Monitoring</title>
 </head>
 <body>
-
+    <script src="/js/notif.js"></script>
+<div class="toast-container" id="toastContainer"></div>
 <div id="sos-toast">🚨 New SoS Alert received!</div>
 
 <div class="layout">
@@ -329,6 +371,24 @@
         <h2>First Login Detected</h2>
         <p>You must change your password before using the system.</p>
         <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+<!-- Success Modal (from system settings) -->
+<div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                
+            </div>
+            <div class="modal-body">
+                <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <h5 id="successMessage">Success!</h5>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -399,7 +459,7 @@
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
                             <td th:text="${report.location != null ? report.location : 'N/A'}"></td>
                             <td><span class="status-incoming">Incoming</span></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'PROCESSING\')'">Process</button><button class="archive-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'PROCESSING\')'">Process</button><button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -420,7 +480,7 @@
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
                             <td th:text="${report.location != null ? report.location : 'N/A'}"></td>
                             <td><span class="status-processing">Processing</span></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'RESOLVED\')'">Resolve</button><button class="archive-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'RESOLVED\')'">Resolve</button><button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -441,7 +501,7 @@
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
                             <td th:text="${report.location != null ? report.location : 'N/A'}"></td>
                             <td><span class="status-resolved">Resolved</span></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="archive-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -449,12 +509,12 @@
             </div>
         </div>
 
-        <!-- ===== ARCHIVE ===== (WITH VIEW BUTTON ADDED) -->
+        <!-- ===== ARCHIVE ===== -->
         <div id="tab-archive" class="panel-inner" th:classappend="${currentTab != 'archive' ? 'd-none' : ''}">
             <div class="panel-header">Archived SoS Alerts</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
-                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Location</th><th>Status</th><th>Actions</th><tr></thead>
                     <tbody>
                         <tr th:each="report : ${archivedReports}" th:if="${not #lists.isEmpty(archivedReports)}">
                             <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
@@ -483,7 +543,7 @@
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
                             <td th:text="${report.location != null ? report.location : 'N/A'}"></td>
                             <td><span class="status-cancelled">Cancelled</span></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="archive-btn" th:onclick="'updateStatus(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -515,6 +575,162 @@
 <script src="/js/sidebar.js"></script>
 
 <script>
+// =================================================================
+// SUCCESS MODAL FUNCTION (from system settings)
+// =================================================================
+function showSuccess(message) {
+    document.getElementById('successMessage').innerHTML = message;
+    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+    successModal.show();
+}
+
+// =================================================================
+// DYNAMIC CONFIRMATION MODAL (from system settings)
+// =================================================================
+function showConfirm(message, title, onConfirm) {
+    const confirmModalId = 'dynamicConfirmModal_' + Date.now();
+    const confirmModalHtml = `
+        <div id="${confirmModalId}" class="modal fade" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 16px;">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #30534D, #3d6b63);">
+                        <h5 class="modal-title" style="color: white;">${title}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" style="padding: 24px; font-size: 16px;">
+                        ${message}
+                    </div>
+                    <div class="modal-footer" style="border-top: none; padding: 16px 24px;">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="confirmOkBtn_${confirmModalId}" style="background-color: #44C375; border-color: #44C375;">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.querySelectorAll('[id^="dynamicConfirmModal_"]').forEach(modal => modal.remove());
+    document.body.insertAdjacentHTML('beforeend', confirmModalHtml);
+    const modalEl = document.getElementById(confirmModalId);
+    const modal = new bootstrap.Modal(modalEl);
+    
+    const confirmBtn = document.getElementById(`confirmOkBtn_${confirmModalId}`);
+    confirmBtn.onclick = function() {
+        modal.hide();
+        onConfirm();
+    };
+    
+    modalEl.addEventListener('hidden.bs.modal', function() {
+        modalEl.remove();
+    });
+    
+    modal.show();
+}
+
+// =================================================================
+// UPDATED: STATUS UPDATE WITH CONFIRMATION (from system settings)
+// =================================================================
+function updateStatusWithConfirm(id, status) {
+    let actionText = '';
+    let title = '';
+    let message = '';
+    
+    switch(status) {
+        case 'PROCESSING':
+            actionText = 'process';
+            title = 'Confirm Process';
+            message = 'Are you sure you want to mark this SoS alert as Processing?';
+            break;
+        case 'RESOLVED':
+            actionText = 'resolve';
+            title = 'Confirm Resolve';
+            message = 'Are you sure you want to mark this SoS alert as Resolved?';
+            break;
+        case 'ARCHIVED':
+            actionText = 'archive';
+            title = 'Confirm Archive';
+            message = 'Are you sure you want to archive this SoS alert?';
+            break;
+        default:
+            actionText = 'update';
+            title = 'Confirm Update';
+            message = 'Are you sure you want to update this SoS alert?';
+    }
+    
+    showConfirm(message, title, () => {
+        let responderName = '';
+        const nameElement = document.querySelector('.user-name, .admin-name, [class*="user"], [class*="admin"]');
+        if (nameElement) {
+            let fullText = nameElement.innerText.trim();
+            responderName = fullText.replace(/^ADMIN:\s*/i, '').replace(/^Name:\s*/i, '');
+        }
+        if (!responderName) responderName = 'Barangay Responder';
+        
+        let url = '/sos-monitoring/' + id + '/status?status=' + status;
+        if (status === 'PROCESSING') url += '&responderName=' + encodeURIComponent(responderName);
+        
+        fetch(url, { method: 'PUT' })
+    .then(r => {
+        if (r.ok) {
+            let successMsg = '';
+            switch(status) {
+                case 'PROCESSING': successMsg = 'SoS alert moved to Processing!'; break;
+                case 'RESOLVED': successMsg = 'SoS alert marked as Resolved!'; break;
+                case 'ARCHIVED': successMsg = 'SoS alert archived successfully!'; break;
+                default: successMsg = 'Status updated successfully!';
+            }
+            showSuccess(successMsg);
+            // Remove the alert row from current table instead of reloading
+            const row = document.querySelector(`[data-id="${id}"]`);
+            if (row) {
+                row.remove();
+            }
+            // Update badge counts locally
+            const activeTab = document.querySelector('.tab.active');
+            if (activeTab) {
+                const tabText = activeTab.innerText.toLowerCase();
+                if (tabText.includes('incoming')) {
+                    const badge = document.getElementById('badge-incoming');
+                    if (badge) {
+                        let count = parseInt(badge.textContent) || 0;
+                        badge.textContent = Math.max(0, count - 1);
+                    }
+                } else if (tabText.includes('processing')) {
+                    const badge = document.getElementById('badge-processing');
+                    if (badge) {
+                        let count = parseInt(badge.textContent) || 0;
+                        badge.textContent = Math.max(0, count - 1);
+                    }
+                } else if (tabText.includes('cancelled')) {
+                    const badge = document.getElementById('badge-cancelled');
+                    if (badge) {
+                        let count = parseInt(badge.textContent) || 0;
+                        badge.textContent = Math.max(0, count - 1);
+                    }
+                }
+            }
+            // Show empty message if no rows left
+            const tbody = row ? row.parentElement : null;
+            if (tbody && tbody.children.length === 0) {
+                const emptyDiv = document.querySelector(`#${tbody.id}-empty`);
+                if (emptyDiv) emptyDiv.style.display = 'block';
+            }
+        } else {
+            alert('Error updating status');
+        }
+    })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Network error occurred');
+            });
+    });
+}
+
+// Keep original function for compatibility
+function updateStatus(id, status) {
+    updateStatusWithConfirm(id, status);
+}
+
 // =================================================================
 // AUDIO
 // =================================================================
@@ -606,6 +822,11 @@ async function pollIncoming() {
         if (badge && data.count != null) badge.textContent = data.count;
         if (data.newSos && data.newSos.length > 0) {
             lastSeenIncomingId = Math.max(lastSeenIncomingId, ...data.newSos.map(r => r.id));
+            
+            // 🔔 PLAY SIREN + SHOW TOAST for new SOS
+            playSiren();
+            showToast('🚨 New SoS Alert received! ' + data.newSos.length + ' new alert(s)');
+            
             const tbody = document.getElementById('incoming-tbody');
             const empty = document.getElementById('incoming-empty');
             if (empty) empty.style.display = 'none';
@@ -617,9 +838,6 @@ async function pollIncoming() {
                 tr.innerHTML = buildIncomingRow(r);
                 tbody.prepend(tr);
             });
-        }
-        if (data.reports && data.reports.length > 0) {
-            lastSeenIncomingId = Math.max(lastSeenIncomingId, ...data.reports.map(r => r.id));
         }
     } catch (_) {}
 }
@@ -681,15 +899,15 @@ async function pollCancelled() {
 }
 
 function buildIncomingRow(r) {
-    return `<tr data-id="${r.id}"><td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-incoming">Incoming</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatus(${r.id},'PROCESSING')">Process</button><button class="archive-btn" onclick="updateStatus(${r.id},'ARCHIVED')">Archive</button></div></td></tr>`;
+    return `<tr data-id="${r.id}"><td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-incoming">Incoming</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatusWithConfirm(${r.id},'PROCESSING')">Process</button><button class="archive-btn" onclick="updateStatusWithConfirm(${r.id},'ARCHIVED')">Archive</button></div></td></tr>`;
 }
 
 function buildProcessingRow(r) {
-    return `<tr data-id="${r.id}"><td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-processing">Processing</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatus(${r.id},'RESOLVED')">Resolve</button><button class="archive-btn" onclick="updateStatus(${r.id},'ARCHIVED')">Archive</button></div></td></tr>`;
+    return `<tr data-id="${r.id}"><td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-processing">Processing</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatusWithConfirm(${r.id},'RESOLVED')">Resolve</button><button class="archive-btn" onclick="updateStatusWithConfirm(${r.id},'ARCHIVED')">Archive</button></div></td></tr>`;
 }
 
 function buildCancelledRow(r) {
-    return `<tr data-id="${r.id}"><td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-cancelled">Cancelled</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="archive-btn" onclick="updateStatus(${r.id},'ARCHIVED')">Archive</button></div></td></tr>`;
+    return `<tr data-id="${r.id}"><td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-cancelled">Cancelled</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="archive-btn" onclick="updateStatusWithConfirm(${r.id},'ARCHIVED')">Archive</button></div></td></tr>`;
 }
 
 // =================================================================
@@ -825,19 +1043,6 @@ document.querySelectorAll('#typeFilterMenu .dropdown-item').forEach(item => {
 });
 
 document.getElementById('sos-search').addEventListener('keyup', applyFilters);
-
-function updateStatus(id, status) {
-    let responderName = '';
-    const nameElement = document.querySelector('.user-name, .admin-name, [class*="user"], [class*="admin"]');
-    if (nameElement) {
-        let fullText = nameElement.innerText.trim();
-        responderName = fullText.replace(/^ADMIN:\s*/i, '').replace(/^Name:\s*/i, '');
-    }
-    if (!responderName) responderName = 'Barangay Responder';
-    let url = '/sos-monitoring/' + id + '/status?status=' + status;
-    if (status === 'PROCESSING') url += '&responderName=' + encodeURIComponent(responderName);
-    fetch(url, { method: 'PUT' }).then(r => { if (r.ok) location.reload(); else alert('Error'); });
-}
 
 function exportToPDF() {
     const { jsPDF } = window.jspdf;

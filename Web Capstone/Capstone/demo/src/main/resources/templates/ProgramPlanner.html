@@ -398,6 +398,7 @@
 </head>
 <body>
 
+<div class="toast-container" id="toastContainer"></div>
 <div class="layout">
 
 <div id="forcePasswordModal" class="force-modal">
@@ -648,35 +649,35 @@
         </p>
 
         <div id="ai-program-details">
-            <div class="program-detail-row">
-                <div class="program-detail-label">📌 Program Name</div>
-                <div class="program-detail-value" id="ai-program-name-display">-</div>
-            </div>
-            <div class="program-detail-row">
-                <div class="program-detail-label">📅 Date</div>
-                <div class="program-detail-value" id="ai-program-date-display">-</div>
-            </div>
-            <div class="program-detail-row">
-                <div class="program-detail-label">📍 Location</div>
-                <div class="program-detail-value" id="ai-program-location-display">-</div>
-            </div>
-            <div class="program-detail-row">
-                <div class="program-detail-label">⏰ Start Time</div>
-                <div class="program-detail-value" id="ai-program-starttime-display">-</div>
-            </div>
-            <div class="program-detail-row">
-                <div class="program-detail-label">⏰ End Time</div>
-                <div class="program-detail-value" id="ai-program-endtime-display">-</div>
-            </div>
-            <div class="program-detail-row">
-                <div class="program-detail-label">💰 Estimated Budget</div>
-                <div class="program-detail-value" id="ai-program-budget-display">-</div>
-            </div>
-            <div class="program-detail-row">
-                <div class="program-detail-label">📝 Notes</div>
-                <div class="program-detail-value" id="ai-program-notes-display">-</div>
-            </div>
-        </div>
+          <div class="program-detail-row">
+              <div class="program-detail-label">📌 Program Name</div>
+              <input type="text" class="form-control" id="ai-program-name-display" style="font-size:13px;">
+          </div>
+          <div class="program-detail-row">
+              <div class="program-detail-label">📅 Date</div>
+              <input type="date" class="form-control" id="ai-program-date-display" style="font-size:13px;">
+          </div>
+          <div class="program-detail-row">
+              <div class="program-detail-label">📍 Location</div>
+              <input type="text" class="form-control" id="ai-program-location-display" style="font-size:13px;">
+          </div>
+          <div class="program-detail-row">
+              <div class="program-detail-label">⏰ Start Time</div>
+              <input type="time" class="form-control" id="ai-program-starttime-display" style="font-size:13px;">
+          </div>
+          <div class="program-detail-row">
+              <div class="program-detail-label">⏰ End Time</div>
+              <input type="time" class="form-control" id="ai-program-endtime-display" style="font-size:13px;">
+          </div>
+          <div class="program-detail-row">
+              <div class="program-detail-label">💰 Estimated Budget (₱)</div>
+              <input type="number" class="form-control" id="ai-program-budget-display" style="font-size:13px;" min="0">
+          </div>
+          <div class="program-detail-row">
+              <div class="program-detail-label">📝 Notes</div>
+              <textarea class="form-control" id="ai-program-notes-display" rows="2" style="font-size:13px; resize:none;"></textarea>
+          </div>
+      </div>
 
         <div style="display: flex; gap: 10px; margin-top: 16px;">
             <button onclick="saveAIGeneratedProgram()" class="chat-send-btn" style="flex: 1; height: 40px; background-color: #44C375;">
@@ -895,63 +896,59 @@
   }
 
   function openAICreateModal() {
-    if (!_currentAIGeneratedProgram) {
-      alert('No program data available. Please ask the AI to suggest a program first.');
-      return;
-    }
-    
-    document.getElementById('ai-program-name-display').textContent = _currentAIGeneratedProgram.programName || 'Not specified';
-    document.getElementById('ai-program-date-display').textContent = _currentAIGeneratedProgram.programDate || 'Not specified';
-    document.getElementById('ai-program-location-display').textContent = _currentAIGeneratedProgram.program_place || 'Not specified';
-    document.getElementById('ai-program-starttime-display').textContent = formatTime(_currentAIGeneratedProgram.programTime);
-    document.getElementById('ai-program-endtime-display').textContent = formatTime(_currentAIGeneratedProgram.programEndTime);
-    document.getElementById('ai-program-budget-display').innerHTML = `₱${(_currentAIGeneratedProgram.program_budget || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-    document.getElementById('ai-program-notes-display').textContent = _currentAIGeneratedProgram.notes || 'No notes';
-    
-    document.getElementById('aiCreateProgramModal').style.display = 'block';
-  }
-
-  function closeAICreateModal() {
-    document.getElementById('aiCreateProgramModal').style.display = 'none';
-  }
-
-  async function saveAIGeneratedProgram() {
-    if (!_currentAIGeneratedProgram) {
-        alert('No program data to save.');
-        return;
-    }
-    
-    const programData = {
-        programName: _currentAIGeneratedProgram.programName,
-        programDate: _currentAIGeneratedProgram.programDate,
-        program_place: _currentAIGeneratedProgram.program_place,
-        programTime: _currentAIGeneratedProgram.programTime,
-        programendTime: _currentAIGeneratedProgram.programEndTime,
-        program_budget: _currentAIGeneratedProgram.program_budget || 0
-    };
-    
-    try {
-        const response = await fetch('/api/calendar/suggested', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(programData)
-        });
-        
-        if (response.ok) {
-            alert('Program saved successfully!');
-            closeAICreateModal();
-            setCreateButtonEnabled(false);
-            _currentAIGeneratedProgram = null;
-            loadSuggestedPrograms();
-        } else {
-            const error = await response.text();
-            alert('Failed to save program: ' + error);
+        if (!_currentAIGeneratedProgram) {
+            alert('No program data available. Please ask the AI to suggest a program first.');
+            return;
         }
-    } catch (error) {
-        console.error('Error saving program:', error);
-        alert('Error saving program. Please try again.');
+
+        document.getElementById('ai-program-name-display').value     = _currentAIGeneratedProgram.programName || '';
+        document.getElementById('ai-program-date-display').value     = _currentAIGeneratedProgram.programDate || '';
+        document.getElementById('ai-program-location-display').value = _currentAIGeneratedProgram.program_place || '';
+        document.getElementById('ai-program-starttime-display').value = _currentAIGeneratedProgram.programTime || '';
+        document.getElementById('ai-program-endtime-display').value  = _currentAIGeneratedProgram.programEndTime || '';
+        document.getElementById('ai-program-budget-display').value   = _currentAIGeneratedProgram.program_budget || 0;
+        document.getElementById('ai-program-notes-display').value    = _currentAIGeneratedProgram.notes || '';
+
+        document.getElementById('aiCreateProgramModal').style.display = 'block';
     }
-  }
+
+    async function saveAIGeneratedProgram() {
+        const programData = {
+            programName:    document.getElementById('ai-program-name-display').value,
+            programDate:    document.getElementById('ai-program-date-display').value,
+            program_place:  document.getElementById('ai-program-location-display').value,
+            programTime:    document.getElementById('ai-program-starttime-display').value,
+            programendTime: document.getElementById('ai-program-endtime-display').value,
+            program_budget: parseFloat(document.getElementById('ai-program-budget-display').value) || 0,
+            notes:          document.getElementById('ai-program-notes-display').value
+        };
+
+        if (!programData.programName) {
+            alert('Program name is required.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/calendar/suggested', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(programData)
+            });
+
+            if (response.ok) {
+                alert('Program saved successfully!');
+                closeAICreateModal();
+                setCreateButtonEnabled(false);
+                _currentAIGeneratedProgram = null;
+                loadSuggestedPrograms();
+            } else {
+                alert('Failed to save program: ' + await response.text());
+            }
+        } catch (error) {
+            console.error('Error saving program:', error);
+            alert('Error saving program. Please try again.');
+        }
+    }
 
   async function loadChatHistory() {
     try {

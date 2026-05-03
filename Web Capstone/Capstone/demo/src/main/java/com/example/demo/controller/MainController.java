@@ -4,6 +4,7 @@ import com.example.demo.dto.AdminUserDTO;
 import com.example.demo.dto.ResidentDTO;
 import com.example.demo.model.Activitylogs;
 import com.example.demo.model.AdminUser;
+import com.example.demo.model.ContactHelpRequest;
 import com.example.demo.model.ResidentUser;
 import com.example.demo.services.AdminUserServices;
 import com.example.demo.services.AnnouncementsService;
@@ -11,10 +12,13 @@ import com.example.demo.services.ResidentUserService;
 import com.example.demo.services.EmailService;
 import com.example.demo.services.ActivityLogService;
 import com.example.demo.services.BlotterService;
+import com.example.demo.services.ContactHelpService;
 import com.example.demo.services.DocumentRequestService;
 import com.example.demo.services.SosReportsService;
 import com.example.demo.services.SafetyReportService;
 import com.example.demo.services.ProgramBudgetService;
+import com.example.demo.services.ProgramCalendarService;
+import com.example.demo.model.ProgramCalendar;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -73,7 +77,14 @@ public class MainController {
     @Autowired private EmailService emailService;
     @Autowired private HttpSession session;
     @Autowired private ProgramBudgetService programBudgetService;
+
+    @Autowired(required = false)
+    private ProgramCalendarService programCalendarService;
+
+    @Autowired(required = false)
+    private ContactHelpService contactHelpService;
     
+
     // Track last modification time for accounts polling
     private volatile long lastAccountsModificationTime = System.currentTimeMillis();
 
@@ -144,7 +155,7 @@ public class MainController {
 
     @GetMapping("/account")
     public String AccountPage(Model model, Principal principal) {
-
+        
         AdminUser currentAdmin = addCurrentAdminToModel(principal, model);
 
         Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "BARANGAY-CAPTAIN");
@@ -152,7 +163,9 @@ public class MainController {
         if (currentAdmin == null || !allowedRoles.contains(currentAdmin.getRole())) {
             return "redirect:/home";
         }
-
+        if ("Archived".equalsIgnoreCase(currentAdmin.getEmpstatus())) {
+                return "redirect:/logout";
+            }
         model.addAttribute("currentusername", currentAdmin.getUsername());
 
         List<AdminUserDTO> adminDTOs = adminUserService.getAllAdminsForTable();
@@ -193,7 +206,7 @@ public class MainController {
     @PostMapping("/register")
     public String registerAdmin(
             @ModelAttribute("newAdmin") AdminUser admin,
-            @RequestParam("profilePicture") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam(value = "profilePicture", required = false) org.springframework.web.multipart.MultipartFile file,
             @RequestParam(value = "redirectTo", required = false) String redirectTo,
             @RequestParam(value = "profilePictureUrl", required = false) String profilePictureUrl,
             RedirectAttributes redirectAttributes,
@@ -221,7 +234,9 @@ public class MainController {
                 existingAdmin.setPhoneNumber(admin.getPhoneNumber());
                 existingAdmin.setAddress(admin.getAddress());
                 existingAdmin.setGender(admin.getGender());
-                existingAdmin.setRole(admin.getRole());
+                if (admin.getRole() != null && !admin.getRole().isBlank()) {
+                    existingAdmin.setRole(admin.getRole());
+                }
                 existingAdmin.setBirthDate(admin.getBirthDate());
 
                 // Handle profile picture URL from Supabase
@@ -242,7 +257,7 @@ public class MainController {
                 adminUserService.saveAdmin(existingAdmin);
                 activityLogService.log(
                     existingAdmin.getName(), "ADMIN", "UPDATED", "Accounts",
-                    truncate("Updated admin account: " + existingAdmin.getUsername()),
+                    truncate("Updated account details for " + existingAdmin.getName() + " (" + existingAdmin.getRole() + ")"),
                     request.getRemoteAddr(), "Success"
                 );
                 
@@ -263,7 +278,7 @@ public class MainController {
                 adminUserService.saveAdmin(admin);
                 activityLogService.log(
                     principal.getName(), admin.getRole(), "CREATED", "Accounts",
-                    truncate("Created new Employee account: " + admin.getUsername()),
+                    truncate("Created a new employee account for " + admin.getName() + " with role " + admin.getRole()),
                     request.getRemoteAddr(), "Success"
                 );
                 
@@ -276,10 +291,10 @@ public class MainController {
 
         } catch (Exception e) {
             activityLogService.log(
-                principal.getName(), "ADMIN", "ERROR", "Accounts",
-                truncate("Failed to save account: " + e.getMessage()),
-                request.getRemoteAddr(), "Failed"
-            );
+                    principal.getName(), "ADMIN", "ERROR", "Accounts",
+                    truncate("Failed to save account — " + e.getMessage()),
+                    request.getRemoteAddr(), "Failed"
+                );
             redirectAttributes.addFlashAttribute("error", "Something went wrong: " + e.getMessage());
         }
 
@@ -304,12 +319,9 @@ public class MainController {
                 adminUserService.saveAdmin(admin);
 
                 activityLogService.log(
-                    currentAdmin.getName(),
-                    admin.getRole(),
-                    "ARCHIVED", "Accounts",
-                    "Archived admin account: " + admin.getUsername(),
-                    request.getRemoteAddr(),
-                    "Success"
+                    currentAdmin.getName(), admin.getRole(), "ARCHIVED", "Accounts",
+                    "Deactivated the account of " + admin.getName() + " (" + admin.getRole() + ")",
+                    request.getRemoteAddr(), "Success"
                 );
                 
                 // Update modification timestamp
@@ -330,10 +342,10 @@ public class MainController {
             resident.setStatus("Archived");
             residentUserService.saveResident(resident);
             activityLogService.log(
-                currentAdmin.getName(), currentAdmin.getRole(), "ARCHIVED", "Accounts",
-                "Archived resident account: " + resident.getFirstName() + " " + resident.getLastName(),
-                request.getRemoteAddr(), "Success"
-            );
+                    currentAdmin.getName(), currentAdmin.getRole(), "ARCHIVED", "Accounts",
+                    "Archived the resident account of " + resident.getFirstName() + " " + resident.getLastName(),
+                    request.getRemoteAddr(), "Success"
+                );
             
             // Update modification timestamp
             lastAccountsModificationTime = System.currentTimeMillis();
@@ -415,13 +427,96 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
 // SIMPLE POLLING ENDPOINT (like Safety Reports)
 // =========================================================
 
-@GetMapping("/accounts/api/poll")
-@ResponseBody
-public ResponseEntity<Map<String, Object>> pollAccounts() {
-    Map<String, Object> response = new HashMap<>();
-    response.put("lastModified", lastAccountsModificationTime);
-    return ResponseEntity.ok(response);
-}
+    @GetMapping("/accounts/api/poll")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> pollAccounts() {
+        Map<String, Object> response = new HashMap<>();
+        
+        response.put("lastModified", lastAccountsModificationTime);
+        
+        // Get all admin accounts
+        List<AdminUserDTO> allAdmins = adminUserService.getAllAdminsForTable();
+        
+        // Active employees (not archived)
+        List<Map<String, Object>> activeEmployees = allAdmins.stream()
+            .filter(a -> !"Archived".equalsIgnoreCase(a.empstatus()))
+            .map(this::mapAdminToPollResponse)
+            .collect(Collectors.toList());
+        
+        // Archived employees
+        List<Map<String, Object>> archivedEmployees = allAdmins.stream()
+            .filter(a -> "Archived".equalsIgnoreCase(a.empstatus()))
+            .map(this::mapAdminToPollResponse)
+            .collect(Collectors.toList());
+        
+        response.put("employeeAccounts", activeEmployees);
+        response.put("archivedEmployeeAccounts", archivedEmployees);
+        
+        // Get all resident accounts
+        List<ResidentDTO> allResidents = residentUserService.getAllResidentsDTO();
+        
+        // Active residents (not archived)
+        List<Map<String, Object>> activeResidents = allResidents.stream()
+            .filter(r -> !"Archived".equalsIgnoreCase(r.status()))
+            .map(this::mapResidentToPollResponse)
+            .collect(Collectors.toList());
+        
+        // Archived residents
+        List<Map<String, Object>> archivedResidents = allResidents.stream()
+            .filter(r -> "Archived".equalsIgnoreCase(r.status()))
+            .map(this::mapResidentToPollResponse)
+            .collect(Collectors.toList());
+        
+        response.put("residentAccounts", activeResidents);
+        response.put("archivedResidentAccounts", archivedResidents);
+        
+        // Lists for validation (emails, usernames, phones)
+        response.put("emailList", adminUserService.extractEmails(allAdmins));
+        response.put("usernameList", adminUserService.extractUsernames(allAdmins));
+        response.put("phoneList", adminUserService.extractPhoneNumbers(allAdmins));
+        
+        return ResponseEntity.ok(response);
+    }
+
+    // Helper method to map AdminUserDTO to poll response Map
+    private Map<String, Object> mapAdminToPollResponse(AdminUserDTO admin) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", admin.id());
+        map.put("employeeId", admin.employeeId());
+        map.put("firstName", admin.firstName());
+        map.put("lastName", admin.lastName());
+        map.put("username", admin.username());
+        map.put("email", admin.email());
+        map.put("role", admin.role());
+        map.put("gender", admin.gender());
+        map.put("birthDate", admin.birthDate() != null ? admin.birthDate().toString() : "");
+        map.put("address", admin.address());
+        map.put("phoneNumber", admin.phoneNumber());
+        map.put("empstatus", admin.empstatus());
+        map.put("profilePicture", admin.profilePicture());
+        return map;
+    }
+
+    // Helper method to map ResidentDTO to poll response Map
+    private Map<String, Object> mapResidentToPollResponse(ResidentDTO resident) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", resident.id() != null ? resident.id().toString() : "");
+        map.put("residentId", resident.residentId());
+        map.put("firstName", resident.firstName());
+        map.put("lastName", resident.lastName());
+        map.put("gender", resident.gender());
+        map.put("birthDate", resident.birthDate() != null ? resident.birthDate().toString() : "");
+        map.put("mobileNumber", resident.mobileNumber());
+        map.put("email", resident.email());
+        map.put("address", resident.address());
+        map.put("accountStatus", resident.account_status() != null ? resident.account_status() : "UNVERIFIED");
+        map.put("selfie", resident.selfie());
+        map.put("validId", resident.validId());
+        map.put("barangayIndigency", resident.barangayIndigency());
+        map.put("avatarUrl", resident.avatar_url());
+        map.put("status", resident.status());
+        return map;
+    }
 
     // =========================================================
     // EMAIL ENDPOINTS
@@ -557,7 +652,10 @@ public ResponseEntity<Map<String, Object>> pollAccounts() {
             model.addAttribute("latestAnnouncement", announcementsService.getLatest());
             model.addAttribute("pendingDocuments",   documentService.countPending());
             model.addAttribute("budget", programBudgetService.getTotalBudget());
-
+            model.addAttribute("currentAdminProfilePicture", admin.getProfilePicture());
+            if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+                return "redirect:/logout";
+            }
             boolean isPrivileged = "ADMIN".equals(role)
                                 || "BARANGAY-CAPTAIN".equals(role)
                                 || "SECRETARY".equals(role);
@@ -592,6 +690,229 @@ public ResponseEntity<Map<String, Object>> pollAccounts() {
         return "Dashboard";
     }
 
+        @GetMapping("/api/dashboard/notifications")
+        @ResponseBody
+        public ResponseEntity<?> getNotifications(@RequestParam(defaultValue = "false") boolean countOnly) {
+            
+            List<Map<String, Object>> notifications = new ArrayList<>();
+            
+            // 1. Pending Document Requests
+            try {
+                long pendingDocuments = documentService.countPending();
+                if (pendingDocuments > 0) {
+                    notifications.add(createNotification(
+                        "bi-file-earmark-text", "documents",
+                        "Document Requests", 
+                        pendingDocuments + " pending document request(s) waiting for approval",
+                        "/requests-document"
+                    ));
+                }
+            } catch (Exception e) {}
+            
+            // 2. SAFETY REPORTS - ADD THIS SECTION
+            try {
+                Map<String, Long> safetyStats = safetyReportService.getStatusCounts();
+                // Count incoming/unverified reports only
+                long incomingReports = safetyStats.getOrDefault("unverified", 0L);
+                
+                System.out.println("Safety Reports - incoming count: " + incomingReports); // Debug log
+                
+                if (incomingReports > 0) {
+                    notifications.add(createNotification(
+                        "bi-shield-exclamation", "safety",
+                        "📋 Safety Reports",
+                        incomingReports + " incoming safety report(s) need review",
+                        "/safety-reports?tab=incoming"
+                    ));
+                }
+            } catch (Exception e) {
+                System.err.println("Error getting safety reports: " + e.getMessage());
+                e.printStackTrace();
+            }
+            
+            // 3. SOS Alerts
+            try {
+                long incomingSosCount = sosService.countByStatus("INCOMING");
+                if (incomingSosCount > 0) {
+                    notifications.add(createNotification(
+                        "bi-exclamation-triangle-fill", "emergency",
+                        "⚠️ SOS Alerts",
+                        incomingSosCount + " incoming SOS alert(s) need immediate attention",
+                        "/sos-monitoring?tab=incoming"
+                    ));
+                }
+            } catch (Exception e) {
+                System.err.println("Error getting SOS alerts: " + e.getMessage());
+            }
+            
+            // 4. Latest Announcement
+            try {
+                var latestAnnouncement = announcementsService.getLatest();
+                if (latestAnnouncement != null && latestAnnouncement.getTitle() != null) {
+                    String title = latestAnnouncement.getTitle();
+                    if (title.length() > 40) title = title.substring(0, 37) + "...";
+                    notifications.add(createNotification(
+                        "bi-megaphone-fill", "announcements",
+                        "Latest Announcement",
+                        title,
+                        "/announcements"
+                    ));
+                }
+            } catch (Exception e) {}
+            
+            // 5. Pending Resident Verifications
+            try {
+                List<ResidentDTO> allResidents = residentUserService.getAllResidentsDTO();
+                long unverifiedResidents = allResidents.stream()
+                    .filter(r -> "UNVERIFIED".equalsIgnoreCase(r.account_status()))
+                    .filter(r -> !"Archived".equalsIgnoreCase(r.status()))
+                    .count();
+                
+                if (unverifiedResidents > 0) {
+                    notifications.add(createNotification(
+                        "bi-person-check-fill", "accounts",
+                        "Pending Verifications",
+                        unverifiedResidents + " resident(s) waiting for account verification",
+                        "/account"
+                    ));
+                }
+            } catch (Exception e) {}
+            
+            // 6. Upcoming Programs
+            try {
+                java.time.LocalDate today = java.time.LocalDate.now();
+                var allEvents = programCalendarService.getAllEvents();
+                long upcomingPrograms = allEvents.stream()
+                    .filter(e -> e.getEventDate() != null)
+                    .filter(e -> !e.getEventDate().isBefore(today))
+                    .count();
+                
+                if (upcomingPrograms > 0) {
+                    notifications.add(createNotification(
+                        "bi-calendar-event-fill", "programs",
+                        "Upcoming Programs",
+                        upcomingPrograms + " upcoming program(s) scheduled",
+                        "/program-calendar"
+                    ));
+                }
+            } catch (Exception e) {
+                System.err.println("Error getting programs: " + e.getMessage());
+            }
+
+            // 7. Contact Help - Incoming Messages
+            try {
+                List<ContactHelpRequest> incomingContacts = contactHelpService.getRequestsByStatus("INCOMING");
+                long incomingCount = incomingContacts.size();
+                
+                if (incomingCount > 0) {
+                    notifications.add(createNotification(
+                        "bi-chat-dots-fill", "accounts",
+                        "Contact Help",
+                        incomingCount + " new message(s) from residents",
+                        "/contact-help?tab=incoming"
+                    ));
+                }
+            } catch (Exception e) {
+                // ContactHelpService might not be available
+            }
+
+            // Return count only
+            if (countOnly) {
+                return ResponseEntity.ok(Map.of("count", (long) notifications.size()));
+            }
+            
+            // If no notifications, show "all clear"
+            if (notifications.isEmpty()) {
+                notifications.add(createNotification(
+                    "bi-check-circle-fill", "programs",
+                    "All Clear",
+                    "No pending items requiring your attention",
+                    "#"
+                ));
+            }
+            
+            return ResponseEntity.ok(notifications);
+        }
+        // =========================================================
+        // SIDEBAR COUNTS
+        // =========================================================
+
+        @GetMapping("/api/sidebar/counts")
+        @ResponseBody
+        public ResponseEntity<Map<String, Integer>> getSidebarCounts(Principal principal) {
+            Map<String, Integer> counts = new HashMap<>();
+
+            // Announcements — new/active count
+            try {
+                counts.put("announcements", (int) announcementsService.countActive());
+            } catch (Exception e) { counts.put("announcements", 0); }
+
+            // Accounts — unverified residents (not archived)
+            try {
+                long unverified = residentUserService.getAllResidentsDTO().stream()
+                    .filter(r -> "UNVERIFIED".equalsIgnoreCase(r.account_status()))
+                    .filter(r -> !"Archived".equalsIgnoreCase(r.status()))
+                    .count();
+                counts.put("accounts", (int) unverified);
+            } catch (Exception e) { counts.put("accounts", 0); }
+
+            // Requests + Documents — pending document requests
+            try {
+                int pending = (int) documentService.countPending();
+                counts.put("requests",  pending);
+                counts.put("documents", pending);
+            } catch (Exception e) { counts.put("requests", 0); counts.put("documents", 0); }
+
+            // Facilities — nothing to count yet
+            counts.put("facilities", 0);
+
+            // Safety reports — unverified/in-progress reports
+            try {
+                Map<String, Long> safetyStats = safetyReportService.getStatusCounts();
+                int active = (int)(
+                    safetyStats.getOrDefault("incoming",  0L) +
+                    safetyStats.getOrDefault("in progress", 0L) +
+                    safetyStats.getOrDefault("approved",    0L)
+                );
+                counts.put("safety-reports", active);
+            } catch (Exception e) { counts.put("safety-reports", 0); }
+
+            // SOS — incoming alerts only
+            try {
+                counts.put("sos", (int) sosService.countByStatus("INCOMING"));
+            } catch (Exception e) { counts.put("sos", 0); }
+
+            // Programs — upcoming events
+            try {
+                java.time.LocalDate today = java.time.LocalDate.now();
+                int upcoming = (int) programCalendarService.getAllEvents().stream()
+                    .filter(e -> e.getEventDate() != null)
+                    .filter(e -> !e.getEventDate().isBefore(today))
+                    .count();
+                counts.put("programs", upcoming);
+            } catch (Exception e) { counts.put("programs", 0); }
+
+            // Activity logs — nothing to badge
+            counts.put("activity-logs", 0);
+
+            return ResponseEntity.ok(counts);
+        }
+    private Map<String, Object> createNotification(String icon, String iconClass, String title, String description, String link) {
+        Map<String, Object> n = new HashMap<>();
+        n.put("icon", icon);
+        n.put("iconClass", iconClass);
+        n.put("title", title);
+        n.put("description", description);
+        n.put("link", link);
+        n.put("timeAgo", "Now");
+        return n;
+    }
+        @GetMapping("/api/debug/safety-stats")
+        @ResponseBody
+        public ResponseEntity<?> debugSafetyStats() {
+            Map<String, Long> safetyStats = safetyReportService.getStatusCounts();
+            return ResponseEntity.ok(safetyStats);
+        }
     // =========================================================
     // OTHER PAGES
     // =========================================================
@@ -608,7 +929,9 @@ public ResponseEntity<Map<String, Object>> pollAccounts() {
         if (!allowedRoles.contains(admin.getRole())) {
             return "redirect:/home";
         }
-
+        if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+                return "redirect:/logout";
+            }
         return "ProgramCalendar";
     }
 
@@ -622,6 +945,9 @@ public ResponseEntity<Map<String, Object>> pollAccounts() {
         if (!allowedRoles.contains(admin.getRole())) {
             return "redirect:/home";
         }
+        if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+                return "redirect:/logout";
+            }
         return "ProgramPlanner";
     }
 
@@ -646,7 +972,9 @@ public ResponseEntity<Map<String, Object>> pollAccounts() {
         if (currentAdmin == null || !allowedRoles.contains(currentAdmin.getRole())) {
             return "redirect:/home";
         }
-
+        if ("Archived".equalsIgnoreCase(currentAdmin.getEmpstatus())) {
+                return "redirect:/logout";
+            }
         model.addAttribute("newAdmin", new AdminUser());
 
         org.springframework.data.domain.Page<Activitylogs> logsPage =
@@ -657,6 +985,22 @@ public ResponseEntity<Map<String, Object>> pollAccounts() {
         model.addAttribute("totalPages",   logsPage.getTotalPages());
 
         return "ActivityLogs";
+    }
+    @GetMapping("/Activity-logs/api/poll")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> pollActivityLogs() {
+        Map<String, Object> response = new HashMap<>();
+        org.springframework.data.domain.Page<Activitylogs> latestPage = 
+            activityLogService.getLogsPaginated(0, 1);
+        if (!latestPage.getContent().isEmpty()) {
+            Activitylogs latest = latestPage.getContent().get(0);
+            response.put("lastId", latest.getId());
+            response.put("lastTimestamp", latest.getTimestamp() != null ? latest.getTimestamp().toString() : "");
+        } else {
+            response.put("lastId", 0);
+            response.put("lastTimestamp", "");
+        }
+        return ResponseEntity.ok(response);
     }
 
     // =========================================================
@@ -698,41 +1042,49 @@ public ResponseEntity<Map<String, Object>> pollAccounts() {
     }
 
     @PostMapping("/api/forgot-password/verify-and-reset")
-    @ResponseBody
-    public ResponseEntity<?> forgotPasswordVerifyAndReset(@RequestBody Map<String, String> payload) {
-        String email = payload.get("email");
-        String otp   = payload.get("otp");
+        @ResponseBody
+        public ResponseEntity<?> forgotPasswordVerifyAndReset(@RequestBody Map<String, String> payload) {
+            String email = payload.get("email");
+            String otp   = payload.get("otp");
 
-        OtpEntry entry = forgotPasswordOtpStore.get(email);
+            OtpEntry entry = forgotPasswordOtpStore.get(email);
 
-        if (entry == null || entry.isExpired()) {
+            if (entry == null || entry.isExpired()) {
+                forgotPasswordOtpStore.remove(email);
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "Verification code has expired. Please request a new one."));
+            }
+
+            if (!entry.otp.equals(otp)) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "Invalid verification code"));
+            }
+
             forgotPasswordOtpStore.remove(email);
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Verification code has expired. Please request a new one."));
+
+            String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+            AdminUser admin = adminUserService.getAdminByEmail(email);
+            String fullName = admin.getName();
+            
+            // Encode the temporary password
+            admin.setPassword(passwordEncoder.encode(tempPassword));
+            
+            // Set status to "Newly Updated" - THIS IS THE KEY CHANGE
+            admin.setEmpstatus("Newly Updated");
+            
+            // Save the admin with updated status
+            adminUserService.saveAdmin(admin);
+
+            try {
+                System.out.println("DEBUG: Sending temporary password to " + fullName);
+                emailService.sendGeneratedPassword(email, tempPassword, fullName);
+            } catch (Exception e) {
+                // Log the error
+                System.err.println("Failed to send email: " + e.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Map.of("message", "Password was reset but failed to send email. Please contact your administrator."));
+            }
+
+            return ResponseEntity.ok(Map.of("message", "Temporary password sent successfully. Please check your email."));
         }
-
-        if (!entry.otp.equals(otp)) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Invalid verification code"));
-        }
-
-        forgotPasswordOtpStore.remove(email);
-
-        String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-        AdminUser admin = adminUserService.getAdminByEmail(email);
-        String fullName = admin.getName();
-        admin.setPassword(passwordEncoder.encode(tempPassword));
-        admin.setEmpstatus("Newly Updated");
-        adminUserService.saveAdmin(admin);
-
-        try {
-            System.out.println("DEBUG: " + fullName);
-            emailService.sendGeneratedPassword(email, tempPassword, fullName);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Password was reset but failed to send email. Please contact your administrator."));
-        }
-
-        return ResponseEntity.ok(Map.of("message", "Temporary password sent successfully"));
-    }
 }

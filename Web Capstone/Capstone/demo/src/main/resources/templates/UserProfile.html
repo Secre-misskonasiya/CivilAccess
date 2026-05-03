@@ -118,7 +118,8 @@
 </style>
 </head>
 <body>
-
+    <script src="/js/notif.js"></script>
+<div class="toast-container" id="toastContainer"></div>
 <div class="layout">
     <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
@@ -134,7 +135,7 @@
 
                 <div class="profile-hero">
                     <form id="profileForm" th:action="@{/register}" method="post" enctype="multipart/form-data"
-                          onsubmit="prepareProfileSubmit(event)" style="display:contents">
+                          onsubmit="return prepareProfileSubmit(event)" style="display:contents">
 
                         <input type="hidden" name="id" th:value="${currentAdminNumericId}">
                         <input type="hidden" name="employeeId" th:value="${currentAdminID}">
@@ -285,7 +286,10 @@
                 </div>
                 <div class="input-wrapper" style="position:relative">
                     <input type="password" id="newPassword" placeholder="New Password" style="width:100%;padding:10px 40px 10px 12px;border:1px solid #d0d5dd;border-radius:6px;">
-                    <button type="button" onclick="togglePwd('newPassword')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;">👁️</button>
+                    <button type="button" onclick="togglePwd('newPassword')" 
+                            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#666;padding:0;margin:0;line-height:1;">
+                        <i class="bi bi-eye-slash" id="newPasswordIcon"></i>
+                    </button>
                 </div>
                 <div id="password-requirements" class="password-requirements">
                     <div class="requirement-item" id="req-length">At least 8 characters</div>
@@ -296,7 +300,10 @@
                 </div>
                 <div class="input-wrapper" style="margin-top:8px;position:relative">
                     <input type="password" id="confirmPassword" placeholder="Confirm New Password" style="width:100%;padding:10px 40px 10px 12px;border:1px solid #d0d5dd;border-radius:6px;">
-                    <button type="button" onclick="togglePwd('confirmPassword')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;">👁️</button>
+                    <button type="button" onclick="togglePwd('confirmPassword')" 
+                            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#666;padding:0;margin:0;line-height:1;">
+                        <i class="bi bi-eye-slash" id="confirmPasswordIcon"></i>
+                    </button>
                 </div>
                 <small class="err" id="confirm-password-error">Passwords do not match</small>
             </div>
@@ -425,22 +432,38 @@
             return;
         }
         fileError.classList.remove('show');
+
+        // Show preview immediately
         const reader = new FileReader();
         reader.onload = e => {
-            document.getElementById('profilePictureDisplay').innerHTML = `<img src="${e.target.result}" alt="Profile Picture" style="width:100%;height:100%;object-fit:cover;">`;
+            document.getElementById('profilePictureDisplay').innerHTML =
+                `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
         };
         reader.readAsDataURL(file);
-        uploadImageToSupabase(file).then(imageUrl => { 
-            currentImageUrl = imageUrl; 
-            console.log("Image uploaded, URL saved:", currentImageUrl);
-            // Also set the hidden input immediately
-            const urlHidden = document.getElementById('profilePictureUrlHidden');
-            if (urlHidden) urlHidden.value = currentImageUrl;
-        }).catch(err => { 
-            console.error(err); 
-            fileError.classList.add('show'); 
-            fileError.textContent = 'Upload failed'; 
-        });
+
+        // Disable save while uploading
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Uploading...';
+
+        uploadImageToSupabase(file)
+            .then(imageUrl => {
+                currentImageUrl = imageUrl;
+                document.getElementById('profilePictureUrlHidden').value = imageUrl;
+                // Re-run validation to re-enable save if all fields are valid
+                updateSaveButton();
+                saveBtn.textContent = '💾 Save Changes';
+            })
+            .catch(err => {
+                console.error(err);
+                fileError.textContent = 'Upload failed. Please try again.';
+                fileError.classList.add('show');
+                saveBtn.disabled = false;
+                saveBtn.textContent = '💾 Save Changes';
+                // Clear the broken file input
+                event.target.value = '';
+                currentImageUrl = null;
+            });
     }
 
     function updateFieldValidation(input, iconId, isValid) {
@@ -532,7 +555,6 @@
             updateSaveButton();
         });
     }
-
     function prepareProfileSubmit(event) {
         const fullname = document.getElementById('fullname').value.trim();
         const parts = fullname.split(/\s+/);
@@ -541,19 +563,20 @@
         document.getElementById('hiddenUsername').value = document.getElementById('username').value.trim();
         document.getElementById('hiddenEmail').value = document.getElementById('email').value.trim();
         document.getElementById('hiddenPhoneNumber').value = document.getElementById('phone').value.trim();
-        
+
         if (document.getElementById('birthdate')) {
             document.getElementById('hiddenBirthDate').value = document.getElementById('birthdate').value.trim();
         }
         if (document.getElementById('address')) {
             document.getElementById('hiddenAddress').value = document.getElementById('address').value.trim();
         }
-        
-        // Set the profile picture URL if uploaded
+
+        // Don't overwrite — the hidden input was already set when the upload completed
+        // Only set it here as a safety fallback
         if (currentImageUrl) {
             document.getElementById('profilePictureUrlHidden').value = currentImageUrl;
         }
-        
+
         return true;
     }
 
@@ -624,8 +647,30 @@
         document.getElementById('pwdHiddenPhoneNumber').value = document.getElementById('phone').value.trim();
     }
 
-    function togglePwd(inputId) { const input = document.getElementById(inputId); if (input) input.type = input.type === 'password' ? 'text' : 'password'; }
+        function togglePwd(inputId) { 
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            // Get the corresponding icon
+            const iconId = inputId === 'newPassword' ? 'newPasswordIcon' : 'confirmPasswordIcon';
+            const icon = document.getElementById(iconId);
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (icon) {
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                }
+            } else {
+                input.type = 'password';
+                if (icon) {
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                }
+            }
+        }
 
+        
     window.addEventListener('load', () => {
         ['fullname','username','email','phone'].forEach(id => document.getElementById(id)?.dispatchEvent(new Event('input')));
         if (birthdateEl) birthdateEl.dispatchEvent(new Event('input'));
