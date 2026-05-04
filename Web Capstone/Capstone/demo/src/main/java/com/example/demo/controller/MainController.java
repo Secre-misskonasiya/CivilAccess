@@ -15,6 +15,7 @@ import com.example.demo.services.BlotterService;
 import com.example.demo.services.ContactHelpService;
 import com.example.demo.services.DocumentRequestService;
 import com.example.demo.services.SosReportsService;
+import com.example.demo.services.SystemSettingsService;
 import com.example.demo.services.SafetyReportService;
 import com.example.demo.services.ProgramBudgetService;
 import com.example.demo.services.ProgramCalendarService;
@@ -78,11 +79,14 @@ public class MainController {
     @Autowired private HttpSession session;
     @Autowired private ProgramBudgetService programBudgetService;
 
+
     @Autowired(required = false)
     private ProgramCalendarService programCalendarService;
 
     @Autowired(required = false)
     private ContactHelpService contactHelpService;
+
+
     
 
     // Track last modification time for accounts polling
@@ -856,21 +860,30 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 counts.put("accounts", (int) unverified);
             } catch (Exception e) { counts.put("accounts", 0); }
 
-            // Requests + Documents — pending document requests
+            // Requests + Documents — pending document requests + active blotters
             try {
-                int pending = (int) documentService.countPending();
-                counts.put("requests",  pending);
+                int pending  = (int) documentService.countPending();
+                int blotters = blotterService.getByStatus("PROCESSING").size()
+                            + blotterService.getByStatus("READY").size();
+                counts.put("requests",  pending + blotters);
                 counts.put("documents", pending);
             } catch (Exception e) { counts.put("requests", 0); counts.put("documents", 0); }
+
+            // Blotter — processing + ready
+            try {
+                int blotters = blotterService.getByStatus("PROCESSING").size()
+                            + blotterService.getByStatus("READY").size();
+                counts.put("blotter", blotters);
+            } catch (Exception e) { counts.put("blotter", 0); }
 
             // Facilities — nothing to count yet
             counts.put("facilities", 0);
 
-            // Safety reports — unverified/in-progress reports
+            // Safety reports — incoming + approved + in progress
             try {
                 Map<String, Long> safetyStats = safetyReportService.getStatusCounts();
                 int active = (int)(
-                    safetyStats.getOrDefault("incoming",  0L) +
+                    safetyStats.getOrDefault("incoming",    0L) +
                     safetyStats.getOrDefault("in progress", 0L) +
                     safetyStats.getOrDefault("approved",    0L)
                 );
@@ -897,16 +910,19 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
 
             return ResponseEntity.ok(counts);
         }
-    private Map<String, Object> createNotification(String icon, String iconClass, String title, String description, String link) {
-        Map<String, Object> n = new HashMap<>();
-        n.put("icon", icon);
-        n.put("iconClass", iconClass);
-        n.put("title", title);
-        n.put("description", description);
-        n.put("link", link);
-        n.put("timeAgo", "Now");
-        return n;
-    }
+
+        private Map<String, Object> createNotification(String icon, String iconClass, String title, String description, String link) {
+            Map<String, Object> n = new HashMap<>();
+            n.put("icon", icon);
+            n.put("iconClass", iconClass);
+            n.put("title", title);
+            n.put("description", description);
+            n.put("link", link);
+            n.put("timeAgo", "Now");
+            return n;
+        }
+
+        
         @GetMapping("/api/debug/safety-stats")
         @ResponseBody
         public ResponseEntity<?> debugSafetyStats() {

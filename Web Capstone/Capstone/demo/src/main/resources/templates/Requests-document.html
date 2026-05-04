@@ -149,6 +149,8 @@
     .view-btn:hover { background-color: #6c3483; }
     .archive-btn { background-color: #e74c3c; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
     .archive-btn:hover { background-color: #b93e30; }
+    .viewfile-btn { background-color: #16a085; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
+    .viewfile-btn:hover { background-color: #0e6655; }
 
     .table-footer {
         display: flex;
@@ -161,7 +163,8 @@
     }
     .page-item.active .page-link { background-color: #2d4a44; border-color: #2d4a44; }
     .page-link { color: #2d4a44; }
-    /* Document Modal */
+
+    /* ── Document Modal (wider) ── */
     .doc-modal-overlay {
         display: none;
         position: fixed;
@@ -175,8 +178,8 @@
         background: white;
         margin: 30px auto;
         border-radius: 10px;
-        width: 900px;
-        max-width: 95%;
+        width: 1050px;
+        max-width: 96%;
         box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         overflow: hidden;
     }
@@ -204,6 +207,7 @@
         border-top: 1px solid #e0e0e0;
         display: flex;
         justify-content: flex-end;
+        align-items: center;
         gap: 10px;
         background: #f9f9f9;
     }
@@ -259,6 +263,33 @@
     .doc-field input:focus, .doc-field select:focus, .doc-field textarea:focus {
         border-bottom: 2px solid #2d4a44;
     }
+    /* All inline doc inputs — reset outline, set transparent bg */
+    .doc-template input,
+    .doc-template select,
+    .doc-template textarea {
+        background: transparent !important;
+        outline: none !important;
+    }
+    /* Editable inputs get a visible hover + focus cue */
+    .doc-template input:not([readonly]):hover,
+    .doc-template select:not([readonly]):hover {
+        background-color: rgba(45,74,68,0.06) !important;
+        cursor: text !important;
+    }
+    .doc-template input:not([readonly]):focus,
+    .doc-template select:not([readonly]):focus,
+    .doc-template textarea:not([readonly]):focus {
+        border-bottom: 2px solid #2d4a44 !important;
+        background-color: rgba(45,74,68,0.08) !important;
+        cursor: text !important;
+    }
+    .doc-template input[readonly],
+    .doc-template select[readonly],
+    .doc-template textarea[readonly] {
+        cursor: default !important;
+        pointer-events: none !important;
+        color: #333 !important;
+    }
     .doc-field textarea { resize: none; }
     .doc-row { display: flex; gap: 20px; }
     .doc-row .doc-field { flex: 1; }
@@ -306,6 +337,60 @@
         background: white; width: 400px; padding: 30px;
         border-radius: 8px; text-align: center; margin: 15% auto;
     }
+
+    /* ── View File Modal (accounts-style) ── */
+    .viewfile-modal-overlay {
+        display: none;
+        position: fixed;
+        z-index: 4000;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.7);
+        overflow-y: auto;
+    }
+    .viewfile-modal-box {
+        background: white;
+        margin: 30px auto;
+        border-radius: 10px;
+        width: 700px;
+        max-width: 95%;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        overflow: hidden;
+    }
+    .viewfile-modal-header {
+        background-color: #2d4a44;
+        color: white;
+        padding: 20px 24px 0;
+        position: relative;
+        border-bottom: 3px solid #FED734;
+    }
+    .viewfile-modal-header .close-x {
+        position: absolute; top: 12px; right: 16px;
+        color: white; opacity: 0.7; font-size: 22px;
+        cursor: pointer; background: none; border: none; line-height:1;
+    }
+    .viewfile-modal-header .close-x:hover { opacity: 1; }
+    .viewfile-modal-body { padding: 24px; }
+    .vf-doc-card {
+        flex: 1; min-width: 160px; text-align: center;
+        background: #f9f9f9; border-radius: 10px; padding: 14px;
+    }
+    .vf-doc-card h4 { font-size: 13px; color: #2d4a44; margin-bottom: 10px; }
+    .vf-doc-img-wrap {
+        background: #e9ecef; height: 160px; display: flex;
+        align-items: center; justify-content: center; border-radius: 6px;
+        overflow: hidden;
+    }
+    .vf-doc-img-wrap img { max-width: 100%; max-height: 160px; object-fit: contain; cursor: pointer; border-radius: 6px; }
+
+    .tab-badge {
+            background-color: #FED734;
+            color: #2d4a44;
+            border-radius: 10px;
+            padding: 1px 7px;
+            font-size: 12px;
+            font-weight: bold;
+        }
 </style>
 
 <meta charset="UTF-8">
@@ -356,17 +441,25 @@
             <option value="all">All Document Types</option>
             <option value="Barangay_ID">Barangay ID</option>
             <option value="Barangay_Clearance">Barangay Clearance</option>
-            <option value="Certificate_of_Residency">Certificate of Residency</option>
+            <option value="Certificate_of_Indigency">Certificate of Indigency</option>
         </select>
         <button class="export-btn" id="export-pdf-btn" onclick="exportToPDF()">Export</button>
     </div>
 
     <!-- Tabs -->
     <div class="tabbar">
-        <div class="tab active" onclick="switchTab(this, 'incoming')">Incoming</div>
-        <div class="tab" onclick="switchTab(this, 'processing')">Processing</div>
-        <div class="tab" onclick="switchTab(this, 'ready')">Ready</div>
-        <div class="tab" onclick="switchTab(this, 'archive')">Archive</div>
+        <div class="tab active" onclick="switchTab(this, 'incoming')">
+            Incoming <span class="tab-badge" id="badge-incoming" th:text="${incomingCount}">0</span>
+        </div>
+        <div class="tab" onclick="switchTab(this, 'processing')">
+            Processing <span class="tab-badge" id="badge-processing" th:text="${processingCount}">0</span>
+        </div>
+        <div class="tab" onclick="switchTab(this, 'ready')">
+            Ready <span class="tab-badge" id="badge-ready" th:text="${readyCount}">0</span>
+        </div>
+        <div class="tab" onclick="switchTab(this, 'archive')">
+            Archive <span class="tab-badge" id="badge-archive" th:text="${archivedCount}">0</span>
+        </div>
     </div>
 
     <!-- Panel -->
@@ -378,7 +471,7 @@
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
                     <thead>
-                        
+                        <tr>
                             <th>Name</th>
                             <th>Phone Number</th>
                             <th>File</th>
@@ -387,12 +480,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="req : ${incomingRequests}">
+                        <tr th:each="req : ${incomingRequests}"
+                            th:attr="data-name=${req.fullName},
+                                     data-validid=${req.validIdUrl},
+                                     data-type=${req.documentType}">
                             <td th:text="${req.fullName}"></td>
                             <td th:text="${req.contactNumber}"></td>
                             <td>
-                                <a th:if="${req.validIdUrl != null}" th:href="${req.validIdUrl}" target="_blank">View File</a>
-                                <span th:unless="${req.validIdUrl != null}">N/A</span>
+                                <button type="button" class="viewfile-btn"
+                                    onclick="openViewFileModal(this.closest('tr'))">View File</button>
                             </td>
                             <td th:text="${req.documentType}"></td>
                             <td>
@@ -439,12 +535,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="req : ${processingRequests}">
+                        <tr th:each="req : ${processingRequests}"
+                            th:attr="data-name=${req.fullName},
+                                     data-validid=${req.validIdUrl},
+                                     data-type=${req.documentType}">
                             <td th:text="${req.fullName}"></td>
                             <td th:text="${req.contactNumber}"></td>
                             <td>
-                                <a th:if="${req.validIdUrl != null}" th:href="${req.validIdUrl}" target="_blank">View File</a>
-                                <span th:unless="${req.validIdUrl != null}">N/A</span>
+                                <button type="button" class="viewfile-btn"
+                                    onclick="openViewFileModal(this.closest('tr'))">View File</button>
                             </td>
                             <td th:text="${req.documentType}"></td>
                             <td>
@@ -500,12 +599,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="req : ${readyRequests}">
+                        <tr th:each="req : ${readyRequests}"
+                            th:attr="data-name=${req.fullName},
+                                     data-validid=${req.validIdUrl},
+                                     data-type=${req.documentType}">
                             <td th:text="${req.fullName}"></td>
                             <td th:text="${req.contactNumber}"></td>
                             <td>
-                                <a th:if="${req.validIdUrl != null}" th:href="${req.validIdUrl}" target="_blank">View File</a>
-                                <span th:unless="${req.validIdUrl != null}">N/A</span>
+                                <button type="button" class="viewfile-btn"
+                                    onclick="openViewFileModal(this.closest('tr'))">View File</button>
                             </td>
                             <td th:text="${req.documentType}"></td>
                             <td>
@@ -557,12 +659,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="req : ${archivedRequests}">
+                        <tr th:each="req : ${archivedRequests}"
+                            th:attr="data-name=${req.fullName},
+                                     data-validid=${req.validIdUrl},
+                                     data-type=${req.documentType}">
                             <td th:text="${req.fullName}"></td>
                             <td th:text="${req.contactNumber}"></td>
                             <td>
-                                <a th:if="${req.validIdUrl != null}" th:href="${req.validIdUrl}" target="_blank">View File</a>
-                                <span th:unless="${req.validIdUrl != null}">N/A</span>
+                                <button type="button" class="viewfile-btn"
+                                    onclick="openViewFileModal(this.closest('tr'))">View File</button>
                             </td>
                             <td th:text="${req.documentType}"></td>
                         </tr>
@@ -594,7 +699,76 @@
 <!-- Logout modal -->
     <script src="/js/sidebar.js"></script>
 
-<!-- Document Modal -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- VIEW FILE MODAL  (accounts-style: header + 3 cards + purpose) -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div id="viewFileModalOverlay" class="viewfile-modal-overlay">
+    <div class="viewfile-modal-box">
+
+        <!-- Header (same style as accounts view modal) -->
+        <div class="viewfile-modal-header">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <button class="close-x" onclick="closeViewFileModal()">&times;</button>
+                <div>
+                    <p style="color:#9fd4c8; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; margin:0 0 2px;">Barangay San Sebastian</p>
+                    <p style="color:white; font-size:15px; font-weight:500; margin:0;">Document Request Files</p>
+                </div>
+                <div style="background:#FED734; border-radius:4px; padding:4px 12px; margin-right:28px;">
+                    <p style="font-size:14px; font-weight:600; color:#2d4a44; margin:0;" id="vf-doctype">BARANGAY ID</p>
+                </div>
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:14px; margin-top:16px; padding-bottom:16px;">
+                <div style="width:54px; height:54px; border-radius:50%; background:#3d6b63; border:2px solid #9fd4c8; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="#9fd4c8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8" stroke="#9fd4c8" stroke-width="2" fill="none"/></svg>
+                </div>
+                <div>
+                    <p style="color:white; font-size:17px; font-weight:500; margin:0;" id="vf-name">Juan dela Cruz</p>
+                    <p style="color:#9fd4c8; font-size:12px; margin:3px 0 0;" id="vf-purpose-label">Purpose: —</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Body: 3 document cards -->
+        <div class="viewfile-modal-body">
+            <div style="display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-bottom:20px;">
+
+                <!-- 1x1 / 2x2 Photo -->
+                <div class="vf-doc-card">
+                    <h4><i class="bi bi-person-square" style="margin-right:5px;"></i>1×1 / 2×2 Photo</h4>
+                    <div class="vf-doc-img-wrap" id="vf-photo-wrap">
+                        <span style="color:#aaa; font-size:13px;">No photo uploaded</span>
+                    </div>
+                </div>
+
+                <!-- Valid ID -->
+                <div class="vf-doc-card">
+                    <h4><i class="bi bi-card-text" style="margin-right:5px;"></i>Valid ID</h4>
+                    <div class="vf-doc-img-wrap" id="vf-validid-wrap">
+                        <span style="color:#aaa; font-size:13px;">No ID uploaded</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Purpose of Request info block -->
+            <div style="background:#f0f8f5; border:1px solid #c3e0d8; border-radius:8px; padding:14px 18px;">
+                <p style="font-size:11px; font-weight:bold; color:#2d4a44; text-transform:uppercase; letter-spacing:0.07em; margin:0 0 6px;">Purpose of Request</p>
+                <p style="font-size:15px; color:#333; margin:0;" id="vf-purpose-text">—</p>
+            </div>
+
+            <div style="text-align:right; margin-top:18px;">
+                <button class="btn-cancel" onclick="closeViewFileModal()">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Enlarge overlay (reused) -->
+<div id="imgEnlargeOverlay" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.88); cursor:zoom-out;" onclick="this.style.display='none'">
+    <img id="imgEnlargeSrc" src="" style="max-width:90%; max-height:90vh; object-fit:contain; border-radius:8px; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);">
+</div>
+
+<!-- Document Modal (process/view) -->
 <div id="docModalOverlay" class="doc-modal-overlay">
     <div class="doc-modal-box">
         <div class="doc-modal-header">
@@ -605,6 +779,10 @@
             <div id="printable-area"></div>
         </div>
         <div class="doc-modal-footer">
+            <!-- Price label (left side) -->
+            <div style="flex:1; display:flex; align-items:center;">
+                <span style="font-family:'Arial', sans-serif; font-size:17px; font-weight:bold; color:#e74c3c; letter-spacing:0.5px;">Price: &#8369;30</span>
+            </div>
             <button class="btn-cancel" onclick="closeDocModal()">Close</button>
             <button class="btn-download" onclick="downloadPDF()"><i class="bi bi-download"></i> Download PDF</button>
             <button class="btn-print" onclick="printDocument()"><i class="bi bi-printer"></i> Print</button>
@@ -629,41 +807,24 @@
     const searchValue = document.getElementById('request-search').value.toLowerCase();
     const filterType = document.getElementById('filter-type').value;
     const activePanel = document.querySelector('.panel-inner:not(.d-none)');
-    
     if (!activePanel) return;
-    
     const rows = activePanel.querySelectorAll('tbody tr');
     let visibleCount = 0;
-    
     rows.forEach(row => {
-      // Skip the "no data" row if it exists
-      if (row.querySelector('td[colspan]')) {
-        row.style.display = '';
-        return;
-      }
-      
+      if (row.querySelector('td[colspan]')) { row.style.display = ''; return; }
       const name = row.cells[0]?.textContent.toLowerCase() || '';
       const phone = row.cells[1]?.textContent.toLowerCase() || '';
       const documentType = row.cells[3]?.textContent.toLowerCase() || '';
       const searchText = `${name} ${phone} ${documentType}`;
-      
       let matchesSearch = searchValue === '' || searchText.includes(searchValue);
-      
       let matchesFilter = filterType === 'all';
       if (!matchesFilter && filterType !== 'all') {
         const filterValue = filterType.toLowerCase().replace(/_/g, ' ');
         matchesFilter = documentType.includes(filterValue) || documentType.includes(filterType.toLowerCase());
       }
-      
-      if (matchesSearch && matchesFilter) {
-        row.style.display = '';
-        visibleCount++;
-      } else {
-        row.style.display = 'none';
-      }
+      if (matchesSearch && matchesFilter) { row.style.display = ''; visibleCount++; }
+      else row.style.display = 'none';
     });
-    
-    // Update the "no results" message
     const noDataRow = activePanel.querySelector('tbody tr td[colspan]')?.parentElement;
     if (noDataRow) {
       if (visibleCount === 0 && searchValue !== '') {
@@ -674,26 +835,15 @@
         noDataRow.style.display = '';
         const td = noDataRow.querySelector('td');
         if (td) td.textContent = `No ${filterType.replace(/_/g, ' ')} requests found`;
-      } else {
-        noDataRow.style.display = 'none';
-      }
+      } else { noDataRow.style.display = 'none'; }
     }
   }
 
-  // ── Search input listener ─────────────────────────────────────────────────
   const searchInput = document.getElementById('request-search');
-  if (searchInput) {
-    searchInput.addEventListener('keyup', applyFilters);
-  }
-
-  // ── Filter dropdown listener ─────────────────────────────────────────────
+  if (searchInput) searchInput.addEventListener('keyup', applyFilters);
   const filterSelect = document.getElementById('filter-type');
-  if (filterSelect) {
-    filterSelect.addEventListener('change', applyFilters);
-  }
+  if (filterSelect) filterSelect.addEventListener('change', applyFilters);
 
-
-  // Helper function to escape HTML special characters
   function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -701,16 +851,56 @@
     return div.innerHTML;
   }
 
-  // ── Document Modal ─────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════
+  // VIEW FILE MODAL
+  // ══════════════════════════════════════════════════════════════
+  function openViewFileModal(row) {
+    const name    = row.getAttribute('data-name')    || '—';
+    const validId = row.getAttribute('data-validid') || '';
+    const type    = row.getAttribute('data-type')    || '';
+
+    document.getElementById('vf-name').textContent          = name;
+    document.getElementById('vf-doctype').textContent       = type.replace(/_/g, ' ').toUpperCase();
+    document.getElementById('vf-purpose-label').textContent = '';
+    document.getElementById('vf-purpose-text').textContent  = '—';
+
+    const photoWrap = document.getElementById('vf-photo-wrap');
+    photoWrap.innerHTML = '<span style="color:#aaa; font-size:13px;">No photo uploaded</span>';
+
+    const idWrap = document.getElementById('vf-validid-wrap');
+    if (validId && validId !== 'null' && validId.trim() !== '') {
+      idWrap.innerHTML = `<img src="${escapeHtml(validId)}" alt="Valid ID" onclick="enlargeImg('${escapeHtml(validId)}')">`;
+    } else {
+      idWrap.innerHTML = '<span style="color:#aaa; font-size:13px;">No ID uploaded</span>';
+    }
+
+    document.getElementById('viewFileModalOverlay').style.display = 'block';
+  }
+
+  function closeViewFileModal() {
+    document.getElementById('viewFileModalOverlay').style.display = 'none';
+  }
+
+  function enlargeImg(src) {
+    document.getElementById('imgEnlargeSrc').src = src;
+    document.getElementById('imgEnlargeOverlay').style.display = 'block';
+  }
+
+  document.getElementById('viewFileModalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeViewFileModal();
+  });
+
+  // ══════════════════════════════════════════════════════════════
+  // DOCUMENT PROCESS / VIEW MODAL
+  // ══════════════════════════════════════════════════════════════
   function openDocModal(button) {
     const id = button.getAttribute('data-id');
     const fullName = button.getAttribute('data-name') || '';
     const contactNumber = button.getAttribute('data-phone') || '';
     let documentType = button.getAttribute('data-type') || '';
     const isReadOnly = button.getAttribute('data-readonly') === 'true';
-    
+
     documentType = documentType.trim();
-    
     const safeFullName = escapeHtml(fullName);
     const safeContactNumber = escapeHtml(contactNumber);
     const today = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -721,139 +911,158 @@
     document.getElementById('docModalTitle').textContent =
       (isReadOnly ? 'View: ' : 'Process: ') + documentType.replace(/_/g, ' ');
 
-    if (documentType.includes('Certificate_of_Residency') || 
-        documentType.toLowerCase().includes('residency')) {
+    // ── CERTIFICATE OF INDIGENCY ────────────────────────────────────────────
+    if (documentType.includes('Certificate_of_Indigency') ||
+        documentType.toLowerCase().includes('indigency')) {
       html = `
-        <div class="doc-template ${wm}">
-          <div class="doc-header">
-            <div class="republic">Republic of the Philippines</div>
-            <div class="province">City/Municipality of ___________</div>
-            <div class="barangay-name">Barangay San Sebastian</div>
-            <div class="doc-title">Certificate of Residency</div>
+        <div class="doc-template ${wm}" style="font-family: Arial, sans-serif; width: 210mm; min-height: 297mm; margin: 0 auto; padding: 28px 36px; box-sizing: border-box; border: 3px solid #222;">
+
+          <!-- Dual-logo header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;margin-bottom:4px;">
+            <div style="text-align:center;">
+              <div style="width:72px;height:72px;background:#e9e9e9;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid #aaa;margin:0 auto 4px;">
+                <img src="/images/brgy.png" style="width:62px;height:62px;object-fit:contain;" alt="Brgy Logo" onerror="this.style.display='none'"/>
+              </div>
+              <div style="font-size:10px;color:#555;">Barangay</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:11px;color:#555;">Republic of the Philippines</div>
+              <div style="font-size:11px;color:#555;">City/Municipality of ___________</div>
+              <div style="font-size:15px;font-weight:bold;color:#333;">Office of the Sangguniang</div>
+              <div style="font-size:14px;font-weight:bold;color:#2d4a44;">Barangay San Sebastian</div>
+            </div>
+            <div style="width:72px;height:72px;background:#e9e9e9;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid #aaa;">
+              <img src="/images/city.png" style="width:62px;height:62px;object-fit:contain;" alt="City Logo" onerror="this.style.display='none'"/>
+            </div>
           </div>
-          <p style="font-size:13px; margin: 16px 0 10px; line-height:1.7;">TO WHOM IT MAY CONCERN:</p>
-          <p style="font-size:13px; line-height:1.9; margin-bottom: 6px;">
-            This is to certify that
-            <strong><input type="text" value="${safeFullName}" ${ro} style="width:200px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;font-weight:bold;padding:0 4px;"/></strong>,
-            of legal age, is a <strong>bona fide resident</strong> of
-            <input type="text" placeholder="complete address" ${ro} style="width:260px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;"/>
-            and has been residing in this barangay for
-            <input type="text" placeholder="X" ${ro} style="width:40px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;text-align:center;"/>
-            year(s).
+
+          <div style="text-align:center;letter-spacing:1px;font-size:12px;color:#555;margin-bottom:16px;">========================================</div>
+
+          <div style="text-align:center;margin-bottom:24px;">
+            <div style="font-size:20px;font-weight:bold;letter-spacing:2px;color:#222;font-family:'Times New Roman',serif;">CERTIFICATE OF INDIGENCY</div>
+          </div>
+
+          <p style="font-size:13px;font-weight:bold;margin-bottom:12px;">TO WHOM IT MAY CONCERN:</p>
+
+          <p style="font-size:13px;line-height:2;text-align:justify;margin-bottom:14px;font-family:'Times New Roman',serif;">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This is to certify that <strong><input type="text" value="${safeFullName}" ${ro} style="width:190px;display:inline;border:none;border-bottom:1.5px solid #333;font-size:13px;font-weight:bold;padding:0 4px;font-family:'Times New Roman',serif;"/></strong>
+            <input type="text" ${ro} placeholder="age" style="width:36px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;text-align:center;font-family:'Times New Roman',serif;"/> years old, a bonafide resident of <input type="text" ${ro} placeholder="Block/Lot/Street, Barangay San Sebastian" style="width:290px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;"/>.
           </p>
-          <div class="doc-section-title">Certificate Details</div>
-          <div class="doc-row">
-            <div class="doc-field">
-              <label>Purpose</label>
-              <input type="text" placeholder="e.g. School Enrollment, Employment, Loan" ${ro}/>
-            </div>
-            <div class="doc-field">
-              <label>Contact Number</label>
-              <input type="text" value="${safeContactNumber}" ${ro}/>
-            </div>
-          </div>
-          <div class="doc-row">
-            <div class="doc-field">
-              <label>Civil Status</label>
-              <select ${ro}>
-                <option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option>
-              </select>
-            </div>
-            <div class="doc-field">
-              <label>Date of Birth</label>
-              <input type="text" placeholder="e.g. January 1, 2000" ${ro}/>
-            </div>
-            <div class="doc-field">
-              <label>Date Issued</label>
-              <input type="text" value="${today}" ${ro}/>
-            </div>
-          </div>
-          <div class="doc-field">
-            <label>Additional Notes (optional)</label>
-            <textarea rows="2" placeholder="Any additional information..." ${ro}></textarea>
-          </div>
-          <div class="doc-signature-area">
-            <div class="doc-signature-block">
-              <div class="doc-field" style="margin-bottom:6px;">
-                <input type="text" placeholder="Issued By (Name)" ${ro} style="text-align:center;"/>
+
+          <p style="font-size:13px;line-height:2;text-align:justify;margin-bottom:14px;font-style:italic;font-family:'Times New Roman',serif;">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This certification is being issued upon the request of the subject person concerned in connection with her/his application for <strong style="font-style:normal;"><input type="text" ${ro} placeholder="PURPOSE (e.g. FINANCIAL ASSISTANCE PURPOSES)" style="width:280px;display:inline;border:none;border-bottom:1.5px solid #333;font-size:13px;font-weight:bold;padding:0 4px;text-transform:uppercase;font-family:'Times New Roman',serif;"/></strong> and for whatever intent or legal purpose this may serve him/her best.
+          </p>
+
+          <p style="font-size:13px;line-height:2;margin-top:18px;font-style:italic;font-family:'Times New Roman',serif;">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Issued this <input type="text" ${ro} placeholder="12" style="width:32px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 2px;text-align:center;font-family:'Times New Roman',serif;"/><sup>th</sup> of <input type="text" ${ro} placeholder="Month, Year" style="width:140px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;"/>, at Barangay San Sebastian.
+          </p>
+
+          <!-- Signature block (right-aligned) -->
+          <div style="text-align:right;margin-top:40px;margin-right:40px;">
+            <div style="display:inline-block;text-align:center;">
+              <div style="height:52px;"></div>
+              <div style="border-top:1.5px solid #333;padding-top:6px;">
+                <input type="text" ${ro} placeholder="Barangay Captain Full Name" style="border:none;border-bottom:1px solid #ccc;font-size:13px;font-weight:bold;text-align:center;width:230px;font-style:italic;font-family:'Times New Roman',serif;"/>
               </div>
-              <div class="sig-sub">Issuing Officer</div>
-            </div>
-            <div class="doc-signature-block">
-              <div class="doc-field" style="margin-bottom:0;">
-                <input type="text" placeholder="Punong Barangay Name" ${ro} style="text-align:center;"/>
-              </div>
-              <div class="sig-sub">Punong Barangay</div>
+              <div style="font-size:11px;font-style:italic;color:#444;margin-top:3px;">Barangay Captain</div>
             </div>
           </div>
+
+          <!-- Seal info at bottom left -->
+          <div style="margin-top:28px;border-top:1px solid #ddd;padding-top:14px;font-size:11px;color:#1a3a8c;font-weight:bold;line-height:1.9;font-family:Arial,sans-serif;">
+            SEAL NO.: <input type="text" ${ro} placeholder="XXX-BI-XX-XXX" style="border:none;border-bottom:1px solid #aaa;font-size:11px;padding:0 4px;width:130px;color:#1a3a8c;font-weight:bold;"/><br/>
+            SERIES OF: <input type="text" ${ro} placeholder="2026" style="border:none;border-bottom:1px solid #aaa;font-size:11px;padding:0 4px;width:60px;color:#1a3a8c;font-weight:bold;"/><br/>
+            Not Valid without Dry Seal<br/>
+            Validity: Good for Three (3) months from the date of issued
+          </div>
+
         </div>`;
     }
-    else if (documentType.includes('Barangay_Clearance') || 
+    // ── BARANGAY CLEARANCE ─────────────────────────────────────────────────
+    else if (documentType.includes('Barangay_Clearance') ||
              documentType.toLowerCase().includes('clearance')) {
       html = `
-        <div class="doc-template ${wm}">
-          <div class="doc-header">
-            <div class="republic">Republic of the Philippines</div>
-            <div class="province">City/Municipality of ___________</div>
-            <div class="barangay-name">Barangay San Sebastian</div>
-            <div class="doc-title">Barangay Clearance</div>
+        <div class="doc-template ${wm}" style="font-family: 'Times New Roman', serif; width: 210mm; min-height: 297mm; margin: 0 auto; padding: 28px 36px; box-sizing: border-box; border: 3px solid #222;">
+
+          <!-- Header: logo left, text right -->
+          <div style="display:flex; align-items:flex-start; gap:20px; margin-bottom:10px;">
+            <div style="flex-shrink:0;">
+              <div style="width:80px;height:80px;border:1.5px solid #aaa;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#f5f5f5;overflow:hidden;">
+                <img src="/images/brgy.png" style="width:72px;height:72px;object-fit:contain;" alt="Brgy Logo" onerror="this.style.display='none'"/>
+              </div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:12px;color:#333;">Republic of the Philippines</div>
+              <div style="font-size:12px;color:#333;">City/Municipality of ___________</div>
+              <div style="font-size:12px;color:#333;">Province of ___________</div>
+              <div style="font-size:22px;font-weight:bold;color:#1a3a6e;font-style:italic;font-family:Georgia,serif;margin-top:4px;">Barangay San Sebastian</div>
+            </div>
           </div>
-          <p style="font-size:13px; margin: 16px 0 10px; line-height:1.7;">TO WHOM IT MAY CONCERN:</p>
-          <p style="font-size:13px; line-height:1.9; margin-bottom: 6px;">
+
+          <!-- Horizontal rule -->
+          <div style="border-top:2.5px solid #222;border-bottom:1px solid #222;padding:2px 0;margin-bottom:28px;"></div>
+
+          <!-- Office label -->
+          <div style="text-align:center;font-size:13px;font-weight:bold;letter-spacing:1px;margin-bottom:10px;">OFFICE OF THE BARANGAY CAPTAIN</div>
+
+          <!-- Title -->
+          <div style="text-align:center;margin-bottom:30px;">
+            <span style="font-size:28px;font-weight:900;letter-spacing:2px;color:#111;">BARANGAY CLEARANCE</span>
+          </div>
+
+          <!-- To Whom -->
+          <p style="font-size:13px;font-weight:bold;margin-bottom:20px;">TO WHOM IT MAY CONCERN:</p>
+
+          <!-- Body paragraph -->
+          <p style="font-size:13px;line-height:2.1;text-align:justify;margin-bottom:14px;margin-left:40px;">
             This is to certify that
-            <strong><input type="text" value="${safeFullName}" ${ro} style="width:200px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;font-weight:bold;padding:0 4px;"/></strong>,
-            of legal age,
-            <select ${ro} style="border:none;border-bottom:1px solid #333;font-size:13px;">
-              <option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option>
-            </select>,
-            Filipino citizen, and a resident of
-            <input type="text" placeholder="complete address" ${ro} style="width:260px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;"/>
-            is known to be a person of <strong>good moral character</strong> and has no derogatory record on file in this office.
+            <input type="text" value="${safeFullName}" ${ro} style="width:220px;display:inline;border:none;border-bottom:1.5px solid #333;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;"/>,
+            <input type="text" ${ro} placeholder="age" style="width:60px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;text-align:center;font-family:'Times New Roman',serif;"/> years old,
+            <select ${ro} style="border:none;border-bottom:1px solid #333;font-size:13px;font-family:'Times New Roman',serif;">
+              <option value="">Civil Status</option><option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option>
+            </select>
+            and a resident of
+            <input type="text" ${ro} placeholder="complete address, Barangay San Sebastian" style="width:320px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;"/>
+            is known to be of good moral character and law-abiding citizen in the community.
           </p>
-          <div class="doc-section-title">Clearance Details</div>
-          <div class="doc-row">
-            <div class="doc-field">
-              <label>Purpose</label>
-              <input type="text" placeholder="e.g. Employment, Loan, School Enrollment" ${ro}/>
-            </div>
-            <div class="doc-field">
-              <label>Contact Number</label>
-              <input type="text" value="${safeContactNumber}" ${ro}/>
-            </div>
-          </div>
-          <div class="doc-row">
-            <div class="doc-field">
-              <label>OR Number</label>
-              <input type="text" placeholder="Official Receipt No." ${ro}/>
-            </div>
-            <div class="doc-field">
-              <label>Amount Paid</label>
-              <input type="text" placeholder="e.g. PHP 50.00" ${ro}/>
-            </div>
-            <div class="doc-field">
-              <label>Date Issued</label>
-              <input type="text" value="${today}" ${ro}/>
-            </div>
-          </div>
-          <div class="doc-signature-area">
-            <div class="doc-signature-block">
-              <div class="doc-field" style="margin-bottom:6px;">
-                <input type="text" placeholder="Issued By (Name)" ${ro} style="text-align:center;"/>
+
+          <p style="font-size:13px;line-height:2;text-align:justify;margin-bottom:14px;margin-left:40px;">
+            To certify further, that he/she has no derogatory and/or criminal records filed in this barangay.
+          </p>
+
+          <p style="font-size:13px;line-height:2;text-align:justify;margin-bottom:14px;margin-left:40px;">
+            <strong>ISSUED</strong> this
+            <input type="text" ${ro} placeholder="__" style="width:36px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;text-align:center;font-family:'Times New Roman',serif;"/> day of
+            <input type="text" ${ro} placeholder="Month, Year" style="width:160px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;"/>
+            at Barangay San Sebastian upon request of the interested party for whatever legal purposes it may serve.
+          </p>
+
+          <!-- Signature block (right-aligned) -->
+          <div style="text-align:right;margin-top:50px;margin-right:20px;">
+            <div style="display:inline-block;text-align:center;">
+              <div style="height:52px;"></div>
+              <div style="border-top:1.5px solid #222;padding-top:6px;min-width:200px;">
+                <input type="text" ${ro} placeholder="Barangay Captain Name" style="border:none;border-bottom:1px solid #ccc;font-size:13px;font-weight:bold;text-align:center;width:220px;font-family:'Times New Roman',serif;"/>
               </div>
-              <div class="sig-sub">Issuing Officer</div>
-            </div>
-            <div class="doc-signature-block">
-              <div class="doc-field" style="margin-bottom:0;">
-                <input type="text" placeholder="Punong Barangay Name" ${ro} style="text-align:center;"/>
-              </div>
-              <div class="sig-sub">Punong Barangay</div>
+              <div style="font-size:12px;color:#333;margin-top:2px;">Barangay Captain</div>
             </div>
           </div>
+
+          <!-- OR No. / Date Issued / Doc Stamp -->
+          <div style="margin-top:48px;">
+            <div style="font-size:12px;line-height:2.2;font-family:'Times New Roman',serif;">
+              <div>O.R No. &nbsp;&nbsp;&nbsp; <input type="text" ${ro} style="width:170px;border:none;border-bottom:1px solid #aaa;font-size:12px;padding:0 4px;"/></div>
+              <div>Date Issued: <input type="text" ${ro} value="${today}" style="width:170px;border:none;border-bottom:1px solid #aaa;font-size:12px;padding:0 4px;"/></div>
+              <div>Doc. Stamp: &nbsp;<strong>Paid</strong></div>
+            </div>
+          </div>
+
         </div>`;
     }
+    // ── BARANGAY ID ────────────────────────────────────────────────────────
     else {
       html = `
-      <div class="doc-template ${wm}" style="font-family: 'Times New Roman', serif; max-width: 700px; margin: 0 auto;">
+      <div class="doc-template ${wm}" style="font-family: 'Times New Roman', serif; max-width: 760px; margin: 0 auto;">
 
         <!-- Header -->
         <div style="background: #2d4a44; color: white; padding: 10px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 3px solid #FED734; border-radius: 8px 8px 0 0;">
@@ -866,91 +1075,89 @@
           <div style="margin-left: auto; background: #FED734; color: #2d4a44; font-size: 10px; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-family: Arial, sans-serif;">OFFICIAL ID</div>
         </div>
 
-        <!-- Body -->
-        <div style="padding: 16px 20px; border: 2px solid #2d4a44; border-top: none; border-radius: 0 0 8px 8px;">
+        <!-- Body: left fields | right column (picture → signature → control no.) -->
+        <div style="padding: 16px 20px; border: 2px solid #2d4a44; border-top: none; border-radius: 0 0 8px 8px; display: flex; gap: 20px; align-items: flex-start;">
 
-          <!-- Name Row -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px;">
-            <div class="doc-field">
-              <label>First Name</label>
-              <input type="text" value="${safeFullName.split(' ')[0] || ''}" ${ro}/>
-            </div>
-            <div class="doc-field">
-              <label>Middle Name</label>
-              <input type="text" ${ro}/>
-            </div>
-            <div class="doc-field">
-              <label>Last Name</label>
-              <input type="text" value="${safeFullName.split(' ').slice(-1)[0] || ''}" ${ro}/>
-            </div>
-          </div>
+          <!-- LEFT COLUMN -->
+          <div style="flex: 1;">
 
-          <!-- Main body: left fields + right picture -->
-          <div style="display: flex; gap: 16px; align-items: flex-start;">
-
-            <!-- Left column -->
-            <div style="flex: 1;">
-
+            <!-- Name row -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px;">
               <div class="doc-field">
-                <label>Address</label>
+                <label>First Name</label>
+                <input type="text" value="${safeFullName.split(' ')[0] || ''}" ${ro}/>
+              </div>
+              <div class="doc-field">
+                <label>Middle Name</label>
                 <input type="text" ${ro}/>
               </div>
+              <div class="doc-field">
+                <label>Last Name</label>
+                <input type="text" value="${safeFullName.split(' ').slice(-1)[0] || ''}" ${ro}/>
+              </div>
+            </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+            <div class="doc-field">
+              <label>Address</label>
+              <input type="text" ${ro}/>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+              <div class="doc-field" style="margin-bottom:0;">
+                <label>Birthdate</label>
+                <input type="text" ${ro} placeholder="MM/DD/YYYY"/>
+              </div>
+              <div class="doc-field" style="margin-bottom:0;">
+                <label>Contact No.</label>
+                <input type="text" value="${safeContactNumber}" ${ro}/>
+              </div>
+            </div>
+
+            <!-- In Case of Emergency -->
+            <div style="border: 1.5px solid #e74c3c; border-radius: 6px; padding: 10px 12px; margin-top: 6px;">
+              <div style="font-size: 11px; font-weight: bold; color: #e74c3c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-family: Arial, sans-serif;">In Case of Emergency</div>
+              <div class="doc-field" style="margin-bottom: 8px;">
+                <label>Name</label>
+                <input type="text" ${ro}/>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div class="doc-field" style="margin-bottom: 0;">
-                  <label>Birthdate</label>
-                  <input type="text" ${ro} placeholder="MM/DD/YYYY"/>
+                  <label>Address</label>
+                  <input type="text" ${ro}/>
                 </div>
                 <div class="doc-field" style="margin-bottom: 0;">
                   <label>Contact No.</label>
-                  <input type="text" value="${safeContactNumber}" ${ro}/>
-                </div>
-              </div>
-
-              <!-- In Case of Emergency -->
-              <div style="border: 1.5px solid #e74c3c; border-radius: 6px; padding: 10px 12px; margin-top: 6px; margin-bottom: 14px;">
-                <div style="font-size: 11px; font-weight: bold; color: #e74c3c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-family: Arial, sans-serif;">In Case of Emergency</div>
-                <div class="doc-field" style="margin-bottom: 8px;">
-                  <label>Name</label>
                   <input type="text" ${ro}/>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                  <div class="doc-field" style="margin-bottom: 0;">
-                    <label>Address</label>
-                    <input type="text" ${ro}/>
-                  </div>
-                  <div class="doc-field" style="margin-bottom: 0;">
-                    <label>Contact No.</label>
-                    <input type="text" ${ro}/>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Signature (bottom-left) -->
-              <div class="doc-field" style="margin-bottom: 6px;">
-                <label>Signature</label>
-                <div style="border-bottom: 1.5px solid #333; min-height: 40px;"></div>
-              </div>
-
-              <!-- Control No. (below signature) -->
-              <div class="doc-field" style="margin-bottom: 0;">
-                <label>Control No.</label>
-                <input type="text" ${ro} placeholder="BSS-2026-XXXXX"/>
-              </div>
-
-            </div>
-
-            <!-- Right column: picture only -->
-            <div style="flex-shrink: 0; display: flex; flex-direction: column; align-items: center; padding-top: 4px;">
-              <div style="width: 100px; height: 120px; border: 1.5px solid #2d4a44; display: flex; align-items: center; justify-content: center; background: #f5f5f5; border-radius: 4px;">
-                <div style="text-align: center; color: #aaa;">
-                  <i class="bi bi-person" style="font-size: 48px;"></i>
-                  <div style="font-size: 10px; font-family: Arial, sans-serif; margin-top: 4px;">Picture 1x1</div>
                 </div>
               </div>
             </div>
 
           </div>
+
+          <!-- RIGHT COLUMN: Picture → Signature → Control No. -->
+          <div style="flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; padding-top: 4px; min-width: 120px;">
+
+            <!-- 1×1 Picture box -->
+            <div style="width: 100px; height: 120px; border: 1.5px solid #2d4a44; display: flex; align-items: center; justify-content: center; background: #f5f5f5; border-radius: 4px;">
+              <div style="text-align: center; color: #aaa;">
+                <i class="bi bi-person" style="font-size: 44px;"></i>
+                <div style="font-size: 10px; font-family: Arial, sans-serif; margin-top: 4px;">Picture 1×1</div>
+              </div>
+            </div>
+
+            <!-- Signature box -->
+            <div style="width: 100px; border: 1.5px solid #333; min-height: 48px; border-radius: 4px; background: #fafafa; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px;">
+              <span style="font-size: 9px; color: #888; font-family: Arial, sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">Signature</span>
+            </div>
+
+            <!-- Control No. -->
+            <div class="doc-field" style="margin-bottom: 0; width: 100px; text-align: center;">
+              <label style="font-size:9px;">Control No.</label>
+              <input type="text" ${ro} placeholder="BSS-2026-XXXXX" style="font-size:11px; text-align:center;"/>
+            </div>
+
+          </div>
+
         </div>
       </div>`;
     }
@@ -1003,48 +1210,32 @@
     setTimeout(() => { win.print(); win.close(); }, 400);
   }
 
-  // ── Download PDF with html2canvas ─────────────────────────────────────────
+  // ── Download PDF ─────────────────────────────────────────────────────────
   async function downloadPDF() {
     const area = document.getElementById('printable-area');
     const title = document.getElementById('docModalTitle').textContent;
-    
     const downloadBtn = document.querySelector('.btn-download');
     const originalText = downloadBtn.innerHTML;
     downloadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating PDF...';
     downloadBtn.disabled = true;
-    
     try {
       const element = area.firstElementChild;
       if (!element) return;
-      
-      const canvas = await html2canvas(element, {
-        scale: 3,
-        backgroundColor: '#ffffff',
-        logging: false,
-        useCORS: true
-      });
-      
+      const canvas = await html2canvas(element, { scale: 3, backgroundColor: '#ffffff', logging: false, useCORS: true });
       const { jsPDF } = window.jspdf;
       const imgData = canvas.toDataURL('image/png');
-      const imgWidth = 190;
-      const pageHeight = 277;
+      const imgWidth = 190, pageHeight = 277;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-      
+      let heightLeft = imgHeight, position = 0;
       const orientation = imgWidth > imgHeight ? 'landscape' : 'portrait';
-      const doc = new jsPDF({ orientation: orientation, unit: 'mm', format: 'a4' });
-      
+      const doc = new jsPDF({ orientation, unit: 'mm', format: 'a4' });
       doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
-      
       while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        doc.addPage();
+        position = heightLeft - imgHeight; doc.addPage();
         doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
-      
       doc.save(title.replace(/[\s:]+/g, '_') + '.pdf');
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -1058,51 +1249,41 @@
   function exportToPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-
     const activePanel = document.querySelector('.panel-inner:not(.d-none)');
     const table = activePanel.querySelector('table');
     const title = activePanel.querySelector('.panel-header').innerText;
-
     doc.text(title, 14, 15);
-
     doc.autoTable({
-        html: table,
-        startY: 20,
-        margin: { top: 20 },
-        columnStyles: {
-            5: { cellWidth: 0, minCellWidth: 0 }
-        }
+      html: table, startY: 20, margin: { top: 20 },
+      columnStyles: { 5: { cellWidth: 0, minCellWidth: 0 } }
     });
-
     doc.save(`${title.replace(/\s+/g, '_')}.pdf`);
   }
-window.onload = function() {
-        const status = document.getElementById('accountStatus').value;
-        if (status === 'New' || status === 'Newly Updated') {
-            document.getElementById('forcePasswordModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        }
-    };
 
-    function redirectToPassword() {
-        window.location.href = '/user-profile';
+  window.onload = function() {
+    const status = document.getElementById('accountStatus').value;
+    if (status === 'New' || status === 'Newly Updated') {
+      document.getElementById('forcePasswordModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
     }
+  };
+  function redirectToPassword() { window.location.href = '/user-profile'; }
 </script>
+
 <script>
 (function() {
     var lastSnapshot = '';
-    
     function isModalOpen() {
         var docModal = document.getElementById('docModalOverlay');
         if (docModal && docModal.style.display === 'block') return true;
+        var vfModal = document.getElementById('viewFileModalOverlay');
+        if (vfModal && vfModal.style.display === 'block') return true;
         var logoutModal = document.getElementById('logoutModal');
         if (logoutModal && (logoutModal.style.display === 'block' || logoutModal.style.display === 'flex')) return true;
         return false;
     }
-    
     function poll() {
         if (isModalOpen()) return;
-        
         var xhr = new XMLHttpRequest();
         xhr.open('GET', '/requests-document/api/poll?t=' + Date.now(), true);
         xhr.onload = function() {
@@ -1110,18 +1291,30 @@ window.onload = function() {
                 try {
                     var data = JSON.parse(xhr.responseText);
                     var snapshot = JSON.stringify(data);
-                    
-                    if (lastSnapshot === '') {
-                        lastSnapshot = snapshot;
-                    } else if (snapshot !== lastSnapshot) {
-                        location.reload();
+
+                    // Update badge counts if provided
+                    if (data.counts) {
+                        var map = {
+                            incoming: 'badge-incoming',
+                            processing: 'badge-processing',
+                            ready: 'badge-ready',
+                            archive: 'badge-archive'
+                        };
+                        Object.keys(map).forEach(function(key) {
+                            var el = document.getElementById(map[key]);
+                            if (el && data.counts[key] !== undefined) {
+                                el.textContent = data.counts[key];
+                            }
+                        });
                     }
+
+                    if (lastSnapshot === '') { lastSnapshot = snapshot; }
+                    else if (snapshot !== lastSnapshot) { location.reload(); }
                 } catch(e) {}
             }
         };
         xhr.send();
     }
-    
     poll();
     setInterval(poll, 5000);
 })();

@@ -38,9 +38,8 @@
         overflow: hidden;
     }
 
-    /* Calendar main */
     .calendar-main {
-        flex: 2.5;
+        flex: 2;
         background-color: white;
         border-radius: 12px;
         padding: 20px;
@@ -97,7 +96,7 @@
     }
 
     .cal-day {
-        padding: 6px 4px;
+        padding: 4px 4px;
         font-size: 13px;
         cursor: pointer;
         transition: background-color 0.2s;
@@ -106,8 +105,9 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 3px;
+        gap: 2px;
         min-height: 0;
+        overflow: hidden;
     }
     .cal-day:hover {
         background-color: #e8f5f0;
@@ -118,13 +118,23 @@
         color: #ccc;
     }
     .cal-day.today .day-number {
-        background-color: #2d4a44;
-        color: white;
+        background-color: #FED734;
+        color: #2d4a44;
         border-radius: 50%;
         font-weight: bold;
     }
     .cal-day.has-event {
         background-color: #f0faf5;
+    }
+    .cal-day.past-event {
+        background-color: #e8e8e8;
+    }
+    .cal-day.past-event .event-label {
+        background-color: #c0c0c0;
+        color: #555;
+    }
+    .cal-day.past-event .day-number {
+        color: #888;
     }
 
     .day-number {
@@ -137,6 +147,20 @@
         font-size: 13px;
     }
 
+    .event-label {
+        width: 100%;
+        font-size: 9px;
+        line-height: 1.2;
+        color: #0f6e56;
+        background-color: #c8f0dc;
+        border-radius: 3px;
+        padding: 1px 3px;
+        white-space: normal;
+        word-break: break-word;
+        text-align: left;
+        flex-shrink: 0;
+    }
+
     .event-dot {
         width: 6px;
         height: 6px;
@@ -145,9 +169,8 @@
         flex-shrink: 0;
     }
 
-    /* Side column */
     .side-column {
-        flex: 1;
+        flex: 1.3;
         display: flex;
         flex-direction: column;
         gap: 16px;
@@ -254,7 +277,6 @@
     }
     .btn-red:hover { background-color: #c0392b; }
 
-    /* Toggle */
     .toggle-row {
         display: flex;
         align-items: center;
@@ -271,7 +293,6 @@
     }
     .form-check-input:checked { background-color: #2d4a44; border-color: #2d4a44; }
 
-    /* Export */
     .export-row {
         display: flex;
         align-items: center;
@@ -300,7 +321,7 @@
         min-width: 0;
     }
 
-    /* Modals */
+    /* Existing page modals (add/view event) */
     .modal {
         display: none;
         position: fixed;
@@ -312,10 +333,10 @@
     .modal-content {
         background-color: white;
         margin: 5% auto;
-        padding: 25px;
+        padding: 20px;
         border-radius: 12px;
         width: 90%;
-        max-width: 520px;
+        max-width: 420px;
         max-height: 85vh;
         overflow-y: auto;
         text-align: left;
@@ -325,14 +346,14 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 12px;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
         border-bottom: 1px solid #e0e0e0;
     }
     .modal-header h3 {
         margin: 0;
         color: #2d4a44;
-        font-size: 17px;
+        font-size: 15px;
     }
     .close-modal {
         background: none;
@@ -346,14 +367,14 @@
     .close-modal:hover { color: #333; }
 
     .form-group {
-        margin-bottom: 14px;
+        margin-bottom: 10px;
     }
     .form-group label {
         display: block;
         font-weight: bold;
         color: #2d4a44;
-        font-size: 12px;
-        margin-bottom: 5px;
+        font-size: 11px;
+        margin-bottom: 4px;
         text-transform: uppercase;
         letter-spacing: 0.3px;
     }
@@ -361,10 +382,10 @@
     .form-group textarea,
     .form-group select {
         width: 100%;
-        padding: 8px 12px;
+        padding: 7px 10px;
         border: 1px solid #d0d5dd;
         border-radius: 6px;
-        font-size: 14px;
+        font-size: 13px;
         font-family: Arial, sans-serif;
         background-color: white;
     }
@@ -377,8 +398,8 @@
 
     .form-row {
         display: flex;
-        gap: 14px;
-        margin-bottom: 14px;
+        gap: 10px;
+        margin-bottom: 10px;
     }
     .form-row .form-col {
         flex: 1;
@@ -388,17 +409,17 @@
         display: block;
         font-weight: bold;
         color: #2d4a44;
-        font-size: 12px;
-        margin-bottom: 5px;
+        font-size: 11px;
+        margin-bottom: 4px;
         text-transform: uppercase;
         letter-spacing: 0.3px;
     }
     .form-row .form-col input {
         width: 100%;
-        padding: 8px 12px;
+        padding: 7px 10px;
         border: 1px solid #d0d5dd;
         border-radius: 6px;
-        font-size: 14px;
+        font-size: 13px;
     }
     .form-row .form-col input:focus {
         outline: none;
@@ -408,17 +429,17 @@
     .modal-buttons {
         display: flex;
         gap: 10px;
-        margin-top: 20px;
-        padding-top: 16px;
+        margin-top: 14px;
+        padding-top: 12px;
         border-top: 1px solid #e0e0e0;
     }
     .modal-buttons button {
         flex: 1;
-        padding: 10px;
+        padding: 8px;
         border-radius: 6px;
         font-weight: bold;
         cursor: pointer;
-        font-size: 14px;
+        font-size: 13px;
     }
     .btn-save {
         background-color: #44C375;
@@ -433,7 +454,6 @@
     }
     .btn-cancel:hover { background-color: #ccc; }
 
-    /* View Events Modal */
     .event-card {
         border: 1px solid #e0e0e0;
         border-radius: 8px;
@@ -489,7 +509,6 @@
         margin: 15% auto; 
     }
 
-    /* PDF Export Styles */
     @media print {
         .sidebar, .top-header, .calendar-nav, .side-column, .modal, .btn, button, .export-row, .toggle-row {
             display: none !important;
@@ -531,6 +550,183 @@
         background-color: #2d4a44;
         color: white;
     }
+
+    /* Success Modal Styles - exactly like System Settings */
+    .success-toast-modal .modal-content {
+        background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+    }
+    .success-toast-modal .modal-header {
+        background: transparent;
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .success-toast-modal .modal-body {
+        text-align: center;
+        padding: 20px;
+    }
+    .success-toast-modal .modal-footer {
+        border-top: none;
+        justify-content: center;
+        padding-top: 0;
+        background: transparent;
+    }
+    .success-icon {
+        font-size: 60px;
+        margin-bottom: 12px;
+    }
+    
+    /* Confirmation Modal - like System Settings */
+    .confirm-modal .modal-content {
+        border-radius: 16px;
+    }
+    .confirm-modal .modal-header {
+        background: linear-gradient(135deg, #30534D, #3d6b63);
+        color: white;
+        border-radius: 16px 16px 0 0;
+    }
+    .confirm-modal .modal-header h3 {
+        color: white;
+    }
+    .confirm-modal .modal-header .btn-close-white {
+        filter: brightness(0) invert(1);
+    }
+
+    /* ============================================
+       PURE CSS ALERT OVERLAYS (no Bootstrap, no emojis)
+       ============================================ */
+    .sys-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.65);
+        z-index: 99999;
+        justify-content: center;
+        align-items: center;
+    }
+    .sys-overlay.show { display: flex; }
+
+    .sys-modal-box {
+        border-radius: 16px;
+        overflow: hidden;
+        min-width: 300px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        animation: sysSlideUp 0.25s ease;
+    }
+
+    @keyframes sysSlideUp {
+        from { transform: translateY(30px); opacity: 0; }
+        to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .sys-modal-box.success { background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%); }
+    .sys-modal-box.error   { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
+    .sys-modal-box.confirm { background: #fff; }
+
+    .sys-modal-body {
+        text-align: center;
+        padding: 32px 28px 20px;
+    }
+    .sys-modal-icon {
+        font-size: 52px;
+        margin-bottom: 12px;
+        line-height: 1;
+        color: #fff;
+    }
+    .sys-modal-body h5 {
+        color: #fff;
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+    .sys-modal-footer {
+        display: flex;
+        justify-content: center;
+        padding: 0 28px 28px;
+    }
+    .sys-btn-ok {
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+        border: 2px solid rgba(255,255,255,0.5);
+        padding: 9px 36px;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: Arial, sans-serif;
+        transition: background 0.2s;
+    }
+    .sys-btn-ok:hover { background: rgba(255,255,255,0.35); }
+
+    /* Confirm-specific */
+    .sys-confirm-header {
+        background: linear-gradient(135deg, #30534D, #3d6b63);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .sys-confirm-header h5 {
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+    .sys-confirm-close {
+        background: none;
+        border: none;
+        color: rgba(255,255,255,0.75);
+        font-size: 22px;
+        cursor: pointer;
+        line-height: 1;
+        padding: 0;
+        transition: color 0.2s;
+    }
+    .sys-confirm-close:hover { color: #fff; }
+    .sys-confirm-body {
+        padding: 22px 20px 10px;
+        font-size: 15px;
+        color: #333;
+        font-family: Arial, sans-serif;
+    }
+    .sys-confirm-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 10px 20px 20px;
+    }
+    .sys-btn-cancel {
+        background: #e0e0e0;
+        color: #555;
+        border: none;
+        padding: 9px 20px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: Arial, sans-serif;
+        transition: background 0.2s;
+    }
+    .sys-btn-cancel:hover { background: #ccc; }
+    .sys-btn-confirm {
+        background: #44C375;
+        color: #fff;
+        border: none;
+        padding: 9px 20px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: Arial, sans-serif;
+        transition: background 0.2s;
+    }
+    .sys-btn-confirm:hover { background: #36a863; }
 </style>
 
 <meta charset="UTF-8">
@@ -546,14 +742,98 @@
 <body>
     <script src="/js/notif.js"></script>
 <div class="toast-container" id="toastContainer"></div>
+
+<!-- ============================================
+     PURE CSS ALERT OVERLAYS
+     ============================================ -->
+
+<!-- Success Overlay -->
+<div class="sys-overlay" id="sysSuccessOverlay">
+    <div class="sys-modal-box success">
+        <div class="sys-modal-body">
+            <div class="sys-modal-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <h5 id="sysSuccessMessage">Success!</h5>
+        </div>
+        <div class="sys-modal-footer">
+            <button class="sys-btn-ok" onclick="document.getElementById('sysSuccessOverlay').classList.remove('show')">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Error Overlay -->
+<div class="sys-overlay" id="sysErrorOverlay">
+    <div class="sys-modal-box error">
+        <div class="sys-modal-body">
+            <div class="sys-modal-icon"><i class="bi bi-x-circle-fill"></i></div>
+            <h5 id="sysErrorMessage">An error occurred.</h5>
+        </div>
+        <div class="sys-modal-footer">
+            <button class="sys-btn-ok" onclick="document.getElementById('sysErrorOverlay').classList.remove('show')">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Overlay -->
+<div class="sys-overlay" id="sysConfirmOverlay">
+    <div class="sys-modal-box confirm">
+        <div class="sys-confirm-header">
+            <h5 id="sysConfirmTitle">Confirm</h5>
+            <button class="sys-confirm-close" onclick="document.getElementById('sysConfirmOverlay').classList.remove('show')">&times;</button>
+        </div>
+        <div class="sys-confirm-body">
+            <p id="sysConfirmMessage" style="margin:0;"></p>
+        </div>
+        <div class="sys-confirm-footer">
+            <button class="sys-btn-cancel" onclick="document.getElementById('sysConfirmOverlay').classList.remove('show')">Cancel</button>
+            <button class="sys-btn-confirm" id="sysConfirmOkBtn">Confirm</button>
+        </div>
+    </div>
+</div>
+
 <div class="layout">
 
 <!-- Lock Modal -->
 <div id="forcePasswordModal" class="force-modal">
     <div class="force-modal-content">
-        <h2>🔒 First Login Detected</h2>
+        <h2><i class="bi bi-lock-fill"></i> First Login Detected</h2>
         <p>You must change your password before using the system.</p>
         <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+<!-- Success Modal - exactly like System Settings (user must click OK) -->
+<div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+            </div>
+            <div class="modal-body">
+                <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <h5 id="successMessage">Success!</h5>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal - like System Settings -->
+<div class="modal fade confirm-modal" id="confirmationModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalTitle">Confirm Action</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="confirmModalMessage" style="padding: 24px; font-size: 16px;">
+                Are you sure?
+            </div>
+            <div class="modal-footer" style="border-top: none; padding: 16px 24px;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmModalOkBtn" style="background-color: #44C375; border-color: #44C375;">Confirm</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -620,9 +900,8 @@
           <div class="export-row">
             <button class="btn-yellow" onclick="exportToPDF()"><i class="bi bi-download"></i> Export PDF</button>
             <select id="exportFormat" class="export-select">
-              <option value="both">📋 Both Calendar &amp; Events</option>
-              <option value="calendar">📅 Calendar Only</option>
-              <option value="events">📋 Events List Only</option>
+              <option value="both">Both Calendar &amp; Events</option>
+              <option value="events">Events List Only</option>
             </select>
             <span style="font-size: 11px; color: #888;">Export as PDF</span>
           </div>
@@ -644,13 +923,19 @@
         </div>
         
         <div class="form-group">
-            <label>Event Name / Program Name</label>
+            <label>Event Name</label>
             <input type="text" id="eventName" placeholder="e.g., Community Clean-up Drive">
         </div>
-        
-        <div class="form-group">
-            <label>Date</label>
-            <input type="date" id="eventDate">
+
+        <div class="form-row">
+            <div class="form-col">
+                <label>Date</label>
+                <input type="date" id="eventDate">
+            </div>
+            <div class="form-col">
+                <label>Location</label>
+                <input type="text" id="eventLocation" placeholder="e.g., Barangay Hall">
+            </div>
         </div>
         
         <div class="form-row">
@@ -665,12 +950,7 @@
         </div>
         
         <div class="form-group">
-            <label>Location</label>
-            <input type="text" id="eventLocation" placeholder="e.g., Barangay Hall">
-        </div>
-        
-        <div class="form-group">
-            <label>Estimated Budget (₱)</label>
+            <label>Estimated Budget (&#8369;)</label>
             <input type="number" id="eventBudget" placeholder="0" value="0">
         </div>
         
@@ -720,9 +1000,71 @@
   let dbEvents = {}; 
   let allEvents = [];
   let currentSelectedDate = null;
+  let _pendingConfirmAction = null;
 
   let currentDate = new Date();
   currentDate.setDate(1);
+
+  // ============================================
+  // PURE CSS MODAL HELPERS
+  // ============================================
+
+  function showSuccess(message) {
+    document.getElementById('sysSuccessMessage').innerHTML = message;
+    document.getElementById('sysSuccessOverlay').classList.add('show');
+  }
+
+  function showError(message) {
+    document.getElementById('sysErrorMessage').innerHTML = message;
+    document.getElementById('sysErrorOverlay').classList.add('show');
+  }
+
+  function showConfirm(message, title, onConfirm) {
+    document.getElementById('sysConfirmTitle').innerHTML = title || 'Confirm Action';
+    document.getElementById('sysConfirmMessage').innerHTML = message;
+    const overlay = document.getElementById('sysConfirmOverlay');
+    overlay.classList.add('show');
+    const okBtn = document.getElementById('sysConfirmOkBtn');
+    okBtn.onclick = function() {
+      overlay.classList.remove('show');
+      onConfirm();
+    };
+  }
+
+  // ============================================
+  // CONFIRMATION & SUCCESS MODAL FUNCTIONS (exactly like System Settings)
+  // ============================================
+
+  function showSuccessBS(message) {
+    document.getElementById('successMessage').innerHTML = message;
+    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+    successModal.show();
+  }
+
+  function showConfirmBS(message, title, onConfirm) {
+    document.getElementById('confirmModalTitle').innerHTML = title || 'Confirm Action';
+    document.getElementById('confirmModalMessage').innerHTML = message;
+    
+    _pendingConfirmAction = onConfirm;
+    
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+    
+    const confirmBtn = document.getElementById('confirmModalOkBtn');
+    const oldBtnClick = confirmBtn.onclick;
+    confirmBtn.onclick = function() {
+      if (_pendingConfirmAction && typeof _pendingConfirmAction === 'function') {
+        _pendingConfirmAction();
+      }
+      confirmModal.hide();
+    };
+    
+    confirmModal.show();
+    
+    document.getElementById('confirmationModal').addEventListener('hidden.bs.modal', function() {
+      confirmBtn.onclick = oldBtnClick;
+      _pendingConfirmAction = null;
+    }, { once: true });
+  }
 
   async function loadEvents() {
     try {
@@ -799,23 +1141,23 @@
   }
 
   async function deleteEventFromList(eventId, dateKey) {
-    if (!confirm('Are you sure you want to delete this event?')) return;
-    
-    try {
-        const response = await fetch(`/api/calendar/${eventId}`, {
-            method: 'DELETE'
-        });
-        
-        if (response.ok) {
-            alert('Event deleted successfully!');
-            loadEvents();
-        } else {
-            alert('Failed to delete event');
+    showConfirm('Are you sure you want to delete this event?', 'Confirm Delete', async function() {
+        try {
+            const response = await fetch(`/api/calendar/${eventId}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                showSuccess('Event deleted successfully!');
+                loadEvents();
+            } else {
+                showError('Failed to delete event. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error deleting event:', error);
+            showError('Error deleting event. Please try again.');
         }
-    } catch (error) {
-        console.error('Error deleting event:', error);
-        alert('Error deleting event');
-    }
+    });
   }
 
   function showEventsForDay(dateKey) {
@@ -862,24 +1204,24 @@
   }
 
   async function deleteEvent(eventId, dateKey) {
-    if (!confirm('Are you sure you want to delete this event?')) return;
-    
-    try {
-        const response = await fetch(`/api/calendar/${eventId}`, {
-            method: 'DELETE'
-        });
-        
-        if (response.ok) {
-            alert('Event deleted successfully!');
-            loadEvents();
-            closeViewEventsModal();
-        } else {
-            alert('Failed to delete event');
+    showConfirm('Are you sure you want to delete this event?', 'Confirm Delete', async function() {
+        try {
+            const response = await fetch(`/api/calendar/${eventId}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                showSuccess('Event deleted successfully!');
+                loadEvents();
+                closeViewEventsModal();
+            } else {
+                showError('Failed to delete event. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error deleting event:', error);
+            showError('Error deleting event. Please try again.');
         }
-    } catch (error) {
-        console.error('Error deleting event:', error);
-        alert('Error deleting event');
-    }
+    });
   }
 
   function openAddEventModalWithDate() {
@@ -923,19 +1265,19 @@
     const notes = document.getElementById('eventNotes').value.trim();
 
     if (!eventName) {
-        alert('Please enter an event name.');
+        showError('Please enter an event name.');
         return;
     }
     if (!eventDate) {
-        alert('Please select a date.');
+        showError('Please select a date.');
         return;
     }
     if (!startTime) {
-        alert('Please select a start time.');
+        showError('Please select a start time.');
         return;
     }
     if (!endTime) {
-        alert('Please select an end time.');
+        showError('Please select an end time.');
         return;
     }
     
@@ -945,7 +1287,7 @@
     selectedDate.setHours(0, 0, 0, 0);
     
     if (selectedDate < today) {
-        alert('❌ Cannot add events on past dates. Please select a future or today\'s date.');
+        showError('Cannot add events on past dates. Please select a future or today\'s date.');
         return;
     }
 
@@ -967,18 +1309,18 @@
         });
 
         if (response.ok) {
-            alert('Event added successfully!');
+            showSuccess('Event added successfully!');
             closeAddEventModal();
             loadEvents();
         } else {
             const error = await response.text();
-            alert('Failed to add event: ' + error);
+            showError('Failed to add event: ' + error);
         }
     } catch (error) {
         console.error('Error adding event:', error);
-        alert('Error adding event. Please try again.');
+        showError('Error adding event. Please try again.');
     }
-}
+  }
 
   function formatTime(timeStr) {
     if (!timeStr) return 'N/A';
@@ -1039,15 +1381,29 @@
     for (let d = 1; d <= daysInMonth; d++) {
         const dateKey = `${year}-${String(month + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-        const hasEvent = dbEvents[dateKey] && dbEvents[dateKey].length > 0;
+        const dayEvents = dbEvents[dateKey] || [];
+        const hasEvent = dayEvents.length > 0;
+        const cellDate = new Date(year, month, d);
+        const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const isPast = cellDate < todayMidnight;
 
         const div = document.createElement('div');
-        div.className = `cal-day${isToday ? ' today' : ''}${hasEvent ? ' has-event' : ''}`;
+        div.className = `cal-day${isToday ? ' today' : ''}${hasEvent && !isPast ? ' has-event' : ''}${hasEvent && isPast ? ' past-event' : ''}`;
         div.dataset.date = dateKey;
-        div.innerHTML = `
-            <div class="day-number">${d}</div>
-            ${hasEvent ? '<div class="event-dot"></div>' : ''}
-        `;
+
+        let labelsHtml = '';
+        if (hasEvent) {
+            const maxLabels = 2;
+            const shown = dayEvents.slice(0, maxLabels);
+            labelsHtml = shown.map(e =>
+                `<div class="event-label">${escapeHtml(e.notes || 'Program')}</div>`
+            ).join('');
+            if (dayEvents.length > maxLabels) {
+                labelsHtml += `<div class="event-label" style="background:#e0f0e8; color:#555;">+${dayEvents.length - maxLabels} more</div>`;
+            }
+        }
+
+        div.innerHTML = `<div class="day-number">${d}</div>${labelsHtml}`;
         div.onclick = (function(date) { return function() { showEventsForDay(date); }; })(dateKey);
         grid.appendChild(div);
     }
@@ -1069,98 +1425,159 @@
 
   async function exportToPDF() {
     const format = document.getElementById('exportFormat').value;
-    const element = document.createElement('div');
-    element.className = 'pdf-export-container';
-    
+
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                        'July', 'August', 'September', 'October', 'November', 'December'];
-    const currentMonthYear = `${monthNames[month]} ${year}`;
-    
-    if (format === 'calendar' || format === 'both') {
-        const calendarClone = document.querySelector('.calendar-main').cloneNode(true);
-        const navBtns = calendarClone.querySelectorAll('.calendar-nav-btn');
-        navBtns.forEach(btn => btn.remove());
+    const monthNamesAll = ['January','February','March','April','May','June',
+                        'July','August','September','October','November','December'];
+    const dayNamesShort = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const currentMonthYear = `${monthNamesAll[month]} ${year}`;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const upcomingEvents = allEvents.filter(e => e.eventDate >= todayStr);
+    upcomingEvents.sort((a, b) => a.eventDate.localeCompare(b.eventDate));
+
+    function buildCalendarGrid() {
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const daysInPrev = new Date(year, month, 0).getDate();
+        const todayObj = new Date();
+
+        const headerCells = dayNamesShort.map(d =>
+            `<th style="background:#2d4a44;color:white;padding:8px 4px;font-size:11px;font-weight:bold;text-align:center;border:1px solid #1a3530;">${d}</th>`
+        ).join('');
+
+        let cells = [];
+        for (let i = firstDay - 1; i >= 0; i--) cells.push({ day: daysInPrev - i, otherMonth: true });
         
-        const header = document.createElement('div');
-        header.className = 'pdf-header';
-        header.innerHTML = `
-            <h2>Barangay Program Calendar</h2>
-            <p>${currentMonthYear}</p>
-            <p>Generated on: ${new Date().toLocaleString()}</p>
-        `;
-        
-        element.appendChild(header);
-        element.appendChild(calendarClone);
-    }
-    
-    if (format === 'events' || format === 'both') {
-        const today = new Date().toISOString().split('T')[0];
-        const upcomingEvents = allEvents.filter(e => e.eventDate >= today);
-        upcomingEvents.sort((a, b) => a.eventDate.localeCompare(b.eventDate));
-        
-        const eventsDiv = document.createElement('div');
-        eventsDiv.style.marginTop = '30px';
-        eventsDiv.style.padding = '20px';
-        eventsDiv.style.borderTop = '2px solid #2d4a44';
-        
-        let eventsHtml = `
-            <div class="pdf-header" style="margin-top: 20px;">
-                <h2>Upcoming Events</h2>
-                <p>${upcomingEvents.length} event(s) scheduled</p>
-            </div>
-            <table class="pdf-table">
-                <thead>
-                    <tr><th>#</th><th>Event Name</th><th>Date</th><th>Time</th><th>Location</th><th>Budget</th></tr>
-                </thead>
-                <tbody>
-        `;
-        
-        upcomingEvents.forEach((e, index) => {
-            const budgetValue = e.program_budget !== undefined && e.program_budget !== null ? e.program_budget : 0;
-            eventsHtml += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${escapeHtml(e.notes || 'Community Program')}</td>
-                    <td>${formatDate(e.eventDate)}</td>
-                    <td>${formatTime(e.startTime)} - ${formatTime(e.endTime)}</td>
-                    <td>${escapeHtml(e.location || 'TBD')}</td>
-                    <td>&#8369;${budgetValue.toLocaleString()}</td>
-                </tr>
-            `;
-        });
-        
-        eventsHtml += `</tbody></table><div style="margin-top:20px;text-align:center;font-size:10px;color:#888;"><p>Official document from Barangay Program Management System.</p></div>`;
-        eventsDiv.innerHTML = eventsHtml;
-        
-        if (format === 'events') {
-            const header = document.createElement('div');
-            header.className = 'pdf-header';
-            header.innerHTML = `<h2>Barangay Program Events</h2><p>Generated on: ${new Date().toLocaleString()}</p>`;
-            element.appendChild(header);
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateKey = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const isToday = d === todayObj.getDate() && month === todayObj.getMonth() && year === todayObj.getFullYear();
+            const cellDate = new Date(year, month, d);
+            const todayMidnight = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate());
+            const isPast = cellDate < todayMidnight;
+            cells.push({ day: d, otherMonth: false, isToday, isPast, events: dbEvents[dateKey] || [] });
         }
-        element.appendChild(eventsDiv);
+        
+        const rem = cells.length % 7 === 0 ? 0 : 7 - (cells.length % 7);
+        for (let i = 1; i <= rem; i++) cells.push({ day: i, otherMonth: true });
+
+        let rows = '';
+        for (let r = 0; r < cells.length / 7; r++) {
+            let row = '<tr>';
+            for (let c = 0; c < 7; c++) {
+                const cell = cells[r * 7 + c];
+                let bg = cell.otherMonth ? '#f9f9f9' : 'white';
+                if (!cell.otherMonth) {
+                    if (cell.isPast && cell.events && cell.events.length > 0) {
+                        bg = '#e8e8e8';
+                    } else if (cell.events && cell.events.length > 0 && !cell.isPast) {
+                        bg = '#f0faf5';
+                    }
+                }
+                const color = cell.otherMonth ? '#bbb' : '#222';
+                const numStyle = cell.isToday
+                    ? 'display:inline-block;background:#FED734;color:#2d4a44;border-radius:50%;width:20px;height:20px;line-height:20px;text-align:center;font-weight:bold;font-size:11px;'
+                    : 'font-size:11px;font-weight:bold;';
+                
+                let eventLabels = '';
+                if (cell.events && cell.events.length > 0) {
+                    const isPastEvent = cell.isPast === true;
+                    const labelBg = isPastEvent ? '#c0c0c0' : '#c8f0dc';
+                    const labelColor = isPastEvent ? '#555' : '#0f6e56';
+                    cell.events.slice(0, 2).forEach(e => {
+                        eventLabels += `<div style="background:${labelBg};color:${labelColor};font-size:8px;border-radius:2px;padding:1px 3px;margin-top:2px;line-height:1.3;word-break:break-word;">${escapeHtml(e.notes || 'Program')}</div>`;
+                    });
+                    if (cell.events.length > 2) eventLabels += `<div style="font-size:8px;color:#888;margin-top:1px;">+${cell.events.length - 2} more</div>`;
+                }
+                
+                row += `<td style="border:1px solid #ddd;padding:5px 4px;vertical-align:top;background:${bg};color:${color};width:14.28%;height:70px;overflow:hidden;"><div style="${numStyle}">${cell.day}</div>${eventLabels}</td>`;
+            }
+            row += '</tr>';
+            rows += row;
+        }
+        return `<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><thead><tr>${headerCells}</tr></thead><tbody>${rows}</tbody></table>`;
     }
-    
+
+    function buildEventsTable() {
+        if (upcomingEvents.length === 0) return `<p style="color:#888;text-align:center;padding:20px 0;">No upcoming events scheduled.</p>`;
+        const rows = upcomingEvents.map((e, i) => {
+            const budget = e.program_budget !== undefined && e.program_budget !== null ? e.program_budget : 0;
+            const bg = i % 2 === 0 ? 'white' : '#f5faf8';
+            return `<tr style="background:${bg};">
+                <td style="border:1px solid #ddd;padding:7px 8px;text-align:center;font-size:11px;">${i + 1}</td>
+                <td style="border:1px solid #ddd;padding:7px 8px;font-size:11px;font-weight:bold;">${escapeHtml(e.notes || 'Community Program')}</td>
+                <td style="border:1px solid #ddd;padding:7px 8px;font-size:11px;">${formatDateLong(e.eventDate)}</td>
+                <td style="border:1px solid #ddd;padding:7px 8px;font-size:11px;">${formatTime(e.startTime)} &ndash; ${formatTime(e.endTime)}</td>
+                <td style="border:1px solid #ddd;padding:7px 8px;font-size:11px;">${escapeHtml(e.location || 'TBD')}</td>
+                <td style="border:1px solid #ddd;padding:7px 8px;font-size:11px;text-align:right;">&#8369;${budget.toLocaleString()}</td>
+             </tr>`;
+        }).join('');
+        return `<table style="width:100%;border-collapse:collapse;margin-top:8px;">
+            <thead>
+                <tr>
+                    <th style="background:#2d4a44;color:white;padding:8px;font-size:11px;border:1px solid #1a3530;width:4%;">#</th>
+                    <th style="background:#2d4a44;color:white;padding:8px;font-size:11px;border:1px solid #1a3530;width:28%;">Event Name</th>
+                    <th style="background:#2d4a44;color:white;padding:8px;font-size:11px;border:1px solid #1a3530;width:20%;">Date</th>
+                    <th style="background:#2d4a44;color:white;padding:8px;font-size:11px;border:1px solid #1a3530;width:18%;">Time</th>
+                    <th style="background:#2d4a44;color:white;padding:8px;font-size:11px;border:1px solid #1a3530;width:18%;">Location</th>
+                    <th style="background:#2d4a44;color:white;padding:8px;font-size:11px;border:1px solid #1a3530;width:12%;text-align:right;">Budget</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+         </table>`;
+    }
+
+    let bodyContent = `
+        <div style="text-align:center;padding-bottom:16px;margin-bottom:24px;border-bottom:3px solid #2d4a44;">
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#888;margin-bottom:4px;">CivilAccess Web System</div>
+            <div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">Program Calendar</div>
+            <div style="font-size:13px;color:#555;">${currentMonthYear}</div>
+            <div style="font-size:9px;color:#aaa;margin-top:6px;">Generated on: ${new Date().toLocaleString()}</div>
+        </div>`;
+
+    if (format === 'both') {
+        bodyContent += `
+            <div style="margin-bottom:28px;">
+                <div style="font-size:13px;font-weight:bold;color:#2d4a44;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #ddd;"> ${currentMonthYear}</div>
+                ${buildCalendarGrid()}
+            </div>
+            <div>
+                <div style="font-size:13px;font-weight:bold;color:#2d4a44;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #ddd;"> Upcoming Events <span style="font-weight:normal;font-size:11px;color:#888;">(${upcomingEvents.length} event${upcomingEvents.length !== 1 ? 's' : ''} scheduled)</span></div>
+                ${buildEventsTable()}
+            </div>`;
+    } else if (format === 'events') {
+        bodyContent += `
+            <div>
+                <div style="font-size:13px;font-weight:bold;color:#2d4a44;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #ddd;"> Upcoming Events <span style="font-weight:normal;font-size:11px;color:#888;">(${upcomingEvents.length} event${upcomingEvents.length !== 1 ? 's' : ''} scheduled)</span></div>
+                ${buildEventsTable()}
+            </div>`;
+    }
+
+    bodyContent += `<div style="margin-top:30px;padding-top:12px;border-top:1px solid #e0e0e0;text-align:center;font-size:9px;color:#aaa;">Official document from CivilAccess Web System &nbsp;|&nbsp; Confidential</div>`;
+
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'font-family:Arial,sans-serif;padding:36px;background:white;color:#222;';
+    wrapper.innerHTML = bodyContent;
+
     const opt = {
-        margin: [0.5, 0.5, 0.5, 0.5],
+        margin: [0.3, 0.3, 0.3, 0.3],
         filename: `Barangay_Calendar_${currentMonthYear.replace(/ /g, '_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, letterRendering: true, useCORS: true, logging: false },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
-    
+
     const exportBtn = document.querySelector('.btn-yellow');
     const originalText = exportBtn.innerHTML;
     exportBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
     exportBtn.disabled = true;
-    
+
     try {
-        await html2pdf().set(opt).from(element).save();
+        await html2pdf().set(opt).from(wrapper).save();
     } catch (error) {
         console.error('PDF generation error:', error);
-        alert('Error generating PDF. Please try again.');
+        showError('Error generating PDF. Please try again.');
     } finally {
         exportBtn.innerHTML = originalText;
         exportBtn.disabled = false;

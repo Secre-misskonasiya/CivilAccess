@@ -344,6 +344,14 @@
         background: white; width: 400px; padding: 30px;
         border-radius: 8px; text-align: center; margin: 15% auto;
     }
+        .tab-badge {
+        background-color: #FED734;
+        color: #2d4a44;
+        border-radius: 10px;
+        padding: 1px 7px;
+        font-size: 12px;
+        font-weight: bold;
+    }
 </style>
 
 <meta charset="UTF-8">
@@ -399,15 +407,20 @@
     </div>
 
     <div class="tabbar">
-        <div class="tab active" onclick="switchTab(this, 'incoming')">Incoming</div>
-        <div class="tab" onclick="switchTab(this, 'processing')">Processing</div>
-        <div class="tab" onclick="switchTab(this, 'ready')">Ready</div>
-        <div class="tab" onclick="switchTab(this, 'archive')">Archive</div>
+        <div class="tab active" onclick="switchTab(this, 'processing')">
+            Blotters In Process <span class="tab-badge" id="badge-processing" th:text="${processingCount}">0</span>
+        </div>
+        <div class="tab" onclick="switchTab(this, 'ready')">
+            Ready <span class="tab-badge" id="badge-ready" th:text="${readyCount}">0</span>
+        </div>
+        <div class="tab" onclick="switchTab(this, 'archive')">
+            Archive <span class="tab-badge" id="badge-archive" th:text="${archivedCount}">0</span>
+        </div>
     </div>
 
     <div class="panel">
 
-        <div id="tab-incoming" class="panel-inner">
+        <!-- <div id="tab-incoming" class="panel-inner">
             <div class="panel-header">Incoming Blotter Reports</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
@@ -451,9 +464,9 @@
                     <nav><ul class="pagination pagination-sm mb-0"><li class="page-item"><a class="page-link" href="#">Prev</a></li><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">Next</a></li></ul></nav>
                 </div>
             </div>
-        </div>
+        </div> -->
 
-        <div id="tab-processing" class="panel-inner d-none">
+        <div id="tab-processing" class="panel-inner">
             <div class="panel-header">Processing Blotter Reports</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
@@ -709,6 +722,44 @@
         window.location.href = '/user-profile';
     }
 </script>
+<script>
+(function() {
+    var lastSnapshot = '';
+    function isModalOpen() {
+        var modal = document.getElementById('blotterModalOverlay');
+        if (modal && modal.style.display === 'block') return true;
+        var logoutModal = document.getElementById('logoutModal');
+        if (logoutModal && (logoutModal.style.display === 'block' || logoutModal.style.display === 'flex')) return true;
+        return false;
+    }
+    function poll() {
+        if (isModalOpen()) return;
+        fetch('/requests-blotter/api/poll?t=' + Date.now())
+            .then(function(res) { return res.ok ? res.json() : null; })
+            .then(function(data) {
+                if (!data) return;
+                var snapshot = JSON.stringify(data);
 
+                if (data.counts) {
+                    var map = {
+                        processing: 'badge-processing',
+                        ready:      'badge-ready',
+                        archive:    'badge-archive'
+                    };
+                    Object.keys(map).forEach(function(key) {
+                        var el = document.getElementById(map[key]);
+                        if (el && data.counts[key] !== undefined) el.textContent = data.counts[key];
+                    });
+                }
+
+                if (lastSnapshot === '') { lastSnapshot = snapshot; }
+                else if (snapshot !== lastSnapshot) { location.reload(); }
+            })
+            .catch(function() {});
+    }
+    poll();
+    setInterval(poll, 5000);
+})();
+</script>
 </body>
 </html>
