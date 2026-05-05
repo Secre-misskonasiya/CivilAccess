@@ -647,12 +647,16 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
 
         if (admin != null) {
             String role = admin.getRole();
-
+            long processing = blotterService.countByStatus("PROCESSING");
+            long ready = blotterService.countByStatus("READY");
+            long pendingBlotters = processing + ready;
+            System.out.println("current total of processing blotters: "+ pendingBlotters);
             model.addAttribute("currentUser",   admin.getName());
             model.addAttribute("currentrole",   role);
             model.addAttribute("currentstatus", admin.getEmpstatus());
             model.addAttribute("residents", residentUserService.countResidents());
             model.addAttribute("blotterCount",        blotterService.countAll());
+            model.addAttribute("blotterPending", pendingBlotters);
             model.addAttribute("latestAnnouncement", announcementsService.getLatest());
             model.addAttribute("pendingDocuments",   documentService.countPending());
             model.addAttribute("budget", programBudgetService.getTotalBudget());
