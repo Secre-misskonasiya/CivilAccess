@@ -620,6 +620,7 @@
         document.body.style.overflow = '';
     }
 
+    // FIXED: Updated submitEditForm function with proper form submission
     function submitEditForm() {
         const required = [
             { id: 'edit-complainant', err: 'err-edit-complainant' },
@@ -643,10 +644,43 @@
                 err.style.display = 'none';
             }
         });
+        
         if (valid) {
             const form = document.getElementById('editForm');
-            form.action = '/requests-blotter/' + document.getElementById('edit-id').value + '/update';
-            form.submit();
+            const blotterId = document.getElementById('edit-id').value;
+            
+            // Create FormData object
+            const formData = new FormData();
+            formData.append('complainantName', document.getElementById('edit-complainant').value);
+            formData.append('contactInfo', document.getElementById('edit-contact').value);
+            formData.append('respondentName', document.getElementById('edit-respondent').value);
+            formData.append('incidentType', document.getElementById('edit-type').value);
+            formData.append('incidentDate', document.getElementById('edit-date').value);
+            formData.append('incidentLocation', document.getElementById('edit-location').value);
+            formData.append('narrative', document.getElementById('edit-narrative').value);
+            formData.append('remarks', document.getElementById('edit-remarks').value);
+            formData.append('status', document.getElementById('edit-status').value);
+            
+            // Submit using fetch for better error handling
+            fetch(`/requests-blotter/${blotterId}/update`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`Update failed: ${response.status}`);
+                    });
+                } else {
+                    window.location.href = '/requests-blotter';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to update blotter record. Please check the console for details and try again.');
+            });
         }
     }
 
