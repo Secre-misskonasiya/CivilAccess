@@ -490,24 +490,41 @@
         padding: 30px;
     }
 
-    .force-modal { 
-        display: none; 
-        position: fixed; 
-        z-index: 9999; 
-        left: 0; 
-        top: 0; 
-        width: 100%; 
-        height: 100%; 
-        background-color: rgba(0,0,0,0.6); 
+    /* ══════════════════════════════════════
+       FORCE MODAL
+    ══════════════════════════════════════ */
+    .force-modal {
+        display: none;
+        position: fixed; z-index: 9999;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.55);
+        backdrop-filter: blur(2px);
     }
-    .force-modal-content { 
-        background: white; 
-        width: 400px; 
-        padding: 30px; 
-        border-radius: 8px; 
-        text-align: center; 
-        margin: 15% auto; 
+    .force-modal-content {
+        background: white;
+        width: 440px;
+        padding: 44px;
+        border-radius: var(--radius-lg);
+        text-align: center;
+        margin: 18% auto;
+        box-shadow: var(--shadow-lg);
     }
+    .force-modal-content h2 { color: var(--green-900); margin-bottom: 12px; font-size: 22px; font-weight: 700; }
+    .force-modal-content p { font-size: 15px; color: var(--gray-500); }
+    .force-modal-content button {
+        margin-top: 22px;
+        padding: 13px 32px;
+        background: var(--green-700);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: var(--font);
+        transition: background 0.2s;
+    }
+    .force-modal-content button:hover { background: var(--green-900); }
 
     @media print {
         .sidebar, .top-header, .calendar-nav, .side-column, .modal, .btn, button, .export-row, .toggle-row {
@@ -792,15 +809,6 @@
 
 <div class="layout">
 
-<!-- Lock Modal -->
-<div id="forcePasswordModal" class="force-modal">
-    <div class="force-modal-content">
-        <h2><i class="bi bi-lock-fill"></i> First Login Detected</h2>
-        <p>You must change your password before using the system.</p>
-        <button onclick="redirectToPassword()">Change Password</button>
-    </div>
-</div>
-
 <!-- Success Modal - exactly like System Settings (user must click OK) -->
 <div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -1008,6 +1016,10 @@
   // ============================================
   // PURE CSS MODAL HELPERS
   // ============================================
+ window.onload = function() {
+        const status = document.getElementById("accountStatus").value;
+        if (status === "New" || status === 'Newly Updated') { document.getElementById("forcePasswordModal").style.display = "block"; document.body.style.overflow = "hidden"; }
+    };
 
   function showSuccess(message) {
     document.getElementById('sysSuccessMessage').innerHTML = message;

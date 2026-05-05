@@ -189,15 +189,41 @@
     }
     .new-cancelled-row { animation: cancelFlash 2s ease-out; }
 
+    /* ══════════════════════════════════════
+       FORCE MODAL
+    ══════════════════════════════════════ */
     .force-modal {
-        display: none; position: fixed; z-index: 9999;
+        display: none;
+        position: fixed; z-index: 9999;
         left: 0; top: 0; width: 100%; height: 100%;
-        background-color: rgba(0,0,0,0.6);
+        background: rgba(0,0,0,0.55);
+        backdrop-filter: blur(2px);
     }
     .force-modal-content {
-        background: white; width: 400px; padding: 30px;
-        border-radius: 8px; text-align: center; margin: 15% auto;
+        background: white;
+        width: 440px;
+        padding: 44px;
+        border-radius: var(--radius-lg);
+        text-align: center;
+        margin: 18% auto;
+        box-shadow: var(--shadow-lg);
     }
+    .force-modal-content h2 { color: var(--green-900); margin-bottom: 12px; font-size: 22px; font-weight: 700; }
+    .force-modal-content p { font-size: 15px; color: var(--gray-500); }
+    .force-modal-content button {
+        margin-top: 22px;
+        padding: 13px 32px;
+        background: var(--green-700);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: var(--font);
+        transition: background 0.2s;
+    }
+    .force-modal-content button:hover { background: var(--green-900); }
 
     /* Toast */
     #sos-toast {
@@ -654,6 +680,12 @@
 <script src="/js/sidebar.js"></script>
 
 <script>
+
+window.onload = function() {
+        const status = document.getElementById("accountStatus").value;
+        if (status === "New" || status === 'Newly Updated') { document.getElementById("forcePasswordModal").style.display = "block"; document.body.style.overflow = "hidden"; }
+    };
+
 // =================================================================
 // SUCCESS MODAL FUNCTION
 // =================================================================

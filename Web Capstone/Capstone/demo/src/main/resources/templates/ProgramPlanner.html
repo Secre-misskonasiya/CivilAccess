@@ -495,8 +495,41 @@
     }
     .detail-input:focus { outline: none; border-color: #2d4a44; box-shadow: 0 0 0 2px rgba(45,74,68,0.1); }
 
-    .force-modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); }
-    .force-modal-content { background: white; width: 400px; padding: 30px; border-radius: 8px; text-align: center; margin: 15% auto; }
+    /* ══════════════════════════════════════
+       FORCE MODAL
+    ══════════════════════════════════════ */
+    .force-modal {
+        display: none;
+        position: fixed; z-index: 9999;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.55);
+        backdrop-filter: blur(2px);
+    }
+    .force-modal-content {
+        background: white;
+        width: 440px;
+        padding: 44px;
+        border-radius: var(--radius-lg);
+        text-align: center;
+        margin: 18% auto;
+        box-shadow: var(--shadow-lg);
+    }
+    .force-modal-content h2 { color: var(--green-900); margin-bottom: 12px; font-size: 22px; font-weight: 700; }
+    .force-modal-content p { font-size: 15px; color: var(--gray-500); }
+    .force-modal-content button {
+        margin-top: 22px;
+        padding: 13px 32px;
+        background: var(--green-700);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: var(--font);
+        transition: background 0.2s;
+    }
+    .force-modal-content button:hover { background: var(--green-900); }
 
     .success-toast-modal .modal-content {
         background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
@@ -1039,6 +1072,11 @@
   let _currentViewedProgram = null; 
   let _currentViewedProgramId = null;
 
+ window.onload = function() {
+        const status = document.getElementById("accountStatus").value;
+        if (status === "New" || status === 'Newly Updated') { document.getElementById("forcePasswordModal").style.display = "block"; document.body.style.overflow = "hidden"; }
+    };
+    
   function showSuccess(message) {
     document.getElementById('successMessage').innerHTML = message;
     const successModal = new bootstrap.Modal(document.getElementById('successModal'));

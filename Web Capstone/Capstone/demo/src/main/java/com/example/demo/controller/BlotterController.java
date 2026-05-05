@@ -40,6 +40,7 @@ public class BlotterController {
                 model.addAttribute("currentUser", admin.getName());
                 model.addAttribute("currentrole", admin.getRole());
                 model.addAttribute("currentstatus", "ACTIVE");
+                model.addAttribute("accountStatus", admin.getEmpstatus());
             } else {
                 model.addAttribute("currentUser", username);
                 model.addAttribute("currentrole", "USER");
@@ -65,6 +66,8 @@ public class BlotterController {
         model.addAttribute("processingCount", service.getByStatus("PROCESSING").size());
         model.addAttribute("readyCount",      service.getByStatus("READY").size());
         model.addAttribute("archivedCount",   service.getByStatus("ARCHIVE").size());
+
+        
 
         return "Requests-Blotter";
     }
