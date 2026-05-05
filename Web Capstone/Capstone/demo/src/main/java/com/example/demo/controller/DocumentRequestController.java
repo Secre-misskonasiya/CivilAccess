@@ -13,10 +13,12 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Principal;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/requests-document")
@@ -42,117 +44,216 @@ public class DocumentRequestController {
             if (admin != null) {
                 model.addAttribute("currentUser", admin.getName());
                 model.addAttribute("currentrole", admin.getRole());
+                model.addAttribute("currentstatus", admin.getEmpstatus());
                 Set<String> allowed = Set.of("ADMIN", "SECRETARY", "BARANGAY-CAPTAIN", "TREASURER");
                 if (!allowed.contains(admin.getRole())) return "redirect:/home";
             } else {
                 model.addAttribute("currentUser", principal.getName());
                 model.addAttribute("currentrole", "USER");
+                model.addAttribute("currentstatus", "Active");
             }
         } else {
             model.addAttribute("currentUser", "Guest");
             model.addAttribute("currentrole", "USER");
+            model.addAttribute("currentstatus", "Active");
         }
 
-        model.addAttribute("incomingRequests",   service.getByStatus("INCOMING"));
-        model.addAttribute("processingRequests", service.getByStatus("PROCESSING"));
-        model.addAttribute("readyRequests",      service.getByStatus("READY"));
-        model.addAttribute("archivedRequests",   service.getByStatus("RESOLVED"));
+        List<DocumentRequest> incoming = service.getByStatus("INCOMING");
+        List<DocumentRequest> processing = service.getByStatus("PROCESSING");
+        List<DocumentRequest> ready = service.getByStatus("READY");
+        List<DocumentRequest> archived = service.getByStatus("RESOLVED");
+
+        // Sort by createdAt descending (newest first)
+        incoming = sortByDateDescending(incoming);
+        processing = sortByDateDescending(processing);
+        ready = sortByDateDescending(ready);
+        archived = sortByDateDescending(archived);
+
+        model.addAttribute("incomingRequests", incoming);
+        model.addAttribute("processingRequests", processing);
+        model.addAttribute("readyRequests", ready);
+        model.addAttribute("archivedRequests", archived);
+        
+        model.addAttribute("incomingCount", incoming.size());
+        model.addAttribute("processingCount", processing.size());
+        model.addAttribute("readyCount", ready.size());
+        model.addAttribute("archivedCount", archived.size());
 
         return "Requests-document";
     }
 
-    // Instead of doc.getRequesterName() and doc.getRequestType()
-// Use the actual field names from your DocumentRequest model
+    private List<DocumentRequest> sortByDateDescending(List<DocumentRequest> requests) {
+        return requests.stream()
+            .sorted(Comparator.comparing(DocumentRequest::getCreatedAt, 
+                Comparator.nullsLast(Comparator.reverseOrder())))
+            .collect(Collectors.toList());
+    }
 
-        @PostMapping("/{id}/process")
-        public String processRequest(
-                @PathVariable Long id,
-                Principal principal,
-                HttpServletRequest request) {
+    @PostMapping("/{id}/process")
+    public String processRequest(
+            @PathVariable Long id,
+            Principal principal,
+            HttpServletRequest request) {
 
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+
+        if ("ARCHIVED".equalsIgnoreCase(admin.getEmpstatus())) {
+            return "redirect:/logout";
+        }
+
+        DocumentRequest doc = service.getById(id);
+        
+        String requesterName = doc != null ? doc.getFullName() : "#" + id;
+        String requestType   = doc != null ? doc.getDocumentType() : "Document";
+
+        service.updateStatus(id, "PROCESSING", admin.getName());
+
+        activityLogService.log(
+            admin.getName(), admin.getRole(), "UPDATED", "Document Requests",
+            "Started processing " + requestType + " request for " + requesterName,
+            request.getRemoteAddr(), "Success"
+        );
+
+        return "redirect:/requests-document";
+    }
+
+    @PostMapping("/{id}/ready")
+    public String markReady(
+            @PathVariable Long id,
+            Principal principal,
+            HttpServletRequest request) {
+
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+
+        DocumentRequest doc = service.getById(id);
+        String requesterName = doc != null ? doc.getFullName() : "#" + id;
+        String requestType   = doc != null ? doc.getDocumentType() : "Document";
+
+        service.updateStatus(id, "READY", admin.getName());
+
+        activityLogService.log(
+            admin.getName(), admin.getRole(), "UPDATED", "Document Requests",
+            requestType + " request for " + requesterName + " is ready for pickup",
+            request.getRemoteAddr(), "Success"
+        );
+
+        return "redirect:/requests-document";
+    }
+
+    @PostMapping("/{id}/save-readied-document")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> saveReadiedDocumentUrl(
+            @PathVariable Long id,
+            @RequestParam("documentUrl") String documentUrl,
+            Principal principal,
+            HttpServletRequest request) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
             AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
-
-            if ("ARCHIVED".equalsIgnoreCase(admin.getEmpstatus())) {
-                return "redirect:/logout";
-            }
-
             DocumentRequest doc = service.getById(id);
             
-            // Use the correct field names - likely these:
-            String requesterName = doc != null ? doc.getFullName() : "#" + id;  // Changed from getRequesterName()
-            String requestType   = doc != null ? doc.getDocumentType() : "Document";  // Changed from getRequestType()
-
-            service.updateStatus(id, "PROCESSING", admin.getName());
-
+            if (doc == null) {
+                response.put("success", false);
+                response.put("message", "Document not found");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // Save the Supabase URL to readied_document column and mark as READY
+            service.updateReadiedDocument(id, documentUrl, admin.getName());
+            
             activityLogService.log(
                 admin.getName(), admin.getRole(), "UPDATED", "Document Requests",
-                "Started processing " + requestType + " request for " + requesterName,
+                "Marked as READY and saved document for " + doc.getFullName() + " (" + doc.getDocumentType() + ")",
                 request.getRemoteAddr(), "Success"
             );
-
-            return "redirect:/requests-document";
+            
+            response.put("success", true);
+            response.put("message", "Document saved and marked as READY");
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Error saving document: " + e.getMessage());
         }
+        
+        return ResponseEntity.ok(response);
+    }
 
-        @PostMapping("/{id}/ready")
-        public String markReady(
-                @PathVariable Long id,
-                Principal principal,
-                HttpServletRequest request) {
-
+    @PostMapping("/{id}/save-document-only")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> saveDocumentOnly(
+            @PathVariable Long id,
+            @RequestParam("documentUrl") String documentUrl,
+            Principal principal,
+            HttpServletRequest request) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
             AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
-
             DocumentRequest doc = service.getById(id);
-            String requesterName = doc != null ? doc.getFullName() : "#" + id;  // Fixed
-            String requestType   = doc != null ? doc.getDocumentType() : "Document";  // Fixed
-
-            service.updateStatus(id, "READY", admin.getName());
-
+            
+            if (doc == null) {
+                response.put("success", false);
+                response.put("message", "Document not found");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // ONLY save the document URL, do NOT change status to READY
+            doc.setReadiedDocumentUrl(documentUrl);
+            // Status remains PROCESSING - no change
+            service.getRepository().save(doc);
+            
             activityLogService.log(
                 admin.getName(), admin.getRole(), "UPDATED", "Document Requests",
-                requestType + " request for " + requesterName + " is ready for pickup",
+                "Saved document draft for " + doc.getFullName() + " (" + doc.getDocumentType() + ")",
                 request.getRemoteAddr(), "Success"
             );
-
-            return "redirect:/requests-document";
+            
+            response.put("success", true);
+            response.put("message", "Document draft saved successfully (status unchanged)");
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Error saving document: " + e.getMessage());
         }
+        
+        return ResponseEntity.ok(response);
+    }
 
-        @PostMapping("/{id}/archive")
-        public String archiveRequest(
-                @PathVariable Long id,
-                Principal principal,
-                HttpServletRequest request) {
+    @PostMapping("/{id}/archive")
+    public String archiveRequest(
+            @PathVariable Long id,
+            Principal principal,
+            HttpServletRequest request) {
 
-            AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
 
-            DocumentRequest doc = service.getById(id);
-            String requesterName = doc != null ? doc.getFullName() : "#" + id;  // Fixed
-            String requestType   = doc != null ? doc.getDocumentType() : "Document";  // Fixed
+        DocumentRequest doc = service.getById(id);
+        String requesterName = doc != null ? doc.getFullName() : "#" + id;
+        String requestType   = doc != null ? doc.getDocumentType() : "Document";
 
-            service.archiveRequest(id, admin.getName());
+        service.archiveRequest(id, admin.getName());
 
-            activityLogService.log(
-                admin.getName(), admin.getRole(), "ARCHIVED", "Document Requests",
-                "Archived " + requestType + " request for " + requesterName,
-                request.getRemoteAddr(), "Success"
-            );
+        activityLogService.log(
+            admin.getName(), admin.getRole(), "ARCHIVED", "Document Requests",
+            "Archived " + requestType + " request for " + requesterName,
+            request.getRemoteAddr(), "Success"
+        );
 
-            return "redirect:/requests-document";
-        }
+        return "redirect:/requests-document";
+    }
 
     @GetMapping("/search")
     @ResponseBody
     public List<DocumentRequest> search(@RequestParam String query) {
-        return service.searchRequests(query);
+        List<DocumentRequest> results = service.searchRequests(query);
+        return sortByDateDescending(results);
     }
 
-    private String getCurrentUserName(Principal principal) {
-        if (principal != null) {
-            AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
-            if (admin != null) return admin.getName();
-            return principal.getName();
-        }
-        return "System";
-    }
     @GetMapping("/api/poll")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> pollRequests() {

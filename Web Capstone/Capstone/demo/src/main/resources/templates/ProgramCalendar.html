@@ -38,7 +38,6 @@
         overflow: hidden;
     }
 
-    /* Calendar main — reduced from flex: 2.5 to flex: 2 */
     .calendar-main {
         flex: 2;
         background-color: white;
@@ -118,7 +117,6 @@
         background-color: #fafafa;
         color: #ccc;
     }
-    /* CHANGED: today tile is now yellow/gold with dark green text */
     .cal-day.today .day-number {
         background-color: #FED734;
         color: #2d4a44;
@@ -149,7 +147,6 @@
         font-size: 13px;
     }
 
-    /* Event label on calendar cell */
     .event-label {
         width: 100%;
         font-size: 9px;
@@ -172,7 +169,6 @@
         flex-shrink: 0;
     }
 
-    /* Side column — increased from flex: 1 to flex: 1.3 */
     .side-column {
         flex: 1.3;
         display: flex;
@@ -281,7 +277,6 @@
     }
     .btn-red:hover { background-color: #c0392b; }
 
-    /* Toggle */
     .toggle-row {
         display: flex;
         align-items: center;
@@ -298,7 +293,6 @@
     }
     .form-check-input:checked { background-color: #2d4a44; border-color: #2d4a44; }
 
-    /* Export */
     .export-row {
         display: flex;
         align-items: center;
@@ -327,7 +321,7 @@
         min-width: 0;
     }
 
-    /* Modals */
+    /* Existing page modals (add/view event) */
     .modal {
         display: none;
         position: fixed;
@@ -460,7 +454,6 @@
     }
     .btn-cancel:hover { background-color: #ccc; }
 
-    /* View Events Modal */
     .event-card {
         border: 1px solid #e0e0e0;
         border-radius: 8px;
@@ -516,7 +509,6 @@
         margin: 15% auto; 
     }
 
-    /* PDF Export Styles */
     @media print {
         .sidebar, .top-header, .calendar-nav, .side-column, .modal, .btn, button, .export-row, .toggle-row {
             display: none !important;
@@ -601,6 +593,140 @@
     .confirm-modal .modal-header .btn-close-white {
         filter: brightness(0) invert(1);
     }
+
+    /* ============================================
+       PURE CSS ALERT OVERLAYS (no Bootstrap, no emojis)
+       ============================================ */
+    .sys-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.65);
+        z-index: 99999;
+        justify-content: center;
+        align-items: center;
+    }
+    .sys-overlay.show { display: flex; }
+
+    .sys-modal-box {
+        border-radius: 16px;
+        overflow: hidden;
+        min-width: 300px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        animation: sysSlideUp 0.25s ease;
+    }
+
+    @keyframes sysSlideUp {
+        from { transform: translateY(30px); opacity: 0; }
+        to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .sys-modal-box.success { background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%); }
+    .sys-modal-box.error   { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
+    .sys-modal-box.confirm { background: #fff; }
+
+    .sys-modal-body {
+        text-align: center;
+        padding: 32px 28px 20px;
+    }
+    .sys-modal-icon {
+        font-size: 52px;
+        margin-bottom: 12px;
+        line-height: 1;
+        color: #fff;
+    }
+    .sys-modal-body h5 {
+        color: #fff;
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+    .sys-modal-footer {
+        display: flex;
+        justify-content: center;
+        padding: 0 28px 28px;
+    }
+    .sys-btn-ok {
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+        border: 2px solid rgba(255,255,255,0.5);
+        padding: 9px 36px;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: Arial, sans-serif;
+        transition: background 0.2s;
+    }
+    .sys-btn-ok:hover { background: rgba(255,255,255,0.35); }
+
+    /* Confirm-specific */
+    .sys-confirm-header {
+        background: linear-gradient(135deg, #30534D, #3d6b63);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .sys-confirm-header h5 {
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+    .sys-confirm-close {
+        background: none;
+        border: none;
+        color: rgba(255,255,255,0.75);
+        font-size: 22px;
+        cursor: pointer;
+        line-height: 1;
+        padding: 0;
+        transition: color 0.2s;
+    }
+    .sys-confirm-close:hover { color: #fff; }
+    .sys-confirm-body {
+        padding: 22px 20px 10px;
+        font-size: 15px;
+        color: #333;
+        font-family: Arial, sans-serif;
+    }
+    .sys-confirm-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 10px 20px 20px;
+    }
+    .sys-btn-cancel {
+        background: #e0e0e0;
+        color: #555;
+        border: none;
+        padding: 9px 20px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: Arial, sans-serif;
+        transition: background 0.2s;
+    }
+    .sys-btn-cancel:hover { background: #ccc; }
+    .sys-btn-confirm {
+        background: #44C375;
+        color: #fff;
+        border: none;
+        padding: 9px 20px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: Arial, sans-serif;
+        transition: background 0.2s;
+    }
+    .sys-btn-confirm:hover { background: #36a863; }
 </style>
 
 <meta charset="UTF-8">
@@ -616,12 +742,60 @@
 <body>
     <script src="/js/notif.js"></script>
 <div class="toast-container" id="toastContainer"></div>
+
+<!-- ============================================
+     PURE CSS ALERT OVERLAYS
+     ============================================ -->
+
+<!-- Success Overlay -->
+<div class="sys-overlay" id="sysSuccessOverlay">
+    <div class="sys-modal-box success">
+        <div class="sys-modal-body">
+            <div class="sys-modal-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <h5 id="sysSuccessMessage">Success!</h5>
+        </div>
+        <div class="sys-modal-footer">
+            <button class="sys-btn-ok" onclick="document.getElementById('sysSuccessOverlay').classList.remove('show')">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Error Overlay -->
+<div class="sys-overlay" id="sysErrorOverlay">
+    <div class="sys-modal-box error">
+        <div class="sys-modal-body">
+            <div class="sys-modal-icon"><i class="bi bi-x-circle-fill"></i></div>
+            <h5 id="sysErrorMessage">An error occurred.</h5>
+        </div>
+        <div class="sys-modal-footer">
+            <button class="sys-btn-ok" onclick="document.getElementById('sysErrorOverlay').classList.remove('show')">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Overlay -->
+<div class="sys-overlay" id="sysConfirmOverlay">
+    <div class="sys-modal-box confirm">
+        <div class="sys-confirm-header">
+            <h5 id="sysConfirmTitle">Confirm</h5>
+            <button class="sys-confirm-close" onclick="document.getElementById('sysConfirmOverlay').classList.remove('show')">&times;</button>
+        </div>
+        <div class="sys-confirm-body">
+            <p id="sysConfirmMessage" style="margin:0;"></p>
+        </div>
+        <div class="sys-confirm-footer">
+            <button class="sys-btn-cancel" onclick="document.getElementById('sysConfirmOverlay').classList.remove('show')">Cancel</button>
+            <button class="sys-btn-confirm" id="sysConfirmOkBtn">Confirm</button>
+        </div>
+    </div>
+</div>
+
 <div class="layout">
 
 <!-- Lock Modal -->
 <div id="forcePasswordModal" class="force-modal">
     <div class="force-modal-content">
-        <h2>🔒 First Login Detected</h2>
+        <h2><i class="bi bi-lock-fill"></i> First Login Detected</h2>
         <p>You must change your password before using the system.</p>
         <button onclick="redirectToPassword()">Change Password</button>
     </div>
@@ -776,7 +950,7 @@
         </div>
         
         <div class="form-group">
-            <label>Estimated Budget (₱)</label>
+            <label>Estimated Budget (&#8369;)</label>
             <input type="number" id="eventBudget" placeholder="0" value="0">
         </div>
         
@@ -832,16 +1006,42 @@
   currentDate.setDate(1);
 
   // ============================================
-  // CONFIRMATION & SUCCESS MODAL FUNCTIONS (exactly like System Settings)
+  // PURE CSS MODAL HELPERS
   // ============================================
 
   function showSuccess(message) {
+    document.getElementById('sysSuccessMessage').innerHTML = message;
+    document.getElementById('sysSuccessOverlay').classList.add('show');
+  }
+
+  function showError(message) {
+    document.getElementById('sysErrorMessage').innerHTML = message;
+    document.getElementById('sysErrorOverlay').classList.add('show');
+  }
+
+  function showConfirm(message, title, onConfirm) {
+    document.getElementById('sysConfirmTitle').innerHTML = title || 'Confirm Action';
+    document.getElementById('sysConfirmMessage').innerHTML = message;
+    const overlay = document.getElementById('sysConfirmOverlay');
+    overlay.classList.add('show');
+    const okBtn = document.getElementById('sysConfirmOkBtn');
+    okBtn.onclick = function() {
+      overlay.classList.remove('show');
+      onConfirm();
+    };
+  }
+
+  // ============================================
+  // CONFIRMATION & SUCCESS MODAL FUNCTIONS (exactly like System Settings)
+  // ============================================
+
+  function showSuccessBS(message) {
     document.getElementById('successMessage').innerHTML = message;
     const successModal = new bootstrap.Modal(document.getElementById('successModal'));
     successModal.show();
   }
 
-  function showConfirm(message, title, onConfirm) {
+  function showConfirmBS(message, title, onConfirm) {
     document.getElementById('confirmModalTitle').innerHTML = title || 'Confirm Action';
     document.getElementById('confirmModalMessage').innerHTML = message;
     
@@ -951,11 +1151,11 @@
                 showSuccess('Event deleted successfully!');
                 loadEvents();
             } else {
-                alert('Failed to delete event');
+                showError('Failed to delete event. Please try again.');
             }
         } catch (error) {
             console.error('Error deleting event:', error);
-            alert('Error deleting event');
+            showError('Error deleting event. Please try again.');
         }
     });
   }
@@ -1015,11 +1215,11 @@
                 loadEvents();
                 closeViewEventsModal();
             } else {
-                alert('Failed to delete event');
+                showError('Failed to delete event. Please try again.');
             }
         } catch (error) {
             console.error('Error deleting event:', error);
-            alert('Error deleting event');
+            showError('Error deleting event. Please try again.');
         }
     });
   }
@@ -1065,19 +1265,19 @@
     const notes = document.getElementById('eventNotes').value.trim();
 
     if (!eventName) {
-        alert('Please enter an event name.');
+        showError('Please enter an event name.');
         return;
     }
     if (!eventDate) {
-        alert('Please select a date.');
+        showError('Please select a date.');
         return;
     }
     if (!startTime) {
-        alert('Please select a start time.');
+        showError('Please select a start time.');
         return;
     }
     if (!endTime) {
-        alert('Please select an end time.');
+        showError('Please select an end time.');
         return;
     }
     
@@ -1087,7 +1287,7 @@
     selectedDate.setHours(0, 0, 0, 0);
     
     if (selectedDate < today) {
-        alert('❌ Cannot add events on past dates. Please select a future or today\'s date.');
+        showError('Cannot add events on past dates. Please select a future or today\'s date.');
         return;
     }
 
@@ -1114,13 +1314,13 @@
             loadEvents();
         } else {
             const error = await response.text();
-            alert('Failed to add event: ' + error);
+            showError('Failed to add event: ' + error);
         }
     } catch (error) {
         console.error('Error adding event:', error);
-        alert('Error adding event. Please try again.');
+        showError('Error adding event. Please try again.');
     }
-}
+  }
 
   function formatTime(timeStr) {
     if (!timeStr) return 'N/A';
@@ -1377,7 +1577,7 @@
         await html2pdf().set(opt).from(wrapper).save();
     } catch (error) {
         console.error('PDF generation error:', error);
-        alert('Error generating PDF. Please try again.');
+        showError('Error generating PDF. Please try again.');
     } finally {
         exportBtn.innerHTML = originalText;
         exportBtn.disabled = false;

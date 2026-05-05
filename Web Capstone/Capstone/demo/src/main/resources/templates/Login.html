@@ -5,9 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login - Brgy. San Sebastian</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
-  /* ========== FORMAT FROM FIRST FILE ========== */
   *, *::before, *::after {
     margin: 0;
     padding: 0;
@@ -77,7 +82,6 @@
     backdrop-filter: blur(4px);
   }
 
-  /* LEFT PANEL - first file style with background image */
   .left-panel {
     background-image: url('/images/kawit.jpg');
     background-size: cover;
@@ -178,7 +182,6 @@
     position: relative; z-index: 1;
   }
 
-  /* RIGHT PANEL - first file glassmorphism style */
   .right-panel {
     background: rgba(255,255,255,0.06);
     padding: 48px 56px;
@@ -305,7 +308,6 @@
 
   .field-error.show { display: block; }
 
-  /* Password toggle */
   .password-wrapper { position: relative; }
   .password-wrapper input { padding-right: 56px; }
 
@@ -323,7 +325,7 @@
   .toggle-password:hover { color: rgba(255,255,255,0.7); }
   .toggle-password svg   { width: 22px; height: 22px; }
 
-  /* MODAL OVERLAY - first file style */
+  /* FORGOT PASSWORD MODAL */
   .modal-overlay {
     display: none;
     position: fixed; inset: 0;
@@ -440,7 +442,7 @@
     margin: 0 auto 22px; font-size: 48px;
   }
 
-  /* OTP MODAL - first file style */
+  /* OTP MODAL */
   #otpModal {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.8);
@@ -491,6 +493,138 @@
     font-size: 0.95rem;
   }
 
+  /* ============================================
+     SYSTEM SETTINGS-STYLE ALERT MODALS (pure CSS, no Bootstrap)
+     ============================================ */
+
+  .sys-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.72);
+    z-index: 99999;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.2s ease;
+  }
+  .sys-overlay.show { display: flex; }
+
+  .sys-modal-box {
+    border-radius: 16px;
+    overflow: hidden;
+    min-width: 300px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 28px 72px rgba(0,0,0,0.45);
+    animation: slideUp 0.25s ease;
+  }
+
+  /* Success */
+  .sys-modal-box.success {
+    background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
+  }
+
+  /* Error */
+  .sys-modal-box.error {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  }
+
+  /* Confirm */
+  .sys-modal-box.confirm {
+    background: #fff;
+  }
+
+  .sys-modal-body {
+    text-align: center;
+    padding: 32px 28px 20px;
+  }
+
+  .sys-modal-icon {
+    font-size: 56px;
+    margin-bottom: 12px;
+  }
+
+  .sys-modal-body h5 {
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .sys-modal-footer {
+    display: flex;
+    justify-content: center;
+    padding: 0 28px 28px;
+    gap: 10px;
+  }
+
+  .sys-btn-ok {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    border: 2px solid rgba(255,255,255,0.5);
+    padding: 9px 32px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s;
+  }
+  .sys-btn-ok:hover { background: rgba(255,255,255,0.35); }
+
+  /* Confirm modal specifics */
+  .sys-confirm-header {
+    background: linear-gradient(135deg, #30534D, #3d6b63);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sys-confirm-header h5 {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+  }
+  .sys-confirm-close {
+    background: none; border: none;
+    color: rgba(255,255,255,0.7);
+    font-size: 22px; cursor: pointer;
+    line-height: 1; padding: 0;
+    transition: color 0.2s;
+  }
+  .sys-confirm-close:hover { color: #fff; }
+
+  .sys-confirm-body {
+    padding: 24px;
+    font-size: 15px;
+    color: #333;
+  }
+
+  .sys-confirm-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 0 24px 24px;
+  }
+
+  .sys-btn-cancel {
+    background: #e0e0e0; color: #555;
+    border: none; padding: 9px 22px;
+    border-radius: 8px; font-size: 0.9rem;
+    font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: background 0.2s;
+  }
+  .sys-btn-cancel:hover { background: #ccc; }
+
+  .sys-btn-confirm {
+    background: #44C375; color: #fff;
+    border: none; padding: 9px 22px;
+    border-radius: 8px; font-size: 0.9rem;
+    font-weight: 700; cursor: pointer;
+    font-family: inherit; transition: background 0.2s;
+  }
+  .sys-btn-confirm:hover { background: #36a863; }
+
   /* Responsive */
   @media (max-width: 768px) {
     .login-container { flex-direction: column; height: auto; max-width: 100%; }
@@ -519,12 +653,59 @@
 </head>
 <body>
 
+<!-- Success Modal -->
+<div class="sys-overlay" id="sysSuccessOverlay">
+  <div class="sys-modal-box success">
+    <div class="sys-modal-body">
+      <div class="sys-modal-icon">
+       <i class="bi bi-check-circle-fill"></i>
+      </div>
+      <h5 id="sysSuccessMessage">Success!</h5>
+    </div>
+    <div class="sys-modal-footer">
+      <button class="sys-btn-ok" onclick="document.getElementById('sysSuccessOverlay').classList.remove('show')">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Error Modal -->
+<div class="sys-overlay" id="sysErrorOverlay">
+  <div class="sys-modal-box error">
+    <div class="sys-modal-body">
+      <div class="sys-modal-icon">
+        <i class="bi bi-x-circle-fill"></i>
+      </div>
+      <h5 id="sysErrorMessage">An error occurred.</h5>
+    </div>
+    <div class="sys-modal-footer">
+      <button class="sys-btn-ok" onclick="document.getElementById('sysErrorOverlay').classList.remove('show')">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="sys-overlay" id="sysConfirmOverlay">
+  <div class="sys-modal-box confirm">
+    <div class="sys-confirm-header">
+      <h5 id="sysConfirmTitle">Confirm</h5>
+      <button class="sys-confirm-close" onclick="document.getElementById('sysConfirmOverlay').classList.remove('show')">&times;</button>
+    </div>
+    <div class="sys-confirm-body">
+      <p id="sysConfirmMessage" style="margin:0;"></p>
+    </div>
+    <div class="sys-confirm-footer">
+      <button class="sys-btn-cancel" onclick="document.getElementById('sysConfirmOverlay').classList.remove('show')">Cancel</button>
+      <button class="sys-btn-confirm" id="sysConfirmOkBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <div class="bg-blob-mid"></div>
 
 <div class="login-container">
   <input type="hidden" th:text="${empstatus}" id="empstatus">
 
-  <!-- LEFT PANEL (first file format) -->
+  <!-- LEFT PANEL -->
   <div class="left-panel">
     <a th:href="@{/landing-page}" href="/landing-page" class="backbutton">&larr; Back to Landing Page</a>
     <div class="brgy-title">Brgy. San Sebastian</div>
@@ -535,7 +716,7 @@
     <div class="welcome-subtitle">Sign In to access<br>the dashboard</div>
   </div>
 
-  <!-- RIGHT PANEL (first file format, with second file's form structure) -->
+  <!-- RIGHT PANEL -->
   <div class="right-panel">
     <div class="login-header">
       <h1 class="login-title">Login</h1>
@@ -580,7 +761,7 @@
   </div>
 </div>
 
-<!-- Admin Login OTP Modal (preserved from second file) -->
+<!-- Admin Login OTP Modal -->
 <div id="otpModal">
   <div class="otp-modal-content">
     <h2>Verification Code</h2>
@@ -591,7 +772,7 @@
   </div>
 </div>
 
-<!-- Forgot Password Modal (preserved from second file) -->
+<!-- Forgot Password Modal -->
 <div class="modal-overlay" id="forgotPasswordModal">
   <div class="modal">
     <button class="modal-close" id="closeModal">&times;</button>
@@ -612,7 +793,7 @@
 
     <div class="step" id="step2">
       <div class="modal-header">
-        <div class="modal-icon">🔐</div>
+        <div class="modal-icon">&#x1F510;</div>
         <h2 class="modal-title">Enter Verification Code</h2>
         <p class="modal-subtitle">We've sent a 6-digit code to <strong><span id="emailDisplay"></span></strong></p>
       </div>
@@ -632,7 +813,7 @@
 
     <div class="step" id="step3">
       <div class="modal-header">
-        <div class="done-icon">✅</div>
+        <div class="done-icon">&#x2705;</div>
         <h2 class="modal-title">Password Reset!</h2>
         <p class="modal-subtitle">
           A new temporary password has been sent to<br>
@@ -647,7 +828,33 @@
 
 <script>
   // ============================================
-  // ALL FUNCTIONS PRESERVED EXACTLY FROM SECOND FILE
+  // PURE CSS MODAL HELPERS (no Bootstrap)
+  // ============================================
+
+  function showSuccess(message) {
+    document.getElementById('sysSuccessMessage').innerHTML = message;
+    document.getElementById('sysSuccessOverlay').classList.add('show');
+  }
+
+  function showError(message) {
+    document.getElementById('sysErrorMessage').innerHTML = message;
+    document.getElementById('sysErrorOverlay').classList.add('show');
+  }
+
+  function showConfirm(message, title, onConfirm) {
+    document.getElementById('sysConfirmTitle').innerHTML = title;
+    document.getElementById('sysConfirmMessage').innerHTML = message;
+    const overlay = document.getElementById('sysConfirmOverlay');
+    overlay.classList.add('show');
+    const okBtn = document.getElementById('sysConfirmOkBtn');
+    okBtn.onclick = function() {
+      overlay.classList.remove('show');
+      onConfirm();
+    };
+  }
+
+  // ============================================
+  // LOGIN FORM LOGIC
   // ============================================
 
   const loginForm     = document.getElementById('loginForm');
@@ -715,8 +922,8 @@
         handleAdmin2FA(email);
       } else if (response.status === 403) {
         const message = await response.text();
-        alert(message);
         resetLoginButton();
+        showError(message);
       } else if (response.status === 401) {
         showLoginError("Invalid email or password.");
         resetLoginButton();
@@ -726,6 +933,7 @@
       }
     } catch (err) {
       console.error("Connection Error:", err);
+      showError("A connection error occurred. Please try again.");
       resetLoginButton();
     }
   });
@@ -738,11 +946,12 @@
         document.getElementById('displayEmail').innerText = email;
         document.getElementById('otpModal').classList.add('show');
       } else {
-        alert("Failed to send code. Please try again.");
+        showError("Failed to send verification code. Please try again.");
         resetLoginButton();
       }
     } catch (err) {
       console.error("OTP Error:", err);
+      showError("A connection error occurred. Please try again.");
       resetLoginButton();
     }
   }
@@ -756,10 +965,13 @@
           isOtpVerified = true;
           loginForm.submit();
         } else {
-          alert("Invalid verification code.");
+          showError("Invalid verification code. Please try again.");
         }
       })
-      .catch(err => console.error("Verification error:", err));
+      .catch(err => {
+        console.error("Verification error:", err);
+        showError("A connection error occurred. Please try again.");
+      });
   }
 
   function closeOtpModal() {
@@ -784,7 +996,10 @@
     passwordInput.type = isPassword ? 'text' : 'password';
   });
 
+  // ============================================
   // FORGOT PASSWORD FUNCTIONS
+  // ============================================
+
   const modal           = document.getElementById('forgotPasswordModal');
   const forgotLink      = document.getElementById('forgotPasswordLink');
   const closeModalBtn   = document.getElementById('closeModal');

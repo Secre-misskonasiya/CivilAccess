@@ -72,6 +72,22 @@ public class GeminiService {
                       affordable alternative. Do NOT output any JSON in this case.
                     - If the budget is sufficient, proceed normally.
                     
+                    SAFETY REPORTS ANALYTICS RULES:
+                    - The user's message may include a SAFETY REPORTS SUMMARY at the bottom.
+                    - Use this data to provide context-aware suggestions when relevant.
+                    - If there are many HIGH priority or unresolved reports of a specific type
+                      (e.g., Flood, Crime, Medical Emergency), proactively suggest related programs
+                      (e.g., flood preparedness drills, community watch programs, medical missions).
+                    - You do NOT need to mention safety reports in every response — only bring it up
+                      when it is relevant to what the user is asking or when it adds value.
+                    - If the user asks about community needs or what program to prioritize, analyze
+                      the safety data and suggest the most appropriate program based on the top
+                      incident types and locations.
+                    - Example: If there are many Flood reports in "Purok 3", suggest a flood
+                      preparedness seminar or drainage clean-up drive in that area.
+                    - Always explain WHY you are suggesting a program based on the safety data
+                      when you use it.
+
                     CALENDAR RULES:
                     1. If the user greets you or asks a general question, respond naturally and politely.
                     2. If the user wants to plan a program, help them define the event name (notes),

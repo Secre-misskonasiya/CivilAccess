@@ -164,7 +164,7 @@
     .page-item.active .page-link { background-color: #2d4a44; border-color: #2d4a44; }
     .page-link { color: #2d4a44; }
 
-    /* ── Document Modal (wider) ── */
+    /* Document Modal */
     .doc-modal-overlay {
         display: none;
         position: fixed;
@@ -236,16 +236,6 @@
         letter-spacing: 4px;
         font-family: Arial, sans-serif;
     }
-    .doc-header {
-        text-align: center;
-        margin-bottom: 20px;
-        border-bottom: 2px solid #2d4a44;
-        padding-bottom: 14px;
-    }
-    .doc-header .republic { font-size: 11px; color: #555; margin-bottom: 2px; }
-    .doc-header .province { font-size: 11px; color: #555; }
-    .doc-header .barangay-name { font-size: 20px; font-weight: bold; color: #2d4a44; margin: 6px 0 2px; }
-    .doc-header .doc-title { font-size: 15px; font-weight: bold; letter-spacing: 2px; margin-top: 8px; text-transform: uppercase; color: #333; }
     .doc-field { margin-bottom: 14px; }
     .doc-field label { display: block; font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
     .doc-field input, .doc-field select, .doc-field textarea {
@@ -263,14 +253,12 @@
     .doc-field input:focus, .doc-field select:focus, .doc-field textarea:focus {
         border-bottom: 2px solid #2d4a44;
     }
-    /* All inline doc inputs — reset outline, set transparent bg */
     .doc-template input,
     .doc-template select,
     .doc-template textarea {
         background: transparent !important;
         outline: none !important;
     }
-    /* Editable inputs get a visible hover + focus cue */
     .doc-template input:not([readonly]):hover,
     .doc-template select:not([readonly]):hover {
         background-color: rgba(45,74,68,0.06) !important;
@@ -290,6 +278,16 @@
         pointer-events: none !important;
         color: #333 !important;
     }
+    .doc-header {
+        text-align: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #2d4a44;
+        padding-bottom: 14px;
+    }
+    .doc-header .republic { font-size: 11px; color: #555; margin-bottom: 2px; }
+    .doc-header .province { font-size: 11px; color: #555; }
+    .doc-header .barangay-name { font-size: 20px; font-weight: bold; color: #2d4a44; margin: 6px 0 2px; }
+    .doc-header .doc-title { font-size: 15px; font-weight: bold; letter-spacing: 2px; margin-top: 8px; text-transform: uppercase; color: #333; }
     .doc-field textarea { resize: none; }
     .doc-row { display: flex; gap: 20px; }
     .doc-row .doc-field { flex: 1; }
@@ -338,7 +336,7 @@
         border-radius: 8px; text-align: center; margin: 15% auto;
     }
 
-    /* ── View File Modal (accounts-style) ── */
+    /* View File Modal */
     .viewfile-modal-overlay {
         display: none;
         position: fixed;
@@ -384,20 +382,100 @@
     .vf-doc-img-wrap img { max-width: 100%; max-height: 160px; object-fit: contain; cursor: pointer; border-radius: 6px; }
 
     .tab-badge {
-            background-color: #FED734;
-            color: #2d4a44;
-            border-radius: 10px;
-            padding: 1px 7px;
-            font-size: 12px;
-            font-weight: bold;
-        }
+        background-color: #FED734;
+        color: #2d4a44;
+        border-radius: 10px;
+        padding: 1px 7px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .loading-spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 0.6s linear infinite;
+        margin-right: 5px;
+    }
+
+
+
+        /* Hide dropdown arrows, spinners, and placeholder text in readonly mode */
+    .doc-template input[readonly]::-webkit-calendar-picker-indicator,
+    .doc-template select[readonly]::-webkit-calendar-picker-indicator,
+    .doc-template input[readonly]::-webkit-inner-spin-button,
+    .doc-template input[readonly]::-webkit-outer-spin-button {
+        display: none;
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+    }
+    
+    .doc-template input[readonly]::-webkit-input-placeholder,
+    .doc-template select[readonly]::-webkit-input-placeholder {
+        color: transparent;
+        visibility: hidden;
+    }
+    
+    .doc-template input[readonly]::placeholder,
+    .doc-template select[readonly]::placeholder {
+        color: transparent;
+        visibility: hidden;
+    }
+    
+    /* Hide select dropdown arrow for readonly */
+    .doc-template select[readonly] {
+        -webkit-appearance: none;
+        appearance: none;
+        background-image: none;
+    }
+    
+    /* For Firefox */
+    .doc-template input[readonly]::-moz-placeholder {
+        color: transparent;
+        visibility: hidden;
+    }
+    
+    /* Ensure readonly inputs show NO hint text */
+    .doc-template input[readonly]:placeholder-shown {
+        color: #333;
+    }
+
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+
+    .btn-save-document {
+    padding: 9px 20px;
+    border: none;
+    border-radius: 6px;
+    background: #44C375;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+}
+.btn-save-document:hover {
+    background: #2ea05e;
+}
+.btn-save-document:disabled {
+    background: #a0d4b0;
+    cursor: not-allowed;
+}
+
+
 </style>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" th:href="@{/css/sidebar.css}">   
+<link rel="stylesheet" th:href="@{/css/sidebar.css}">   
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -405,12 +483,12 @@
 <title>Requests</title>
 </head>
 <body>
-  <script src="/js/notif.js"></script>
+<script src="/js/notif.js"></script>
 <div class="toast-container" id="toastContainer"></div>
 <div class="layout">
 
 <!-- Lock Modal -->
- <input type="hidden" id="accountStatus" th:value="${currentstatus}">
+<input type="hidden" id="accountStatus" th:value="${currentstatus}">
 <div id="forcePasswordModal" class="force-modal">
     <div class="force-modal-content">
         <h2>First Login Detected</h2>
@@ -419,19 +497,14 @@
     </div>
 </div>
 
-  <!-- Sidebar -->
-<div th:replace="~{fragments/sidebar :: sidebar}"></div>
 <!-- Sidebar -->
-
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
 <div class="content">
-
-    <!-- Top header -->
     <div class="top-header">
         <div class="top-header-tab">Document Requests</div>
     </div>
 
-    <!-- Search / Filter / Export -->
     <div class="search-bar-area">
         <div class="search-input-wrap">
             <span class="search-icon"><i class="bi bi-search"></i></span>
@@ -446,7 +519,6 @@
         <button class="export-btn" id="export-pdf-btn" onclick="exportToPDF()">Export</button>
     </div>
 
-    <!-- Tabs -->
     <div class="tabbar">
         <div class="tab active" onclick="switchTab(this, 'incoming')">
             Incoming <span class="tab-badge" id="badge-incoming" th:text="${incomingCount}">0</span>
@@ -462,61 +534,46 @@
         </div>
     </div>
 
-    <!-- Panel -->
     <div class="panel">
-
         <!-- Incoming -->
         <div id="tab-incoming" class="panel-inner">
             <div class="panel-header">Incoming Document Requests</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
                     <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Phone Number</th>
-                            <th>File</th>
-                            <th>Request Type</th>
-                            <th>Actions</th>
-                        </tr>
+                        <tr><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr th:each="req : ${incomingRequests}"
                             th:attr="data-name=${req.fullName},
                                      data-validid=${req.validIdUrl},
-                                     data-type=${req.documentType}">
+                                     data-type=${req.documentType},
+                                     data-purpose=${req.purposeOfRequest},
+                                     data-photo=${req.photo2x2Url},
+                                     data-id=${req.id},
+                                     data-address=${req.address},
+                                     data-birthdate=${req.birthdate},
+                                     data-emergency-name=${req.emergencyName},
+                                     data-emergency-address=${req.emergencyAddress},
+                                     data-emergency-contact=${req.emergencyContact}">
                             <td th:text="${req.fullName}"></td>
                             <td th:text="${req.contactNumber}"></td>
-                            <td>
-                                <button type="button" class="viewfile-btn"
-                                    onclick="openViewFileModal(this.closest('tr'))">View File</button>
-                            </td>
+                            <td><button type="button" class="viewfile-btn" onclick="openViewFileModal(this.closest('tr'))">View File</button></td>
                             <td th:text="${req.documentType}"></td>
-                            <td>
-                                <div class="action-buttons">
-                                    <form th:action="@{/requests-document/{id}/process(id=${req.id})}" method="post" style="display:inline;">
-                                        <button class="approve-btn" type="submit">Approve</button>
-                                    </form>
-                                    <form th:action="@{/requests-document/{id}/archive(id=${req.id})}" method="post" style="display:inline;">
-                                        <button class="archive-btn" type="submit">Archive</button>
-                                    </form>
-                                </div>
-                            </td>
+                            <td><div class="action-buttons">
+                                <form th:action="@{/requests-document/{id}/process(id=${req.id})}" method="post" style="display:inline;">
+                                    <button class="approve-btn" type="submit">Approve</button>
+                                </form>
+                                <form th:action="@{/requests-document/{id}/archive(id=${req.id})}" method="post" style="display:inline;">
+                                    <button class="archive-btn" type="submit">Archive</button>
+                                </form>
+                            </div></td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(incomingRequests)}">
                             <td colspan="5" style="text-align:center; color:#999;">No incoming requests</td>
                         </tr>
                     </tbody>
                 </table>
-                <div class="table-footer">
-                    <span>Showing incoming requests</span>
-                    <nav>
-                        <ul class="pagination pagination-sm mb-0">
-                            <li class="page-item"><a class="page-link" href="#"><i class="bi bi-arrow-left"></i> Prev</a></li>
-                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                            <li class="page-item"><a class="page-link" href="#">Next <i class="bi bi-arrow-right"></i></a></li>
-                        </ul>
-                    </nav>
-                </div>
             </div>
         </div>
 
@@ -526,45 +583,45 @@
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
                     <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Phone Number</th>
-                            <th>File</th>
-                            <th>Request Type</th>
-                            <th>Actions</th>
-                        </tr>
+                        <tr><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr th:each="req : ${processingRequests}"
                             th:attr="data-name=${req.fullName},
                                      data-validid=${req.validIdUrl},
-                                     data-type=${req.documentType}">
+                                     data-type=${req.documentType},
+                                     data-purpose=${req.purposeOfRequest},
+                                     data-photo=${req.photo2x2Url},
+                                     data-id=${req.id},
+                                     data-address=${req.address},
+                                     data-birthdate=${req.birthdate},
+                                     data-emergency-name=${req.emergencyName},
+                                     data-emergency-address=${req.emergencyAddress},
+                                     data-emergency-contact=${req.emergencyContact},
+                                     data-contact=${req.contactNumber}">
                             <td th:text="${req.fullName}"></td>
                             <td th:text="${req.contactNumber}"></td>
-                            <td>
-                                <button type="button" class="viewfile-btn"
-                                    onclick="openViewFileModal(this.closest('tr'))">View File</button>
-                            </td>
+                            <td><button type="button" class="viewfile-btn" onclick="openViewFileModal(this.closest('tr'))">View File</button></td>
                             <td th:text="${req.documentType}"></td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button type="button" class="process-btn"
-                                        th:data-id="${req.id}"
-                                        th:data-name="${req.fullName}"
-                                        th:data-phone="${req.contactNumber}"
-                                        th:data-type="${req.documentType}"
-                                        th:data-readonly="false"
-                                        onclick="openDocModal(this)">
-                                        Process
-                                    </button>
-                                    <form th:action="@{/requests-document/{id}/ready(id=${req.id})}" method="post" style="display:inline;">
-                                        <button class="ready-btn" type="submit">Mark Ready</button>
-                                    </form>
-                                    <form th:action="@{/requests-document/{id}/archive(id=${req.id})}" method="post" style="display:inline;">
-                                        <button class="archive-btn" type="submit">Archive</button>
-                                    </form>
-                                </div>
-                            </td>
+                            <td><div class="action-buttons">
+                                <button type="button" class="process-btn"
+                                        onclick="openDocModalFromRow(this, false)">Process</button>
+                                <button type="button" class="ready-btn" 
+                                    th:data-id="${req.id}"
+                                    th:data-name="${req.fullName}"
+                                    th:data-phone="${req.contactNumber}"
+                                    th:data-type="${req.documentType}"
+                                    th:data-photo="${req.photo2x2Url}"
+                                    th:data-address="${req.address}"
+                                    th:data-birthdate="${req.birthdate}"
+                                    th:data-emergency-name="${req.emergencyName}"
+                                    th:data-emergency-address="${req.emergencyAddress}"
+                                    th:data-emergency-contact="${req.emergencyContact}"
+                                    onclick="markAsReady(this)">Mark Ready</button>
+                                <form th:action="@{/requests-document/{id}/archive(id=${req.id})}" method="post" style="display:inline;">
+                                    <button class="archive-btn" type="submit">Archive</button>
+                                </form>
+                            </div></td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(processingRequests)}">
                             <td colspan="5" style="text-align:center; color:#999;">No processing requests</td>
@@ -590,42 +647,33 @@
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
                     <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Phone Number</th>
-                            <th>File</th>
-                            <th>Request Type</th>
-                            <th>Actions</th>
-                        </tr>
+                        <tr><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr th:each="req : ${readyRequests}"
                             th:attr="data-name=${req.fullName},
                                      data-validid=${req.validIdUrl},
-                                     data-type=${req.documentType}">
+                                     data-type=${req.documentType},
+                                     data-purpose=${req.purposeOfRequest},
+                                     data-photo=${req.photo2x2Url},
+                                     data-id=${req.id},
+                                     data-address=${req.address},
+                                     data-birthdate=${req.birthdate},
+                                     data-emergency-name=${req.emergencyName},
+                                     data-emergency-address=${req.emergencyAddress},
+                                     data-emergency-contact=${req.emergencyContact},
+                                     data-contact=${req.contactNumber}">
                             <td th:text="${req.fullName}"></td>
                             <td th:text="${req.contactNumber}"></td>
-                            <td>
-                                <button type="button" class="viewfile-btn"
-                                    onclick="openViewFileModal(this.closest('tr'))">View File</button>
-                            </td>
+                            <td><button type="button" class="viewfile-btn" onclick="openViewFileModal(this.closest('tr'))">View File</button></td>
                             <td th:text="${req.documentType}"></td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button type="button" class="view-btn"
-                                        th:data-id="${req.id}"
-                                        th:data-name="${req.fullName}"
-                                        th:data-phone="${req.contactNumber}"
-                                        th:data-type="${req.documentType}"
-                                        th:data-readonly="true"
-                                        onclick="openDocModal(this)">
-                                        View
-                                    </button>
-                                    <form th:action="@{/requests-document/{id}/archive(id=${req.id})}" method="post" style="display:inline;">
-                                        <button class="archive-btn" type="submit">Archive</button>
-                                    </form>
-                                </div>
-                            </td>
+                            <td><div class="action-buttons">
+                                <button type="button" class="view-btn"
+                                        onclick="openDocModalFromRow(this, true)">View</button>
+                                <form th:action="@{/requests-document/{id}/archive(id=${req.id})}" method="post" style="display:inline;">
+                                    <button class="archive-btn" type="submit">Archive</button>
+                                </form>
+                            </div></td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(readyRequests)}">
                             <td colspan="5" style="text-align:center; color:#999;">No ready requests</td>
@@ -651,28 +699,33 @@
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
                     <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Phone Number</th>
-                            <th>File</th>
-                            <th>Request Type</th>
-                        </tr>
+                        <tr><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr th:each="req : ${archivedRequests}"
                             th:attr="data-name=${req.fullName},
                                      data-validid=${req.validIdUrl},
-                                     data-type=${req.documentType}">
+                                     data-type=${req.documentType},
+                                     data-purpose=${req.purposeOfRequest},
+                                     data-photo=${req.photo2x2Url},
+                                     data-id=${req.id},
+                                     data-address=${req.address},
+                                     data-birthdate=${req.birthdate},
+                                     data-emergency-name=${req.emergencyName},
+                                     data-emergency-address=${req.emergencyAddress},
+                                     data-emergency-contact=${req.emergencyContact},
+                                     data-contact=${req.contactNumber}">
                             <td th:text="${req.fullName}"></td>
                             <td th:text="${req.contactNumber}"></td>
-                            <td>
-                                <button type="button" class="viewfile-btn"
-                                    onclick="openViewFileModal(this.closest('tr'))">View File</button>
-                            </td>
+                            <td><button type="button" class="viewfile-btn" onclick="openViewFileModal(this.closest('tr'))">View File</button></td>
                             <td th:text="${req.documentType}"></td>
+                            <td><div class="action-buttons">
+                                <button type="button" class="view-btn"
+                                        onclick="openDocModalFromRow(this, true)">View Document</button>
+                            </div></td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(archivedRequests)}">
-                            <td colspan="4" style="text-align:center; color:#999;">No archived requests</td>
+                            <td colspan="5" style="text-align:center; color:#999;">No archived requests</td>
                         </tr>
                     </tbody>
                 </table>
@@ -688,24 +741,17 @@
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 </div>
 
 <!-- Logout Modal -->
 <div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
+<script src="/js/sidebar.js"></script>
 
-<!-- Logout modal -->
-    <script src="/js/sidebar.js"></script>
-
-<!-- ══════════════════════════════════════════════════════════════ -->
-<!-- VIEW FILE MODAL  (accounts-style: header + 3 cards + purpose) -->
-<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- View File Modal -->
 <div id="viewFileModalOverlay" class="viewfile-modal-overlay">
     <div class="viewfile-modal-box">
-
-        <!-- Header (same style as accounts view modal) -->
         <div class="viewfile-modal-header">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <button class="close-x" onclick="closeViewFileModal()">&times;</button>
@@ -727,35 +773,25 @@
                 </div>
             </div>
         </div>
-
-        <!-- Body: 3 document cards -->
         <div class="viewfile-modal-body">
             <div style="display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-bottom:20px;">
-
-                <!-- 1x1 / 2x2 Photo -->
                 <div class="vf-doc-card">
                     <h4><i class="bi bi-person-square" style="margin-right:5px;"></i>1×1 / 2×2 Photo</h4>
                     <div class="vf-doc-img-wrap" id="vf-photo-wrap">
                         <span style="color:#aaa; font-size:13px;">No photo uploaded</span>
                     </div>
                 </div>
-
-                <!-- Valid ID -->
                 <div class="vf-doc-card">
                     <h4><i class="bi bi-card-text" style="margin-right:5px;"></i>Valid ID</h4>
                     <div class="vf-doc-img-wrap" id="vf-validid-wrap">
                         <span style="color:#aaa; font-size:13px;">No ID uploaded</span>
                     </div>
                 </div>
-
             </div>
-
-            <!-- Purpose of Request info block -->
             <div style="background:#f0f8f5; border:1px solid #c3e0d8; border-radius:8px; padding:14px 18px;">
                 <p style="font-size:11px; font-weight:bold; color:#2d4a44; text-transform:uppercase; letter-spacing:0.07em; margin:0 0 6px;">Purpose of Request</p>
                 <p style="font-size:15px; color:#333; margin:0;" id="vf-purpose-text">—</p>
             </div>
-
             <div style="text-align:right; margin-top:18px;">
                 <button class="btn-cancel" onclick="closeViewFileModal()">Close</button>
             </div>
@@ -763,7 +799,7 @@
     </div>
 </div>
 
-<!-- Image Enlarge overlay (reused) -->
+<!-- Image Enlarge overlay -->
 <div id="imgEnlargeOverlay" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.88); cursor:zoom-out;" onclick="this.style.display='none'">
     <img id="imgEnlargeSrc" src="" style="max-width:90%; max-height:90vh; object-fit:contain; border-radius:8px; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);">
 </div>
@@ -779,11 +815,11 @@
             <div id="printable-area"></div>
         </div>
         <div class="doc-modal-footer">
-            <!-- Price label (left side) -->
-            <div style="flex:1; display:flex; align-items:center;">
+            <div id="priceLabel" style="flex:1; display:none; align-items:center;">
                 <span style="font-family:'Arial', sans-serif; font-size:17px; font-weight:bold; color:#e74c3c; letter-spacing:0.5px;">Price: &#8369;30</span>
             </div>
             <button class="btn-cancel" onclick="closeDocModal()">Close</button>
+            <button id="saveDocumentBtn" class="btn-save-document" style="display:none;" onclick="saveProcessedDocument()"><i class="bi bi-save"></i> Save Document</button>
             <button class="btn-download" onclick="downloadPDF()"><i class="bi bi-download"></i> Download PDF</button>
             <button class="btn-print" onclick="printDocument()"><i class="bi bi-printer"></i> Print</button>
         </div>
@@ -791,7 +827,29 @@
 </div>
 
 <script>
-  // ── Tab switching ──────────────────────────────────────────────────────────
+  // Supabase configuration
+  const SUPABASE_URL = 'https://upfrofppponiqffbssqb.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_tZyxrTJrpd_OD5-TKUkT8Q__DnuY0tj';
+  
+  let supabaseClient = null;
+  let currentDocId = null;
+  let currentDocType = null;
+  let currentIsReadOnly = false;
+
+  function initSupabase() {
+    if (typeof supabase !== 'undefined' && supabase.createClient) {
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } else {
+      setTimeout(initSupabase, 500);
+    }
+  }
+  
+  const supabaseScript = document.createElement('script');
+  supabaseScript.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  supabaseScript.onload = initSupabase;
+  document.head.appendChild(supabaseScript);
+
+  // Tab switching
   function switchTab(el, tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
@@ -802,7 +860,6 @@
     applyFilters();
   }
 
-  // ── Search and Filter Functions ───────────────────────────────────────────
   function applyFilters() {
     const searchValue = document.getElementById('request-search').value.toLowerCase();
     const filterType = document.getElementById('filter-type').value;
@@ -851,24 +908,32 @@
     return div.innerHTML;
   }
 
-  // ══════════════════════════════════════════════════════════════
-  // VIEW FILE MODAL
-  // ══════════════════════════════════════════════════════════════
+  function isValidUrl(val) {
+    return val && val.trim() !== '' && val !== 'null' && val !== 'undefined';
+  }
+
+  // View File Modal
   function openViewFileModal(row) {
     const name    = row.getAttribute('data-name')    || '—';
     const validId = row.getAttribute('data-validid') || '';
+    const photo   = row.getAttribute('data-photo')   || '';
     const type    = row.getAttribute('data-type')    || '';
+    const purpose = row.getAttribute('data-purpose') || '—';
 
-    document.getElementById('vf-name').textContent          = name;
-    document.getElementById('vf-doctype').textContent       = type.replace(/_/g, ' ').toUpperCase();
-    document.getElementById('vf-purpose-label').textContent = '';
-    document.getElementById('vf-purpose-text').textContent  = '—';
+    document.getElementById('vf-name').textContent = name;
+    document.getElementById('vf-doctype').textContent = type.replace(/_/g, ' ').toUpperCase();
+    document.getElementById('vf-purpose-label').textContent = 'Purpose:';
+    document.getElementById('vf-purpose-text').textContent = purpose;
 
     const photoWrap = document.getElementById('vf-photo-wrap');
-    photoWrap.innerHTML = '<span style="color:#aaa; font-size:13px;">No photo uploaded</span>';
+    if (isValidUrl(photo)) {
+      photoWrap.innerHTML = `<img src="${escapeHtml(photo)}" alt="2x2 Photo" onclick="enlargeImg('${escapeHtml(photo)}')">`;
+    } else {
+      photoWrap.innerHTML = '<span style="color:#aaa; font-size:13px;">No 2x2 photo uploaded</span>';
+    }
 
     const idWrap = document.getElementById('vf-validid-wrap');
-    if (validId && validId !== 'null' && validId.trim() !== '') {
+    if (isValidUrl(validId)) {
       idWrap.innerHTML = `<img src="${escapeHtml(validId)}" alt="Valid ID" onclick="enlargeImg('${escapeHtml(validId)}')">`;
     } else {
       idWrap.innerHTML = '<span style="color:#aaa; font-size:13px;">No ID uploaded</span>';
@@ -890,274 +955,396 @@
     if (e.target === this) closeViewFileModal();
   });
 
-  // ══════════════════════════════════════════════════════════════
-  // DOCUMENT PROCESS / VIEW MODAL
-  // ══════════════════════════════════════════════════════════════
-  function openDocModal(button) {
-    const id = button.getAttribute('data-id');
-    const fullName = button.getAttribute('data-name') || '';
-    const contactNumber = button.getAttribute('data-phone') || '';
-    let documentType = button.getAttribute('data-type') || '';
-    const isReadOnly = button.getAttribute('data-readonly') === 'true';
+  // Upload document image to Supabase
+  async function uploadReadiedDocumentToSupabase(imageData, docId) {
+    if (!supabaseClient) throw new Error('Supabase client not initialized');
+    
+    const base64Data = imageData.split(',')[1];
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'image/png' });
+    
+    const timestamp = Date.now();
+    const fileName = `readied_document_${docId}_${timestamp}.png`;
+    const filePath = `readied_documents/${fileName}`;
+    
+    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+      .from('resident-documents')
+      .upload(filePath, blob, { contentType: 'image/png', upsert: true });
+    
+    if (uploadError) throw uploadError;
+    
+    const { data: urlData } = supabaseClient.storage.from('resident-documents').getPublicUrl(uploadData.path);
+    return urlData.publicUrl;
+  }
 
-    documentType = documentType.trim();
-    const safeFullName = escapeHtml(fullName);
-    const safeContactNumber = escapeHtml(contactNumber);
+  // Save changes from Process modal - ONLY saves the document image, does NOT change status to READY
+  async function saveProcessedDocument() {
+    if (!currentDocId) {
+      alert('No document selected');
+      return;
+    }
+    
+    const element = document.getElementById('printable-area').firstElementChild;
+    if (!element) {
+      alert('Could not generate document preview');
+      return;
+    }
+    
+    const saveBtn = document.getElementById('saveDocumentBtn');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<span class="loading-spinner"></span> Saving...';
+    saveBtn.disabled = true;
+    
+    try {
+      const canvas = await html2canvas(element, { 
+        scale: 3, 
+        backgroundColor: '#ffffff', 
+        logging: false, 
+        useCORS: true,
+        allowTaint: false
+      });
+      const imageData = canvas.toDataURL('image/png');
+      
+      const uploadedUrl = await uploadReadiedDocumentToSupabase(imageData, currentDocId);
+      
+      const response = await fetch(`/requests-document/${currentDocId}/save-document-only`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `documentUrl=${encodeURIComponent(uploadedUrl)}`
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        alert('Document saved successfully! You can continue editing.');
+        // DO NOT close modal or reload - keep editing
+      } else {
+        throw new Error(result.message || 'Failed to save document');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error saving document: ' + error.message);
+    } finally {
+      saveBtn.innerHTML = originalText;
+      saveBtn.disabled = false;
+    }
+  }
+
+  // Helper function to generate document HTML without opening modal
+  function generateDocumentHTML(data, readOnly) {
+    const safeFullName = escapeHtml(data.name);
+    const safeContactNumber = escapeHtml(data.phone);
+    const safeAddress = escapeHtml(data.address);
+    const safeEmergencyName = escapeHtml(data.emergencyName);
+    const safeEmergencyAddr = escapeHtml(data.emergencyAddress);
+    const safeEmergencyPhone = escapeHtml(data.emergencyContact);
+    const photoUrl = isValidUrl(data.photo) ? data.photo : '';
+    const birthdate = escapeHtml(data.birthdate);
+    const documentType = data.type.trim();
     const today = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
-    const ro = isReadOnly ? 'readonly' : '';
-    const wm = isReadOnly ? 'with-watermark' : '';
-    let html = '';
+    const ro = readOnly ? 'readonly' : '';
+    const wm = readOnly ? 'with-watermark' : '';
+    const isClearance = documentType.replace(/\s+/g, '_').toLowerCase().includes('barangay_clearance');
 
-    document.getElementById('docModalTitle').textContent =
-      (isReadOnly ? 'View: ' : 'Process: ') + documentType.replace(/_/g, ' ');
-
-    // ── CERTIFICATE OF INDIGENCY ────────────────────────────────────────────
-    if (documentType.includes('Certificate_of_Indigency') ||
-        documentType.toLowerCase().includes('indigency')) {
-      html = `
-        <div class="doc-template ${wm}" style="font-family: Arial, sans-serif; width: 210mm; min-height: 297mm; margin: 0 auto; padding: 28px 36px; box-sizing: border-box; border: 3px solid #222;">
-
-          <!-- Dual-logo header -->
+    if (documentType.replace(/\s+/g,'_').toLowerCase().includes('certificate_of_indigency')) {
+      return `<div class="doc-template ${wm}" style="font-family: Arial, sans-serif; width: 210mm; min-height: 297mm; margin: 0 auto; padding: 28px 36px; box-sizing: border-box; border: 3px solid #222;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;margin-bottom:4px;">
-            <div style="text-align:center;">
-              <div style="width:72px;height:72px;background:#e9e9e9;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid #aaa;margin:0 auto 4px;">
-                <img src="/images/brgy.png" style="width:62px;height:62px;object-fit:contain;" alt="Brgy Logo" onerror="this.style.display='none'"/>
-              </div>
-              <div style="font-size:10px;color:#555;">Barangay</div>
-            </div>
-            <div style="text-align:center;">
-              <div style="font-size:11px;color:#555;">Republic of the Philippines</div>
-              <div style="font-size:11px;color:#555;">City/Municipality of ___________</div>
-              <div style="font-size:15px;font-weight:bold;color:#333;">Office of the Sangguniang</div>
-              <div style="font-size:14px;font-weight:bold;color:#2d4a44;">Barangay San Sebastian</div>
-            </div>
-            <div style="width:72px;height:72px;background:#e9e9e9;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid #aaa;">
-              <img src="/images/city.png" style="width:62px;height:62px;object-fit:contain;" alt="City Logo" onerror="this.style.display='none'"/>
-            </div>
+            <div style="text-align:center;"><div style="width:72px;height:72px;background:#e9e9e9;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid #aaa;margin:0 auto 4px;"><img src="/images/brgy.png" style="width:62px;height:62px;object-fit:contain;" alt="Brgy Logo" onerror="this.style.display='none'"/></div><div style="font-size:10px;color:#555;">Barangay</div></div>
+            <div style="text-align:center;"><div style="font-size:11px;color:#555;">Republic of the Philippines</div><div style="font-size:11px;color:#555;">City/Municipality of ___________</div><div style="font-size:15px;font-weight:bold;color:#333;">Office of the Sangguniang</div><div style="font-size:14px;font-weight:bold;color:#2d4a44;">Barangay San Sebastian</div></div>
+            <div style="width:72px;height:72px;background:#e9e9e9;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid #aaa;"><img src="/images/city.png" style="width:62px;height:62px;object-fit:contain;" alt="City Logo" onerror="this.style.display='none'"/></div>
           </div>
-
           <div style="text-align:center;letter-spacing:1px;font-size:12px;color:#555;margin-bottom:16px;">========================================</div>
-
-          <div style="text-align:center;margin-bottom:24px;">
-            <div style="font-size:20px;font-weight:bold;letter-spacing:2px;color:#222;font-family:'Times New Roman',serif;">CERTIFICATE OF INDIGENCY</div>
-          </div>
-
+          <div style="text-align:center;margin-bottom:24px;"><div style="font-size:20px;font-weight:bold;letter-spacing:2px;color:#222;font-family:'Times New Roman',serif;">CERTIFICATE OF INDIGENCY</div></div>
           <p style="font-size:13px;font-weight:bold;margin-bottom:12px;">TO WHOM IT MAY CONCERN:</p>
-
-          <p style="font-size:13px;line-height:2;text-align:justify;margin-bottom:14px;font-family:'Times New Roman',serif;">
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This is to certify that <strong><input type="text" value="${safeFullName}" ${ro} style="width:190px;display:inline;border:none;border-bottom:1.5px solid #333;font-size:13px;font-weight:bold;padding:0 4px;font-family:'Times New Roman',serif;"/></strong>
-            <input type="text" ${ro} placeholder="age" style="width:36px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;text-align:center;font-family:'Times New Roman',serif;"/> years old, a bonafide resident of <input type="text" ${ro} placeholder="Block/Lot/Street, Barangay San Sebastian" style="width:290px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;"/>.
-          </p>
-
-          <p style="font-size:13px;line-height:2;text-align:justify;margin-bottom:14px;font-style:italic;font-family:'Times New Roman',serif;">
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This certification is being issued upon the request of the subject person concerned in connection with her/his application for <strong style="font-style:normal;"><input type="text" ${ro} placeholder="PURPOSE (e.g. FINANCIAL ASSISTANCE PURPOSES)" style="width:280px;display:inline;border:none;border-bottom:1.5px solid #333;font-size:13px;font-weight:bold;padding:0 4px;text-transform:uppercase;font-family:'Times New Roman',serif;"/></strong> and for whatever intent or legal purpose this may serve him/her best.
-          </p>
-
-          <p style="font-size:13px;line-height:2;margin-top:18px;font-style:italic;font-family:'Times New Roman',serif;">
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Issued this <input type="text" ${ro} placeholder="12" style="width:32px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 2px;text-align:center;font-family:'Times New Roman',serif;"/><sup>th</sup> of <input type="text" ${ro} placeholder="Month, Year" style="width:140px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;"/>, at Barangay San Sebastian.
-          </p>
-
-          <!-- Signature block (right-aligned) -->
-          <div style="text-align:right;margin-top:40px;margin-right:40px;">
-            <div style="display:inline-block;text-align:center;">
-              <div style="height:52px;"></div>
-              <div style="border-top:1.5px solid #333;padding-top:6px;">
-                <input type="text" ${ro} placeholder="Barangay Captain Full Name" style="border:none;border-bottom:1px solid #ccc;font-size:13px;font-weight:bold;text-align:center;width:230px;font-style:italic;font-family:'Times New Roman',serif;"/>
-              </div>
-              <div style="font-size:11px;font-style:italic;color:#444;margin-top:3px;">Barangay Captain</div>
-            </div>
-          </div>
-
-          <!-- Seal info at bottom left -->
-          <div style="margin-top:28px;border-top:1px solid #ddd;padding-top:14px;font-size:11px;color:#1a3a8c;font-weight:bold;line-height:1.9;font-family:Arial,sans-serif;">
-            SEAL NO.: <input type="text" ${ro} placeholder="XXX-BI-XX-XXX" style="border:none;border-bottom:1px solid #aaa;font-size:11px;padding:0 4px;width:130px;color:#1a3a8c;font-weight:bold;"/><br/>
-            SERIES OF: <input type="text" ${ro} placeholder="2026" style="border:none;border-bottom:1px solid #aaa;font-size:11px;padding:0 4px;width:60px;color:#1a3a8c;font-weight:bold;"/><br/>
-            Not Valid without Dry Seal<br/>
-            Validity: Good for Three (3) months from the date of issued
-          </div>
-
+          <p style="font-size:13px;line-height:2;text-align:justify;margin-bottom:14px;font-family:'Times New Roman',serif;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This is to certify that <strong><input type="text" value="${safeFullName}" ${ro} style="width:190px;display:inline;border:none;border-bottom:1.5px solid #333;font-size:13px;font-weight:bold;padding:0 4px;"/></strong> <input type="text" ${ro} placeholder="age" style="width:36px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;text-align:center;"/> years old, a bonafide resident of <input type="text" value="${safeAddress}" ${ro} placeholder="Block/Lot/Street, Barangay San Sebastian" style="width:290px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;"/>.</p>
+          <p style="font-size:13px;line-height:2;text-align:justify;margin-bottom:14px;font-style:italic;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This certification is being issued upon the request of the subject person concerned in connection with her/his application for <strong style="font-style:normal;"><input type="text" ${ro} placeholder="PURPOSE" style="width:280px;display:inline;border:none;border-bottom:1.5px solid #333;font-size:13px;font-weight:bold;padding:0 4px;text-transform:uppercase;"/></strong> and for whatever intent or legal purpose this may serve him/her best.</p>
+          <p style="font-size:13px;line-height:2;margin-top:18px;font-style:italic;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Issued this <input type="text" ${ro} placeholder="12" style="width:32px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 2px;text-align:center;"/><sup>th</sup> of <input type="text" ${ro} placeholder="Month, Year" style="width:140px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;"/>, at Barangay San Sebastian.</p>
+          <div style="text-align:right;margin-top:40px;margin-right:40px;"><div style="display:inline-block;text-align:center;"><div style="height:52px;"></div><div style="border-top:1.5px solid #333;padding-top:6px;"><input type="text" ${ro} placeholder="Barangay Captain Full Name" style="border:none;border-bottom:1px solid #ccc;font-size:13px;font-weight:bold;text-align:center;width:230px;font-style:italic;"/></div><div style="font-size:11px;font-style:italic;color:#444;margin-top:3px;">Barangay Captain</div></div></div>
+          <div style="margin-top:28px;border-top:1px solid #ddd;padding-top:14px;font-size:11px;color:#1a3a8c;font-weight:bold;line-height:1.9;font-family:Arial,sans-serif;">SEAL NO.: <input type="text" ${ro} placeholder="XXX-BI-XX-XXX" style="border:none;border-bottom:1px solid #aaa;font-size:11px;padding:0 4px;width:130px;color:#1a3a8c;font-weight:bold;"/><br/>SERIES OF: <input type="text" ${ro} placeholder="2026" style="border:none;border-bottom:1px solid #aaa;font-size:11px;padding:0 4px;width:60px;color:#1a3a8c;font-weight:bold;"/><br/>Not Valid without Dry Seal<br/>Validity: Good for Three (3) months from the date of issued</div>
         </div>`;
     }
-    // ── BARANGAY CLEARANCE ─────────────────────────────────────────────────
-    else if (documentType.includes('Barangay_Clearance') ||
-             documentType.toLowerCase().includes('clearance')) {
-      html = `
-        <div class="doc-template ${wm}" style="font-family: 'Times New Roman', serif; width: 210mm; min-height: 297mm; margin: 0 auto; padding: 28px 36px; box-sizing: border-box; border: 3px solid #222;">
-
-          <!-- Header: logo left, text right -->
-          <div style="display:flex; align-items:flex-start; gap:20px; margin-bottom:10px;">
-            <div style="flex-shrink:0;">
-              <div style="width:80px;height:80px;border:1.5px solid #aaa;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#f5f5f5;overflow:hidden;">
-                <img src="/images/brgy.png" style="width:72px;height:72px;object-fit:contain;" alt="Brgy Logo" onerror="this.style.display='none'"/>
-              </div>
-            </div>
-            <div style="flex:1;">
-              <div style="font-size:12px;color:#333;">Republic of the Philippines</div>
-              <div style="font-size:12px;color:#333;">City/Municipality of ___________</div>
-              <div style="font-size:12px;color:#333;">Province of ___________</div>
-              <div style="font-size:22px;font-weight:bold;color:#1a3a6e;font-style:italic;font-family:Georgia,serif;margin-top:4px;">Barangay San Sebastian</div>
-            </div>
-          </div>
-
-          <!-- Horizontal rule -->
+    else if (isClearance) {
+      return `<div class="doc-template ${wm}" style="font-family: 'Times New Roman', serif; width: 210mm; min-height: 297mm; margin: 0 auto; padding: 28px 36px; box-sizing: border-box; border: 3px solid #222;">
+          <div style="display:flex; align-items:flex-start; gap:20px; margin-bottom:10px;"><div style="flex-shrink:0;"><div style="width:80px;height:80px;border:1.5px solid #aaa;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#f5f5f5;overflow:hidden;"><img src="/images/brgy.png" style="width:72px;height:72px;object-fit:contain;" alt="Brgy Logo" onerror="this.style.display='none'"/></div></div><div style="flex:1;"><div style="font-size:12px;color:#333;">Republic of the Philippines</div><div style="font-size:12px;color:#333;">City/Municipality of ___________</div><div style="font-size:12px;color:#333;">Province of ___________</div><div style="font-size:22px;font-weight:bold;color:#1a3a6e;font-style:italic;font-family:Georgia,serif;margin-top:4px;">Barangay San Sebastian</div></div></div>
           <div style="border-top:2.5px solid #222;border-bottom:1px solid #222;padding:2px 0;margin-bottom:28px;"></div>
-
-          <!-- Office label -->
           <div style="text-align:center;font-size:13px;font-weight:bold;letter-spacing:1px;margin-bottom:10px;">OFFICE OF THE BARANGAY CAPTAIN</div>
-
-          <!-- Title -->
-          <div style="text-align:center;margin-bottom:30px;">
-            <span style="font-size:28px;font-weight:900;letter-spacing:2px;color:#111;">BARANGAY CLEARANCE</span>
-          </div>
-
-          <!-- To Whom -->
+          <div style="text-align:center;margin-bottom:30px;"><span style="font-size:28px;font-weight:900;letter-spacing:2px;color:#111;">BARANGAY CLEARANCE</span></div>
           <p style="font-size:13px;font-weight:bold;margin-bottom:20px;">TO WHOM IT MAY CONCERN:</p>
-
-          <!-- Body paragraph -->
-          <p style="font-size:13px;line-height:2.1;text-align:justify;margin-bottom:14px;margin-left:40px;">
-            This is to certify that
-            <input type="text" value="${safeFullName}" ${ro} style="width:220px;display:inline;border:none;border-bottom:1.5px solid #333;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;"/>,
-            <input type="text" ${ro} placeholder="age" style="width:60px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;text-align:center;font-family:'Times New Roman',serif;"/> years old,
-            <select ${ro} style="border:none;border-bottom:1px solid #333;font-size:13px;font-family:'Times New Roman',serif;">
-              <option value="">Civil Status</option><option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option>
-            </select>
-            and a resident of
-            <input type="text" ${ro} placeholder="complete address, Barangay San Sebastian" style="width:320px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;"/>
-            is known to be of good moral character and law-abiding citizen in the community.
-          </p>
-
-          <p style="font-size:13px;line-height:2;text-align:justify;margin-bottom:14px;margin-left:40px;">
-            To certify further, that he/she has no derogatory and/or criminal records filed in this barangay.
-          </p>
-
-          <p style="font-size:13px;line-height:2;text-align:justify;margin-bottom:14px;margin-left:40px;">
-            <strong>ISSUED</strong> this
-            <input type="text" ${ro} placeholder="__" style="width:36px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;text-align:center;font-family:'Times New Roman',serif;"/> day of
-            <input type="text" ${ro} placeholder="Month, Year" style="width:160px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;"/>
-            at Barangay San Sebastian upon request of the interested party for whatever legal purposes it may serve.
-          </p>
-
-          <!-- Signature block (right-aligned) -->
-          <div style="text-align:right;margin-top:50px;margin-right:20px;">
-            <div style="display:inline-block;text-align:center;">
-              <div style="height:52px;"></div>
-              <div style="border-top:1.5px solid #222;padding-top:6px;min-width:200px;">
-                <input type="text" ${ro} placeholder="Barangay Captain Name" style="border:none;border-bottom:1px solid #ccc;font-size:13px;font-weight:bold;text-align:center;width:220px;font-family:'Times New Roman',serif;"/>
-              </div>
-              <div style="font-size:12px;color:#333;margin-top:2px;">Barangay Captain</div>
-            </div>
-          </div>
-
-          <!-- OR No. / Date Issued / Doc Stamp -->
-          <div style="margin-top:48px;">
-            <div style="font-size:12px;line-height:2.2;font-family:'Times New Roman',serif;">
-              <div>O.R No. &nbsp;&nbsp;&nbsp; <input type="text" ${ro} style="width:170px;border:none;border-bottom:1px solid #aaa;font-size:12px;padding:0 4px;"/></div>
-              <div>Date Issued: <input type="text" ${ro} value="${today}" style="width:170px;border:none;border-bottom:1px solid #aaa;font-size:12px;padding:0 4px;"/></div>
-              <div>Doc. Stamp: &nbsp;<strong>Paid</strong></div>
-            </div>
-          </div>
-
+          <p style="font-size:13px;line-height:2.1;text-align:justify;margin-bottom:14px;margin-left:40px;">This is to certify that <input type="text" value="${safeFullName}" ${ro} style="width:220px;display:inline;border:none;border-bottom:1.5px solid #333;font-size:13px;padding:0 4px;"/>, <input type="text" ${ro} placeholder="age" style="width:60px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;text-align:center;"/> years old, <select ${ro} style="border:none;border-bottom:1px solid #333;font-size:13px;"><option value="">Civil Status</option><option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option></select> and a resident of <input type="text" value="${safeAddress}" ${ro} placeholder="complete address, Barangay San Sebastian" style="width:320px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;"/> is known to be of good moral character and law-abiding citizen in the community.</p>
+          <p style="font-size:13px;line-height:2;text-align:justify;margin-bottom:14px;margin-left:40px;">To certify further, that he/she has no derogatory and/or criminal records filed in this barangay.</p>
+          <p style="font-size:13px;line-height:2;text-align:justify;margin-bottom:14px;margin-left:40px;"><strong>ISSUED</strong> this <input type="text" ${ro} placeholder="__" style="width:36px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;text-align:center;"/> day of <input type="text" ${ro} placeholder="Month, Year" style="width:160px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;"/> at Barangay San Sebastian upon request of the interested party for whatever legal purposes it may serve.</p>
+          <div style="text-align:right;margin-top:50px;margin-right:20px;"><div style="display:inline-block;text-align:center;"><div style="height:52px;"></div><div style="border-top:1.5px solid #222;padding-top:6px;min-width:200px;"><input type="text" ${ro} placeholder="Barangay Captain Name" style="border:none;border-bottom:1px solid #ccc;font-size:13px;font-weight:bold;text-align:center;width:220px;"/></div><div style="font-size:12px;color:#333;margin-top:2px;">Barangay Captain</div></div></div>
+          <div style="margin-top:48px;"><div style="font-size:12px;line-height:2.2;"><div>O.R No. &nbsp;&nbsp;&nbsp; <input type="text" ${ro} style="width:170px;border:none;border-bottom:1px solid #aaa;font-size:12px;padding:0 4px;"/></div><div>Date Issued: <input type="text" ${ro} value="${today}" style="width:170px;border:none;border-bottom:1px solid #aaa;font-size:12px;padding:0 4px;"/></div><div>Doc. Stamp: &nbsp;<strong>Paid</strong></div></div></div>
         </div>`;
     }
-    // ── BARANGAY ID ────────────────────────────────────────────────────────
     else {
-      html = `
-      <div class="doc-template ${wm}" style="font-family: 'Times New Roman', serif; max-width: 760px; margin: 0 auto;">
+      const nameParts = data.name.trim().split(/\s+/);
+      const firstName = escapeHtml(nameParts[0] || '');
+      const lastName = escapeHtml(nameParts.length > 1 ? nameParts[nameParts.length - 1] : '');
+      const hasPhoto = isValidUrl(photoUrl);
 
-        <!-- Header -->
+      return `<div class="doc-template ${wm}" style="font-family: 'Times New Roman', serif; max-width: 760px; margin: 0 auto;">
         <div style="background: #2d4a44; color: white; padding: 10px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 3px solid #FED734; border-radius: 8px 8px 0 0;">
           <img src="/images/brgy.png" style="width: 44px; height: 44px; filter: brightness(0) invert(1);" alt="Logo" onerror="this.style.display='none'"/>
-          <div>
-            <div style="font-size: 10px; letter-spacing: 1px; opacity: 0.8; font-family: Arial, sans-serif;">Republic of the Philippines</div>
-            <div style="font-size: 15px; font-weight: bold; font-family: Arial, sans-serif;">Barangay San Sebastian</div>
-            <div style="font-size: 10px; opacity: 0.7; font-family: Arial, sans-serif;">Barangay Identification Card</div>
-          </div>
-          <div style="margin-left: auto; background: #FED734; color: #2d4a44; font-size: 10px; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-family: Arial, sans-serif;">OFFICIAL ID</div>
+          <div><div style="font-size: 10px; letter-spacing: 1px; opacity: 0.8;">Republic of the Philippines</div><div style="font-size: 15px; font-weight: bold;">Barangay San Sebastian</div><div style="font-size: 10px; opacity: 0.7;">Barangay Identification Card</div></div>
+          <div style="margin-left: auto; background: #FED734; color: #2d4a44; font-size: 10px; font-weight: bold; padding: 4px 10px; border-radius: 4px;">OFFICIAL ID</div>
         </div>
-
-        <!-- Body: left fields | right column (picture → signature → control no.) -->
         <div style="padding: 16px 20px; border: 2px solid #2d4a44; border-top: none; border-radius: 0 0 8px 8px; display: flex; gap: 20px; align-items: flex-start;">
-
-          <!-- LEFT COLUMN -->
           <div style="flex: 1;">
-
-            <!-- Name row -->
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px;">
-              <div class="doc-field">
-                <label>First Name</label>
-                <input type="text" value="${safeFullName.split(' ')[0] || ''}" ${ro}/>
-              </div>
-              <div class="doc-field">
-                <label>Middle Name</label>
-                <input type="text" ${ro}/>
-              </div>
-              <div class="doc-field">
-                <label>Last Name</label>
-                <input type="text" value="${safeFullName.split(' ').slice(-1)[0] || ''}" ${ro}/>
-              </div>
+              <div class="doc-field"><label>First Name</label><input type="text" value="${firstName}" ${ro}/></div>
+              <div class="doc-field"><label>Middle Name</label><input type="text" ${ro}/></div>
+              <div class="doc-field"><label>Last Name</label><input type="text" value="${lastName}" ${ro}/></div>
             </div>
-
-            <div class="doc-field">
-              <label>Address</label>
-              <input type="text" ${ro}/>
-            </div>
-
+            <div class="doc-field"><label>Address</label><input type="text" value="${safeAddress}" ${ro} placeholder="Complete Address"/></div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
-              <div class="doc-field" style="margin-bottom:0;">
-                <label>Birthdate</label>
-                <input type="text" ${ro} placeholder="MM/DD/YYYY"/>
-              </div>
-              <div class="doc-field" style="margin-bottom:0;">
-                <label>Contact No.</label>
-                <input type="text" value="${safeContactNumber}" ${ro}/>
-              </div>
+              <div class="doc-field" style="margin-bottom:0;"><label>Birthdate</label><input type="text" value="${birthdate}" ${ro} placeholder="MM/DD/YYYY"/></div>
+              <div class="doc-field" style="margin-bottom:0;"><label>Contact No.</label><input type="text" value="${safeContactNumber}" ${ro}/></div>
             </div>
-
-            <!-- In Case of Emergency -->
             <div style="border: 1.5px solid #e74c3c; border-radius: 6px; padding: 10px 12px; margin-top: 6px;">
-              <div style="font-size: 11px; font-weight: bold; color: #e74c3c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-family: Arial, sans-serif;">In Case of Emergency</div>
-              <div class="doc-field" style="margin-bottom: 8px;">
-                <label>Name</label>
-                <input type="text" ${ro}/>
-              </div>
+              <div style="font-size: 11px; font-weight: bold; color: #e74c3c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">In Case of Emergency</div>
+              <div class="doc-field" style="margin-bottom: 8px;"><label>Name</label><input type="text" value="${safeEmergencyName}" ${ro} placeholder="Emergency Contact Name"/></div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <div class="doc-field" style="margin-bottom: 0;">
-                  <label>Address</label>
-                  <input type="text" ${ro}/>
-                </div>
-                <div class="doc-field" style="margin-bottom: 0;">
-                  <label>Contact No.</label>
-                  <input type="text" ${ro}/>
-                </div>
+                <div class="doc-field" style="margin-bottom: 0;"><label>Address</label><input type="text" value="${safeEmergencyAddr}" ${ro} placeholder="Emergency Address"/></div>
+                <div class="doc-field" style="margin-bottom: 0;"><label>Contact No.</label><input type="text" value="${safeEmergencyPhone}" ${ro} placeholder="Emergency Contact Number"/></div>
               </div>
             </div>
-
           </div>
-
-          <!-- RIGHT COLUMN: Picture → Signature → Control No. -->
           <div style="flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; padding-top: 4px; min-width: 120px;">
-
-            <!-- 1×1 Picture box -->
-            <div style="width: 100px; height: 120px; border: 1.5px solid #2d4a44; display: flex; align-items: center; justify-content: center; background: #f5f5f5; border-radius: 4px;">
-              <div style="text-align: center; color: #aaa;">
+            <div style="width: 100px; height: 120px; border: 1.5px solid #2d4a44; display: flex; align-items: center; justify-content: center; background: #f5f5f5; border-radius: 4px; overflow: hidden;">
+              ${hasPhoto ? `<img src="${escapeHtml(photoUrl)}" style="width:100%; height:100%; object-fit:cover;" alt="2x2 Photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
+              <div style="text-align: center; color: #aaa; display: ${hasPhoto ? 'none' : 'flex'}; flex-direction: column; align-items: center; width:100%;">
                 <i class="bi bi-person" style="font-size: 44px;"></i>
-                <div style="font-size: 10px; font-family: Arial, sans-serif; margin-top: 4px;">Picture 1×1</div>
+                <div style="font-size: 10px; margin-top: 4px;">2x2 Picture</div>
               </div>
             </div>
-
-            <!-- Signature box -->
-            <div style="width: 100px; border: 1.5px solid #333; min-height: 48px; border-radius: 4px; background: #fafafa; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px;">
-              <span style="font-size: 9px; color: #888; font-family: Arial, sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">Signature</span>
-            </div>
-
-            <!-- Control No. -->
-            <div class="doc-field" style="margin-bottom: 0; width: 100px; text-align: center;">
-              <label style="font-size:9px;">Control No.</label>
-              <input type="text" ${ro} placeholder="BSS-2026-XXXXX" style="font-size:11px; text-align:center;"/>
-            </div>
-
+            <div style="width: 100px; border: 1.5px solid #333; min-height: 48px; border-radius: 4px; background: #fafafa; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px;"><span style="font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">Signature</span></div>
+            <div class="doc-field" style="margin-bottom: 0; width: 100px; text-align: center;"><label style="font-size:9px;">Control No.</label><input type="text" ${ro} placeholder="BSS-2026-XXXXX" style="font-size:11px; text-align:center;"/></div>
           </div>
+        </div>
+      </div>`;
+    }
+  }
 
+  // Mark as Ready - captures document with watermark and saves to database (WITH changing status to READY)
+  async function markAsReady(button) {
+    const docId = button.getAttribute('data-id');
+    const fullName = button.getAttribute('data-name') || '';
+    const contactNumber = button.getAttribute('data-phone') || '';
+    const documentType = button.getAttribute('data-type') || '';
+    const photoUrl = button.getAttribute('data-photo') || '';
+    const address = button.getAttribute('data-address') || '';
+    const birthdate = button.getAttribute('data-birthdate') || '';
+    const emergencyName = button.getAttribute('data-emergency-name') || '';
+    const emergencyAddress = button.getAttribute('data-emergency-address') || '';
+    const emergencyContact = button.getAttribute('data-emergency-contact') || '';
+    
+    const tempData = {
+      id: docId,
+      name: fullName,
+      phone: contactNumber,
+      type: documentType,
+      photo: photoUrl,
+      address: address,
+      birthdate: birthdate,
+      emergencyName: emergencyName,
+      emergencyAddress: emergencyAddress,
+      emergencyContact: emergencyContact
+    };
+    
+    let hiddenContainer = document.getElementById('hidden-capture-container');
+    if (!hiddenContainer) {
+      hiddenContainer = document.createElement('div');
+      hiddenContainer.id = 'hidden-capture-container';
+      hiddenContainer.style.position = 'absolute';
+      hiddenContainer.style.left = '-9999px';
+      hiddenContainer.style.top = '-9999px';
+      hiddenContainer.style.width = '1100px';
+      hiddenContainer.style.zIndex = '-1';
+      document.body.appendChild(hiddenContainer);
+    }
+    
+    const htmlContent = generateDocumentHTML(tempData, true);
+    hiddenContainer.innerHTML = htmlContent;
+    
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    const element = hiddenContainer.firstElementChild;
+    if (!element) {
+      alert('Could not generate document preview');
+      return;
+    }
+    
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span class="loading-spinner"></span> Saving...';
+    button.disabled = true;
+    
+    try {
+      const canvas = await html2canvas(element, { 
+        scale: 3, 
+        backgroundColor: '#ffffff', 
+        logging: false, 
+        useCORS: true,
+        allowTaint: false
+      });
+      const imageData = canvas.toDataURL('image/png');
+      
+      const uploadedUrl = await uploadReadiedDocumentToSupabase(imageData, docId);
+      
+      const response = await fetch(`/requests-document/${docId}/save-readied-document`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `documentUrl=${encodeURIComponent(uploadedUrl)}`
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        hiddenContainer.innerHTML = '';
+        location.reload();
+      } else {
+        throw new Error(result.message || 'Failed to save document');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error saving document: ' + error.message);
+      hiddenContainer.innerHTML = '';
+    } finally {
+      button.innerHTML = originalText;
+      button.disabled = false;
+    }
+  }
+
+  function openDocModalFromRow(button, readOnly) {
+    const row = button.closest('tr');
+    
+    const data = {
+      id:               row.getAttribute('data-id')               || '',
+      name:             row.getAttribute('data-name')             || '',
+      phone:            row.getAttribute('data-contact')          || '',
+      type:             row.getAttribute('data-type')             || '',
+      photo:            row.getAttribute('data-photo')            || '',
+      address:          row.getAttribute('data-address')          || '',
+      birthdate:        row.getAttribute('data-birthdate')        || '',
+      emergencyName:    row.getAttribute('data-emergency-name')   || '',
+      emergencyAddress: row.getAttribute('data-emergency-address')|| '',
+      emergencyContact: row.getAttribute('data-emergency-contact')|| '',
+    };
+    
+    renderDocModal(data, readOnly);
+  }
+
+  function renderDocModal(data, readOnly) {
+    currentDocId      = data.id;
+    currentIsReadOnly = readOnly;
+    currentDocType    = data.type.trim();
+
+    const safeFullName        = escapeHtml(data.name);
+    const safeContactNumber   = escapeHtml(data.phone);
+    const safeAddress         = escapeHtml(data.address);
+    const safeEmergencyName   = escapeHtml(data.emergencyName);
+    const safeEmergencyAddr   = escapeHtml(data.emergencyAddress);
+    const safeEmergencyPhone  = escapeHtml(data.emergencyContact);
+    const photoUrl            = isValidUrl(data.photo) ? data.photo : '';
+    const birthdate           = escapeHtml(data.birthdate);
+
+    const today = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+    const ro = readOnly ? 'readonly' : '';
+    const wm = readOnly ? 'with-watermark' : '';
+
+    document.getElementById('docModalTitle').textContent =
+      (readOnly ? 'View: ' : 'Process: ') + currentDocType.replace(/_/g, ' ');
+
+    const priceLabel = document.getElementById('priceLabel');
+    const isClearance = currentDocType.replace(/\s+/g, '_').toLowerCase().includes('barangay_clearance');
+    priceLabel.style.display = (!readOnly && isClearance) ? 'flex' : 'none';
+
+    // Show/hide Save button - only in Process mode (not read-only)
+    const saveBtn = document.getElementById('saveDocumentBtn');
+    if (saveBtn) {
+      saveBtn.style.display = (!readOnly) ? 'inline-flex' : 'none';
+    }
+
+    let html = '';
+
+    if (currentDocType.replace(/\s+/g,'_').toLowerCase().includes('certificate_of_indigency')) {
+      html = `<div class="doc-template ${wm}" style="font-family: Arial, sans-serif; width: 210mm; min-height: 297mm; margin: 0 auto; padding: 28px 36px; box-sizing: border-box; border: 3px solid #222;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;margin-bottom:4px;">
+            <div style="text-align:center;"><div style="width:72px;height:72px;background:#e9e9e9;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid #aaa;margin:0 auto 4px;"><img src="/images/brgy.png" style="width:62px;height:62px;object-fit:contain;" alt="Brgy Logo" onerror="this.style.display='none'"/></div><div style="font-size:10px;color:#555;">Barangay</div></div>
+            <div style="text-align:center;"><div style="font-size:11px;color:#555;">Republic of the Philippines</div><div style="font-size:11px;color:#555;">City/Municipality of ___________</div><div style="font-size:15px;font-weight:bold;color:#333;">Office of the Sangguniang</div><div style="font-size:14px;font-weight:bold;color:#2d4a44;">Barangay San Sebastian</div></div>
+            <div style="width:72px;height:72px;background:#e9e9e9;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid #aaa;"><img src="/images/city.png" style="width:62px;height:62px;object-fit:contain;" alt="City Logo" onerror="this.style.display='none'"/></div>
+          </div>
+          <div style="text-align:center;letter-spacing:1px;font-size:12px;color:#555;margin-bottom:16px;">========================================</div>
+          <div style="text-align:center;margin-bottom:24px;"><div style="font-size:20px;font-weight:bold;letter-spacing:2px;color:#222;font-family:'Times New Roman',serif;">CERTIFICATE OF INDIGENCY</div></div>
+          <p style="font-size:13px;font-weight:bold;margin-bottom:12px;">TO WHOM IT MAY CONCERN:</p>
+          <p style="font-size:13px;line-height:2;text-align:justify;margin-bottom:14px;font-family:'Times New Roman',serif;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This is to certify that <strong><input type="text" value="${safeFullName}" ${ro} style="width:190px;display:inline;border:none;border-bottom:1.5px solid #333;font-size:13px;font-weight:bold;padding:0 4px;"/></strong> <input type="text" ${ro} placeholder="age" style="width:36px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;text-align:center;"/> years old, a bonafide resident of <input type="text" value="${safeAddress}" ${ro} placeholder="Block/Lot/Street, Barangay San Sebastian" style="width:290px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;"/>.</p>
+          <p style="font-size:13px;line-height:2;text-align:justify;margin-bottom:14px;font-style:italic;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This certification is being issued upon the request of the subject person concerned in connection with her/his application for <strong style="font-style:normal;"><input type="text" ${ro} placeholder="PURPOSE" style="width:280px;display:inline;border:none;border-bottom:1.5px solid #333;font-size:13px;font-weight:bold;padding:0 4px;text-transform:uppercase;"/></strong> and for whatever intent or legal purpose this may serve him/her best.</p>
+          <p style="font-size:13px;line-height:2;margin-top:18px;font-style:italic;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Issued this <input type="text" ${ro} placeholder="12" style="width:32px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 2px;text-align:center;"/><sup>th</sup> of <input type="text" ${ro} placeholder="Month, Year" style="width:140px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;"/>, at Barangay San Sebastian.</p>
+          <div style="text-align:right;margin-top:40px;margin-right:40px;"><div style="display:inline-block;text-align:center;"><div style="height:52px;"></div><div style="border-top:1.5px solid #333;padding-top:6px;"><input type="text" ${ro} placeholder="Barangay Captain Full Name" style="border:none;border-bottom:1px solid #ccc;font-size:13px;font-weight:bold;text-align:center;width:230px;font-style:italic;"/></div><div style="font-size:11px;font-style:italic;color:#444;margin-top:3px;">Barangay Captain</div></div></div>
+          <div style="margin-top:28px;border-top:1px solid #ddd;padding-top:14px;font-size:11px;color:#1a3a8c;font-weight:bold;line-height:1.9;font-family:Arial,sans-serif;">SEAL NO.: <input type="text" ${ro} placeholder="XXX-BI-XX-XXX" style="border:none;border-bottom:1px solid #aaa;font-size:11px;padding:0 4px;width:130px;color:#1a3a8c;font-weight:bold;"/><br/>SERIES OF: <input type="text" ${ro} placeholder="2026" style="border:none;border-bottom:1px solid #aaa;font-size:11px;padding:0 4px;width:60px;color:#1a3a8c;font-weight:bold;"/><br/>Not Valid without Dry Seal<br/>Validity: Good for Three (3) months from the date of issued</div>
+        </div>`;
+    }
+    else if (isClearance) {
+      html = `<div class="doc-template ${wm}" style="font-family: 'Times New Roman', serif; width: 210mm; min-height: 297mm; margin: 0 auto; padding: 28px 36px; box-sizing: border-box; border: 3px solid #222;">
+          <div style="display:flex; align-items:flex-start; gap:20px; margin-bottom:10px;"><div style="flex-shrink:0;"><div style="width:80px;height:80px;border:1.5px solid #aaa;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#f5f5f5;overflow:hidden;"><img src="/images/brgy.png" style="width:72px;height:72px;object-fit:contain;" alt="Brgy Logo" onerror="this.style.display='none'"/></div></div><div style="flex:1;"><div style="font-size:12px;color:#333;">Republic of the Philippines</div><div style="font-size:12px;color:#333;">City/Municipality of ___________</div><div style="font-size:12px;color:#333;">Province of ___________</div><div style="font-size:22px;font-weight:bold;color:#1a3a6e;font-style:italic;font-family:Georgia,serif;margin-top:4px;">Barangay San Sebastian</div></div></div>
+          <div style="border-top:2.5px solid #222;border-bottom:1px solid #222;padding:2px 0;margin-bottom:28px;"></div>
+          <div style="text-align:center;font-size:13px;font-weight:bold;letter-spacing:1px;margin-bottom:10px;">OFFICE OF THE BARANGAY CAPTAIN</div>
+          <div style="text-align:center;margin-bottom:30px;"><span style="font-size:28px;font-weight:900;letter-spacing:2px;color:#111;">BARANGAY CLEARANCE</span></div>
+          <p style="font-size:13px;font-weight:bold;margin-bottom:20px;">TO WHOM IT MAY CONCERN:</p>
+          <p style="font-size:13px;line-height:2.1;text-align:justify;margin-bottom:14px;margin-left:40px;">This is to certify that <input type="text" value="${safeFullName}" ${ro} style="width:220px;display:inline;border:none;border-bottom:1.5px solid #333;font-size:13px;padding:0 4px;"/>, <input type="text" ${ro} placeholder="age" style="width:60px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;text-align:center;"/> years old, <select ${ro} style="border:none;border-bottom:1px solid #333;font-size:13px;"><option value="">Civil Status</option><option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option></select> and a resident of <input type="text" value="${safeAddress}" ${ro} placeholder="complete address, Barangay San Sebastian" style="width:320px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;"/> is known to be of good moral character and law-abiding citizen in the community.</p>
+          <p style="font-size:13px;line-height:2;text-align:justify;margin-bottom:14px;margin-left:40px;">To certify further, that he/she has no derogatory and/or criminal records filed in this barangay.</p>
+          <p style="font-size:13px;line-height:2;text-align:justify;margin-bottom:14px;margin-left:40px;"><strong>ISSUED</strong> this <input type="text" ${ro} placeholder="__" style="width:36px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;text-align:center;"/> day of <input type="text" ${ro} placeholder="Month, Year" style="width:160px;display:inline;border:none;border-bottom:1px solid #333;font-size:13px;padding:0 4px;"/> at Barangay San Sebastian upon request of the interested party for whatever legal purposes it may serve.</p>
+          <div style="text-align:right;margin-top:50px;margin-right:20px;"><div style="display:inline-block;text-align:center;"><div style="height:52px;"></div><div style="border-top:1.5px solid #222;padding-top:6px;min-width:200px;"><input type="text" ${ro} placeholder="Barangay Captain Name" style="border:none;border-bottom:1px solid #ccc;font-size:13px;font-weight:bold;text-align:center;width:220px;"/></div><div style="font-size:12px;color:#333;margin-top:2px;">Barangay Captain</div></div></div>
+          <div style="margin-top:48px;"><div style="font-size:12px;line-height:2.2;"><div>O.R No. &nbsp;&nbsp;&nbsp; <input type="text" ${ro} style="width:170px;border:none;border-bottom:1px solid #aaa;font-size:12px;padding:0 4px;"/></div><div>Date Issued: <input type="text" ${ro} value="${today}" style="width:170px;border:none;border-bottom:1px solid #aaa;font-size:12px;padding:0 4px;"/></div><div>Doc. Stamp: &nbsp;<strong>Paid</strong></div></div></div>
+        </div>`;
+    }
+    else {
+      const nameParts  = data.name.trim().split(/\s+/);
+      const firstName  = escapeHtml(nameParts[0] || '');
+      const lastName   = escapeHtml(nameParts.length > 1 ? nameParts[nameParts.length - 1] : '');
+      const hasPhoto   = isValidUrl(photoUrl);
+
+      html = `<div class="doc-template ${wm}" style="font-family: 'Times New Roman', serif; max-width: 760px; margin: 0 auto;">
+        <div style="background: #2d4a44; color: white; padding: 10px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 3px solid #FED734; border-radius: 8px 8px 0 0;">
+          <img src="/images/brgy.png" style="width: 44px; height: 44px; filter: brightness(0) invert(1);" alt="Logo" onerror="this.style.display='none'"/>
+          <div><div style="font-size: 10px; letter-spacing: 1px; opacity: 0.8;">Republic of the Philippines</div><div style="font-size: 15px; font-weight: bold;">Barangay San Sebastian</div><div style="font-size: 10px; opacity: 0.7;">Barangay Identification Card</div></div>
+          <div style="margin-left: auto; background: #FED734; color: #2d4a44; font-size: 10px; font-weight: bold; padding: 4px 10px; border-radius: 4px;">OFFICIAL ID</div>
+        </div>
+        <div style="padding: 16px 20px; border: 2px solid #2d4a44; border-top: none; border-radius: 0 0 8px 8px; display: flex; gap: 20px; align-items: flex-start;">
+          <div style="flex: 1;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+              <div class="doc-field"><label>First Name</label><input type="text" value="${firstName}" ${ro}/></div>
+              <div class="doc-field"><label>Middle Name</label><input type="text" ${ro}/></div>
+              <div class="doc-field"><label>Last Name</label><input type="text" value="${lastName}" ${ro}/></div>
+            </div>
+            <div class="doc-field"><label>Address</label><input type="text" value="${safeAddress}" ${ro} placeholder="Complete Address"/></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+              <div class="doc-field" style="margin-bottom:0;"><label>Birthdate</label><input type="text" value="${birthdate}" ${ro} placeholder="MM/DD/YYYY"/></div>
+              <div class="doc-field" style="margin-bottom:0;"><label>Contact No.</label><input type="text" value="${safeContactNumber}" ${ro}/></div>
+            </div>
+            <div style="border: 1.5px solid #e74c3c; border-radius: 6px; padding: 10px 12px; margin-top: 6px;">
+              <div style="font-size: 11px; font-weight: bold; color: #e74c3c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">In Case of Emergency</div>
+              <div class="doc-field" style="margin-bottom: 8px;"><label>Name</label><input type="text" value="${safeEmergencyName}" ${ro} placeholder="Emergency Contact Name"/></div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="doc-field" style="margin-bottom: 0;"><label>Address</label><input type="text" value="${safeEmergencyAddr}" ${ro} placeholder="Emergency Address"/></div>
+                <div class="doc-field" style="margin-bottom: 0;"><label>Contact No.</label><input type="text" value="${safeEmergencyPhone}" ${ro} placeholder="Emergency Contact Number"/></div>
+              </div>
+            </div>
+          </div>
+          <div style="flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; padding-top: 4px; min-width: 120px;">
+            <div style="width: 100px; height: 120px; border: 1.5px solid #2d4a44; display: flex; align-items: center; justify-content: center; background: #f5f5f5; border-radius: 4px; overflow: hidden;">
+              ${hasPhoto ? `<img src="${escapeHtml(photoUrl)}" style="width:100%; height:100%; object-fit:cover;" alt="2x2 Photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
+              <div style="text-align: center; color: #aaa; display: ${hasPhoto ? 'none' : 'flex'}; flex-direction: column; align-items: center; width:100%;">
+                <i class="bi bi-person" style="font-size: 44px;"></i>
+                <div style="font-size: 10px; margin-top: 4px;">2x2 Picture</div>
+              </div>
+            </div>
+            <div style="width: 100px; border: 1.5px solid #333; min-height: 48px; border-radius: 4px; background: #fafafa; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px;"><span style="font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">Signature</span></div>
+            <div class="doc-field" style="margin-bottom: 0; width: 100px; text-align: center;"><label style="font-size:9px;">Control No.</label><input type="text" ${ro} placeholder="BSS-2026-XXXXX" style="font-size:11px; text-align:center;"/></div>
+          </div>
         </div>
       </div>`;
     }
@@ -1169,48 +1356,19 @@
   function closeDocModal() {
     document.getElementById('docModalOverlay').style.display = 'none';
     document.getElementById('printable-area').innerHTML = '';
+    currentDocId = null;
+    currentDocType = null;
   }
 
-  // ── Print ──────────────────────────────────────────────────────────────────
   function printDocument() {
     const content = document.getElementById('printable-area').innerHTML;
     const win = window.open('', '_blank');
-    win.document.write(`
-      <html><head><title>Print Document</title>
-      <style>
-        body { font-family: 'Times New Roman', serif; margin: 40px; }
-        .doc-template { border: 2px solid #2d4a44; padding: 30px; position: relative; }
-        .doc-template.with-watermark::before {
-          content: 'READY FOR PICKUP';
-          position: fixed; top: 50%; left: 50%;
-          transform: translate(-50%, -50%) rotate(-35deg);
-          font-size: 72px; font-weight: 900;
-          color: rgba(231,76,60,0.15);
-          white-space: nowrap; pointer-events: none; z-index: 10;
-          letter-spacing: 4px; font-family: Arial, sans-serif;
-        }
-        .doc-header { text-align: center; border-bottom: 2px solid #2d4a44; padding-bottom: 14px; margin-bottom: 20px; }
-        .doc-header .republic, .doc-header .province { font-size: 11px; color: #555; }
-        .doc-header .barangay-name { font-size: 20px; font-weight: bold; color: #2d4a44; margin: 6px 0 2px; }
-        .doc-header .doc-title { font-size: 15px; font-weight: bold; letter-spacing: 2px; margin-top: 8px; text-transform: uppercase; }
-        .doc-field { margin-bottom: 14px; }
-        .doc-field label { display: block; font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; margin-bottom: 3px; }
-        .doc-field input, .doc-field select, .doc-field textarea { width: 100%; border: none; border-bottom: 1px solid #aaa; font-size: 14px; font-family: 'Times New Roman', serif; background: transparent; padding: 5px 2px; box-sizing: border-box; }
-        .doc-row { display: flex; gap: 20px; }
-        .doc-row .doc-field { flex: 1; }
-        .doc-section-title { font-size: 12px; font-weight: bold; color: #2d4a44; text-transform: uppercase; margin: 18px 0 10px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
-        .doc-signature-area { display: flex; justify-content: space-between; margin-top: 40px; }
-        .doc-signature-block { text-align: center; width: 45%; }
-        .doc-signature-block .sig-line { border-top: 1px solid #333; padding-top: 6px; font-size: 13px; font-weight: bold; }
-        .doc-signature-block .sig-sub { font-size: 11px; color: #666; }
-      </style></head><body>${content}</body></html>
-    `);
+    win.document.write(`<html><head><title>Print Document</title><style>body { font-family: 'Times New Roman', serif; margin: 40px; } .doc-template { border: 2px solid #2d4a44; padding: 30px; position: relative; } .doc-template.with-watermark::before { content: 'READY FOR PICKUP'; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg); font-size: 72px; font-weight: 900; color: rgba(231,76,60,0.15); white-space: nowrap; pointer-events: none; z-index: 10; letter-spacing: 4px; font-family: Arial, sans-serif; } .doc-field { margin-bottom: 14px; } .doc-field label { display: block; font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; margin-bottom: 3px; } .doc-field input, .doc-field select, .doc-field textarea { width: 100%; border: none; border-bottom: 1px solid #aaa; font-size: 14px; font-family: 'Times New Roman', serif; background: transparent; padding: 5px 2px; box-sizing: border-box; } .doc-row { display: flex; gap: 20px; }</style></head><body>${content}</body></html>`);
     win.document.close();
     win.focus();
     setTimeout(() => { win.print(); win.close(); }, 400);
   }
 
-  // ── Download PDF ─────────────────────────────────────────────────────────
   async function downloadPDF() {
     const area = document.getElementById('printable-area');
     const title = document.getElementById('docModalTitle').textContent;
@@ -1261,63 +1419,51 @@
   }
 
   window.onload = function() {
-    const status = document.getElementById('accountStatus').value;
+    const status = document.getElementById('accountStatus')?.value;
     if (status === 'New' || status === 'Newly Updated') {
       document.getElementById('forcePasswordModal').style.display = 'block';
       document.body.style.overflow = 'hidden';
     }
   };
+  
   function redirectToPassword() { window.location.href = '/user-profile'; }
-</script>
 
-<script>
-(function() {
-    var lastSnapshot = '';
+  (function() {
+    let lastSnapshot = '';
     function isModalOpen() {
-        var docModal = document.getElementById('docModalOverlay');
-        if (docModal && docModal.style.display === 'block') return true;
-        var vfModal = document.getElementById('viewFileModalOverlay');
-        if (vfModal && vfModal.style.display === 'block') return true;
-        var logoutModal = document.getElementById('logoutModal');
-        if (logoutModal && (logoutModal.style.display === 'block' || logoutModal.style.display === 'flex')) return true;
-        return false;
+      if (document.getElementById('docModalOverlay')?.style.display === 'block') return true;
+      if (document.getElementById('viewFileModalOverlay')?.style.display === 'block') return true;
+      const logoutModal = document.getElementById('logoutModal');
+      if (logoutModal && (logoutModal.style.display === 'block' || logoutModal.style.display === 'flex')) return true;
+      return false;
     }
     function poll() {
-        if (isModalOpen()) return;
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', '/requests-document/api/poll?t=' + Date.now(), true);
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                try {
-                    var data = JSON.parse(xhr.responseText);
-                    var snapshot = JSON.stringify(data);
-
-                    // Update badge counts if provided
-                    if (data.counts) {
-                        var map = {
-                            incoming: 'badge-incoming',
-                            processing: 'badge-processing',
-                            ready: 'badge-ready',
-                            archive: 'badge-archive'
-                        };
-                        Object.keys(map).forEach(function(key) {
-                            var el = document.getElementById(map[key]);
-                            if (el && data.counts[key] !== undefined) {
-                                el.textContent = data.counts[key];
-                            }
-                        });
-                    }
-
-                    if (lastSnapshot === '') { lastSnapshot = snapshot; }
-                    else if (snapshot !== lastSnapshot) { location.reload(); }
-                } catch(e) {}
+      if (isModalOpen()) return;
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', '/requests-document/api/poll?t=' + Date.now(), true);
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            const snapshot = JSON.stringify(data);
+            if (data.counts) {
+              const map = { incoming: 'badge-incoming', processing: 'badge-processing', ready: 'badge-ready', archive: 'badge-archive' };
+              Object.keys(map).forEach(key => {
+                const el = document.getElementById(map[key]);
+                if (el && data.counts[key] !== undefined) el.textContent = data.counts[key];
+              });
             }
-        };
-        xhr.send();
+            if (lastSnapshot === '') lastSnapshot = snapshot;
+            else if (snapshot !== lastSnapshot) location.reload();
+          } catch(e) {}
+        }
+      };
+      xhr.send();
     }
     poll();
     setInterval(poll, 5000);
-})();
+  })();
 </script>
+
 </body>
 </html>

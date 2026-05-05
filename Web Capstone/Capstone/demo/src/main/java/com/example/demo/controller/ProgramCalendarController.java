@@ -9,6 +9,7 @@ import com.example.demo.services.SuggestedProgramService;
 import com.example.demo.services.ChatHistoryServiceAI;
 import com.example.demo.services.GeminiService;
 import com.example.demo.services.ActivityLogService;
+import com.example.demo.services.SafetyReportService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.http.ResponseEntity;
@@ -35,19 +36,22 @@ public class ProgramCalendarController {
     private final ChatHistoryServiceAI chatHistoryService;
     private final GeminiService geminiService;
     private final ActivityLogService activityLogService;
+    private final SafetyReportService safetyReportService;
 
     public ProgramCalendarController(ProgramCalendarService calendarService,
                                      ProgramBudgetService budgetService,
                                      SuggestedProgramService suggestedProgramService,
                                      ChatHistoryServiceAI chatHistoryService,
                                      GeminiService geminiService,
-                                     ActivityLogService activityLogService) {
+                                     ActivityLogService activityLogService,
+                                     SafetyReportService safetyReportService) {
         this.calendarService = calendarService;
         this.budgetService = budgetService;
         this.suggestedProgramService = suggestedProgramService;
         this.chatHistoryService = chatHistoryService;
         this.geminiService = geminiService;
         this.activityLogService = activityLogService;
+        this.safetyReportService = safetyReportService;
     }
 
     private String getCurrentUsername() {
@@ -200,11 +204,19 @@ public class ProgramCalendarController {
             Double totalBudget = budgetService.getTotalBudget();
             if (totalBudget == null) totalBudget = 0.0;
 
+            // Get safety reports summary for context
+            String safetyContext = "";
+            try {
+                safetyContext = "\n\n" + safetyReportService.generateSafetyReportsSummary();
+            } catch (Exception e) {
+                System.err.println("Could not load safety reports summary: " + e.getMessage());
+            }
+
             LocalDate today = LocalDate.now();
             String enrichedPrompt = String.format(
-                "Today's date is %s (%s). The current available budget is ₱%.2f. Please include an estimated program_budget in your JSON response. Do NOT suggest or accept any dates that are before today.\n\nUser request: %s%s",
+                "Today's date is %s (%s). The current available budget is ₱%.2f. Please include an estimated program_budget in your JSON response. Do NOT suggest or accept any dates that are before today.\n\nUser request: %s%s%s",
                 today.toString(), today.format(DateTimeFormatter.ofPattern("MMMM d, yyyy")),
-                totalBudget, userText, conversationHistory
+                totalBudget, userText, conversationHistory, safetyContext
             );
 
             String aiResponse = geminiService.getAiResponse(enrichedPrompt);

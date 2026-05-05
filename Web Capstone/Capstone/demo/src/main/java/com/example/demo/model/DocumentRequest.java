@@ -53,7 +53,47 @@ public class DocumentRequest {
     @Column(name = "document_type")
     private String documentType;
 
-    // Getters & Setters
+    // ===== ADDED FIELDS (from HTML and Service requirements) =====
+
+    @Column(name = "photo_2x2_url")
+    private String photo2x2Url;
+
+    @Column(name = "birthdate")
+    private String birthdate;
+
+    @Column(name = "emergency_name")
+    private String emergencyName;
+
+    @Column(name = "emergency_address")
+    private String emergencyAddress;
+
+    @Column(name = "emergency_contact")
+    private String emergencyContact;
+
+    @Column(name = "readied_document_url", length = 1000)
+    private String readiedDocumentUrl;
+
+    // ===== CONSTRUCTORS =====
+
+    public DocumentRequest() {}
+
+    public DocumentRequest(String fullName, String contactNumber, String documentType, 
+                           String purposeOfRequest, String address, String validIdUrl, 
+                           String photo2x2Url) {
+        this.fullName = fullName;
+        this.contactNumber = contactNumber;
+        this.documentType = documentType;
+        this.purposeOfRequest = purposeOfRequest;
+        this.address = address;
+        this.validIdUrl = validIdUrl;
+        this.photo2x2Url = photo2x2Url;
+        this.status = "INCOMING";
+        this.createdAt = OffsetDateTime.now();
+        this.dateSubmitted = OffsetDateTime.now();
+    }
+
+    // ===== GETTERS AND SETTERS =====
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -98,4 +138,24 @@ public class DocumentRequest {
 
     public String getDocumentType() { return documentType; }
     public void setDocumentType(String documentType) { this.documentType = documentType; }
+
+    // ===== ADDED GETTERS AND SETTERS =====
+
+    public String getPhoto2x2Url() { return photo2x2Url; }
+    public void setPhoto2x2Url(String photo2x2Url) { this.photo2x2Url = photo2x2Url; }
+
+    public String getBirthdate() { return birthdate; }
+    public void setBirthdate(String birthdate) { this.birthdate = birthdate; }
+
+    public String getEmergencyName() { return emergencyName; }
+    public void setEmergencyName(String emergencyName) { this.emergencyName = emergencyName; }
+
+    public String getEmergencyAddress() { return emergencyAddress; }
+    public void setEmergencyAddress(String emergencyAddress) { this.emergencyAddress = emergencyAddress; }
+
+    public String getEmergencyContact() { return emergencyContact; }
+    public void setEmergencyContact(String emergencyContact) { this.emergencyContact = emergencyContact; }
+
+    public String getReadiedDocumentUrl() { return readiedDocumentUrl; }
+    public void setReadiedDocumentUrl(String readiedDocumentUrl) { this.readiedDocumentUrl = readiedDocumentUrl; }
 }

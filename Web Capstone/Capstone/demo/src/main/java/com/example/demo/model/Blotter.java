@@ -14,6 +14,9 @@ public class Blotter {
     @Column(name = "complainant_name")
     private String complainantName;
     
+    @Column(name = "contact_info")
+    private String contactInfo;          // KEPT from first file
+    
     @Column(name = "respondent_name")
     private String respondentName;
     
@@ -21,13 +24,16 @@ public class Blotter {
     private String incidentType;
     
     @Column(name = "incident_date")
-    private LocalDateTime incidentDate;
+    private LocalDateTime incidentDate;   // Changed from LocalDate to LocalDateTime
     
     @Column(name = "incident_location")
     private String incidentLocation;
     
     @Column(columnDefinition = "TEXT")
     private String narrative;
+    
+    @Column(columnDefinition = "TEXT")
+    private String remarks;               // KEPT from first file
     
     private String status;  // INCOMING, PROCESSING, READY, ARCHIVE
     
@@ -66,6 +72,9 @@ public class Blotter {
     public String getComplainantName() { return complainantName; }
     public void setComplainantName(String complainantName) { this.complainantName = complainantName; }
     
+    public String getContactInfo() { return contactInfo; }               // ADDED
+    public void setContactInfo(String contactInfo) { this.contactInfo = contactInfo; }  // ADDED
+    
     public String getRespondentName() { return respondentName; }
     public void setRespondentName(String respondentName) { this.respondentName = respondentName; }
     
@@ -80,6 +89,9 @@ public class Blotter {
     
     public String getNarrative() { return narrative; }
     public void setNarrative(String narrative) { this.narrative = narrative; }
+    
+    public String getRemarks() { return remarks; }                       // ADDED
+    public void setRemarks(String remarks) { this.remarks = remarks; }   // ADDED
     
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
