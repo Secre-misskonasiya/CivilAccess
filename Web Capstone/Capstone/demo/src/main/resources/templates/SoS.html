@@ -516,7 +516,11 @@
                             <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
                             <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
-                            <td th:text="${report.location != null ? report.location : 'N/A'}"></td>
+                            <td th:text="${report.location != null and report.location != 'N/A' 
+                                ? report.location 
+                                : (report.latitude != null and report.longitude != null 
+                                    ? 'Latitude (Y): ' + report.latitude + ', Longitude (X): ' + report.longitude 
+                                    : 'N/A')}">N/A</td>
                             <td><span class="status-incoming">Incoming</span></td>
                             <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'PROCESSING\')'">Process</button><button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
                         </tr>
@@ -537,7 +541,11 @@
                             <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
                             <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
-                            <td th:text="${report.location != null ? report.location : 'N/A'}"></td>
+                            <td th:text="${report.location != null and report.location != 'N/A' 
+                                ? report.location 
+                                : (report.latitude != null and report.longitude != null 
+                                    ? 'Latitude (Y): ' + report.latitude + ', Longitude (X): ' + report.longitude 
+                                    : 'N/A')}">N/A</td>
                             <td><span class="status-processing">Processing</span></td>
                             <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'RESOLVED\')'">Resolve</button><button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
                         </tr>
@@ -558,7 +566,11 @@
                             <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
                             <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
-                            <td th:text="${report.location != null ? report.location : 'N/A'}"></td>
+                            <td th:text="${report.location != null and report.location != 'N/A' 
+                                ? report.location 
+                                : (report.latitude != null and report.longitude != null 
+                                    ? 'Latitude (Y): ' + report.latitude + ', Longitude (X): ' + report.longitude 
+                                    : 'N/A')}">N/A</td>
                             <td><span class="status-resolved">Resolved</span></td>
                             <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
                         </tr>
@@ -579,7 +591,11 @@
                             <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
                             <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
-                            <td th:text="${report.location != null ? report.location : 'N/A'}"></td>
+                            <td th:text="${report.location != null and report.location != 'N/A' 
+                                ? report.location 
+                                : (report.latitude != null and report.longitude != null 
+                                    ? 'Latitude (Y): ' + report.latitude + ', Longitude (X): ' + report.longitude 
+                                    : 'N/A')}">N/A</td>
                             <td><span class="status-archived">Archived</span></td>
                             <td><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button></td>
                         </tr>
@@ -600,7 +616,11 @@
                             <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
                             <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
-                            <td th:text="${report.location != null ? report.location : 'N/A'}"></td>
+                            <td th:text="${report.location != null and report.location != 'N/A' 
+                                ? report.location 
+                                : (report.latitude != null and report.longitude != null 
+                                    ? 'Latitude (Y): ' + report.latitude + ', Longitude (X): ' + report.longitude 
+                                    : 'N/A')}">N/A</td>
                             <td><span class="status-cancelled">Cancelled</span></td>
                             <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
                         </tr>
@@ -989,7 +1009,7 @@ function viewReport(id) {
                             <div class="vm-card-body">
                                 <div class="vm-card-label">SoS Type &amp; Location</div>
                                 <div class="vm-card-value">${escapeHtml(data.sosType) || 'General'}</div>
-                                <div class="vm-card-sub"><i class="bi bi-geo-alt-fill" style="color:#e74c3c;font-size:12px;"></i> ${escapeHtml(data.location) || 'No address provided'}</div>
+                                <div class="vm-card-sub" id="vm-location-text"><i class="bi bi-geo-alt-fill" style="color:#e74c3c;font-size:12px;"></i> ${escapeHtml(data.location) || 'Fetching address...'}</div>
                             </div>
                         </div>
 
@@ -1050,10 +1070,23 @@ function viewReport(id) {
                         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
                         iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
                     });
-                    L.marker([data.latitude, data.longitude], { icon: redIcon })
-                        .addTo(map)
-                        .bindPopup(`<b>${escapeHtml(data.sosType) || 'SOS Location'}</b>`)
-                        .openPopup();
+                    const marker = L.marker([data.latitude, data.longitude], { icon: redIcon }).addTo(map);
+                    if (data.location && data.location !== 'N/A' && data.location.trim() !== '') {
+                        marker.bindPopup(`<b>${escapeHtml(data.sosType) || 'SOS Location'}</b><br><small>${escapeHtml(data.location)}</small>`).openPopup();
+                    } else {
+                        marker.bindPopup(`<b>${escapeHtml(data.sosType) || 'SOS Location'}</b><br><small>Loading address...</small>`).openPopup();
+                        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${data.latitude}&lon=${data.longitude}&format=json`)
+                            .then(r => r.json())
+                            .then(geo => {
+                                const address = geo.display_name || `${data.latitude}, ${data.longitude}`;
+                                marker.setPopupContent(`<b>${escapeHtml(data.sosType) || 'SOS Location'}</b><br><small>${address}</small>`);
+                                const locEl = document.getElementById('vm-location-text');
+                                if (locEl) locEl.innerHTML = `<i class="bi bi-geo-alt-fill" style="color:#e74c3c;font-size:12px;"></i> ${address}`;
+                            })
+                            .catch(() => {
+                                marker.setPopupContent(`<b>${escapeHtml(data.sosType) || 'SOS Location'}</b><br><small>${data.latitude}, ${data.longitude}</small>`);
+                            });
+                    }
                     map.invalidateSize();
                     currentMap = map;
                 });

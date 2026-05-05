@@ -760,6 +760,7 @@
 <input type="hidden" id="dataPending"     th:value="${pendingDocuments != null ? pendingDocuments : 0}">
 <input type="hidden" id="dataResidents"   th:value="${residents != null ? residents : 0}">
 <input type="hidden" id="dataBlotter"     th:value="${blotterCount != null ? blotterCount : 0}">
+<input type="hidden" id="dataBlotterPending"     th:value="${blotterPending != null ? blotterPending : 0}">
 <input type="hidden" id="dataAllReports"  th:value="${allreports != null ? allreports : 0}">
 
 <!-- Lock Modal -->
@@ -878,7 +879,7 @@
                         <div class="stat-card" id="statBudget">
                             <div class="stat-icon-wrap ic-g"><i class="bi bi-cash-stack"></i></div>
                             <div class="stat-label">Program Budget This Month</div>
-                            <div class="stat-number stat-green budget" id="numBudget" th:text="${budget}">₱0</div>
+                            <div class="stat-number stat-green budget" id="numBudget" th:text="'₱'+${budget}">₱0</div>
                         </div>
 
                         <div class="stat-card" id="statSenior">
@@ -905,6 +906,12 @@
                             <div class="stat-icon-wrap ic-r"><i class="bi bi-shield-exclamation"></i></div>
                             <div class="stat-label">Total Incidents Reported</div>
                             <div class="stat-number stat-red" id="numIncidents" th:text="${allreports != null ? allreports : 0}">0</div>
+                        </div>
+
+                        <div class="stat-card">
+                        <div class="stat-icon" style="font-size:22px; margin-bottom:6px;">📋</div>
+                        <div class="stat-label">Blotter Reports<br>Total</div>
+                        <div class="stat-number" th:text="${blotterCount}">0</div>
                         </div>
 
                     </div>
@@ -1387,10 +1394,11 @@
         const unresolved = parseInt(document.getElementById('dataUnresolved').value) || 0;
         const pending    = parseInt(document.getElementById('dataPending').value)    || 0;
         const allReports = parseInt(document.getElementById('dataAllReports').value) || 0;
-        createCharts(resolved, unresolved, pending, allReports);
+        const blotter    = parseInt(document.getElementById('dataBlotterPending').value)    || 0;
+        createCharts(resolved, unresolved, pending, allReports, blotter);
     }
 
-    function createCharts(resolved, unresolved, pending, allReports) {
+    function createCharts(resolved, unresolved, pending, allReports, blotter) {
         Chart.defaults.font.family = "'DM Sans', Arial, sans-serif";
         Chart.defaults.font.size   = 11;
         if (chartInstances.incidentDonut) chartInstances.incidentDonut.destroy();
@@ -1429,8 +1437,8 @@
         chartInstances.workloadChart = new Chart(document.getElementById('workloadChart'), {
             type: 'bar',
             data: {
-                labels: ['Pending Docs', 'Total Incidents'],
-                datasets: [{ data: [pending, allReports], backgroundColor: ['#f0c040','#52887F'], borderRadius: 4, borderSkipped: false }]
+                labels: ['Pending Blotter','Pending Docs', 'Total Incidents'],
+                datasets: [{ data: [blotter, pending, allReports], backgroundColor: ['#f0c040','#52887F'], borderRadius: 4, borderSkipped: false }]
             },
             options: {
                 indexAxis: 'y', responsive: true, maintainAspectRatio: false,
@@ -1443,7 +1451,7 @@
         });
     }
 
-    function updateCharts(resolved, unresolved, pending, allReports) { createCharts(resolved, unresolved, pending, allReports); }
+    function updateCharts(resolved, unresolved, blotter, pending, allReports) { createCharts(resolved, unresolved, blotter, pending, allReports); }
 
     // ============================================
     // DYNAMIC CALENDAR

@@ -22,4 +22,5 @@ public interface BlotterRepository extends JpaRepository<Blotter, Long> {
     
     @Query("SELECT b FROM Blotter b ORDER BY b.createdAt DESC")
     List<Blotter> findAllOrderByCreatedAtDesc();
+    long countByStatus(String status);
 }
