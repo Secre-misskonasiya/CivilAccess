@@ -30,7 +30,7 @@ public class DocumentRequest {
     private String validIdUrl;
 
     @Column(name = "status")
-    private String status; 
+    private String status;
 
     @Column(name = "date_submitted")
     private OffsetDateTime dateSubmitted;
@@ -53,10 +53,11 @@ public class DocumentRequest {
     @Column(name = "document_type")
     private String documentType;
 
-    // ===== ADDED FIELDS (from HTML and Service requirements) =====
-
-    @Column(name = "photo_2x2_url")
+    @Column(name = "2x2_url")
     private String photo2x2Url;
+
+    @Column(name = "readied_document")
+    private String readiedDocumentUrl;
 
     @Column(name = "birthdate")
     private String birthdate;
@@ -70,8 +71,41 @@ public class DocumentRequest {
     @Column(name = "emergency_contact")
     private String emergencyContact;
 
-    @Column(name = "readied_document_url", length = 1000)
-    private String readiedDocumentUrl;
+    // ── New fields for document processing ──────────────────────────────────
+
+    @Column(name = "doc_age")
+    private String docAge;
+
+    @Column(name = "doc_civil_status")
+    private String docCivilStatus;
+
+    @Column(name = "doc_gender")
+    private String docGender;
+
+    @Column(name = "doc_issued_day")
+    private String docIssuedDay;
+
+    @Column(name = "doc_issued_month_year")
+    private String docIssuedMonthYear;
+
+    @Column(name = "doc_captain_name")
+    private String docCaptainName;
+
+    @Column(name = "doc_or_number")
+    private String docOrNumber;
+
+    @Column(name = "doc_date_issued")
+    private String docDateIssued;
+
+    @Column(name = "doc_purpose")
+    private String docPurpose;
+
+    @Column(name = "doc_nb_note")
+    private String docNbNote;
+
+    // ADDED: Middle name field
+    @Column(name = "middle_name")
+    private String middleName;
 
     // ===== CONSTRUCTORS =====
 
@@ -139,10 +173,11 @@ public class DocumentRequest {
     public String getDocumentType() { return documentType; }
     public void setDocumentType(String documentType) { this.documentType = documentType; }
 
-    // ===== ADDED GETTERS AND SETTERS =====
-
     public String getPhoto2x2Url() { return photo2x2Url; }
     public void setPhoto2x2Url(String photo2x2Url) { this.photo2x2Url = photo2x2Url; }
+
+    public String getReadiedDocumentUrl() { return readiedDocumentUrl; }
+    public void setReadiedDocumentUrl(String readiedDocumentUrl) { this.readiedDocumentUrl = readiedDocumentUrl; }
 
     public String getBirthdate() { return birthdate; }
     public void setBirthdate(String birthdate) { this.birthdate = birthdate; }
@@ -156,6 +191,36 @@ public class DocumentRequest {
     public String getEmergencyContact() { return emergencyContact; }
     public void setEmergencyContact(String emergencyContact) { this.emergencyContact = emergencyContact; }
 
-    public String getReadiedDocumentUrl() { return readiedDocumentUrl; }
-    public void setReadiedDocumentUrl(String readiedDocumentUrl) { this.readiedDocumentUrl = readiedDocumentUrl; }
+    public String getDocAge() { return docAge; }
+    public void setDocAge(String docAge) { this.docAge = docAge; }
+
+    public String getDocCivilStatus() { return docCivilStatus; }
+    public void setDocCivilStatus(String docCivilStatus) { this.docCivilStatus = docCivilStatus; }
+
+    public String getDocGender() { return docGender; }
+    public void setDocGender(String docGender) { this.docGender = docGender; }
+
+    public String getDocIssuedDay() { return docIssuedDay; }
+    public void setDocIssuedDay(String docIssuedDay) { this.docIssuedDay = docIssuedDay; }
+
+    public String getDocIssuedMonthYear() { return docIssuedMonthYear; }
+    public void setDocIssuedMonthYear(String docIssuedMonthYear) { this.docIssuedMonthYear = docIssuedMonthYear; }
+
+    public String getDocCaptainName() { return docCaptainName; }
+    public void setDocCaptainName(String docCaptainName) { this.docCaptainName = docCaptainName; }
+
+    public String getDocOrNumber() { return docOrNumber; }
+    public void setDocOrNumber(String docOrNumber) { this.docOrNumber = docOrNumber; }
+
+    public String getDocDateIssued() { return docDateIssued; }
+    public void setDocDateIssued(String docDateIssued) { this.docDateIssued = docDateIssued; }
+
+    public String getDocPurpose() { return docPurpose; }
+    public void setDocPurpose(String docPurpose) { this.docPurpose = docPurpose; }
+
+    public String getDocNbNote() { return docNbNote; }
+    public void setDocNbNote(String docNbNote) { this.docNbNote = docNbNote; }
+
+    public String getMiddleName() { return middleName; }
+    public void setMiddleName(String middleName) { this.middleName = middleName; }
 }

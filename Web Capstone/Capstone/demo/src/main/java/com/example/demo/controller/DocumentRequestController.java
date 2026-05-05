@@ -140,6 +140,71 @@ public class DocumentRequestController {
         return "redirect:/requests-document";
     }
 
+    @PostMapping("/{id}/save-field-edits")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> saveFieldEdits(
+            @PathVariable Long id,
+            @RequestParam Map<String, String> params,
+            Principal principal,
+            HttpServletRequest request) {
+
+        Map<String, Object> response = new HashMap<>();
+        try {
+            AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+            DocumentRequest doc = service.getById(id);
+
+            if (doc == null) {
+                response.put("success", false);
+                response.put("message", "Document not found");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Core fields — all document types
+            if (params.containsKey("fullName"))         doc.setFullName(params.get("fullName"));
+            if (params.containsKey("address"))          doc.setAddress(params.get("address"));
+            if (params.containsKey("birthdate"))        doc.setBirthdate(params.get("birthdate"));
+            if (params.containsKey("contactNumber"))    doc.setContactNumber(params.get("contactNumber"));
+            if (params.containsKey("emergencyName"))    doc.setEmergencyName(params.get("emergencyName"));
+            if (params.containsKey("emergencyAddress")) doc.setEmergencyAddress(params.get("emergencyAddress"));
+            if (params.containsKey("emergencyContact")) doc.setEmergencyContact(params.get("emergencyContact"));
+            
+            // Middle name field
+            if (params.containsKey("middleName"))       doc.setMiddleName(params.get("middleName"));
+
+            // Extra fields — Indigency & Clearance
+            if (params.containsKey("docAge"))              doc.setDocAge(params.get("docAge"));
+            if (params.containsKey("docCivilStatus"))      doc.setDocCivilStatus(params.get("docCivilStatus"));
+            if (params.containsKey("docGender"))           doc.setDocGender(params.get("docGender"));
+            if (params.containsKey("docIssuedDay"))        doc.setDocIssuedDay(params.get("docIssuedDay"));
+            if (params.containsKey("docIssuedMonthYear"))  doc.setDocIssuedMonthYear(params.get("docIssuedMonthYear"));
+            if (params.containsKey("docCaptainName"))      doc.setDocCaptainName(params.get("docCaptainName"));
+            if (params.containsKey("docOrNumber"))         doc.setDocOrNumber(params.get("docOrNumber"));
+            if (params.containsKey("docDateIssued"))       doc.setDocDateIssued(params.get("docDateIssued"));
+            if (params.containsKey("docPurpose"))          doc.setDocPurpose(params.get("docPurpose"));
+            if (params.containsKey("docNbNote"))           doc.setDocNbNote(params.get("docNbNote"));
+
+            // purposeOfRequest is NEVER touched — it's the resident's original submission
+
+            service.getRepository().save(doc);
+
+            activityLogService.log(
+                admin.getName(), admin.getRole(), "UPDATED", "Document Requests",
+                "Edited fields for " + doc.getFullName() + " (" + doc.getDocumentType() + ")",
+                request.getRemoteAddr(), "Success"
+            );
+
+            response.put("success", true);
+            response.put("message", "Fields saved");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Error: " + e.getMessage());
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/{id}/save-readied-document")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> saveReadiedDocumentUrl(
