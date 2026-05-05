@@ -324,6 +324,7 @@
                             <th>Birth Date</th>
                             <th>Phone</th>
                             <th>Address</th>
+                            <th>Priority</th>   <!-- add this -->
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -343,7 +344,9 @@
              data-validid=${res.validId},
              data-indigency=${res.barangayIndigency},
              data-status=${res.account_status},
-             data-avatar=${res.avatar_url}">
+             data-avatar=${res.avatar_url},
+             data-pwdimage=${res.pwdImage},
+             data-seniorimage=${res.seniorImage}">
     <td th:text="${res.residentId}"></td>
     <td th:text="${res.firstName}"></td>
     <td th:text="${res.lastName}"></td>
@@ -351,6 +354,12 @@
     <td th:text="${res.birthDate}"></td>
     <td th:text="${res.mobileNumber}"></td>
     <td th:text="${res.address}"></td>
+    <td>
+        <span th:if="${res.pwdImage != null and res.seniorImage != null}">PWD &amp; Senior</span>
+        <span th:if="${res.pwdImage != null and res.seniorImage == null}">PWD</span>
+        <span th:if="${res.pwdImage == null and res.seniorImage != null}">Senior</span>
+        <span th:if="${res.pwdImage == null and res.seniorImage == null}" style="color:#aaa;">—</span>
+    </td>
     <td>
         <div class="action-buttons">
             <button class="update-btn"
@@ -1600,19 +1609,37 @@ if (!document.getElementById('verifyModal')) {
                 <h3 id="verifyName" style="text-align:center; margin-bottom:10px;"></h3>
                 <p style="text-align:center"><strong>Current Status:</strong> <span id="verifyStatus" style="display:inline-block; padding:4px 12px; border-radius:20px;"></span></p>
                 <div class="verify-docs-grid" style="display:flex; gap:20px; justify-content:center; margin:20px 0; flex-wrap:wrap;">
+
                     <div class="doc-card" style="flex:1; min-width:180px; text-align:center; background:#f9f9f9; border-radius:12px; padding:16px;">
                         <h4 style="font-size:14px; color:#2d4a44; margin-bottom:12px;">Selfie</h4>
                         <div id="selfieImg" style="background:#e9ecef; height:160px; display:flex; align-items:center; justify-content:center; border-radius:8px;">No image</div>
                     </div>
+
                     <div class="doc-card" style="flex:1; min-width:180px; text-align:center; background:#f9f9f9; border-radius:12px; padding:16px;">
                         <h4 style="font-size:14px; color:#2d4a44; margin-bottom:12px;">Valid ID</h4>
                         <div id="validIdImg" style="background:#e9ecef; height:160px; display:flex; align-items:center; justify-content:center; border-radius:8px;">No image</div>
                     </div>
+
                     <div class="doc-card" style="flex:1; min-width:180px; text-align:center; background:#f9f9f9; border-radius:12px; padding:16px;">
                         <h4 style="font-size:14px; color:#2d4a44; margin-bottom:12px;">Barangay Indigency</h4>
                         <div id="indigencyImg" style="background:#e9ecef; height:160px; display:flex; align-items:center; justify-content:center; border-radius:8px;">No image</div>
                     </div>
+
                 </div>
+
+                <div id="priorityDocsSection" style="display:none; justify-content:center; margin:0 0 16px; flex-wrap:wrap; gap:20px;">
+                    
+                    <div id="pwdDocCard" style="display:none; flex:1; min-width:180px; text-align:center; background:#eef4ff; border:1px solid #aed6f1; border-radius:12px; padding:16px; flex-direction:column;">
+                        <h4 style="font-size:14px; color:#2471a3; margin-bottom:12px;">PWD Certificate</h4>
+                        <div id="pwdImg" style="background:#dce8f5; height:160px; display:flex; align-items:center; justify-content:center; border-radius:8px;">No image</div>
+                    </div>
+
+                    <div id="seniorDocCard" style="display:none; flex:1; min-width:180px; text-align:center; background:#fff8e1; border:1px solid #FED734; border-radius:12px; padding:16px; flex-direction:column;">
+                        <h4 style="font-size:14px; color:#b8860b; margin-bottom:12px;">Senior Citizen ID</h4>
+                        <div id="seniorImg" style="background:#f5edcc; height:160px; display:flex; align-items:center; justify-content:center; border-radius:8px;">No image</div>
+                    </div>
+                </div>
+
                 <div id="verifyModalButtons" style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px; padding-top:16px; border-top:1px solid #eee;">
                     <button class="btn-cancel" style="background:#95a5a6; color:white; border:none; padding:10px 24px; border-radius:6px; cursor:pointer;" onclick="document.getElementById('verifyModal').style.display='none'">Cancel</button>
                     <button class="btn-verify-confirm" id="verifyConfirmBtn" style="background:#27ae60; color:white; border:none; padding:10px 24px; border-radius:6px; font-weight:bold; cursor:pointer;">Verify & Set VERIFIED</button>
@@ -1652,6 +1679,8 @@ if (!document.getElementById('verifyModal')) {
                 var indigency = row.getAttribute('data-indigency') || '';
                 var residentUUID = row.getAttribute('data-id') || '';
                 var status = row.getAttribute('data-status') || 'UNVERIFIED';
+                var pwdImage    = row.getAttribute('data-pwdimage')    || '';
+                var seniorImage = row.getAttribute('data-seniorimage') || '';
                 
 // Create View button
 var viewBtn = document.createElement('button');
@@ -1713,10 +1742,30 @@ verifyBtn.onclick = function() {
             container.innerHTML = '<div style="padding:60px;">No document</div>';
         }
     }
-    setImage(selfie, document.getElementById('selfieImg'));
-    setImage(validId, document.getElementById('validIdImg'));
+    setImage(selfie,    document.getElementById('selfieImg'));
+    setImage(validId,   document.getElementById('validIdImg'));
     setImage(indigency, document.getElementById('indigencyImg'));
-    
+
+    // ── Priority docs ──────────────────────────────────────────
+    var hasPwd    = pwdImage    && pwdImage    !== 'null' && pwdImage    !== '';
+    var hasSenior = seniorImage && seniorImage !== 'null' && seniorImage !== '';
+    var prioritySection = document.getElementById('priorityDocsSection');
+    var pwdCard         = document.getElementById('pwdDocCard');
+    var seniorCard      = document.getElementById('seniorDocCard');
+
+    if (hasPwd || hasSenior) {
+        prioritySection.style.display = 'flex';
+        prioritySection.style.gap     = '20px';
+        prioritySection.style.flexWrap = 'wrap';
+        if (hasPwd)    { pwdCard.style.display    = 'flex'; pwdCard.style.flexDirection    = 'column'; setImage(pwdImage,    document.getElementById('pwdImg')); }
+        else             { pwdCard.style.display    = 'none'; }
+        if (hasSenior) { seniorCard.style.display = 'flex'; seniorCard.style.flexDirection = 'column'; setImage(seniorImage, document.getElementById('seniorImg')); }
+        else             { seniorCard.style.display = 'none'; }
+    } else {
+        prioritySection.style.display = 'none';
+    }
+    // ──────────────────────────────────────────────────────────
+
     // Hide buttons if status is already VERIFIED
     var buttonsDiv = document.getElementById('verifyModalButtons');
     if (status === 'VERIFIED') {

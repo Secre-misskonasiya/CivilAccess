@@ -68,7 +68,11 @@ public class ResidentUserService {
                 resident.getValidId(),
                 resident.getBarangayIndigency(),
                 resident.getAccount_status(),
-                resident.getAvatarUrl()
+                resident.getAvatarUrl(),
+                resident.getPwdImage(),
+                resident.getSeniorImage(),
+                Boolean.TRUE.equals(resident.isPwd()),      // null-safe
+                Boolean.TRUE.equals(resident.isSenior())    // null-safe
             ))
             .collect(Collectors.toList());
     }

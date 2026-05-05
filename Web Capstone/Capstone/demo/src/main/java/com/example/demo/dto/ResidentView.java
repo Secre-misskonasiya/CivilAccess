@@ -16,4 +16,6 @@ public interface ResidentView {
     String getStatus();
     String getBarangayIndigency();
     String getValidId();
+    String getPwdImage();
+    String getSeniorImage();
 }
