@@ -429,14 +429,14 @@
 <div class="toast-container" id="toastContainer"></div>
 <div class="layout">
 
-<input type="hidden" id="accountStatus" th:value="${currentstatus}">
+<!-- <input type="hidden" id="accountStatus" th:value="${currentstatus}">
 <div id="forcePasswordModal" class="force-modal">
     <div class="force-modal-content">
         <h2>🔒 First Login Detected</h2>
         <p>You must change your password before using the system.</p>
         <button onclick="redirectToPassword()">Change Password</button>
     </div>
-</div>
+</div> -->
 
 <!-- Sidebar -->
 <div th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -1221,7 +1221,7 @@
     setInterval(checkForNewRequests, 3000);
     setInterval(checkNewMessages, 5000);
     document.addEventListener('DOMContentLoaded', function() { initMessageInfo(); });
-    
+
     window.onload = function() {
         const status = document.getElementById("accountStatus").value;
         if (status === "New" || status === 'Newly Updated') { document.getElementById("forcePasswordModal").style.display = "block"; document.body.style.overflow = "hidden"; }
