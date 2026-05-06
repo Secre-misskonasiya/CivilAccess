@@ -763,7 +763,6 @@
 <input type="hidden" id="dataBlotterPending"     th:value="${blotterPending != null ? blotterPending : 0}">
 <input type="hidden" id="dataAllReports"  th:value="${allreports != null ? allreports : 0}">
 
-<input type="hidden" id="accountStatus"   th:value="${currentstatus}">
 Lock Modal
 <div id="forcePasswordModal" class="force-modal">
     <div class="force-modal-content">
@@ -1664,7 +1663,8 @@ function updateAnnouncement(announcement) {
         if (!str) return '';
         return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
-    
+    function redirectToPassword() { window.location.href = '/user-profile'; }
+
 
     // INIT
 
@@ -1682,10 +1682,10 @@ function updateAnnouncement(announcement) {
         const role = document.getElementById('dataCurrentRole').value;
         if (role === 'ADMIN' || role === 'BARANGAY-CAPTAIN' || role === 'SECRETARY') initCharts();
         startPolling();
-        updateAnnouncementRelativeDate();
-    };
-    function redirectToPassword() { window.location.href = '/user-profile'; }
 
+        updateAnnouncementRelativeDate();
+
+    };
 
     window.addEventListener('beforeunload', function() {
         if (pollingInterval) clearInterval(pollingInterval);
