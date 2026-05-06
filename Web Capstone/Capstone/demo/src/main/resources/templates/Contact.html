@@ -1221,6 +1221,7 @@
     setInterval(checkForNewRequests, 3000);
     setInterval(checkNewMessages, 5000);
     document.addEventListener('DOMContentLoaded', function() { initMessageInfo(); });
+    
     window.onload = function() {
         const status = document.getElementById("accountStatus").value;
         if (status === "New" || status === 'Newly Updated') { document.getElementById("forcePasswordModal").style.display = "block"; document.body.style.overflow = "hidden"; }
