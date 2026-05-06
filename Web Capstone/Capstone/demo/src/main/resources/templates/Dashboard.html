@@ -763,14 +763,6 @@
 <input type="hidden" id="dataBlotterPending"     th:value="${blotterPending != null ? blotterPending : 0}">
 <input type="hidden" id="dataAllReports"  th:value="${allreports != null ? allreports : 0}">
 
-<!-- Lock Modal
-<div id="forcePasswordModal" class="force-modal">
-    <div class="force-modal-content">
-        <h2>First Login Detected</h2>
-        <p>You must change your password before using the system.</p>
-        <button onclick="redirectToPassword()">Change Password</button>
-    </div>
-</div> -->
 
 <!-- Sidebar -->
 <div th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -811,36 +803,33 @@
                 <div class="row-top">
 
                     <!-- Announcement -->
-<!-- Announcement -->
-<div class="announcements-box" id="announcementBox">
-    <div class="announce-header">
-        <div class="announce-header-title">
-            <i class="bi bi-megaphone-fill"></i> Announcement
-        </div>
-        <div class="announce-badge" id="announceBadge" th:if="${latestAnnouncement != null}">
-            <span id="announceRelativeDate" style="font-size:12px; color:white; white-space:nowrap; font-weight:600;"></span>
-        </div>
-    </div>
-    <div class="announcement-content has-content" id="announcementContent"
-         th:if="${latestAnnouncement != null}"
-         style="overflow:hidden;">
-        <img id="announceImage"
-             th:if="${latestAnnouncement.image != null and !#strings.isEmpty(latestAnnouncement.image)}"
-             th:src="${latestAnnouncement.image}" alt="Announcement image"
-             style="width:100%; max-height:180px; object-fit:cover; display:block;">
-        <div style="width:100%; padding:12px 14px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                <strong id="announceTitle" th:text="${latestAnnouncement.title}" style="font-size:13px; color:#24443f; font-weight:600;"></strong>
-                <span id="announceOriginalDate" style="font-size:10px; color:#9aa4a2; white-space:nowrap; margin-left:8px;"
-                      th:text="${latestAnnouncement.datePosted != null ? #temporals.format(latestAnnouncement.datePosted, 'MMM dd, yyyy') : ''}"></span>
-            </div>
-            <p id="announceContent" th:text="${latestAnnouncement.content}" style="font-size:12px; color:#6b7675; margin:0; line-height:1.6;"></p>
-        </div>
-    </div>
-    <div class="announcement-content" id="noAnnouncement" th:if="${latestAnnouncement == null}">
-        No announcements at this time
-    </div>
-</div>
+                    <div class="announcements-box" id="announcementBox">
+                        <div class="announce-header">
+                            <div class="announce-header-title">
+                                <i class="bi bi-megaphone-fill"></i> Announcement
+                            </div>
+                            <div class="announce-badge" id="announceBadge" th:if="${latestAnnouncement != null}">NEW</div>
+                        </div>
+                        <div class="announcement-content has-content" id="announcementContent"
+                             th:if="${latestAnnouncement != null}"
+                             style="overflow:hidden;">
+                            <img id="announceImage"
+                                 th:if="${latestAnnouncement.image != null and !#strings.isEmpty(latestAnnouncement.image)}"
+                                 th:src="${latestAnnouncement.image}" alt="Announcement image"
+                                 style="width:100%; max-height:180px; object-fit:cover; display:block;">
+                            <div style="width:100%; padding:12px 14px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                    <strong id="announceTitle" th:text="${latestAnnouncement.title}" style="font-size:13px; color:#24443f; font-weight:600;"></strong>
+                                    <span id="announceDate" style="font-size:10px; color:#9aa4a2; white-space:nowrap; margin-left:8px;"
+                                          th:text="${latestAnnouncement.datePosted != null ? #temporals.format(latestAnnouncement.datePosted, 'MMM dd, yyyy') : ''}"></span>
+                                </div>
+                                <p id="announceContent" th:text="${latestAnnouncement.content}" style="font-size:12px; color:#6b7675; margin:0; line-height:1.6;"></p>
+                            </div>
+                        </div>
+                        <div class="announcement-content" id="noAnnouncement" th:if="${latestAnnouncement == null}">
+                            No announcements at this time
+                        </div>
+                    </div>
 
                     <!-- Weather — landscape -->
                     <div class="weather-box">
@@ -1562,112 +1551,18 @@
         }
     }
 
-
-   function formatRelativeTime(dateString) {
-    if (!dateString) return '';
-    
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const diffWeeks = Math.floor(diffDays / 7);
-    const diffMonths = Math.floor(diffDays / 30);
-    const diffYears = Math.floor(diffDays / 365);
-    
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m`;
-    if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays}d`;
-    if (diffWeeks === 1) return '1w';
-    if (diffWeeks < 4) return `${diffWeeks}w`;
-    if (diffMonths === 1) return '1mo';
-    if (diffMonths < 12) return `${diffMonths}mo`;
-    if (diffYears === 1) return '1y';
-    return `${diffYears}y`;
-}
-
-// Function to update announcement date with relative time
-function updateAnnouncementRelativeDate() {
-    const originalDateSpan = document.getElementById('announceOriginalDate');
-    const relativeSpan = document.getElementById('announceRelativeDate');
-    
-    if (originalDateSpan && originalDateSpan.textContent && relativeSpan) {
-        // Get the raw date from the data attribute or parse from text
-        const dateText = originalDateSpan.textContent;
-        // Parse "MMM dd, yyyy" format (e.g., "Jan 15, 2024")
-        const parsedDate = new Date(dateText);
-        
-        if (!isNaN(parsedDate.getTime())) {
-            const relativeText = formatRelativeTime(parsedDate);
-            relativeSpan.textContent = relativeText;
-        } else {
-            // Fallback: try to get from Thymeleaf data-date attribute if available
-            const dataDate = originalDateSpan.getAttribute('data-date');
-            if (dataDate) {
-                relativeSpan.textContent = formatRelativeTime(dataDate);
-            }
-        }
-    }
-}
-
-function updateAnnouncement(announcement) {
-    if (!announcement || !announcement.title) return false;
-    if (announcement.title === lastAnnouncementId) return false;
-    lastAnnouncementId = announcement.title;
-    const announceBox         = document.getElementById('announcementBox');
-    const noAnnouncement      = document.getElementById('noAnnouncement');
-    const announcementContent = document.getElementById('announcementContent');
-    if (noAnnouncement)      noAnnouncement.style.display = 'none';
-    if (announcementContent) announcementContent.style.display = 'flex';
-    const titleEl = document.getElementById('announceTitle');
-    if (titleEl) titleEl.textContent = announcement.title;
-    const contentEl = document.getElementById('announceContent');
-    if (contentEl) contentEl.textContent = announcement.content || '';
-    
-    // Update original date (below image)
-    const originalDateEl = document.getElementById('announceOriginalDate');
-    if (originalDateEl && announcement.datePosted) {
-        const date = new Date(announcement.datePosted);
-        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const formattedDate = `${months[date.getMonth()]} ${String(date.getDate()).padStart(2, '0')}, ${date.getFullYear()}`;
-        originalDateEl.textContent = formattedDate;
-        originalDateEl.setAttribute('data-date', announcement.datePosted);
-        
-        // Update relative date in badge
-        const relativeDateEl = document.getElementById('announceRelativeDate');
-        if (relativeDateEl) {
-            relativeDateEl.textContent = formatRelativeTime(announcement.datePosted);
-        }
-    }
-    
-    const imageEl = document.getElementById('announceImage');
-    if (announcement.image) {
-        if (imageEl) { imageEl.src = announcement.image; imageEl.style.display = 'block'; }
-    } else if (imageEl) { imageEl.style.display = 'none'; }
-    const badge = document.getElementById('announceBadge');
-    if (badge) { badge.style.display = 'inline-block'; }
-    if (announceBox) {
-        announceBox.classList.add('new-content');
-        setTimeout(() => announceBox.classList.remove('new-content'), 3000);
-    }
-    return true;
-}
-
-   
+    // ============================================
     // UTILITY
-
+    // ============================================
     function esc(str) {
         if (!str) return '';
         return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
     function redirectToPassword() { window.location.href = '/user-profile'; }
 
-
+    // ============================================
     // INIT
-
+    // ============================================
     window.onload = function () {
         const status = document.getElementById('accountStatus').value;
         if (status === 'New' || status === 'Newly Updated') {
@@ -1682,9 +1577,6 @@ function updateAnnouncement(announcement) {
         const role = document.getElementById('dataCurrentRole').value;
         if (role === 'ADMIN' || role === 'BARANGAY-CAPTAIN' || role === 'SECRETARY') initCharts();
         startPolling();
-
-        updateAnnouncementRelativeDate();
-
     };
 
     window.addEventListener('beforeunload', function() {

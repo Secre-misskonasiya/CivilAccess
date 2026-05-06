@@ -324,16 +324,18 @@
 </head>
 <body>
     <script src="/js/notif.js"></script>
-
-<!-- <input type="hidden" id="accountStatus"   th:value="${currentstatus}">
-Lock Modal
-<div id="forcePasswordModal" class="force-modal">
+<div class="toast-container" id="toastContainer"></div>
+<div class="layout">
+<input type="hidden" id="accountStatus" th:value="${currentstatus}">
+      <div id="forcePasswordModal" class="force-modal">
     <div class="force-modal-content">
         <h2>First Login Detected</h2>
         <p>You must change your password before using the system.</p>
         <button onclick="redirectToPassword()">Change Password</button>
     </div>
-</div> -->
+</div>
+
+
 
   <!-- Sidebar -->
 <div th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -487,6 +489,7 @@ Lock Modal
         }
         populateFilterDropdowns();
     };
+
     function redirectToPassword() { window.location.href = "/user-profile"; }
 
     // ── Search ────────────────────────────────────────────────

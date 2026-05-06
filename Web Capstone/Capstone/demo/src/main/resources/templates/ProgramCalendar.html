@@ -809,6 +809,7 @@
 
 <div class="layout">
 
+
 <!-- Success Modal - exactly like System Settings (user must click OK) -->
 <div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -1020,7 +1021,7 @@
         const status = document.getElementById("accountStatus").value;
         if (status === "New" || status === 'Newly Updated') { document.getElementById("forcePasswordModal").style.display = "block"; document.body.style.overflow = "hidden"; }
     };
-
+    
   function showSuccess(message) {
     document.getElementById('sysSuccessMessage').innerHTML = message;
     document.getElementById('sysSuccessOverlay').classList.add('show');

@@ -508,15 +508,16 @@
     </div>
 </div>
 
-<!-- <input type="hidden" id="accountStatus"   th:value="${accountStatus}">
-Lock Modal
+<!-- Force Password Modal -->
 <div id="forcePasswordModal" class="force-modal">
     <div class="force-modal-content">
         <h2>First Login Detected</h2>
         <p>You must change your password before using the system.</p>
         <button onclick="redirectToPassword()">Change Password</button>
     </div>
-</div> -->
+</div>
+
+<input type="hidden" id="accountStatus" th:value="${currentstatus}">
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -775,12 +776,13 @@ Lock Modal
 
     // Force password on first login
     window.onload = function() {
-        const status = document.getElementById('accountStatus').value;
+        const status = document.getElementById('accountStatus')?.value;
         if (status === 'New' || status === 'Newly Updated') {
             document.getElementById('forcePasswordModal').style.display = 'block';
             document.body.style.overflow = 'hidden';
         }
     };
+
     function redirectToPassword() { window.location.href = '/user-profile'; }
 
     // Polling
