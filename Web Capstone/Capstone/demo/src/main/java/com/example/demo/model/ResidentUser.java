@@ -45,19 +45,6 @@ public class ResidentUser {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
-    @Column(name = "pwd_image", columnDefinition = "VARCHAR")
-    private String pwdImage; 
-
-    @Column(name = "senior_image", columnDefinition = "VARCHAR")
-    private String seniorImage; 
-
-    @Column(name = "is_pwd")
-    private Boolean isPwd;
-
-    @Column(name = "is_senior")
-    private Boolean isSenior;
-
-
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
@@ -105,16 +92,4 @@ public class ResidentUser {
     
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
-
-    public String getPwdImage() { return pwdImage; }
-    public void setPwdImage(String pwdImage) { this.pwdImage = pwdImage; }
-
-    public String getSeniorImage() { return seniorImage; }
-    public void setSeniorImage(String seniorImage) { this.seniorImage = seniorImage; }
-
-    public Boolean isPwd() { return isPwd; }
-    public void setPwd(Boolean isPwd) { this.isPwd = isPwd; }
-
-    public Boolean isSenior() { return isSenior; }
-    public void setSenior(Boolean isSenior) { this.isSenior = isSenior; }
 }

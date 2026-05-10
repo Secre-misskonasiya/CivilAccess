@@ -13,14 +13,10 @@ public record ResidentDTO(
     String mobileNumber,
     String email,
     String address,
-    String status,  
+    String status,
     String selfie,
     String validId,
     String barangayIndigency,
     String account_status,
-    String avatar_url,
-    String pwdImage,
-    String seniorImage,
-    boolean isPwd,      // add
-    boolean isSenior    // add
+    String avatar_url  // Add this line
 ) {}
