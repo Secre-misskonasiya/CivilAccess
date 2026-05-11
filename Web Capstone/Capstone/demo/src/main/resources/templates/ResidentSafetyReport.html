@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safety Reports – CivilAccess</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Lato:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand-dark:  #2d4a44;
+      --brand-mid:   #386660;
+      --brand-light: #44c375;
+      --gold:        #fed734;
+      --bg:          #eaecef;
+      --card:        #ffffff;
+      --text-1:      #1c1e21;
+      --text-2:      #65676b;
+      --text-3:      #9ea3a8;
+      --border:      #e4e6eb;
+      --pin-bg:      #fffdf0;
+      --radius:      12px;
+      --nav-h:       62px;
+      --font-h:      'Sora', sans-serif;
+      --font-b:      'Lato', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-b);
+      background: var(--bg);
+      color: var(--text-1);
+      min-height: 100vh;
+    }
+
+    .topnav {
+      position: sticky; top: 0; z-index: 100;
+      height: var(--nav-h);
+      background: var(--brand-dark);
+      border-bottom: 3px solid var(--gold);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.22);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-icon {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(254,215,52,.15);
+      border: 2px solid var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold); font-size: 18px;
+    }
+    .nav-name { font-family: var(--font-h); font-weight: 800; font-size: 19px; color: #fff; letter-spacing: -.3px; }
+    .nav-sub  { font-size: 10px; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .7px; }
+    .live-badge {
+      display: flex; align-items: center; gap: 7px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.18);
+      color: rgba(255,255,255,.85);
+      padding: 6px 14px; border-radius: 40px;
+      font-family: var(--font-h); font-size: 12px; font-weight: 600;
+    }
+    .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--brand-light);
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
+
+    .page { max-width: 660px; margin: 0 auto; padding: 28px 14px 64px; }
+
+    .page-head { text-align: center; margin-bottom: 26px; animation: fadeDown .45s ease both; }
+    .page-head h1 { font-family: var(--font-h); font-size: 24px; font-weight: 800; color: var(--brand-dark); letter-spacing: -.4px; }
+    .page-head p  { font-size: 13.5px; color: var(--text-2); margin-top: 5px; }
+
+    .search-wrap {
+      position: relative; margin-bottom: 18px;
+      animation: fadeDown .45s .08s ease both;
+    }
+    .search-wrap i {
+      position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+      color: var(--text-3); font-size: 15px; pointer-events: none;
+    }
+    .search-input {
+      width: 100%; padding: 11px 14px 11px 42px;
+      border: 1.5px solid var(--border); border-radius: 40px;
+      font-family: var(--font-b); font-size: 14px;
+      background: var(--card);
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .search-input:focus {
+      border-color: var(--brand-mid);
+      box-shadow: 0 0 0 3px rgba(56,102,96,.1);
+    }
+
+    .chips {
+      display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap;
+      animation: fadeDown .45s .13s ease both;
+    }
+    .chip {
+      padding: 6px 16px; border-radius: 40px;
+      border: 1.5px solid var(--border);
+      font-family: var(--font-h); font-size: 12px; font-weight: 700;
+      cursor: pointer; background: var(--card); color: var(--text-2);
+      transition: all .18s; user-select: none; display: flex; align-items: center; gap: 5px;
+    }
+    .chip:hover { border-color: var(--brand-mid); color: var(--brand-mid); }
+    .chip.active { background: var(--brand-dark); border-color: var(--brand-dark); color: #fff; }
+
+    #feed {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,.07);
+      transition: transform .2s, box-shadow .2s;
+      animation: fadeUp .4s ease both;
+      width: 100%;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(0,0,0,.1); }
+
+    .card-head {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px 8px;
+    }
+    .avatar {
+      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+      background: var(--brand-dark);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold); font-size: 20px;
+      border: 2px solid rgba(56,102,96,.15);
+    }
+    .head-meta { flex: 1; min-width: 0; }
+    .sender { font-family: var(--font-h); font-weight: 700; font-size: 14px; }
+    .post-dt { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+    .badge {
+      flex-shrink: 0; padding: 3px 11px; border-radius: 40px;
+      font-family: var(--font-h); font-size: 10px; font-weight: 800;
+      letter-spacing: .5px; text-transform: uppercase;
+    }
+    .badge-status-incoming { background: #fff8e1; color: #856404; border: 1px solid var(--gold); }
+    .badge-status-approved { background: #e3f2fd; color: #1976d2; border: 1px solid #bbdef5; }
+    .badge-status-inprogress { background: #e8f5f0; color: #2d7a5f; border: 1px solid #b8ddd0; }
+    .badge-status-resolved { background: #44c37520; color: #2ea05e; border: 1px solid #44c375; }
+    .badge-status-archived { background: #f5f5f5; color: #888; border: 1px solid #ddd; }
+
+    .priority-high { background: #fff0f0; color: #e74c3c; border: 1px solid #f5c6c6; }
+    .priority-medium { background: #fff8ec; color: #e67e22; border: 1px solid #f5ddb0; }
+    .priority-low { background: #f0fff4; color: #27ae60; border: 1px solid #b0e0c0; }
+
+    .card-title {
+      font-family: var(--font-h); font-size: 15.5px; font-weight: 700;
+      padding: 2px 16px 7px; line-height: 1.4;
+    }
+    .card-body {
+      font-size: 14.5px; color: #3e4042; line-height: 1.65;
+      padding: 0 16px 12px; white-space: pre-wrap; word-break: break-word;
+    }
+    .card-body.clamped {
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden; white-space: normal;
+    }
+    .read-more {
+      display: block; background: none; border: none;
+      color: var(--brand-mid); font-family: var(--font-h); font-weight: 700;
+      font-size: 13px; cursor: pointer; padding: 0 16px 12px;
+      text-align: left;
+    }
+    .read-more:hover { text-decoration: underline; }
+
+    .card-foot {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .foot-left { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-3); flex-wrap: wrap; }
+    .location-text { display: flex; align-items: center; gap: 4px; }
+    .view-btn {
+      background: none; border: none;
+      color: var(--brand-mid); font-family: var(--font-h); font-weight: 700;
+      font-size: 12px; cursor: pointer;
+      padding: 4px 10px; border-radius: 6px;
+      transition: background .15s;
+    }
+    .view-btn:hover { background: #eef5f3; }
+
+    #feed .card:nth-child(1) { animation-delay:.05s }
+    #feed .card:nth-child(2) { animation-delay:.10s }
+    #feed .card:nth-child(3) { animation-delay:.15s }
+    #feed .card:nth-child(4) { animation-delay:.20s }
+    #feed .card:nth-child(5) { animation-delay:.25s }
+    #feed .card:nth-child(n+6){ animation-delay:.30s }
+
+    .empty { text-align: center; padding: 60px 0; color: var(--text-3); }
+    .empty i { font-size: 50px; display: block; margin-bottom: 12px; opacity: .3; }
+    .empty p { font-size: 15px; }
+
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+      z-index: 200; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .overlay.open { display: flex; }
+
+    .modal-box {
+      background: var(--card); border-radius: 16px;
+      width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 24px 60px rgba(0,0,0,.3);
+      animation: popIn .25s ease both;
+    }
+    @keyframes popIn {
+      from { opacity:0; transform:scale(.95) translateY(10px); }
+      to   { opacity:1; transform:scale(1)   translateY(0); }
+    }
+    .modal-top {
+      background: var(--brand-dark); border-bottom: 3px solid var(--gold);
+      padding: 14px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0;
+    }
+    .modal-top h2 { font-family: var(--font-h); font-size: 15px; font-weight: 700; color: #fff; margin: 0; }
+    .modal-x {
+      background: none; border: none; color: rgba(255,255,255,.65);
+      font-size: 22px; cursor: pointer; line-height: 1; transition: color .15s;
+    }
+    .modal-x:hover { color: #fff; }
+
+    .m-head { display: flex; align-items: center; gap: 10px; padding: 16px 16px 8px; }
+    .m-title { font-family: var(--font-h); font-weight: 700; font-size: 16px; padding: 0 16px 10px; line-height: 1.4; }
+    .m-body  { font-size: 14.5px; color: #3e4042; line-height: 1.7; padding: 0 16px 16px; white-space: pre-wrap; word-break: break-word; }
+    .m-location { font-size: 13px; color: var(--brand-mid); padding: 0 16px 10px; display: flex; align-items: center; gap: 6px; }
+    .m-map { width: 100%; height: 200px; margin-top: 10px; border-radius: 8px; overflow: hidden; }
+    .m-foot {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; border-top: 1px solid var(--border);
+    }
+    .m-foot-left { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-3); }
+    .btn-close-m {
+      padding: 8px 24px; background: var(--brand-dark); color: #fff;
+      border: none; border-radius: 40px;
+      font-family: var(--font-h); font-weight: 600; font-size: 13px;
+      cursor: pointer; transition: background .15s;
+    }
+    .btn-close-m:hover { background: var(--brand-mid); }
+
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeUp   { from{opacity:0;transform:translateY(16px)}  to{opacity:1;transform:translateY(0)} }
+
+    .resolved-badge {
+      background-color: #44C375;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    @media(max-width:480px){
+      .page { padding: 18px 8px 50px; }
+      .nav-sub { display:none; }
+      .foot-left { font-size: 10px; }
+      .location-text { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="nav-brand" href="#">
+    <div class="nav-icon"><i class="bi bi-building-fill"></i></div>
+    <div>
+      <div class="nav-name">CivilAccess</div>
+      <div class="nav-sub">Barangay Portal</div>
+    </div>
+  </a>
+  <div class="live-badge">
+    <div class="dot"></div>
+    Safety Reports
+  </div>
+</nav>
+
+<main class="page">
+
+  <div class="page-head">
+    <h1>Safety Reports</h1>
+    <p>Community safety incidents and emergency reports from your barangay.</p>
+  </div>
+
+  <div class="search-wrap">
+    <i class="bi bi-search"></i>
+    <input class="search-input" id="searchInput" type="text" placeholder="Search reports by title, type, or location...">
+  </div>
+
+  <div class="chips">
+    <div class="chip active" data-filter="all">All</div>
+    <div class="chip" data-filter="incoming">For Verification</div>
+    <div class="chip" data-filter="inprogress">In Progress</div>
+    <div class="chip" data-filter="resolved">Resolved</div>
+  </div>
+
+  <div id="feed">
+
+    <th:block th:each="report : ${reports}">
+      <article th:id="'report-' + ${report.id}"
+               th:data-id="${report.id}"
+               th:data-status="${report.status != null ? #strings.toUpperCase(report.status) : 'INCOMING'}"
+               th:data-type="${report.type}"
+               th:data-title="${report.title}"
+               th:data-description="${report.description}"
+               th:data-date="${report.dateSubmitted}"
+               th:data-location="${report.location}"
+               th:data-latitude="${report.latitude}"
+               th:data-longitude="${report.longitude}"
+               th:data-reporter="${report.reporterName}"
+               th:data-priority="${report.priority != null ? #strings.toUpperCase(report.priority) : 'MEDIUM'}"
+               th:data-resolvedby="${report.resolvedBy}"
+               th:data-resolutionactions="${report.resolutionActions}"
+               th:data-resolutionnotes="${report.resolutionNotes}"
+               th:data-responsetime="${report.resolutionResponseTime}"
+               class="card">
+
+        <div class="card-head">
+          <div class="avatar"><i class="bi bi-exclamation-triangle-fill"></i></div>
+          <div class="head-meta">
+            <div class="sender" th:text="${report.reporterName != null ? report.reporterName : 'Anonymous Resident'}"></div>
+            <div class="post-dt" th:text="${report.dateSubmitted != null ? #temporals.format(report.dateSubmitted, 'MMMM d, yyyy') : 'N/A'}"></div>
+          </div>
+          <span th:class="'badge badge-status-' + (${report.status != null ? #strings.toLowerCase(report.status) : 'incoming'})"
+                th:text="${report.status != null ? report.status : 'INCOMING'}"></span>
+        </div>
+
+        <div class="card-title" th:text="${report.title}"></div>
+
+        <div th:if="${report.description != null and not #strings.isEmpty(report.description)}">
+          <div th:class="${#strings.length(report.description) > 200 ? 'card-body clamped' : 'card-body'}"
+               th:text="${report.description}"></div>
+          <button th:if="${#strings.length(report.description) > 200}"
+                  class="read-more"
+                  th:attr="onclick='openReportModal(' + ${report.id} + ')'">
+            Read more…
+          </button>
+        </div>
+
+        <div class="card-foot">
+          <div class="foot-left">
+            <span class="location-text">
+              <i class="bi bi-geo-alt-fill" style="color:#e74c3c; font-size: 11px;"></i>
+              <span th:text="${report.location != null ? report.location : 'No location specified'}"></span>
+            </span>
+            <span th:if="${report.priority != null}" th:class="'badge ' + (${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')})"
+                  th:text="${report.priority}"></span>
+            <span th:if="${report.status == 'RESOLVED' and report.resolvedBy != null}" class="resolved-badge">
+              <i class="bi bi-check-circle-fill"></i> Resolved
+            </span>
+          </div>
+          <button class="view-btn" th:attr="onclick='openReportModal(' + ${report.id} + ')'">
+            View details <i class="bi bi-arrow-right-short"></i>
+          </button>
+        </div>
+
+      </article>
+    </th:block>
+
+    <div class="empty" id="emptyState" style="display:none">
+      <i class="bi bi-shield-exclamation"></i>
+      <p>No safety reports match your search.</p>
+    </div>
+
+    <div class="empty" th:if="${reports == null or #lists.isEmpty(reports)}">
+      <i class="bi bi-shield-check"></i>
+      <p>No safety reports yet. Your community is safe!</p>
+    </div>
+
+  </div>
+
+</main>
+
+<div class="overlay" id="overlay" onclick="closeModalOnBg(event)">
+  <div class="modal-box" id="modalBox">
+    <div class="modal-top">
+      <h2>Safety Report</h2>
+      <button class="modal-x" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+  let currentMap = null;
+
+  function getStatusBadgeClass(status) {
+    const s = (status || 'INCOMING').toUpperCase();
+    switch(s) {
+      case 'INCOMING': return 'badge-status-incoming';
+      case 'APPROVED': return 'badge-status-approved';
+      case 'IN_PROGRESS': return 'badge-status-inprogress';
+      case 'RESOLVED': return 'badge-status-resolved';
+      case 'ARCHIVED': return 'badge-status-archived';
+      default: return 'badge-status-incoming';
+    }
+  }
+
+  function getPriorityClass(priority) {
+    const p = (priority || 'MEDIUM').toUpperCase();
+    switch(p) {
+      case 'HIGH': return 'priority-high';
+      case 'MEDIUM': return 'priority-medium';
+      case 'LOW': return 'priority-low';
+      default: return 'priority-medium';
+    }
+  }
+
+  function openReportModal(reportId) {
+    const card = document.getElementById('report-' + reportId);
+    if (!card) return;
+
+    const title = card.dataset.title || 'Untitled Report';
+    const description = card.dataset.description || 'No description provided.';
+    const date = card.dataset.date || '';
+    const location = card.dataset.location || 'No location specified';
+    const reporter = card.dataset.reporter || 'Anonymous Resident';
+    const status = (card.dataset.status || 'INCOMING').toUpperCase();
+    const priority = (card.dataset.priority || 'MEDIUM').toUpperCase();
+    const type = card.dataset.type || 'General Safety';
+    const latitude = parseFloat(card.dataset.latitude);
+    const longitude = parseFloat(card.dataset.longitude);
+    const resolvedBy = card.dataset.resolvedby || null;
+    const resolutionActions = card.dataset.resolutionactions || null;
+    const resolutionNotes = card.dataset.resolutionnotes || null;
+    const responseTime = card.dataset.responsetime || null;
+
+    let dateFormatted = 'N/A';
+    if (date) {
+      try {
+        dateFormatted = new Date(date).toLocaleDateString('en-US', {
+          month: 'long', day: 'numeric', year: 'numeric'
+        });
+      } catch(e) { dateFormatted = date; }
+    }
+
+    const statusBadgeClass = getStatusBadgeClass(status);
+    const priorityClass = getPriorityClass(priority);
+
+    let resolutionHtml = '';
+    if (status === 'RESOLVED' && (resolutionActions || resolutionNotes || responseTime)) {
+      resolutionHtml = `
+        <div style="background: #f8faf9; border-radius: 8px; padding: 14px; margin: 12px 16px;">
+          <div style="font-weight: 700; color: var(--brand-dark); margin-bottom: 10px; font-size: 13px;">
+            <i class="bi bi-check-circle-fill" style="color: #44C375;"></i> Resolution Details
+          </div>
+          ${responseTime ? `<div style="margin-bottom: 8px;"><span style="font-weight: 600; font-size: 11px; color: #888;">RESPONSE TIME</span><br><span style="font-size: 13px;">${escapeHtml(responseTime)}</span></div>` : ''}
+          ${resolutionActions ? `<div style="margin-bottom: 8px;"><span style="font-weight: 600; font-size: 11px; color: #888;">ACTIONS TAKEN</span><br><span style="font-size: 13px;">${escapeHtml(resolutionActions)}</span></div>` : ''}
+          ${resolutionNotes ? `<div><span style="font-weight: 600; font-size: 11px; color: #888;">ADDITIONAL NOTES</span><br><span style="font-size: 13px;">${escapeHtml(resolutionNotes)}</span></div>` : ''}
+          ${resolvedBy ? `<div style="margin-top: 8px; font-size: 11px; color: #888;"><i class="bi bi-person-check"></i> Resolved by: ${escapeHtml(resolvedBy)}</div>` : ''}
+        </div>
+      `;
+    }
+
+    let mapHtml = '';
+    const hasValidLocation = latitude && longitude && !isNaN(latitude) && !isNaN(longitude) && latitude !== 0 && longitude !== 0;
+    if (hasValidLocation) {
+      mapHtml = `<div id="modalMap" class="m-map"></div>`;
+    }
+
+    document.getElementById('modalContent').innerHTML = `
+      <div class="m-head">
+        <div class="avatar" style="background:var(--brand-dark);color:var(--gold);">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <div class="head-meta">
+          <div class="sender">${escapeHtml(reporter)}</div>
+          <div class="post-dt">${escapeHtml(dateFormatted)}</div>
+        </div>
+        <span class="badge ${statusBadgeClass}">${escapeHtml(status)}</span>
+      </div>
+      <div class="m-title">${escapeHtml(title)}</div>
+      <div class="m-location">
+        <i class="bi bi-geo-alt-fill" style="color:#e74c3c;"></i>
+        <span>${escapeHtml(location)}</span>
+        <span class="badge ${priorityClass}" style="margin-left: auto;">${escapeHtml(priority)}</span>
+      </div>
+      <div class="m-body"><strong>Type:</strong> ${escapeHtml(type)}<br><br>${escapeHtml(description)}</div>
+      ${mapHtml}
+      ${resolutionHtml}
+      <div class="m-foot">
+        <div class="m-foot-left">
+          <i class="bi bi-info-circle"></i> Official Barangay Safety Report
+        </div>
+        <button class="btn-close-m" onclick="closeModal()">Close</button>
+      </div>
+    `;
+
+    document.getElementById('overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    if (hasValidLocation) {
+      setTimeout(() => {
+        if (currentMap) currentMap.remove();
+        const mapContainer = document.getElementById('modalMap');
+        if (mapContainer) {
+          const map = L.map('modalMap').setView([latitude, longitude], 15);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+          }).addTo(map);
+          const redIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+          });
+          L.marker([latitude, longitude], { icon: redIcon })
+            .addTo(map)
+            .bindPopup(`<b>${escapeHtml(title)}</b><br>${escapeHtml(location)}`)
+            .openPopup();
+          map.invalidateSize();
+          currentMap = map;
+        }
+      }, 100);
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    if (currentMap) {
+      currentMap.remove();
+      currentMap = null;
+    }
+  }
+
+  function closeModalOnBg(e) {
+    if (e.target === document.getElementById('overlay')) closeModal();
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;')
+              .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  let currentFilter = 'all';
+  let currentSearch = '';
+
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentFilter = chip.dataset.filter;
+      applyFilters();
+    });
+  });
+
+  document.getElementById('searchInput').addEventListener('input', function() {
+    currentSearch = this.value.toLowerCase().trim();
+    applyFilters();
+  });
+
+  function applyFilters() {
+    const cards = document.querySelectorAll('#feed .card');
+    let anyVisible = false;
+
+    cards.forEach(card => {
+      const status = (card.dataset.status || 'INCOMING').toUpperCase();
+      const text = ((card.dataset.title || '') + ' ' + (card.dataset.type || '') + ' ' + (card.dataset.location || '')).toLowerCase();
+
+      let matchesFilter = true;
+      if (currentFilter === 'incoming') {
+        matchesFilter = status === 'INCOMING' || status === 'APPROVED';
+      } else if (currentFilter === 'inprogress') {
+        matchesFilter = status === 'IN_PROGRESS';
+      } else if (currentFilter === 'resolved') {
+        matchesFilter = status === 'RESOLVED';
+      } else {
+        matchesFilter = true;
+      }
+
+      const matchesSearch = !currentSearch || text.includes(currentSearch);
+      const show = matchesFilter && matchesSearch;
+      card.style.display = show ? '' : 'none';
+      if (show) anyVisible = true;
+    });
+
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) emptyState.style.display = anyVisible ? 'none' : 'block';
+  }
+
+  let lastEtag = '';
+
+  async function pollReports() {
+    try {
+      const res = await fetch('/resident/safety-reports/api/feed?t=' + Date.now());
+      if (!res.ok) return;
+      const data = await res.json();
+      const etag = JSON.stringify(data.map(r => r.id + ':' + r.status + ':' + r.dateSubmitted));
+      if (etag === lastEtag) return;
+      lastEtag = etag;
+      rebuildFeed(data);
+    } catch(e) { /* silent */ }
+  }
+
+  function rebuildFeed(reports) {
+    document.querySelectorAll('#feed .card:not(.empty)').forEach(c => c.remove());
+    const feed = document.getElementById('feed');
+    const emptyState = document.getElementById('emptyState');
+    reports.forEach(r => feed.insertBefore(buildCard(r), emptyState));
+    applyFilters();
+  }
+
+  function buildCard(r) {
+    const status = (r.status || 'INCOMING').toUpperCase();
+    const priority = (r.priority || 'MEDIUM').toUpperCase();
+    const priorityClass = priority === 'HIGH' ? 'priority-high' : priority === 'MEDIUM' ? 'priority-medium' : 'priority-low';
+    const statusClass = 'badge-status-' + status.toLowerCase();
+    const desc = r.description || '';
+    const clamp = desc.length > 200;
+
+    let dateStr = 'N/A';
+    if (r.dateSubmitted) {
+      try {
+        dateStr = new Date(r.dateSubmitted).toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+      } catch(e) {}
+    }
+
+    const article = document.createElement('article');
+    article.id = 'report-' + r.id;
+    article.className = 'card';
+    article.dataset.id = r.id;
+    article.dataset.status = status;
+    article.dataset.type = r.type || '';
+    article.dataset.title = r.title || '';
+    article.dataset.description = desc;
+    article.dataset.date = r.dateSubmitted || '';
+    article.dataset.location = r.location || '';
+    article.dataset.latitude = r.latitude || '';
+    article.dataset.longitude = r.longitude || '';
+    article.dataset.reporter = r.reporterName || '';
+    article.dataset.priority = priority;
+    article.dataset.resolvedby = r.resolvedBy || '';
+    article.dataset.resolutionactions = r.resolutionActions || '';
+    article.dataset.resolutionnotes = r.resolutionNotes || '';
+    article.dataset.responsetime = r.resolutionResponseTime || '';
+
+    article.innerHTML = `
+      <div class="card-head">
+        <div class="avatar"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="head-meta">
+          <div class="sender">${escapeHtml(r.reporterName || 'Anonymous Resident')}</div>
+          <div class="post-dt">${escapeHtml(dateStr)}</div>
+        </div>
+        <span class="badge ${statusClass}">${escapeHtml(status)}</span>
+      </div>
+      <div class="card-title">${escapeHtml(r.title || 'Untitled Report')}</div>
+      ${desc ? `<div class="card-body${clamp ? ' clamped' : ''}">${escapeHtml(desc)}</div>` : ''}
+      ${clamp ? `<button class="read-more" onclick="openReportModal(${r.id})">Read more…</button>` : ''}
+      <div class="card-foot">
+        <div class="foot-left">
+          <span class="location-text"><i class="bi bi-geo-alt-fill" style="color:#e74c3c;"></i> ${escapeHtml(r.location || 'No location')}</span>
+          <span class="badge ${priorityClass}">${escapeHtml(priority)}</span>
+          ${status === 'RESOLVED' ? `<span class="resolved-badge"><i class="bi bi-check-circle-fill"></i> Resolved</span>` : ''}
+        </div>
+        <button class="view-btn" onclick="openReportModal(${r.id})">
+          View details <i class="bi bi-arrow-right-short"></i>
+        </button>
+      </div>
+    `;
+    return article;
+  }
+
+  setInterval(pollReports, 5000);
+</script>
+
+</body>
+</html>

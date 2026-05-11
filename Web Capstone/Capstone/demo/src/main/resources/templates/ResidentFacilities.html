@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facilities – CivilAccess</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Lato:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand-dark:  #2d4a44;
+      --brand-mid:   #386660;
+      --brand-light: #44c375;
+      --gold:        #fed734;
+      --bg:          #eaecef;
+      --card:        #ffffff;
+      --text-1:      #1c1e21;
+      --text-2:      #65676b;
+      --text-3:      #9ea3a8;
+      --border:      #e4e6eb;
+      --radius:      12px;
+      --nav-h:       62px;
+      --font-h:      'Sora', sans-serif;
+      --font-b:      'Lato', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-b);
+      background: var(--bg);
+      color: var(--text-1);
+      min-height: 100vh;
+    }
+
+    .topnav {
+      position: sticky; top: 0; z-index: 100;
+      height: var(--nav-h);
+      background: var(--brand-dark);
+      border-bottom: 3px solid var(--gold);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.22);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-icon {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(254,215,52,.15);
+      border: 2px solid var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold); font-size: 18px;
+    }
+    .nav-name { font-family: var(--font-h); font-weight: 800; font-size: 19px; color: #fff; letter-spacing: -.3px; }
+    .nav-sub  { font-size: 10px; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .7px; }
+    .live-badge {
+      display: flex; align-items: center; gap: 7px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.18);
+      color: rgba(255,255,255,.85);
+      padding: 6px 14px; border-radius: 40px;
+      font-family: var(--font-h); font-size: 12px; font-weight: 600;
+    }
+    .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--brand-light);
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
+
+    .sub-nav {
+      background: var(--brand-mid);
+      padding: 12px 20px;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .sub-tab {
+      padding: 8px 24px;
+      border-radius: 40px;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      font-family: var(--font-h);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sub-tab i { font-size: 16px; }
+    .sub-tab.active {
+      background: white;
+      color: var(--brand-dark);
+    }
+    .sub-tab:hover:not(.active) { background: rgba(255,255,255,0.25); }
+
+    .page { max-width: 660px; margin: 0 auto; padding: 20px 14px 64px; }
+
+    .section-title { font-family: var(--font-h); font-weight: 700; font-size: 18px; color: var(--brand-dark); margin: 0 0 8px; }
+    .title-underline { width: 50px; height: 3px; background: var(--brand-mid); border-radius: 3px; margin-bottom: 16px; }
+
+    #feed { display: flex; flex-direction: column; gap: 16px; }
+
+    .facility-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,.07);
+      transition: transform .2s, box-shadow .2s;
+      cursor: pointer;
+    }
+    .facility-card:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(0,0,0,.1); }
+
+    .card-head {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px 8px;
+    }
+    .avatar {
+      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+      background: var(--brand-dark);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold); font-size: 20px;
+      border: 2px solid rgba(56,102,96,.15);
+    }
+    .head-meta { flex: 1; min-width: 0; }
+    .facility-type { font-family: var(--font-h); font-weight: 700; font-size: 14px; }
+
+    /* STATUS HIDDEN */
+    .facility-status { display: none; }
+
+    .card-title {
+      font-family: var(--font-h); font-size: 15.5px; font-weight: 700;
+      padding: 2px 16px 4px; line-height: 1.4;
+    }
+    .card-contact {
+      font-size: 13px;
+      color: var(--brand-mid);
+      padding: 0 16px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .card-address {
+      font-size: 12px;
+      color: var(--text-3);
+      padding: 0 16px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .card-foot {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 8px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .view-btn {
+      background: none;
+      border: none;
+      color: var(--brand-mid);
+      font-family: var(--font-h);
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 4px 10px;
+      border-radius: 6px;
+      transition: background .15s;
+    }
+    .view-btn:hover { background: #eef5f3; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-3); }
+    .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+      z-index: 200; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .overlay.open { display: flex; }
+    .modal-box {
+      background: var(--card); border-radius: 16px;
+      width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 24px 60px rgba(0,0,0,.3);
+      animation: popIn .25s ease both;
+    }
+    @keyframes popIn {
+      from { opacity:0; transform:scale(.95) translateY(10px); }
+      to   { opacity:1; transform:scale(1)   translateY(0); }
+    }
+    .modal-top {
+      background: var(--brand-dark); border-bottom: 3px solid var(--gold);
+      padding: 14px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0;
+    }
+    .modal-top h2 { font-family: var(--font-h); font-size: 15px; font-weight: 700; color: #fff; margin: 0; }
+    .modal-x { background: none; border: none; color: rgba(255,255,255,.65); font-size: 22px; cursor: pointer; line-height: 1; }
+    .modal-x:hover { color: #fff; }
+    .modal-body-custom { padding: 20px; }
+    .modal-info-row { margin-bottom: 16px; }
+    .modal-label { font-weight: 700; font-size: 12px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .modal-value { font-size: 14px; color: var(--text-1); }
+    .modal-divider { height: 1px; background: var(--border); margin: 16px 0; }
+    .modal-map { height: 200px; border-radius: 8px; margin-top: 12px; overflow: hidden; }
+    .modal-footer-custom { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+    .btn-close-m {
+      padding: 8px 24px; background: var(--brand-dark); color: #fff;
+      border: none; border-radius: 40px;
+      font-family: var(--font-h); font-weight: 600; font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-close-m:hover { background: var(--brand-mid); }
+
+    @media(max-width:480px){
+      .page { padding: 16px 12px 48px; }
+      .sub-tab { padding: 6px 16px; font-size: 12px; }
+      .card-title { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="nav-brand" href="#">
+    <div class="nav-icon"><i class="bi bi-building-fill"></i></div>
+    <div>
+      <div class="nav-name">CivilAccess</div>
+      <div class="nav-sub">Barangay Portal</div>
+    </div>
+  </a>
+  <div class="live-badge">
+    <div class="dot"></div>
+    Facilities
+  </div>
+</nav>
+
+<div class="sub-nav">
+  <div class="sub-tab active" data-tab="police">
+    <i class="bi bi-shield-shaded"></i> Police
+  </div>
+  <div class="sub-tab" data-tab="fire">
+    <i class="bi bi-fire"></i> Fire
+  </div>
+  <div class="sub-tab" data-tab="hospital">
+    <i class="bi bi-hospital"></i> Hospital
+  </div>
+  <div class="sub-tab" data-tab="emergency">
+    <i class="bi bi-truck"></i> Emergency
+  </div>
+</div>
+
+<main class="page" id="mainPage">
+
+  <div id="facilitiesContent">
+    <div class="section-title" id="activeSectionTitle">Police Stations</div>
+    <div class="title-underline"></div>
+    <div id="feed">
+
+      <!-- Police Facilities -->
+      <div th:each="facility : ${policeFacilities}" class="facility-card"
+           th:attr="data-id=${facility.id},
+                    data-name=${facility.facilityName},
+                    data-type=${facility.facilityType},
+                    data-contact=${facility.contactNumber},
+                    data-email=${facility.email},
+                    data-address=${facility.address},
+                    data-status=${facility.status},
+                    data-latitude=${facility.latitude},
+                    data-longitude=${facility.longitude}"
+           data-category="police">
+        <div class="card-head">
+          <div class="avatar"><i class="bi bi-shield-shaded"></i></div>
+          <div class="head-meta">
+            <div class="facility-type" th:text="${facility.facilityType != null ? facility.facilityType : 'Facility'}"></div>
+          </div>
+        </div>
+        <div class="card-title" th:text="${facility.facilityName != null ? facility.facilityName : 'Unknown Facility'}"></div>
+        <div class="card-contact">
+          <i class="bi bi-telephone-fill" style="color: var(--brand-mid);"></i>
+          <span th:text="${facility.contactNumber != null ? facility.contactNumber : 'N/A'}"></span>
+        </div>
+        <div class="card-address">
+          <i class="bi bi-geo-alt-fill" style="color: #e74c3c;"></i>
+          <span th:text="${facility.address != null ? facility.address : 'No address provided'}"></span>
+        </div>
+        <div class="card-foot">
+          <button class="view-btn" onclick="openFacilityModal(this.closest('.facility-card'))">View Details <i class="bi bi-arrow-right-short"></i></button>
+        </div>
+      </div>
+
+      <!-- Fire Facilities -->
+      <div th:each="facility : ${fireFacilities}" class="facility-card"
+           th:attr="data-id=${facility.id},
+                    data-name=${facility.facilityName},
+                    data-type=${facility.facilityType},
+                    data-contact=${facility.contactNumber},
+                    data-email=${facility.email},
+                    data-address=${facility.address},
+                    data-status=${facility.status},
+                    data-latitude=${facility.latitude},
+                    data-longitude=${facility.longitude}"
+           data-category="fire">
+        <div class="card-head">
+          <div class="avatar"><i class="bi bi-fire"></i></div>
+          <div class="head-meta">
+            <div class="facility-type" th:text="${facility.facilityType != null ? facility.facilityType : 'Facility'}"></div>
+          </div>
+        </div>
+        <div class="card-title" th:text="${facility.facilityName != null ? facility.facilityName : 'Unknown Facility'}"></div>
+        <div class="card-contact">
+          <i class="bi bi-telephone-fill" style="color: var(--brand-mid);"></i>
+          <span th:text="${facility.contactNumber != null ? facility.contactNumber : 'N/A'}"></span>
+        </div>
+        <div class="card-address">
+          <i class="bi bi-geo-alt-fill" style="color: #e74c3c;"></i>
+          <span th:text="${facility.address != null ? facility.address : 'No address provided'}"></span>
+        </div>
+        <div class="card-foot">
+          <button class="view-btn" onclick="openFacilityModal(this.closest('.facility-card'))">View Details <i class="bi bi-arrow-right-short"></i></button>
+        </div>
+      </div>
+
+      <!-- Hospital Facilities -->
+      <div th:each="facility : ${hospitalFacilities}" class="facility-card"
+           th:attr="data-id=${facility.id},
+                    data-name=${facility.facilityName},
+                    data-type=${facility.facilityType},
+                    data-contact=${facility.contactNumber},
+                    data-email=${facility.email},
+                    data-address=${facility.address},
+                    data-status=${facility.status},
+                    data-latitude=${facility.latitude},
+                    data-longitude=${facility.longitude}"
+           data-category="hospital">
+        <div class="card-head">
+          <div class="avatar"><i class="bi bi-hospital"></i></div>
+          <div class="head-meta">
+            <div class="facility-type" th:text="${facility.facilityType != null ? facility.facilityType : 'Facility'}"></div>
+          </div>
+        </div>
+        <div class="card-title" th:text="${facility.facilityName != null ? facility.facilityName : 'Unknown Facility'}"></div>
+        <div class="card-contact">
+          <i class="bi bi-telephone-fill" style="color: var(--brand-mid);"></i>
+          <span th:text="${facility.contactNumber != null ? facility.contactNumber : 'N/A'}"></span>
+        </div>
+        <div class="card-address">
+          <i class="bi bi-geo-alt-fill" style="color: #e74c3c;"></i>
+          <span th:text="${facility.address != null ? facility.address : 'No address provided'}"></span>
+        </div>
+        <div class="card-foot">
+          <button class="view-btn" onclick="openFacilityModal(this.closest('.facility-card'))">View Details <i class="bi bi-arrow-right-short"></i></button>
+        </div>
+      </div>
+
+      <!-- Emergency Facilities -->
+      <div th:each="facility : ${emergencyFacilities}" class="facility-card"
+           th:attr="data-id=${facility.id},
+                    data-name=${facility.facilityName},
+                    data-type=${facility.facilityType},
+                    data-contact=${facility.contactNumber},
+                    data-email=${facility.email},
+                    data-address=${facility.address},
+                    data-status=${facility.status},
+                    data-latitude=${facility.latitude},
+                    data-longitude=${facility.longitude}"
+           data-category="emergency">
+        <div class="card-head">
+          <div class="avatar"><i class="bi bi-truck"></i></div>
+          <div class="head-meta">
+            <div class="facility-type" th:text="${facility.facilityType != null ? facility.facilityType : 'Facility'}"></div>
+          </div>
+        </div>
+        <div class="card-title" th:text="${facility.facilityName != null ? facility.facilityName : 'Unknown Facility'}"></div>
+        <div class="card-contact">
+          <i class="bi bi-telephone-fill" style="color: var(--brand-mid);"></i>
+          <span th:text="${facility.contactNumber != null ? facility.contactNumber : 'N/A'}"></span>
+        </div>
+        <div class="card-address">
+          <i class="bi bi-geo-alt-fill" style="color: #e74c3c;"></i>
+          <span th:text="${facility.address != null ? facility.address : 'No address provided'}"></span>
+        </div>
+        <div class="card-foot">
+          <button class="view-btn" onclick="openFacilityModal(this.closest('.facility-card'))">View Details <i class="bi bi-arrow-right-short"></i></button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="empty-state" id="emptyState" style="display: none;">
+    <i class="bi bi-building"></i>
+    <p>No facilities found in this category.</p>
+  </div>
+
+</main>
+
+<div class="overlay" id="overlay" onclick="closeModalOnBg(event)">
+  <div class="modal-box">
+    <div class="modal-top">
+      <h2>Facility Details</h2>
+      <button class="modal-x" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+  let currentMap = null;
+  let lastEtag = '';
+
+  function openFacilityModal(card) {
+    const name = card.getAttribute('data-name') || '';
+    const type = card.getAttribute('data-type') || '';
+    const contact = card.getAttribute('data-contact') || '';
+    const email = card.getAttribute('data-email') || '';
+    const address = card.getAttribute('data-address') || '';
+    const status = card.getAttribute('data-status') || 'OPEN';
+    const latitude = parseFloat(card.getAttribute('data-latitude'));
+    const longitude = parseFloat(card.getAttribute('data-longitude'));
+
+    const hasLocation = latitude && longitude && !isNaN(latitude) && !isNaN(longitude) && latitude !== 0 && longitude !== 0;
+
+    const modalContent = document.getElementById('modalContent');
+    if (!modalContent) return;
+
+    modalContent.innerHTML = `
+      <div class="modal-body-custom">
+        <div class="modal-info-row">
+          <div class="modal-label">Facility Name</div>
+          <div class="modal-value">${escapeHtml(name)}</div>
+        </div>
+        <div class="modal-info-row">
+          <div class="modal-label">Facility Type</div>
+          <div class="modal-value">${escapeHtml(type)}</div>
+        </div>
+        <div class="modal-info-row">
+          <div class="modal-label">Contact Number</div>
+          <div class="modal-value"><i class="bi bi-telephone-fill"></i> ${escapeHtml(contact)}</div>
+        </div>
+        <div class="modal-info-row">
+          <div class="modal-label">Email</div>
+          <div class="modal-value"><i class="bi bi-envelope-fill"></i> ${escapeHtml(email)}</div>
+        </div>
+        <div class="modal-info-row">
+          <div class="modal-label">Address</div>
+          <div class="modal-value"><i class="bi bi-geo-alt-fill" style="color: #e74c3c;"></i> ${escapeHtml(address)}</div>
+        </div>
+        ${hasLocation ? `
+          <div class="modal-divider"></div>
+          <div class="modal-label">Location Map</div>
+          <div id="modalMap" class="modal-map"></div>
+        ` : ''}
+      </div>
+      <div class="modal-footer-custom">
+        <button class="btn-close-m" onclick="closeModal()">Close</button>
+      </div>
+    `;
+
+    document.getElementById('overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    if (hasLocation) {
+      setTimeout(() => {
+        if (currentMap) currentMap.remove();
+        const mapContainer = document.getElementById('modalMap');
+        if (mapContainer) {
+          const map = L.map('modalMap').setView([latitude, longitude], 15);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+          }).addTo(map);
+          const redIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+          });
+          L.marker([latitude, longitude], { icon: redIcon })
+            .addTo(map)
+            .bindPopup(`<b>${escapeHtml(name)}</b><br>${escapeHtml(address)}`)
+            .openPopup();
+          map.invalidateSize();
+          currentMap = map;
+        }
+      }, 100);
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    if (currentMap) { currentMap.remove(); currentMap = null; }
+  }
+
+  function closeModalOnBg(e) {
+    if (e.target === document.getElementById('overlay')) closeModal();
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;')
+              .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Tab switching
+  document.querySelectorAll('.sub-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      const selectedTab = tab.dataset.tab;
+      const sectionTitle = document.getElementById('activeSectionTitle');
+      const emptyState = document.getElementById('emptyState');
+
+      if (selectedTab === 'police') sectionTitle.textContent = 'Police Stations';
+      else if (selectedTab === 'fire') sectionTitle.textContent = 'Fire Stations';
+      else if (selectedTab === 'hospital') sectionTitle.textContent = 'Hospitals';
+      else sectionTitle.textContent = 'Emergency Stations';
+
+      const cards = document.querySelectorAll('#feed .facility-card');
+      let visibleCount = 0;
+
+      cards.forEach(card => {
+        const category = card.getAttribute('data-category');
+        if (category === selectedTab) {
+          card.style.display = '';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+    });
+  });
+
+  // Initial filter - show only police, hide all others
+  document.querySelectorAll('#feed .facility-card').forEach(card => {
+    if (card.getAttribute('data-category') !== 'police') {
+      card.style.display = 'none';
+    }
+  });
+
+  // Check if police tab has any cards on load
+  const initialPoliceCount = document.querySelectorAll('#feed .facility-card[data-category="police"]').length;
+  document.getElementById('emptyState').style.display = initialPoliceCount === 0 ? 'block' : 'none';
+
+  // Polling — skips reload if modal is open, only reloads on actual data changes
+  async function pollFacilities() {
+    if (document.getElementById('overlay').classList.contains('open')) return;
+
+    try {
+      const res = await fetch('/resident/facilities/api/poll?t=' + Date.now());
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data || !data.length) return;
+
+      const etag = data.map(f => f.id + ':' + (f.updatedAt ?? f.id)).join(',');
+      if (lastEtag === '') { lastEtag = etag; return; }
+      if (etag === lastEtag) return;
+
+      lastEtag = etag;
+      window.location.reload();
+    } catch(e) {
+      console.error('Poll error:', e);
+    }
+  }
+
+  setInterval(pollFacilities, 5000);
+</script>
+
+</body>
+</html>

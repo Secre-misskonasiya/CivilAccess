@@ -4,17 +4,13 @@ import com.example.demo.model.AdminUser;
 import com.example.demo.model.Blotter;
 import com.example.demo.services.AdminUserServices;
 import com.example.demo.services.BlotterService;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,8 +35,12 @@ public class BlotterController {
             if (admin != null) {
                 model.addAttribute("currentUser", admin.getName());
                 model.addAttribute("currentrole", admin.getRole());
+<<<<<<< HEAD
                 model.addAttribute("currentstatus", "ACTIVE");
                 model.addAttribute("accountStatus", admin.getEmpstatus());
+=======
+                model.addAttribute("currentstatus", "ACTIVE");  // Fixed: hardcoded "ACTIVE" instead of admin.getStatus()
+>>>>>>> parent of 143488d (Blotter)
             } else {
                 model.addAttribute("currentUser", username);
                 model.addAttribute("currentrole", "USER");
@@ -91,95 +91,48 @@ public class BlotterController {
         return "redirect:/requests-blotter";
     }
 
-    // Fixed update endpoint with better error handling
+    // Full update endpoint (for edit functionality)
     @PostMapping("/{id}/update")
     public String updateBlotter(@PathVariable Long id, 
-                               @RequestParam("complainantName") String complainantName,
-                               @RequestParam("contactInfo") String contactInfo,
-                               @RequestParam("respondentName") String respondentName,
-                               @RequestParam("incidentType") String incidentType,
-                               @RequestParam("incidentDate") String incidentDate,
-                               @RequestParam("incidentLocation") String incidentLocation,
-                               @RequestParam("narrative") String narrative,
-                               @RequestParam(value = "remarks", required = false) String remarks,
-                               @RequestParam("status") String status,
+                               @ModelAttribute Blotter updatedBlotter,
                                Principal principal) {
-        try {
-            Blotter existing = service.getBlotterById(id);
-            if (existing != null) {
-                existing.setComplainantName(complainantName);
-                existing.setContactInfo(contactInfo);
-                existing.setRespondentName(respondentName);
-                existing.setIncidentType(incidentType);
-                
-                // Parse the date string to LocalDateTime
-                if (incidentDate != null && !incidentDate.isEmpty()) {
-                    LocalDateTime dateTime = LocalDateTime.parse(incidentDate + "T00:00:00");
-                    existing.setIncidentDate(dateTime);
-                }
-                
-                existing.setIncidentLocation(incidentLocation);
-                existing.setNarrative(narrative);
-                existing.setRemarks(remarks != null ? remarks : "");
-                existing.setStatus(status);
-                existing.setUpdatedBy(getCurrentUserName(principal));
-                existing.setUpdatedAt(LocalDateTime.now());
-                service.saveBlotter(existing);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "redirect:/requests-blotter?error=update_failed";
+        Blotter existing = service.getBlotterById(id);
+        if (existing != null) {
+            existing.setComplainantName(updatedBlotter.getComplainantName());
+            existing.setContactInfo(updatedBlotter.getContactInfo());
+            existing.setRespondentName(updatedBlotter.getRespondentName());
+            existing.setIncidentType(updatedBlotter.getIncidentType());
+            existing.setIncidentDate(updatedBlotter.getIncidentDate());
+            existing.setIncidentLocation(updatedBlotter.getIncidentLocation());
+            existing.setNarrative(updatedBlotter.getNarrative());
+            existing.setRemarks(updatedBlotter.getRemarks());
+            existing.setStatus(updatedBlotter.getStatus());
+            existing.setUpdatedBy(getCurrentUserName(principal));
+            existing.setUpdatedAt(LocalDateTime.now());
+            service.saveBlotter(existing);
         }
-        return "redirect:/requests-blotter?success=updated";
+        return "redirect:/requests-blotter";
     }
-
-   // FIXED: Submit new blotter with PROCESSING status instead of INCOMING
-@PostMapping("/submit")
-public String submitBlotter(@RequestParam("complainantName") String complainantName,
-                           @RequestParam("contactInfo") String contactInfo,
-                           @RequestParam("respondentName") String respondentName,
-                           @RequestParam("incidentType") String incidentType,
-                           @RequestParam("incidentDate") String incidentDate,
-                           @RequestParam("incidentLocation") String incidentLocation,
-                           @RequestParam("narrative") String narrative,
-                           @RequestParam(value = "remarks", required = false) String remarks,
-                           Principal principal) {
-    try {
-        Blotter blotter = new Blotter();
-        blotter.setComplainantName(complainantName);
-        blotter.setContactInfo(contactInfo);
-        blotter.setRespondentName(respondentName);
-        blotter.setIncidentType(incidentType);
-        
-        // Parse the date string to LocalDateTime
-        if (incidentDate != null && !incidentDate.isEmpty()) {
-            LocalDateTime dateTime = LocalDateTime.parse(incidentDate + "T00:00:00");
-            blotter.setIncidentDate(dateTime);
-        }
-        
-        blotter.setIncidentLocation(incidentLocation);
-        blotter.setNarrative(narrative);
-        blotter.setRemarks(remarks != null ? remarks : "");
-        blotter.setStatus("PROCESSING"); // Changed from "INCOMING" to "PROCESSING"
-        blotter.setCreatedBy(getCurrentUserName(principal));
-        blotter.setCreatedAt(LocalDateTime.now());
-        blotter.setUpdatedAt(LocalDateTime.now());
-        
-        System.out.println("Saving blotter with status: PROCESSING");
-        service.saveBlotter(blotter);
-        System.out.println("Blotter saved successfully with ID: " + blotter.getId());
-    } catch (Exception e) {
-        e.printStackTrace();
-        return "redirect:/requests-blotter?error=submit_failed";
-    }
-    return "redirect:/requests-blotter?success=submitted";
-}
 
     // Search endpoint
     @GetMapping("/search")
     @ResponseBody
     public List<Blotter> search(@RequestParam String query) {
         return service.searchBlotters(query);
+    }
+
+    // Submit new blotter
+    @PostMapping("/submit")
+    public String submitBlotter(@ModelAttribute("newBlotter") Blotter blotter, Principal principal) {
+        blotter.setStatus("INCOMING");
+        blotter.setCreatedBy(getCurrentUserName(principal));
+        blotter.setCreatedAt(LocalDateTime.now());
+        blotter.setUpdatedAt(LocalDateTime.now());
+        if (blotter.getRemarks() == null) {
+            blotter.setRemarks("");
+        }
+        service.saveBlotter(blotter);
+        return "redirect:/requests-blotter";
     }
 
     // Polling endpoint - returns both tab counts and total
