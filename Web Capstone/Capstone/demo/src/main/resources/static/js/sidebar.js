@@ -42,12 +42,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const sectionMap = [
         { match: ['/home', '/announcements'],                                    section: 'sec-main' },
-        { match: ['/account', '/user-profile', '/system-settings'],              section: 'sec-management' },
-        { match: ['/requests-document', '/requests-blotter'],                    section: 'sec-resident', sub: 'sub-requests' },
+        { match: ['/account', '/user-profile', '/Resident-census'],              section: 'sec-management' },
+        { match: ['/requests-document', '/requests-blotter', '/requests-reservations', '/requests-rentals'],                    section: 'sec-resident', sub: 'sub-requests' },
         { match: ['/contact-help', '/facilities'],                               section: 'sec-resident' },
         { match: ['/safety-reports', '/emergency-alerts', '/sos-monitoring'],    section: 'sec-safety' },
         { match: ['/program-calendar', '/program-planner'],                      section: 'sec-programs' },
-        { match: ['/Activity-logs'],                                             section: 'sec-system' },
+        { match: ['/Activity-logs', '/system-settings'],                                             section: 'sec-system' },
     ];
 
     sectionMap.forEach(function (entry) {

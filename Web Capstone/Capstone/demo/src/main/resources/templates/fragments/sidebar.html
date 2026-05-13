@@ -48,6 +48,9 @@
             <li onclick="window.location.href='/user-profile'">
                 <img src="/icons/user.svg" class="icon"> User Profile
             </li>
+            <li onclick="window.location.href='/Resident-census'">
+                <img src="/icons/user.svg" class="icon"> Resident Census
+            </li>
              <li th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY' || currentrole == 'TREASURER'}"
                 onclick="window.location.href='/finance'">
                 <img src="/icons/cash.svg" class="icon"> Expenditures
@@ -76,6 +79,14 @@
                 </li>
                 <li onclick="window.location.href='/requests-document'">
                     Documents
+                    <span class="sidebar-count-badge" id="badge-documents"></span>
+                </li>
+                <li onclick="window.location.href='/requests-reservations'">
+                    Reservations
+                    <span class="sidebar-count-badge" id="badge-documents"></span>
+                </li>
+                <li onclick="window.location.href='/requests-rentals'">
+                    Rentals
                     <span class="sidebar-count-badge" id="badge-documents"></span>
                 </li>
             </ul>

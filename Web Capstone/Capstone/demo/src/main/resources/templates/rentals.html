@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+    
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+    
+    .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .top-header {
+        background-color: #2d4a44;
+        display: flex;
+        border-bottom: 2px solid #FED734;
+    }
+    .top-header-tab {
+        flex: 1;
+        color: white;
+        text-align: center;
+        padding: 16px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .top-header-tab.inactive {
+        color: #8aada8;
+        font-weight: normal;
+    }
+    .top-header-tab.active {
+        color: white;
+        font-weight: bold;
+    }
+
+    .search-bar-area {
+        padding: 16px 20px 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background-color: #f5f5f5;
+    }
+    .search-input-wrap {
+        flex: 1;
+        position: relative;
+    }
+    .search-input-wrap input {
+        width: 100%;
+        padding: 9px 14px 9px 38px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: white;
+        box-sizing: border-box;
+    }
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #aaa;
+    }
+    .filter-btn {
+        padding: 9px 16px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        background: white;
+        font-size: 14px;
+        cursor: pointer;
+        color: #444;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .filter-btn:hover {
+        background-color: #f0f0f0;
+    }
+    .create-btn {
+        background-color: #44C375;
+        color: white;
+        border: none;
+        padding: 9px 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .create-btn:hover { background-color: #2ea05e; }
+
+    .tabbar {
+        display: flex;
+        background-color: white;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0 20px;
+        gap: 4px;
+    }
+    .tab {
+        padding: 12px 18px;
+        color: #666;
+        cursor: pointer;
+        font-size: 14px;
+        border-bottom: 3px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tab.active {
+        background-color: #2d4a44;
+        color: white;
+        border-radius: 6px 6px 0 0;
+        font-weight: bold;
+    }
+    .tab-badge {
+        background-color: #FED734;
+        color: #2d4a44;
+        border-radius: 10px;
+        padding: 1px 7px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .panel {
+        padding: 20px;
+        background-color: #f5f5f5;
+        flex: 1;
+        overflow-y: auto;
+    }
+    .panel-inner {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+    }
+    .panel-header {
+        background-color: #3d5f58;
+        color: white;
+        padding: 14px 20px;
+        font-weight: bold;
+        font-size: 15px;
+    }
+    .panel-content { padding: 0; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th {
+        background-color: #eaf2f0;
+        color: #2d4a44;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 10px 14px;
+        text-align: left;
+    }
+    td {
+        padding: 14px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+    .status-incoming {
+        background-color: #fff8e1;
+        color: #b8860b;
+        border: 1px solid #FED734;
+    }
+    .status-active {
+        background-color: #e8f5f0;
+        color: #2d7a5f;
+        border: 1px solid #b8ddd0;
+    }
+    .status-overdue {
+        background-color: #fdecea;
+        color: #c0392b;
+        border: 1px solid #f5c6cb;
+    }
+    .status-returned {
+        background-color: #e0e0e0;
+        color: #666;
+        border: 1px solid #ccc;
+    }
+    .status-archive {
+        background-color: #fdecea;
+        color: #c0392b;
+        border: 1px solid #f5c6cb;
+    }
+
+    .btn-sm {
+        padding: 5px 12px;
+        border: none;
+        border-radius: 4px;
+        font-size: 11px;
+        cursor: pointer;
+        margin: 0 2px;
+    }
+    .btn-view {
+        background-color: #3498db;
+        color: white;
+    }
+    .btn-approve {
+        background-color: #44C375;
+        color: white;
+    }
+    .btn-return {
+        background-color: #44C375;
+        color: white;
+    }
+    .btn-archive {
+        background-color: #e74c3c;
+        color: white;
+    }
+
+    .table-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-top: 1px solid #e0e0e0;
+        font-size: 13px;
+        color: #888;
+    }
+
+    .modal-content {
+        border-radius: 8px;
+    }
+    .modal-header {
+        background-color: #30534D;
+        color: white;
+        border-bottom: 2px solid #FED734;
+    }
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+    
+    .total-display {
+        background: #e8f5e9;
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 15px;
+        text-align: right;
+        font-weight: bold;
+        color: #2d7a5f;
+    }
+
+    .success-toast-modal .modal-content {
+        background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+    }
+    .success-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
+
+    /* Confirm Modal Overlay */
+    .confirm-modal-overlay {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        align-items: center;
+        justify-content: center;
+    }
+    .confirm-modal-content {
+        background: white;
+        width: 380px;
+        border-radius: 12px;
+        text-align: center;
+        padding: 24px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .confirm-modal-content h4 {
+        margin-bottom: 12px;
+        color: #2d4a44;
+    }
+    .confirm-modal-content p {
+        margin-bottom: 24px;
+        color: #666;
+    }
+    .confirm-modal-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+    }
+    .confirm-modal-buttons button {
+        padding: 8px 24px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .confirm-cancel {
+        background-color: #e0e0e0;
+        color: #333;
+    }
+    .confirm-ok {
+        background-color: #e74c3c;
+        color: white;
+    }
+</style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" th:href="@{/css/sidebar.css}">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"></script>
+<title>Civil Access - Equipment Rentals</title>
+</head>
+<body>
+
+<div class="layout">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="content">
+        <div class="top-header">
+            <div class="top-header-tab inactive" onclick="window.location.href='/reservations'">Reservations</div>
+            <div class="top-header-tab active" onclick="window.location.href='/rentals'">Rentals</div>
+        </div>
+
+        <div class="search-bar-area">
+            <div class="search-input-wrap">
+                <span class="search-icon"><i class="bi bi-search"></i></span>
+                <input type="text" id="rental-search" placeholder="Search by renter, item, or ID...">
+            </div>
+            <div class="dropdown">
+                <button class="filter-btn dropdown-toggle" type="button" id="typeFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-funnel"></i> Filter by Equipment
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="typeFilterDropdown" id="equipmentFilterMenu">
+                    <li><a class="dropdown-item" href="#" data-equipment="all">All Equipment</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" data-equipment="Chair">Chair</a></li>
+                    <li><a class="dropdown-item" href="#" data-equipment="Canopy Tent">Canopy Tent</a></li>
+                    <li><a class="dropdown-item" href="#" data-equipment="Sound System">Sound System</a></li>
+                    <li><a class="dropdown-item" href="#" data-equipment="Table">Table</a></li>
+                </ul>
+            </div>
+            <button class="filter-btn" onclick="window.location.href='/rentals'"><i class="bi bi-funnel"></i> Reset</button>
+            <button class="create-btn" data-bs-toggle="modal" data-bs-target="#createRentalModal"><i class="bi bi-plus-circle"></i> New Rental</button>
+        </div>
+
+        <div class="tabbar">
+            <div class="tab" th:classappend="${currentTab == 'incoming' ? 'active' : ''}" onclick="window.location.href='/rentals?tab=incoming'">Incoming <span class="tab-badge" id="incomingBadge" th:text="${incomingCount}">0</span></div>
+            <div class="tab" th:classappend="${currentTab == 'active' ? 'active' : ''}" onclick="window.location.href='/rentals?tab=active'">Active <span class="tab-badge" id="activeBadge" th:text="${activeCount}">0</span></div>
+            <div class="tab" th:classappend="${currentTab == 'overdue' ? 'active' : ''}" onclick="window.location.href='/rentals?tab=overdue'">Overdue <span class="tab-badge" id="overdueBadge" th:text="${overdueCount}">0</span></div>
+            <div class="tab" th:classappend="${currentTab == 'returned' ? 'active' : ''}" onclick="window.location.href='/rentals?tab=returned'">Returned <span class="tab-badge" id="returnedBadge" th:text="${returnedCount}">0</span></div>
+            <div class="tab" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/rentals?tab=archive'">Archive <span class="tab-badge" id="archiveBadge" th:text="${archiveCount}">0</span></div>
+        </div>
+
+        <div class="panel">
+            <!-- Incoming Tab -->
+            <div id="tab-incoming" class="panel-inner" th:classappend="${currentTab != 'incoming' ? 'd-none' : ''}">
+                <div class="panel-header">Incoming Rental Requests</div>
+                <div class="panel-content">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr><th>Renter</th><th>Equipment</th><th>Qty</th><th>Rental Date</th><th>Expected Return</th><th>Status</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="incoming-tbody">
+                            <tr><td colspan="7" class="text-center text-muted">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="table-footer"><span id="incomingCount">0 incoming rentals</span></div>
+                </div>
+            </div>
+
+            <!-- Active Tab -->
+            <div id="tab-active" class="panel-inner" th:classappend="${currentTab != 'active' ? 'd-none' : ''}">
+                <div class="panel-header">Currently Rented Equipment</div>
+                <div class="panel-content">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr><th>Renter</th><th>Equipment</th><th>Qty</th><th>Rental Date</th><th>Expected Return</th><th>Status</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="active-tbody">
+                            <tr><td colspan="7" class="text-center text-muted">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="table-footer"><span id="activeCount">0 active rentals</span></div>
+                </div>
+            </div>
+
+            <!-- Overdue Tab -->
+            <div id="tab-overdue" class="panel-inner" th:classappend="${currentTab != 'overdue' ? 'd-none' : ''}">
+                <div class="panel-header">Overdue Rentals</div>
+                <div class="panel-content">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr><th>Renter</th><th>Equipment</th><th>Qty</th><th>Rental Date</th><th>Expected Return</th><th>Days Overdue</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="overdue-tbody">
+                            <tr><td colspan="7" class="text-center text-muted">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="table-footer"><span id="overdueCount">0 overdue rentals</span></div>
+                </div>
+            </div>
+
+            <!-- Returned Tab -->
+            <div id="tab-returned" class="panel-inner" th:classappend="${currentTab != 'returned' ? 'd-none' : ''}">
+                <div class="panel-header">Returned Equipment</div>
+                <div class="panel-content">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr><th>Renter</th><th>Equipment</th><th>Qty</th><th>Rental Date</th><th>Returned Date</th><th>Processed By</th><th>Total Paid</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="returned-tbody">
+                            <tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="table-footer"><span id="returnedCount">0 returned rentals</span></div>
+                </div>
+            </div>
+
+            <!-- Archive Tab -->
+            <div id="tab-archive" class="panel-inner" th:classappend="${currentTab != 'archive' ? 'd-none' : ''}">
+                <div class="panel-header">Archived Rentals</div>
+                <div class="panel-content">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr><th>Renter</th><th>Equipment</th><th>Qty</th><th>Rental Date</th><th>Archived Date</th><th>Processed By</th><th>Status</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="archive-tbody">
+                            <tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="table-footer"><span id="archiveCount">0 archived rentals</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Rental Modal -->
+<div class="modal fade" id="createRentalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-box-seam"></i> New Equipment Rental</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="rentalForm">
+                    <label>Renter Name:</label>
+                    <input type="text" class="form-control mb-2" id="renterName" required>
+                    
+                    <label>Equipment Type:</label>
+                    <select class="form-control mb-2" id="equipmentType">
+                        <option value="Chair">Chair (₱15/day)</option>
+                        <option value="Canopy Tent">Canopy Tent (₱250/day)</option>
+                        <option value="Sound System">Sound System (₱500/day)</option>
+                        <option value="Table">Table (₱100/day)</option>
+                    </select>
+                    
+                    <label>Quantity:</label>
+                    <input type="number" class="form-control mb-2" id="quantity" min="1" value="1">
+                    
+                    
+                    <label>Expected Return Date:</label>
+                    <input type="date" class="form-control mb-2" id="expectedReturnDate" required>
+                    
+                    <div class="total-display" id="rentalTotalDisplay">Total: ₱0.00</div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="createRental()">Create Rental</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Rental Modal -->
+<div class="modal fade" id="viewRentalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Rental Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body" id="viewRentalModalBody"></div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <h5 id="successMessage">Success!</h5>
+            </div>
+            <div class="modal-footer justify-content-center border-0 pb-4">
+                <button type="button" class="btn btn-light" id="successOkBtn">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Confirmation Modals -->
+<div id="approveConfirmModal" class="confirm-modal-overlay">
+    <div class="confirm-modal-content">
+        <h4><i class="bi bi-check-circle"></i> Approve Rental</h4>
+        <p>Are you sure you want to approve this rental request?</p>
+        <div class="confirm-modal-buttons">
+            <button class="confirm-cancel" onclick="closeApproveConfirm()">Cancel</button>
+            <button class="confirm-ok" id="confirmApproveBtn" style="background-color: #44C375;">Approve</button>
+        </div>
+    </div>
+</div>
+
+<div id="returnConfirmModal" class="confirm-modal-overlay">
+    <div class="confirm-modal-content">
+        <h4><i class="bi bi-arrow-return-left"></i> Return Equipment</h4>
+        <p>Are you sure you want to mark this equipment as returned?</p>
+        <div class="confirm-modal-buttons">
+            <button class="confirm-cancel" onclick="closeReturnConfirm()">Cancel</button>
+            <button class="confirm-ok" id="confirmReturnBtn" style="background-color: #44C375;">Confirm Return</button>
+        </div>
+    </div>
+</div>
+
+<div id="archiveConfirmModal" class="confirm-modal-overlay">
+    <div class="confirm-modal-content">
+        <h4><i class="bi bi-archive"></i> Archive Rental</h4>
+        <p>Are you sure you want to archive this rental record?</p>
+        <div class="confirm-modal-buttons">
+            <button class="confirm-cancel" onclick="closeArchiveConfirm()">Cancel</button>
+            <button class="confirm-ok" id="confirmArchiveBtn">Archive</button>
+        </div>
+    </div>
+</div>
+
+<script src="/js/sidebar.js"></script>
+<script>
+    // ============================================
+    // RENTALS MODULE - Full JavaScript
+    // ============================================
+    
+    let pollingInterval = null;
+    let currentTab = 'incoming';
+    let currentEquipmentFilter = 'all';
+    let pendingActionId = null;
+    let pendingActionType = null;
+
+    // Helper function to calculate days overdue correctly
+    function calculateDaysOverdue(expectedReturnDate) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const expected = new Date(expectedReturnDate);
+        expected.setHours(0, 0, 0, 0);
+        
+        const diffTime = today - expected;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get current tab from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        if (tabParam && ['incoming', 'active', 'overdue', 'returned', 'archive'].includes(tabParam)) {
+            currentTab = tabParam;
+        } else {
+            currentTab = 'incoming';
+        }
+        
+        // Highlight the active tab on page load
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            const tabValue = tab.getAttribute('onclick');
+            if (tabValue && tabValue.includes(`tab=${currentTab}`)) {
+                tab.classList.add('active');
+            } else {
+                tab.classList.remove('active');
+            }
+        });
+        
+        initializeTabs();
+        loadRentals(currentTab);
+        startPolling();
+        
+        const equipmentType = document.getElementById('equipmentType');
+        const quantity = document.getElementById('quantity');
+        if (equipmentType) equipmentType.addEventListener('change', updateRentalTotal);
+        if (quantity) quantity.addEventListener('change', updateRentalTotal);
+        
+        const searchInput = document.getElementById('rental-search');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                filterRentals(this.value);
+            });
+        }
+        
+        // Equipment filter dropdown
+        document.querySelectorAll('#equipmentFilterMenu .dropdown-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                currentEquipmentFilter = this.getAttribute('data-equipment');
+                const buttonText = currentEquipmentFilter === 'all' ? 'Filter by Equipment' : currentEquipmentFilter;
+                document.getElementById('typeFilterDropdown').innerHTML = `<i class="bi bi-funnel"></i> ${buttonText}`;
+                filterRentals(document.getElementById('rental-search').value);
+            });
+        });
+    });
+
+    function initializeTabs() {
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                const href = this.getAttribute('onclick');
+                if (href) {
+                    const match = href.match(/\/rentals\?tab=(\w+)/);
+                    if (match) {
+                        e.preventDefault();
+                        currentTab = match[1];
+                        window.history.pushState({}, '', `/rentals?tab=${currentTab}`);
+                        tabs.forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        document.querySelectorAll('.panel-inner').forEach(panel => {
+                            panel.classList.add('d-none');
+                        });
+                        document.getElementById(`tab-${currentTab}`).classList.remove('d-none');
+                        
+                        loadRentals(currentTab);
+                    }
+                }
+            });
+        });
+    }
+
+    function updateRentalTotal() {
+        const type = document.getElementById('equipmentType').value;
+        const qty = parseInt(document.getElementById('quantity').value) || 1;
+        let rate = 0;
+        switch(type) {
+            case 'Chair': rate = 15; break;
+            case 'Canopy Tent': rate = 250; break;
+            case 'Sound System': rate = 500; break;
+            case 'Table': rate = 100; break;
+            default: rate = 0;
+        }
+        const total = rate * qty;
+        const totalDisplay = document.getElementById('rentalTotalDisplay');
+        if (totalDisplay) totalDisplay.innerHTML = `Total: ₱${total.toFixed(2)} (per day)`;
+    }
+
+    function loadRentals(status) {
+        fetch(`/rentals/api/${status}`)
+            .then(response => response.json())
+            .then(data => renderRentals(data, status))
+            .catch(error => console.error('Error loading rentals:', error));
+    }
+
+    function renderRentals(rentals, status) {
+        const tbody = document.getElementById(`${status}-tbody`);
+        const countSpan = document.getElementById(`${status}Count`);
+        
+        if (!rentals || rentals.length === 0) {
+            const colspan = (status === 'returned' || status === 'archive') ? 8 : 7;
+            if (tbody) tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center text-muted">No ${status} rentals found</td></tr>`;
+            if (countSpan) countSpan.textContent = `0 ${status} rentals`;
+            return;
+        }
+        
+        if (countSpan) countSpan.textContent = `${rentals.length} ${status} rentals`;
+        
+        let html = '';
+        if (status === 'incoming') {
+            for (let r of rentals) {
+                html += `
+                    <tr>
+                        <td>${escapeHtml(r.renterName)}</td>
+                        <td>${escapeHtml(r.equipmentType)}</td>
+                        <td>${r.quantity}</td>
+                        <td>${r.rentalDate}</td>
+                        <td>${r.expectedReturnDate}</td>
+                        <td><span class="status-badge status-incoming">INCOMING</span></td>
+                        <td>
+                            <button class="btn-sm btn-approve" onclick="openApproveConfirm(${r.id})">Approve</button>
+                            <button class="btn-sm btn-view" onclick="viewRental(${r.id})">View</button>
+                            <button class="btn-sm btn-archive" onclick="openArchiveConfirm(${r.id})">Archive</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        } else if (status === 'active') {
+            for (let r of rentals) {
+                html += `
+                    <tr>
+                        <td>${escapeHtml(r.renterName)}</td>
+                        <td>${escapeHtml(r.equipmentType)}</td>
+                        <td>${r.quantity}</td>
+                        <td>${r.rentalDate}</td>
+                        <td>${r.expectedReturnDate}</td>
+                        <td><span class="status-badge status-active">ACTIVE</span></td>
+                        <td>
+                            <button class="btn-sm btn-return" onclick="openReturnConfirm(${r.id})">Return</button>
+                            <button class="btn-sm btn-view" onclick="viewRental(${r.id})">View</button>
+                            <button class="btn-sm btn-archive" onclick="openArchiveConfirm(${r.id})">Archive</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        } else if (status === 'overdue') {
+            for (let r of rentals) {
+                const daysOverdue = calculateDaysOverdue(r.expectedReturnDate);
+                let overdueText = '';
+                if (daysOverdue === 0) {
+                    overdueText = '<span class="badge bg-warning text-dark">Due Today!</span>';
+                } else if (daysOverdue === 1) {
+                    overdueText = '<span class="badge bg-danger">1 day overdue</span>';
+                } else {
+                    overdueText = `<span class="badge bg-danger">${daysOverdue} days overdue</span>`;
+                }
+                html += `
+                    <tr>
+                        <td>${escapeHtml(r.renterName)}</td>
+                        <td>${escapeHtml(r.equipmentType)}</td>
+                        <td>${r.quantity}</td>
+                        <td>${r.rentalDate}</td>
+                        <td>${r.expectedReturnDate}</td>
+                        <td>${overdueText}</td>
+                        <td>
+                            <button class="btn-sm btn-return" onclick="openReturnConfirm(${r.id})">Return</button>
+                            <button class="btn-sm btn-view" onclick="viewRental(${r.id})">View</button>
+                            <button class="btn-sm btn-archive" onclick="openArchiveConfirm(${r.id})">Archive</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        } else if (status === 'returned') {
+            for (let r of rentals) {
+                html += `
+                    <tr>
+                        <td>${escapeHtml(r.renterName)}</td>
+                        <td>${escapeHtml(r.equipmentType)}</td>
+                        <td>${r.quantity}</td>
+                        <td>${r.rentalDate}</td>
+                        <td>${r.actualReturnDate || 'N/A'}</td>
+                        <td>${escapeHtml(r.processedBy) || 'N/A'}</td>
+                        <td>₱${(r.totalPrice || 0).toFixed(2)}</td>
+                        <td>
+                            <button class="btn-sm btn-view" onclick="viewRental(${r.id})">View</button>
+                            <button class="btn-sm btn-archive" onclick="openArchiveConfirm(${r.id})">Archive</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        } else if (status === 'archive') {
+            for (let r of rentals) {
+                html += `
+                    <tr>
+                        <td>${escapeHtml(r.renterName)}</td>
+                        <td>${escapeHtml(r.equipmentType)}</td>
+                        <td>${r.quantity}</td>
+                        <td>${r.rentalDate}</td>
+                        <td>${r.archivedDate || r.updatedAt || 'N/A'}</td>
+                        <td>${escapeHtml(r.processedBy) || 'N/A'}</td>
+                        <td><span class="status-badge status-archive">ARCHIVED</span></td>
+                        <td>
+                            <button class="btn-sm btn-view" onclick="viewRental(${r.id})">View</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        if (tbody) tbody.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Confirmation modal functions
+    function openApproveConfirm(id) {
+        pendingActionId = id;
+        pendingActionType = 'approve';
+        document.getElementById('approveConfirmModal').style.display = 'flex';
+    }
+    
+    function closeApproveConfirm() {
+        pendingActionId = null;
+        pendingActionType = null;
+        document.getElementById('approveConfirmModal').style.display = 'none';
+    }
+    
+    function openReturnConfirm(id) {
+        pendingActionId = id;
+        pendingActionType = 'return';
+        document.getElementById('returnConfirmModal').style.display = 'flex';
+    }
+    
+    function closeReturnConfirm() {
+        pendingActionId = null;
+        pendingActionType = null;
+        document.getElementById('returnConfirmModal').style.display = 'none';
+    }
+    
+    function openArchiveConfirm(id) {
+        pendingActionId = id;
+        pendingActionType = 'archive';
+        document.getElementById('archiveConfirmModal').style.display = 'flex';
+    }
+    
+    function closeArchiveConfirm() {
+        pendingActionId = null;
+        pendingActionType = null;
+        document.getElementById('archiveConfirmModal').style.display = 'none';
+    }
+    
+    // Confirm button handlers
+    document.getElementById('confirmApproveBtn').addEventListener('click', function() {
+        if (pendingActionId && pendingActionType === 'approve') {
+            executeApproveRental(pendingActionId);
+            closeApproveConfirm();
+        }
+    });
+    
+    document.getElementById('confirmReturnBtn').addEventListener('click', function() {
+        if (pendingActionId && pendingActionType === 'return') {
+            executeReturnRental(pendingActionId);
+            closeReturnConfirm();
+        }
+    });
+    
+    document.getElementById('confirmArchiveBtn').addEventListener('click', function() {
+        if (pendingActionId && pendingActionType === 'archive') {
+            executeArchiveRental(pendingActionId);
+            closeArchiveConfirm();
+        }
+    });
+    
+    // Close modals when clicking outside
+    document.getElementById('approveConfirmModal').addEventListener('click', function(e) {
+        if (e.target === this) closeApproveConfirm();
+    });
+    
+    document.getElementById('returnConfirmModal').addEventListener('click', function(e) {
+        if (e.target === this) closeReturnConfirm();
+    });
+    
+    document.getElementById('archiveConfirmModal').addEventListener('click', function(e) {
+        if (e.target === this) closeArchiveConfirm();
+    });
+
+    function executeApproveRental(id) {
+        fetch(`/rentals/${id}/approve`, { 
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccess('Rental approved successfully!');
+                loadRentals(currentTab);
+                updateAllCounts();
+            } else {
+                showSuccess('Error: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function executeReturnRental(id) {
+        fetch(`/rentals/${id}/return`, { 
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccess('Equipment returned successfully!');
+                loadRentals(currentTab);
+                updateAllCounts();
+            } else {
+                showSuccess('Error: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showSuccess('An error occurred while processing the return');
+        });
+    }
+
+    function executeArchiveRental(id) {
+        fetch(`/rentals/${id}/archive`, { 
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccess('Rental archived successfully!');
+                loadRentals(currentTab);
+                updateAllCounts();
+            } else {
+                showSuccess('Error: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showSuccess('An error occurred while archiving');
+        });
+    }
+
+    function createRental() {
+        const rental = {
+            renterName: document.getElementById('renterName').value,
+            equipmentType: document.getElementById('equipmentType').value,
+            quantity: parseInt(document.getElementById('quantity').value) || 1,
+          
+            expectedReturnDate: document.getElementById('expectedReturnDate').value
+        };
+        
+        if (!rental.renterName || !rental.expectedReturnDate) {
+            showSuccess('Please fill in all required fields');
+            return;
+        }
+        
+        fetch('/rentals/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(rental)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('createRentalModal'));
+                if (modal) modal.hide();
+                showSuccess('Rental request created successfully!');
+                document.getElementById('rentalForm').reset();
+                updateRentalTotal();
+                loadRentals(currentTab);
+                updateAllCounts();
+            } else {
+                showSuccess('Error: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function viewRental(id) {
+        fetch('/rentals/' + id)
+            .then(response => response.json())
+            .then(data => {
+                const statusClass = data.status === 'INCOMING' ? 'status-incoming' : 
+                                   (data.status === 'ACTIVE' ? 'status-active' :
+                                   (data.status === 'OVERDUE' ? 'status-overdue' :
+                                   (data.status === 'RETURNED' ? 'status-returned' : 'status-archive')));
+                const modalBody = document.getElementById('viewRentalModalBody');
+                modalBody.innerHTML = `
+                    <p><strong>Rental ID:</strong> ${data.id}</p>
+                    <p><strong>Status:</strong> <span class="status-badge ${statusClass}">${data.status}</span></p>
+                    <hr>
+                    <p><strong>Renter:</strong> ${escapeHtml(data.renterName)}</p>
+                    <p><strong>Equipment:</strong> ${escapeHtml(data.equipmentType)}</p>
+                    <p><strong>Quantity:</strong> ${data.quantity}</p>
+                    <p><strong>Rental Date:</strong> ${data.rentalDate}</p>
+                    <p><strong>Expected Return:</strong> ${data.expectedReturnDate}</p>
+                    ${data.actualReturnDate ? `<p><strong>Actual Return:</strong> ${data.actualReturnDate}</p>` : ''}
+                  
+                    ${data.processedBy ? `<p><strong>Processed By:</strong> ${escapeHtml(data.processedBy)}</p>` : ''}
+                    <hr>
+                    <p><strong>Total Price:</strong> ₱${(data.totalPrice || 0).toFixed(2)}</p>
+                    <p><small>Created: ${new Date(data.createdAt).toLocaleString()}</small></p>
+                `;
+                new bootstrap.Modal(document.getElementById('viewRentalModal')).show();
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function filterRentals(keyword) {
+        const rows = document.querySelectorAll(`#tab-${currentTab} tbody tr`);
+        const lowerKeyword = keyword.toLowerCase();
+        rows.forEach(row => {
+            if (row.cells && row.cells.length > 0) {
+                let text = '';
+                if (currentTab === 'returned' || currentTab === 'archive') {
+                    text = Array.from(row.cells).slice(0, 5).map(cell => cell.textContent).join(' ').toLowerCase();
+                } else {
+                    text = Array.from(row.cells).slice(0, 6).map(cell => cell.textContent).join(' ').toLowerCase();
+                }
+                let matchesSearch = text.includes(lowerKeyword);
+                let matchesEquipment = true;
+                
+                if (currentEquipmentFilter !== 'all') {
+                    const equipmentCell = row.cells[1];
+                    const equipmentText = equipmentCell ? equipmentCell.textContent.trim() : '';
+                    matchesEquipment = equipmentText === currentEquipmentFilter;
+                }
+                
+                row.style.display = (matchesSearch && matchesEquipment) ? '' : 'none';
+            }
+        });
+    }
+
+    function updateAllCounts() {
+        fetch('/rentals/api/counts')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('incomingBadge').textContent = data.incoming || 0;
+                document.getElementById('activeBadge').textContent = data.active || 0;
+                document.getElementById('overdueBadge').textContent = data.overdue || 0;
+                document.getElementById('returnedBadge').textContent = data.returned || 0;
+                document.getElementById('archiveBadge').textContent = data.archive || 0;
+            })
+            .catch(error => console.error('Error loading counts:', error));
+    }
+
+    function showSuccess(message) {
+        document.getElementById('successMessage').innerHTML = message;
+        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+        successModal.show();
+        setTimeout(() => successModal.hide(), 2000);
+    }
+
+    function startPolling() {
+        if (pollingInterval) clearInterval(pollingInterval);
+        pollingInterval = setInterval(() => {
+            fetch('/rentals/api/poll?t=' + Date.now())
+                .then(response => response.json())
+                .then(data => {
+                    if (data[currentTab]) {
+                        renderRentals(data[currentTab], currentTab);
+                    }
+                    if (data.counts) {
+                        document.getElementById('incomingBadge').textContent = data.counts.incoming || 0;
+                        document.getElementById('activeBadge').textContent = data.counts.active || 0;
+                        document.getElementById('overdueBadge').textContent = data.counts.overdue || 0;
+                        document.getElementById('returnedBadge').textContent = data.counts.returned || 0;
+                        document.getElementById('archiveBadge').textContent = data.counts.archive || 0;
+                    }
+                })
+                .catch(error => console.error('Poll error:', error));
+        }, 5000);
+    }
+
+    window.addEventListener('beforeunload', function() {
+        if (pollingInterval) clearInterval(pollingInterval);
+    });
+</script>
+</body>
+</html>

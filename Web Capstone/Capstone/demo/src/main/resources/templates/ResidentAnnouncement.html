@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Announcements – CivilAccess</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Lato:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand-dark:  #2d4a44;
+      --brand-mid:   #386660;
+      --brand-light: #44c375;
+      --gold:        #fed734;
+      --bg:          #eaecef;
+      --card:        #ffffff;
+      --text-1:      #1c1e21;
+      --text-2:      #65676b;
+      --text-3:      #9ea3a8;
+      --border:      #e4e6eb;
+      --pin-bg:      #fffdf0;
+      --radius:      12px;
+      --nav-h:       62px;
+      --font-h:      'Sora', sans-serif;
+      --font-b:      'Lato', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-b);
+      background: var(--bg);
+      color: var(--text-1);
+      min-height: 100vh;
+    }
+
+    .topnav {
+      position: sticky; top: 0; z-index: 100;
+      height: var(--nav-h);
+      background: var(--brand-dark);
+      border-bottom: 3px solid var(--gold);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.22);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-icon {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(254,215,52,.15);
+      border: 2px solid var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold); font-size: 18px;
+    }
+    .nav-name { font-family: var(--font-h); font-weight: 800; font-size: 19px; color: #fff; letter-spacing: -.3px; }
+    .nav-sub  { font-size: 10px; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .7px; }
+    .live-badge {
+      display: flex; align-items: center; gap: 7px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.18);
+      color: rgba(255,255,255,.85);
+      padding: 6px 14px; border-radius: 40px;
+      font-family: var(--font-h); font-size: 12px; font-weight: 600;
+    }
+    .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--brand-light);
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
+
+    .page { max-width: 660px; margin: 0 auto; padding: 28px 14px 64px; }
+
+    .page-head { text-align: center; margin-bottom: 26px; animation: fadeDown .45s ease both; }
+    .page-head h1 { font-family: var(--font-h); font-size: 24px; font-weight: 800; color: var(--brand-dark); letter-spacing: -.4px; }
+    .page-head p  { font-size: 13.5px; color: var(--text-2); margin-top: 5px; }
+
+    .search-wrap {
+      position: relative; margin-bottom: 18px;
+      animation: fadeDown .45s .08s ease both;
+    }
+    .search-wrap i {
+      position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+      color: var(--text-3); font-size: 15px; pointer-events: none;
+    }
+    .search-input {
+      width: 100%; padding: 11px 14px 11px 42px;
+      border: 1.5px solid var(--border); border-radius: 40px;
+      font-family: var(--font-b); font-size: 14px;
+      background: var(--card);
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .search-input:focus {
+      border-color: var(--brand-mid);
+      box-shadow: 0 0 0 3px rgba(56,102,96,.1);
+    }
+
+    .chips {
+      display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap;
+      animation: fadeDown .45s .13s ease both;
+    }
+    .chip {
+      padding: 6px 16px; border-radius: 40px;
+      border: 1.5px solid var(--border);
+      font-family: var(--font-h); font-size: 12px; font-weight: 700;
+      cursor: pointer; background: var(--card); color: var(--text-2);
+      transition: all .18s; user-select: none; display: flex; align-items: center; gap: 5px;
+    }
+    .chip:hover { border-color: var(--brand-mid); color: var(--brand-mid); }
+    .chip.active { background: var(--brand-dark); border-color: var(--brand-dark); color: #fff; }
+    .chip.chip-high.active { background: #7d6108; border-color: var(--gold); color: #fff; }
+
+    #feed {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,.07);
+      transition: transform .2s, box-shadow .2s;
+      animation: fadeUp .4s ease both;
+      width: 100%;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(0,0,0,.1); }
+    .card.pinned { border-color: var(--gold); background: var(--pin-bg); }
+
+    .card-head {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px 8px;
+    }
+    .avatar {
+      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+      background: var(--brand-dark);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold); font-size: 20px;
+      border: 2px solid rgba(56,102,96,.15);
+    }
+    .card.pinned .avatar { background: #7d6108; border-color: var(--gold); }
+    .head-meta { flex: 1; min-width: 0; }
+    .sender { font-family: var(--font-h); font-weight: 700; font-size: 14px; }
+    .post-dt { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+    .badge {
+      flex-shrink: 0; padding: 3px 11px; border-radius: 40px;
+      font-family: var(--font-h); font-size: 10px; font-weight: 800;
+      letter-spacing: .5px; text-transform: uppercase;
+    }
+    .badge-normal { background: #e8f5f0; color: #2d7a5f; border: 1px solid #b8ddd0; }
+    .badge-high   { background: #fff8e1; color: #856404; border: 1px solid var(--gold); }
+
+    .card-title {
+      font-family: var(--font-h); font-size: 15.5px; font-weight: 700;
+      padding: 2px 16px 7px; line-height: 1.4;
+    }
+    .card-body {
+      font-size: 14.5px; color: #3e4042; line-height: 1.65;
+      padding: 0 16px 12px; white-space: pre-wrap; word-break: break-word;
+    }
+    .card-body.clamped {
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden; white-space: normal;
+    }
+    .read-more {
+      display: block; background: none; border: none;
+      color: var(--brand-mid); font-family: var(--font-h); font-weight: 700;
+      font-size: 13px; cursor: pointer; padding: 0 16px 12px;
+      text-align: left;
+    }
+    .read-more:hover { text-decoration: underline; }
+
+    .card-img {
+      width: 100%; aspect-ratio: 16/9; object-fit: cover;
+      display: block; background: #f0f2f5;
+    }
+    .no-img {
+      width: 100%; aspect-ratio: 16/9;
+      background: linear-gradient(135deg, #eef2f0, #dde8e5);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px; color: var(--text-3);
+    }
+    .no-img i { font-size: 38px; opacity: .35; }
+    .no-img span { font-size: 13px; opacity: .55; }
+
+    .card-foot {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .foot-left { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-3); }
+    .view-btn {
+      background: none; border: none;
+      color: var(--brand-mid); font-family: var(--font-h); font-weight: 700;
+      font-size: 12px; cursor: pointer;
+      padding: 4px 10px; border-radius: 6px;
+      transition: background .15s;
+    }
+    .view-btn:hover { background: #eef5f3; }
+
+    #feed .card:nth-child(1) { animation-delay:.05s }
+    #feed .card:nth-child(2) { animation-delay:.10s }
+    #feed .card:nth-child(3) { animation-delay:.15s }
+    #feed .card:nth-child(4) { animation-delay:.20s }
+    #feed .card:nth-child(5) { animation-delay:.25s }
+    #feed .card:nth-child(n+6){ animation-delay:.30s }
+
+    .empty { text-align: center; padding: 60px 0; color: var(--text-3); }
+    .empty i { font-size: 50px; display: block; margin-bottom: 12px; opacity: .3; }
+    .empty p { font-size: 15px; }
+
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+      z-index: 200; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .overlay.open { display: flex; }
+
+    .modal-box {
+      background: var(--card); border-radius: 16px;
+      width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 24px 60px rgba(0,0,0,.3);
+      animation: popIn .25s ease both;
+    }
+    @keyframes popIn {
+      from { opacity:0; transform:scale(.95) translateY(10px); }
+      to   { opacity:1; transform:scale(1)   translateY(0); }
+    }
+    .modal-top {
+      background: var(--brand-dark); border-bottom: 3px solid var(--gold);
+      padding: 14px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0;
+    }
+    .modal-top h2 { font-family: var(--font-h); font-size: 15px; font-weight: 700; color: #fff; }
+    .modal-x {
+      background: none; border: none; color: rgba(255,255,255,.65);
+      font-size: 22px; cursor: pointer; line-height: 1; transition: color .15s;
+    }
+    .modal-x:hover { color: #fff; }
+
+    .m-head { display: flex; align-items: center; gap: 10px; padding: 16px 16px 8px; }
+    .m-title { font-family: var(--font-h); font-weight: 700; font-size: 16px; padding: 0 16px 10px; line-height: 1.4; }
+    .m-body  { font-size: 14.5px; color: #3e4042; line-height: 1.7; padding: 0 16px 16px; white-space: pre-wrap; word-break: break-word; }
+    .m-img   { width: 100%; object-fit: cover; max-height: 300px; display: block; }
+    .m-foot  {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; border-top: 1px solid var(--border);
+    }
+    .m-foot-left { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-3); }
+    .btn-close-m {
+      padding: 8px 24px; background: var(--brand-dark); color: #fff;
+      border: none; border-radius: 40px;
+      font-family: var(--font-h); font-weight: 600; font-size: 13px;
+      cursor: pointer; transition: background .15s;
+    }
+    .btn-close-m:hover { background: var(--brand-mid); }
+
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeUp   { from{opacity:0;transform:translateY(16px)}  to{opacity:1;transform:translateY(0)} }
+
+    @media(max-width:480px){
+      .page { padding: 18px 8px 50px; }
+      .nav-sub { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="nav-brand" href="#">
+    <div class="nav-icon"><i class="bi bi-building-fill"></i></div>
+    <div>
+      <div class="nav-name">CivilAccess</div>
+      <div class="nav-sub">Barangay Portal</div>
+    </div>
+  </a>
+  <div class="live-badge">
+    <div class="dot"></div>
+    Live Feed
+  </div>
+</nav>
+
+<main class="page">
+
+  <div class="page-head">
+    <h1>Barangay Announcements</h1>
+    <p>Official notices and community news from your barangay.</p>
+  </div>
+
+  <div class="search-wrap">
+    <i class="bi bi-search"></i>
+    <input class="search-input" id="searchInput" type="text" placeholder="Search announcements…">
+  </div>
+
+  <div class="chips">
+    <div class="chip active" data-filter="all">All</div>
+    <div class="chip chip-high" data-filter="HIGH"><i class="bi bi-pin-angle-fill"></i> Pinned</div>
+    <div class="chip" data-filter="NORMAL">Normal</div>
+  </div>
+
+  <!--
+    Single flat loop — no grouping, no th:if on priority.
+    Controller already sorted: HIGH first, then NORMAL, newest-first within each.
+    Each card renders unconditionally; JS handles filter/search.
+  -->
+  <div id="feed">
+
+    <th:block th:each="a : ${announcements}">
+      <article th:id="'card-' + ${a.id}"
+               th:data-id="${a.id}"
+               th:data-priority="${a.priority != null ? #strings.toUpperCase(a.priority) : 'NORMAL'}"
+               th:data-title="${a.title}"
+               th:data-content="${a.content}"
+               th:data-date="${a.datePosted}"
+               th:data-image="${a.image != null ? a.image : ''}"
+               th:classappend="${a.priority != null and #strings.equalsIgnoreCase(a.priority, 'HIGH') ? 'card pinned' : 'card'}">
+
+        <!-- Header -->
+        <div class="card-head">
+          <div class="avatar"><i class="bi bi-megaphone-fill"></i></div>
+          <div class="head-meta">
+            <div class="sender">Barangay Official</div>
+            <div class="post-dt"
+                 th:text="${a.datePosted != null ? #temporals.format(a.datePosted, 'MMMM d, yyyy · h:mm a') : 'N/A'}">
+            </div>
+          </div>
+          <!-- Only HIGH or NORMAL — simple ternary, no URGENT check -->
+          <span th:class="${a.priority != null and #strings.equalsIgnoreCase(a.priority, 'HIGH') ? 'badge badge-high' : 'badge badge-normal'}"
+                th:text="${a.priority != null ? #strings.toUpperCase(a.priority) : 'NORMAL'}">
+          </span>
+        </div>
+
+        <!-- Title -->
+        <div class="card-title" th:text="${a.title}"></div>
+
+        <!-- Body -->
+        <div th:if="${a.content != null and not #strings.isEmpty(a.content)}">
+          <div th:class="${#strings.length(a.content) > 280 ? 'card-body clamped' : 'card-body'}"
+               th:text="${a.content}">
+          </div>
+          <button th:if="${#strings.length(a.content) > 280}"
+                  class="read-more"
+                  th:attr="onclick='openModal(document.getElementById(\'card-\' + ' + ${a.id} + '))'">
+            Read more…
+          </button>
+        </div>
+
+        <!-- Image -->
+        <img th:if="${a.image != null and not #strings.isEmpty(a.image)}"
+             class="card-img"
+             th:src="${a.image}"
+             alt="Announcement image"
+             onerror="this.style.display='none'">
+        <div th:if="${a.image == null or #strings.isEmpty(a.image)}" class="no-img">
+          <i class="bi bi-image"></i>
+          <span>No image attached</span>
+        </div>
+
+        <!-- Footer -->
+        <div class="card-foot">
+          <div class="foot-left">
+            
+          </div>
+          <button class="view-btn"
+                  th:attr="onclick='openModal(document.getElementById(\'card-\' + ' + ${a.id} + '))'">
+            View full <i class="bi bi-arrow-right-short"></i>
+          </button>
+        </div>
+
+      </article>
+    </th:block>
+
+    <!-- JS empty state -->
+    <div class="empty" id="emptyState" style="display:none">
+      <i class="bi bi-megaphone"></i>
+      <p>No announcements match your search.</p>
+    </div>
+
+    <!-- Server-side empty -->
+    <div class="empty" th:if="${announcements == null or #lists.isEmpty(announcements)}">
+      <i class="bi bi-megaphone"></i>
+      <p>No active announcements yet. Check back soon!</p>
+    </div>
+
+  </div>
+
+</main>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="closeModalOnBg(event)">
+  <div class="modal-box" id="modalBox">
+    <div class="modal-top">
+      <h2>Announcement</h2>
+      <button class="modal-x" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+  function openModal(card) {
+    const title    = card.dataset.title    || '';
+    const content  = card.dataset.content  || '';
+    const date     = card.dataset.date     || '';
+    const image    = card.dataset.image    || '';
+    const priority = (card.dataset.priority || 'NORMAL').toUpperCase();
+    const badgeClass = priority === 'HIGH' ? 'badge-high' : 'badge-normal';
+
+    let dateFormatted = 'N/A';
+    if (date) {
+      try {
+        dateFormatted = new Date(date).toLocaleDateString('en-US', {
+          month: 'long', day: 'numeric', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
+      } catch(e) { dateFormatted = date; }
+    }
+
+    const imgHtml = image
+      ? `<img class="m-img" src="${escHtml(image)}" alt="Announcement image" onerror="this.style.display='none'">`
+      : '';
+
+    document.getElementById('modalContent').innerHTML = `
+      <div class="m-head">
+        <div class="avatar" style="background:var(--brand-dark);color:var(--gold);border:2px solid rgba(56,102,96,.15)">
+          <i class="bi bi-megaphone-fill"></i>
+        </div>
+        <div class="head-meta">
+          <div class="sender">Barangay Official</div>
+          <div class="post-dt">${escHtml(dateFormatted)}</div>
+        </div>
+        <span class="badge ${badgeClass}">${escHtml(priority)}</span>
+      </div>
+      <div class="m-title">${escHtml(title)}</div>
+      <div class="m-body">${escHtml(content)}</div>
+      ${imgHtml}
+      <div class="m-foot">
+        <div class="m-foot-left">
+          <i class="bi bi-info-circle"></i> Official Barangay Announcement
+        </div>
+        <button class="btn-close-m" onclick="closeModal()">Close</button>
+      </div>
+    `;
+
+    document.getElementById('overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function closeModalOnBg(e) {
+    if (e.target === document.getElementById('overlay')) closeModal();
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  function escHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;')
+              .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── Filter chips ── */
+  let currentFilter = 'all';
+  let currentSearch = '';
+
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentFilter = chip.dataset.filter; // 'all', 'HIGH', or 'NORMAL'
+      applyFilters();
+    });
+  });
+
+  document.getElementById('searchInput').addEventListener('input', function() {
+    currentSearch = this.value.toLowerCase().trim();
+    applyFilters();
+  });
+
+  function applyFilters() {
+    const cards = document.querySelectorAll('#feed .card');
+    let anyVisible = false;
+
+    cards.forEach(card => {
+      const priority = (card.dataset.priority || 'NORMAL').toUpperCase();
+      const text = ((card.dataset.title || '') + ' ' + (card.dataset.content || '')).toLowerCase();
+
+      const matchesFilter =
+        currentFilter === 'all'    ? true :
+        currentFilter === 'HIGH'   ? priority === 'HIGH' :
+        currentFilter === 'NORMAL' ? priority === 'NORMAL' : true;
+
+      const matchesSearch = !currentSearch || text.includes(currentSearch);
+
+      const show = matchesFilter && matchesSearch;
+      card.style.display = show ? '' : 'none';
+      if (show) anyVisible = true;
+    });
+
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) emptyState.style.display = anyVisible ? 'none' : 'block';
+  }
+
+  /* ── Polling every 5 s ── */
+  let lastEtag = '';
+
+  async function pollFeed() {
+    try {
+      const res = await fetch('/resident/announcements/api/feed?t=' + Date.now());
+      if (!res.ok) return;
+      const data = await res.json();
+      const etag = JSON.stringify(data.map(a => a.id + ':' + a.datePosted + ':' + a.priority + ':' + a.status));
+      if (etag === lastEtag) return;
+      lastEtag = etag;
+      rebuildFeed(data);
+    } catch(e) { /* silent */ }
+  }
+
+  function rebuildFeed(announcements) {
+    document.querySelectorAll('#feed .card').forEach(c => c.remove());
+    const feed = document.getElementById('feed');
+    const emptyState = document.getElementById('emptyState');
+    announcements.forEach(a => feed.insertBefore(buildCard(a), emptyState));
+    applyFilters();
+  }
+
+  function buildCard(a) {
+    const isHigh   = (a.priority || '').toUpperCase() === 'HIGH';
+    const priority = (a.priority || 'NORMAL').toUpperCase();
+    const content  = a.content || '';
+    const clamp    = content.length > 280;
+
+    let dateStr = 'N/A', dateShort = '';
+    if (a.datePosted) {
+      try {
+        const d = new Date(a.datePosted);
+        dateStr   = d.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+        dateShort = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+      } catch(e) {}
+    }
+
+    const imgHtml = a.image
+      ? `<img class="card-img" src="${escHtml(a.image)}" alt="Announcement image" onerror="this.style.display='none'">`
+      : `<div class="no-img"><i class="bi bi-image"></i><span>No image attached</span></div>`;
+
+    const article = document.createElement('article');
+    article.id            = 'card-' + a.id;
+    article.className     = 'card' + (isHigh ? ' pinned' : '');
+    article.dataset.id       = a.id;
+    article.dataset.priority = priority;
+    article.dataset.title    = a.title || '';
+    article.dataset.content  = content;
+    article.dataset.date     = a.datePosted || '';
+    article.dataset.image    = a.image || '';
+
+    article.innerHTML = `
+      <div class="card-head">
+        <div class="avatar"><i class="bi bi-megaphone-fill"></i></div>
+        <div class="head-meta">
+          <div class="sender">Barangay Official</div>
+          <div class="post-dt">${escHtml(dateStr)}</div>
+        </div>
+        <span class="badge ${isHigh ? 'badge-high' : 'badge-normal'}">${escHtml(priority)}</span>
+      </div>
+      <div class="card-title">${escHtml(a.title || '')}</div>
+      <div class="card-body${clamp ? ' clamped' : ''}">${escHtml(content)}</div>
+      ${clamp ? `<button class="read-more" onclick="openModal(document.getElementById('card-${a.id}'))">Read more…</button>` : ''}
+      ${imgHtml}
+      <div class="card-foot">
+        <div class="foot-left">
+  
+        </div>
+        <button class="view-btn" onclick="openModal(document.getElementById('card-${a.id}'))">
+          View full <i class="bi bi-arrow-right-short"></i>
+        </button>
+      </div>
+    `;
+    return article;
+  }
+
+  setInterval(pollFeed, 5000);
+</script>
+
+</body>
+</html>
