@@ -48,6 +48,11 @@
             <li onclick="window.location.href='/user-profile'">
                 <img src="/icons/user.svg" class="icon"> User Profile
             </li>
+             <li th:if="${currentrole == 'ADMIN' || currentrole == 'BARANGAY-CAPTAIN' || currentrole == 'SECRETARY' || currentrole == 'TREASURER'}"
+                onclick="window.location.href='/finance'">
+                <img src="/icons/cash.svg" class="icon"> Expenditures
+                <span class="sidebar-count-badge" id="badge-finance"></span>
+            </li>
         </ul>
     </div>
 

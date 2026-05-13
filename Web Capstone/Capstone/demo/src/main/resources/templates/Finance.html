@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Management - CivilAccess</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- html2pdf.js library for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* Your existing CSS here */
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f1; }
+        .layout { display: flex; height: 100vh; overflow: hidden; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-header { background-color: #2d4a44; display: flex; border-bottom: 2px solid #FED734; flex-shrink: 0; }
+        .top-header-tab { flex: 1; color: white; text-align: center; padding: 16px 20px; font-size: 16px; font-weight: bold; }
+        .content-area { padding: 24px; flex: 1; overflow-y: auto; background-color: #f0f2f1; }
+        .finance-tabs { display: flex; gap: 5px; margin-bottom: 24px; background: white; padding: 8px 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .tab-btn { padding: 12px 24px; background: none; border: none; font-size: 14px; font-weight: 600; color: #666; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+        .tab-btn:hover { background: #f0f2f1; color: #2d4a44; }
+        .tab-btn.active { background: #2d4a44; color: white; }
+        .stat-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s; border-left: 4px solid; margin-bottom: 20px; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-card.income { border-left-color: #27ae60; }
+        .stat-card.expense { border-left-color: #e74c3c; }
+        .stat-card.budget { border-left-color: #2d4a44; }
+        .stat-card.savings { border-left-color: #FED734; }
+        .stat-title { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .stat-amount { font-size: 28px; font-weight: bold; color: #2d4a44; }
+        .form-panel { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .form-title { font-size: 18px; font-weight: bold; color: #2d4a44; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #FED734; }
+        .form-label { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 5px; }
+        .form-control, .form-select { border-radius: 8px; border: 1px solid #ddd; padding: 10px 12px; font-size: 13px; }
+        .btn-save { background: #2d4a44; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-secondary { background: #6c757d; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-pdf { background: #b91c1c; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-left: 12px; }
+        .btn-pdf:hover { background: #991b1b; }
+        .data-table { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); width: 100%; }
+        .data-table th { background: #f8f9fa; color: #2d4a44; font-weight: 600; font-size: 12px; padding: 12px 12px; border-bottom: 2px solid #FED734; }
+        .data-table td { padding: 10px 12px; font-size: 12px; vertical-align: middle; }
+        .badge-pending { background: #f39c12; color: white; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; }
+        .badge-approved { background: #3498db; color: white; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; }
+        .badge-income { background: #27ae60; color: white; padding: 3px 10px; border-radius: 20px; font-size: 10px; }
+        .badge-rental { background: #f39c12; color: white; padding: 3px 10px; border-radius: 20px; font-size: 10px; }
+        .amount-positive { color: #27ae60; font-weight: 600; }
+        .amount-negative { color: #e74c3c; font-weight: 600; }
+        .action-btn { padding: 4px 8px; border-radius: 4px; font-size: 11px; text-decoration: none; cursor: pointer; border: none; }
+        .action-btn.approve { background: #d4edda; color: #155724; }
+        .action-btn.delete { background: #f8d7da; color: #721c24; }
+        .action-btn.edit { background: #e0e0e0; color: #333; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .toast-wrap { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+        .toast-msg { background: #2d4a44; color: white; padding: 12px 18px; border-radius: 8px; font-size: 13px; margin-bottom: 8px; animation: slideIn 0.3s ease; }
+        .toast-msg.error { background: #c0392b; }
+        .toast-msg.success { background: #27ae60; }
+        @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .search-filter { display: flex; gap: 10px; margin-bottom: 16px; }
+        .search-input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px; }
+        .filter-select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; background: white; font-size: 12px; }
+        .table-responsive { overflow-x: auto; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #pdfReportContainer, #pdfReportContainer * { visibility: visible; }
+            #pdfReportContainer {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                padding: 20px;
+            }
+            .no-print, .no-print * { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="toast-wrap" id="toastWrap"></div>
+
+    <div class="main-content">
+        <div class="top-header">
+            <div class="top-header-tab">Financial Management</div>
+        </div>
+
+        <div class="content-area">
+            <!-- Tabs -->
+            <div class="finance-tabs">
+                <button class="tab-btn active" onclick="showTab('dashboard', this)"><i class="bi bi-speedometer2"></i> Dashboard</button>
+                <button class="tab-btn" onclick="showTab('income', this)"><i class="bi bi-cash-stack"></i> Income</button>
+                <button class="tab-btn" onclick="showTab('expenses', this)"><i class="bi bi-receipt"></i> Expenses</button>
+                <button class="tab-btn" onclick="showTab('budget', this)"><i class="bi bi-pie-chart"></i> Budget</button>
+            </div>
+
+            <!-- DASHBOARD TAB -->
+            <div id="tab-dashboard" class="tab-content active">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="stat-card income">
+                            <div class="stat-title"><i class="bi bi-graph-up"></i> Total Income (This Month)</div>
+                            <div class="stat-amount" th:text="'₱' + ${monthIncome}">₱0</div>
+                            <small class="text-muted">Today: <span th:text="'₱' + ${todayIncome}">₱0</span></small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card expense">
+                            <div class="stat-title"><i class="bi bi-graph-down"></i> Total Expenses (This Month)</div>
+                            <div class="stat-amount" th:text="'₱' + ${monthExpenses}">₱0</div>
+                            <small class="text-muted">Today: <span th:text="'₱' + ${todayExpenses}">₱0</span></small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card budget">
+                            <div class="stat-title"><i class="bi bi-calculator"></i> Remaining Budget</div>
+                            <div class="stat-amount" th:text="'₱' + ${remainingBudget}">₱0</div>
+                            <small class="text-muted">Total: ₱<span th:text="${totalBudget}">0</span></small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-panel" style="margin-top: 20px;">
+                    <div class="form-title"><i class="bi bi-clock-history"></i> Pending Expenses (Need Approval)</div>
+                    <div class="table-responsive">
+                        <table class="data-table table">
+                            <thead>
+                                <tr><th>Date</th><th>Description</th><th>Amount</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="exp : ${pendingExpensesList}">
+                                    <td th:text="${exp.expenseDate}">-</td>
+                                    <td th:text="${exp.description}">-</td>
+                                    <td class="amount-negative" th:text="'₱' + ${exp.amount}">-</td>
+                                    <td><a th:href="@{|/finance/expenses/approve/${exp.id}?approvedBy=${currentAdminNumericId}|}" class="action-btn approve" onclick="return confirm('Approve?')">Approve</a></td>
+                                </tr>
+                                <tr th:if="${pendingExpensesList.isEmpty()}"><td colspan="4" class="text-center text-muted">No pending expenses</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INCOME TAB -->
+            <div id="tab-income" class="tab-content">
+                <div class="form-panel">
+                    <div class="form-title"><i class="bi bi-plus-circle"></i> Record New Income</div>
+                    <form th:action="@{/finance/income/save}" method="post">
+                        <input type="hidden" name="collectedBy" th:value="${currentAdminNumericId}">
+                        <div class="row g-3">
+                            <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="incomeDate" class="form-control" required></div>
+                            <div class="col-md-3">
+                                <label class="form-label">Income Type</label>
+                                <select name="incomeType" class="form-select" id="incomeTypeSelect" required onchange="toggleIncomeFields()">
+                                    <option value="DOCUMENT_FEE">Document Fee</option>
+                                    <option value="DONATION">Donation</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3" id="documentTypeDiv"><label class="form-label">Document Type</label>
+                                <select name="documentType" class="form-select">
+                                    <option value="CLEARANCE">Barangay Clearance</option>
+                                    <option value="INDIGENCY">Certificate of Indigency</option>
+                                    <option value="BARANGAY_ID">Barangay ID</option>
+                                    <option value="OTHER">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3"><label class="form-label">Source Name</label><input type="text" name="sourceName" class="form-control" placeholder="Resident/Renter name" required></div>
+                            <div class="col-md-2"><label class="form-label">Amount (₱)</label><input type="number" name="amount" class="form-control" step="0.01" required></div>
+                            <div class="col-md-12"><button type="submit" class="btn-save"><i class="bi bi-save"></i> Save Income</button></div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="form-panel">
+                    <div class="form-title"><i class="bi bi-list-ul"></i> All Income Records</div>
+                    <div class="search-filter">
+                        <input type="text" id="incomeSearch" class="search-input" placeholder="Search by source or OR#...">
+                        <select id="incomeTypeFilter" class="filter-select"><option value="">All Types</option><option value="DOCUMENT_FEE">Document Fee</option></select>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table table">
+                            <thead>
+                                <tr><th>Date</th><th>OR#</th><th>Source</th><th>Type</th><th>Amount</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="incomeTableBody">
+                                <tr th:each="inc : ${incomeList}">
+                                    <td th:text="${inc.incomeDate}">-</td>
+                                    <td><strong th:text="${inc.orNumber}">-</strong></td>
+                                    <td th:text="${inc.sourceName}">-</td>
+                                    <td><span class="badge-income" th:text="${inc.incomeType.getDisplayName()}">-</span></td>
+                                    <td class="amount-positive" th:text="'₱' + ${inc.amount}">-</td>
+                                    <td><a th:href="@{|/finance/income/delete/${inc.id}|}" class="action-btn delete" onclick="return confirm('Delete this income record?')"><i class="bi bi-trash"></i> Delete</a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EXPENSES TAB -->
+            <div id="tab-expenses" class="tab-content">
+                <div class="form-panel">
+                    <div class="form-title"><i class="bi bi-plus-circle"></i> Record New Expense</div>
+                    <form th:action="@{/finance/expenses/save}" method="post">
+                        <input type="hidden" name="createdBy" th:value="${currentAdminNumericId}">
+                        <div class="row g-3">
+                            <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="expenseDate" class="form-control" required></div>
+                            <div class="col-md-3">
+                                <label class="form-label">Expense Type</label>
+                                <select name="expenseType" class="form-select" required>
+                                    <option value="PROGRAM">Program Expense</option><option value="SUPPLIES">Office Supplies</option>
+                                    <option value="UTILITIES">Utilities</option><option value="SALARY">Salary</option>
+                                    <option value="EMERGENCY">Emergency Response</option><option value="INFRASTRUCTURE">Infrastructure</option>
+                                    <option value="EVENTS">Events</option><option value="OTHER">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Fund Source</label>
+                                <select name="fundSource" class="form-select" required>
+                                    <option value="GENERAL_FUND">General Fund</option><option value="SK_FUND">SK Fund</option>
+                                    <option value="DISASTER_FUND">Disaster Fund</option><option value="SPECIAL_FUND">Special Fund</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3"><label class="form-label">Payee</label><input type="text" name="payee" class="form-control" placeholder="Recipient name" required></div>
+                            <div class="col-md-4"><label class="form-label">Description</label><input type="text" name="description" class="form-control" placeholder="What was purchased?" required></div>
+                            <div class="col-md-2"><label class="form-label">Amount (₱)</label><input type="number" name="amount" class="form-control" step="0.01" required></div>
+                            <div class="col-md-3"><label class="form-label">Receipt Number</label><input type="text" name="receiptNumber" class="form-control" placeholder="Optional"></div>
+                            <div class="col-md-12"><button type="submit" class="btn-save"><i class="bi bi-save"></i> Save Expense</button></div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="form-panel">
+                    <div class="form-title"><i class="bi bi-list-ul"></i> Expense Records</div>
+                    <ul class="nav nav-tabs mb-3">
+                        <li class="nav-item"><a class="nav-link active" data-status="all" href="#" onclick="filterExpenses('all', this); return false;">All</a></li>
+                        <li class="nav-item"><a class="nav-link" data-status="PENDING" href="#" onclick="filterExpenses('PENDING', this); return false;">Pending</a></li>
+                        <li class="nav-item"><a class="nav-link" data-status="APPROVED" href="#" onclick="filterExpenses('APPROVED', this); return false;">Approved</a></li>
+                    </ul>
+                    <div class="search-filter"><input type="text" id="expenseSearch" class="search-input" placeholder="Search by description..."></div>
+                    <div class="table-responsive">
+                        <table class="data-table table">
+                            <thead>
+                                <tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="expenseTableBody">
+                                <tr th:each="exp : ${expenseList}" th:attr="data-status=${exp.status.name()}">
+                                    <td th:text="${exp.expenseDate}">-</td>
+                                    <td th:text="${exp.description}">-</td>
+                                    <td th:text="${exp.expenseType.getDisplayName()}">-</td>
+                                    <td class="amount-negative" th:text="'₱' + ${exp.amount}">-</td>
+                                    <td><span th:classappend="${exp.status.name() == 'PENDING'} ? 'badge-pending' : 'badge-approved'" class="badge-pending" th:text="${exp.status.getDisplayName()}">-</span></td>
+                                    <td>
+                                        <a th:href="@{|/finance/expenses/approve/${exp.id}?approvedBy=${currentAdminNumericId}|}" th:if="${exp.status.name() == 'PENDING'}" class="action-btn approve" onclick="return confirm('Approve this expense?')">Approve</a>
+                                        <a th:href="@{|/finance/expenses/delete/${exp.id}|}" class="action-btn delete" onclick="return confirm('Delete this expense?')">Delete</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BUDGET TAB -->
+            <div id="tab-budget" class="tab-content">
+                <div class="form-panel" style="max-width: 420px; margin: 0 auto;">
+                    <div class="form-title"><i class="bi bi-wallet2"></i> Current Budget</div>
+                    <div style="background: #f0f4f3; border-radius: 10px; padding: 28px 20px; text-align: center; margin-bottom: 20px;">
+                        <div style="font-size: 11px; font-weight: 700; color: #2d4a44; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Available Funds</div>
+                        <div style="font-size: 36px; font-weight: bold; color: #2d4a44;" th:text="'₱' + ${#numbers.formatDecimal(totalBudget, 1, 2)}">₱0.00</div>
+                        <div style="font-size: 11px; color: #888; margin-top: 8px;">Last updated: <span th:text="${#temporals.format(#temporals.createNow(), 'MMMM dd, yyyy')}">Today</span></div>
+                    </div>
+                    <button type="button" onclick="openBudgetModal()" style="width: 100%; background: #FED734; color: #2d4a44; border: none; padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="bi bi-pencil-fill"></i> Update Budget
+                    </button>
+                </div>
+            </div>
+
+            <!-- BUDGET MODAL STEP 1: Enter Amount -->
+            <div id="budgetModal1" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+                <div style="background:white; border-radius:16px; padding:32px; width:100%; max-width:400px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+                    <h5 style="font-weight:700; color:#2d4a44; margin-bottom:6px;"><i class="bi bi-pencil-fill me-2"></i>Update Budget</h5>
+                    <p style="font-size:13px; color:#888; margin-bottom:20px;">Enter the new budget amount.</p>
+                    <label class="form-label">New Budget Amount (₱)</label>
+                    <input type="number" id="budgetStep1Input" class="form-control mb-3" placeholder="e.g. 50000" step="0.01" min="0">
+                    <div style="display:flex; gap:10px; justify-content:flex-end;">
+                        <button onclick="closeBudgetModal()" style="background:#f0f2f1; color:#555; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;">Cancel</button>
+                        <button onclick="proceedToConfirm()" style="background:#2d4a44; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;">Next</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BUDGET MODAL STEP 2: Confirm by retyping -->
+            <div id="budgetModal2" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+                <div style="background:white; border-radius:16px; padding:32px; width:100%; max-width:400px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+                    <h5 style="font-weight:700; color:#2d4a44; margin-bottom:6px;"><i class="bi bi-shield-check me-2"></i>Confirm Budget</h5>
+                    <p style="font-size:13px; color:#888; margin-bottom:4px;">You entered: <strong id="budgetConfirmDisplay" style="color:#2d4a44;"></strong></p>
+                    <p style="font-size:13px; color:#888; margin-bottom:20px;">Please retype the amount to confirm.</p>
+                    <label class="form-label">Retype Amount (₱)</label>
+                    <input type="number" id="budgetStep2Input" class="form-control mb-1" placeholder="Retype amount" step="0.01" min="0">
+                    <div id="budgetMismatchError" style="display:none; color:#e74c3c; font-size:12px; margin-bottom:10px;">Amounts do not match. Please try again.</div>
+                    <div style="margin-bottom:16px;"></div>
+                    <form id="budgetUpdateForm" th:action="@{/finance/budget/update-total}" method="post">
+                        <input type="hidden" name="amount" id="budgetFinalAmount">
+                        <div style="display:flex; gap:10px; justify-content:flex-end;">
+                            <button type="button" onclick="backToStep1()" style="background:#f0f2f1; color:#555; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;">Back</button>
+                            <button type="button" onclick="submitBudget()" style="background:#FED734; color:#2d4a44; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;"><i class="bi bi-check-lg"></i> Confirm</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
+<script src="/js/sidebar.js"></script>
+<script src="/js/notif.js"></script>
+
+<script>
+    // Tab switching
+    function showTab(tabName, el) {
+        var tabs = document.querySelectorAll('.tab-content');
+        for (var i = 0; i < tabs.length; i++) {
+            tabs[i].classList.remove('active');
+        }
+        document.getElementById('tab-' + tabName).classList.add('active');
+        
+        var btns = document.querySelectorAll('.tab-btn');
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].classList.remove('active');
+        }
+        if (el) {
+            el.classList.add('active');
+        }
+        window.location.hash = tabName;
+    }
+    
+    if (window.location.hash) {
+        var tab = window.location.hash.substring(1);
+        if (tab === 'dashboard' || tab === 'income' || tab === 'expenses' || tab === 'budget') {
+            showTab(tab, null);
+        }
+    }
+    
+    function toggleIncomeFields() {
+        var type = document.getElementById('incomeTypeSelect');
+        if (!type) return;
+        var docDiv = document.getElementById('documentTypeDiv');
+        if (type.value === 'DOCUMENT_FEE') {
+            if (docDiv) docDiv.style.display = 'block';
+        } else {
+            if (docDiv) docDiv.style.display = 'none';
+        }
+    }
+    
+    function filterExpenses(status, el) {
+        var rows = document.querySelectorAll('#expenseTableBody tr');
+        for (var i = 0; i < rows.length; i++) {
+            if (status === 'all') {
+                rows[i].style.display = '';
+            } else {
+                var rowStatus = rows[i].getAttribute('data-status') || '';
+                rows[i].style.display = (rowStatus === status) ? '' : 'none';
+            }
+        }
+        var links = document.querySelectorAll('.nav-link');
+        for (var i = 0; i < links.length; i++) {
+            links[i].classList.remove('active');
+        }
+        if (el) {
+            el.classList.add('active');
+        }
+    }
+    
+    // Search filters
+    var incomeSearch = document.getElementById('incomeSearch');
+    if (incomeSearch) {
+        incomeSearch.addEventListener('keyup', function() {
+            var search = this.value.toLowerCase();
+            var typeFilter = document.getElementById('incomeTypeFilter');
+            var filterValue = typeFilter ? typeFilter.value : '';
+            var rows = document.querySelectorAll('#incomeTableBody tr');
+            for (var i = 0; i < rows.length; i++) {
+                if (rows[i].cells.length < 5) continue;
+                var source = rows[i].cells[2]?.textContent.toLowerCase() || '';
+                var orNum = rows[i].cells[1]?.textContent.toLowerCase() || '';
+                var type = rows[i].cells[3]?.textContent || '';
+                var matchesSearch = source.indexOf(search) !== -1 || orNum.indexOf(search) !== -1;
+                var matchesType = !filterValue || type.indexOf(filterValue === 'DOCUMENT_FEE' ? 'Document Fee' : 'Rental') !== -1;
+                rows[i].style.display = (matchesSearch && matchesType) ? '' : 'none';
+            }
+        });
+    }
+    
+    var incomeTypeFilter = document.getElementById('incomeTypeFilter');
+    if (incomeTypeFilter) {
+        incomeTypeFilter.addEventListener('change', function() {
+            if (incomeSearch) incomeSearch.dispatchEvent(new Event('keyup'));
+        });
+    }
+    
+    var expenseSearch = document.getElementById('expenseSearch');
+    if (expenseSearch) {
+        expenseSearch.addEventListener('keyup', function() {
+            var search = this.value.toLowerCase();
+            var rows = document.querySelectorAll('#expenseTableBody tr');
+            for (var i = 0; i < rows.length; i++) {
+                if (rows[i].cells.length < 5) continue;
+                var desc = rows[i].cells[1]?.textContent.toLowerCase() || '';
+                rows[i].style.display = desc.indexOf(search) !== -1 ? '' : 'none';
+            }
+        });
+    }
+    
+    function formatPHP(value) {
+        return '₱' + parseFloat(value).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+    
+    // PDF Report Generation Function
+    async function downloadPDFReport() {
+        var startDate = document.getElementById('reportStartDate').value;
+        var endDate = document.getElementById('reportEndDate').value;
+        
+        if (!startDate || !endDate) {
+            showToast('Please select both start and end dates', 'error');
+            return;
+        }
+        
+        if (new Date(startDate) > new Date(endDate)) {
+            showToast('Start date cannot be after end date', 'error');
+            return;
+        }
+        
+        showToast('Generating PDF report...', 'success');
+        
+        try {
+            var response = await fetch('/finance/reports/pdf-data?startDate=' + startDate + '&endDate=' + endDate);
+            var data = await response.json();
+            
+            if (!data.success) {
+                showToast('Error: ' + (data.error || 'Unknown error'), 'error');
+                return;
+            }
+            
+            // Build income table
+            var incomeRows = '';
+            if (data.incomeList && data.incomeList.length > 0) {
+                data.incomeList.forEach(function(inc) {
+                    var typeDisplay = 'Document Fee';
+                    if (inc.incomeType === 'RENTAL') typeDisplay = 'Rental';
+                    else if (inc.incomeType === 'DONATION') typeDisplay = 'Donation';
+                    else if (inc.incomeType === 'DOCUMENT_FEE') typeDisplay = 'Document Fee';
+                    
+                    incomeRows += '<tr>' +
+                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (inc.incomeDate || '') + '</td>' +
+                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (inc.orNumber || 'N/A') + '</td>' +
+                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (inc.sourceName || '') + '</td>' +
+                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + typeDisplay + '</td>' +
+                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee; color: #27ae60; font-weight: 600;">' + formatPHP(inc.amount) + '</td>' +
+                    '</tr>';
+                });
+            } else {
+                incomeRows = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No income records found</td></tr>';
+            }
+            
+            // Build expense table
+            var expenseRows = '';
+            if (data.expenseList && data.expenseList.length > 0) {
+                data.expenseList.forEach(function(exp) {
+                    var statusClass = exp.status === 'PENDING' ? '#f39c12' : (exp.status === 'APPROVED' ? '#3498db' : '#27ae60');
+                    var statusText = exp.status || 'PENDING';
+                    var expenseTypeDisplay = (exp.expenseType || 'OTHER').replace('_', ' ');
+                    expenseTypeDisplay = expenseTypeDisplay.charAt(0).toUpperCase() + expenseTypeDisplay.slice(1).toLowerCase();
+                    
+                    expenseRows += '<tr>' +
+                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (exp.expenseDate || '') + '</td>' +
+                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (exp.description || '') + '</td>' +
+                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + expenseTypeDisplay + '</td>' +
+                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee; color: #e74c3c; font-weight: 600;">' + formatPHP(exp.amount) + '</td>' +
+                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;"><span style="background: ' + statusClass + '; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px;">' + statusText + '</span></td>' +
+                    '</tr>';
+                });
+            } else {
+                expenseRows = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No expense records found</td></tr>';
+            }
+            
+            // Build budget table
+            var budgetRows = '';
+            if (data.budgetList && data.budgetList.length > 0) {
+                data.budgetList.forEach(function(b) {
+                    budgetRows += '<tr>' +
+                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (b.programId || '') + '</td>' +
+                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (b.budgetItem || '') + '</td>' +
+                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee; color: #27ae60;">' + formatPHP(b.amount) + '</td>' +
+                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee; color: #e74c3c;">' + formatPHP(b.actualSpent || 0) + '</td>' +
+                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + formatPHP(b.remainingBudget || 0) + '</td>' +
+                    '</tr>';
+                });
+            } else {
+                budgetRows = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No budget records found</td></tr>';
+            }
+            
+            var pdfHtml = `
+                <div style="background: white; padding: 30px; font-family: 'Segoe UI', Arial, sans-serif; max-width: 1000px; margin: 0 auto;">
+                    <div style="text-align: center; margin-bottom: 25px; border-bottom: 3px solid #2d4a44; padding-bottom: 15px;">
+                        <h2 style="color: #2d4a44; margin: 0 0 5px 0;">Barangay Financial Report</h2>
+                        <p style="margin: 5px 0; color: #666;">Period: ${new Date(data.startDate).toLocaleDateString()} - ${new Date(data.endDate).toLocaleDateString()}</p>
+                        <p style="margin: 5px 0; color: #999; font-size: 12px;">Generated on: ${new Date().toLocaleString()}</p>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;">
+                        <div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #27ae60;">
+                            <div style="font-size: 11px; color: #666; text-transform: uppercase;">Total Income</div>
+                            <div style="font-size: 22px; font-weight: bold; color: #27ae60;">${formatPHP(data.totalIncome)}</div>
+                        </div>
+                        <div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #e74c3c;">
+                            <div style="font-size: 11px; color: #666; text-transform: uppercase;">Total Expenses</div>
+                            <div style="font-size: 22px; font-weight: bold; color: #e74c3c;">${formatPHP(data.totalExpenses)}</div>
+                        </div>
+                        <div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #FED734;">
+                            <div style="font-size: 11px; color: #666; text-transform: uppercase;">Net Savings</div>
+                            <div style="font-size: 22px; font-weight: bold; color: ${data.netSavings >= 0 ? '#27ae60' : '#e74c3c'};">${formatPHP(data.netSavings)}</div>
+                        </div>
+                        <div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #2d4a44;">
+                            <div style="font-size: 11px; color: #666; text-transform: uppercase;">Remaining Budget</div>
+                            <div style="font-size: 22px; font-weight: bold; color: #2d4a44;">${formatPHP(data.remainingBudget)}</div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="color: #2d4a44; font-size: 16px; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #ddd;">📋 Income Transactions</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background: #f1f5f3;">
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Date</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">OR#</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Source</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Type</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>${incomeRows}</tbody>
+                    </table>
+                    
+                    <h3 style="color: #2d4a44; font-size: 16px; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #ddd;">💰 Expense Transactions</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background: #f1f5f3;">
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Date</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Description</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Category</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Amount</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>${expenseRows}</tbody>
+                    </table>
+                    
+                    <h3 style="color: #2d4a44; font-size: 16px; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #ddd;">📊 Budget Allocations</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background: #f1f5f3;">
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Program ID</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Budget Item</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Allocated</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Spent</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Remaining</th>
+                            </tr>
+                        </thead>
+                        <tbody>${budgetRows}</tbody>
+                    </table>
+                    
+                    <div style="text-align: center; font-size: 10px; color: #999; margin-top: 25px; padding-top: 10px; border-top: 1px solid #ddd;">
+                        CivilAccess Financial Management System — Official Barangay Report
+                    </div>
+                </div>
+            `;
+            
+            var container = document.createElement('div');
+            container.style.position = 'absolute';
+            container.style.left = '-9999px';
+            container.style.top = '-9999px';
+            container.innerHTML = pdfHtml;
+            document.body.appendChild(container);
+            
+            var opt = {
+                margin: [0.5, 0.5, 0.5, 0.5],
+                filename: `Financial_Report_${data.startDate}_to_${data.endDate}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, letterRendering: true },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            
+            await html2pdf().set(opt).from(container).save();
+            document.body.removeChild(container);
+            showToast('PDF report downloaded successfully!', 'success');
+            
+        } catch (err) {
+            console.error('PDF Error:', err);
+            showToast('Error generating PDF: ' + err.message, 'error');
+        }
+    }
+    
+    // Charts
+    window.addEventListener('DOMContentLoaded', function() {
+        // Set default dates for report (current month)
+        var today = new Date();
+        var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        var lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        var startDateInput = document.getElementById('reportStartDate');
+        var endDateInput = document.getElementById('reportEndDate');
+        if (startDateInput) startDateInput.value = firstDay.toISOString().split('T')[0];
+        if (endDateInput) endDateInput.value = lastDay.toISOString().split('T')[0];
+        
+        toggleIncomeFields();
+        
+        var successMsg = /*[[${success}]]*/ null;
+        var errorMsg = /*[[${error}]]*/ null;
+        if (successMsg) showToast(successMsg, 'success');
+        if (errorMsg) showToast(errorMsg, 'error');
+        
+        // Attach PDF button listener
+        var pdfBtn = document.getElementById('generatePdfReportBtn');
+        if (pdfBtn) {
+            pdfBtn.onclick = function(e) {
+                e.preventDefault();
+                downloadPDFReport();
+            };
+        }
+        
+        var sidebar = document.querySelector('.sidebar');
+        if (sidebar) {
+            var toggles = document.querySelectorAll('.section-toggle');
+            for (var i = 0; i < toggles.length; i++) {
+                var onclickAttr = toggles[i].getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes('toggleSection')) {
+                    var match = onclickAttr.match(/toggleSection\(this,\s*'([^']+)'\)/);
+                    if (match && match[1]) {
+                        var sectionId = match[1];
+                        var sectionDiv = document.getElementById(sectionId);
+                        if (sectionDiv && sectionDiv.style.display !== 'block') {
+                            sectionDiv.style.display = 'block';
+                            var arrow = toggles[i].querySelector('.section-arrow');
+                            if (arrow) arrow.classList.add('rotate');
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    function showToast(message, type) {
+        var toastWrap = document.getElementById('toastWrap');
+        if (!toastWrap) return;
+        var toast = document.createElement('div');
+        toast.className = 'toast-msg ' + type;
+        toast.innerHTML = '<i class="bi bi-' + (type === 'success' ? 'check-circle' : 'x-circle') + ' me-2"></i>' + message;
+        toastWrap.appendChild(toast);
+        setTimeout(function() { if(toast) toast.remove(); }, 4000);
+    }
+
+    // Budget modal logic
+    function openBudgetModal() {
+        document.getElementById('budgetStep1Input').value = '';
+        document.getElementById('budgetModal1').style.display = 'flex';
+    }
+
+    function closeBudgetModal() {
+        document.getElementById('budgetModal1').style.display = 'none';
+        document.getElementById('budgetModal2').style.display = 'none';
+        document.getElementById('budgetStep1Input').value = '';
+        document.getElementById('budgetStep2Input').value = '';
+        document.getElementById('budgetMismatchError').style.display = 'none';
+    }
+
+    function proceedToConfirm() {
+        var amount = document.getElementById('budgetStep1Input').value;
+        if (!amount || parseFloat(amount) <= 0) {
+            showToast('Please enter a valid amount.', 'error');
+            return;
+        }
+        document.getElementById('budgetConfirmDisplay').textContent = '₱' + parseFloat(amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('budgetStep2Input').value = '';
+        document.getElementById('budgetMismatchError').style.display = 'none';
+        document.getElementById('budgetModal1').style.display = 'none';
+        document.getElementById('budgetModal2').style.display = 'flex';
+    }
+
+    function backToStep1() {
+        document.getElementById('budgetModal2').style.display = 'none';
+        document.getElementById('budgetModal1').style.display = 'flex';
+    }
+
+    function submitBudget() {
+        var amount1 = parseFloat(document.getElementById('budgetStep1Input').value);
+        var amount2 = parseFloat(document.getElementById('budgetStep2Input').value);
+        if (isNaN(amount2) || amount1 !== amount2) {
+            document.getElementById('budgetMismatchError').style.display = 'block';
+            return;
+        }
+        document.getElementById('budgetMismatchError').style.display = 'none';
+        document.getElementById('budgetFinalAmount').value = amount1;
+        document.getElementById('budgetUpdateForm').submit();
+    }
+
+    // Close modals on backdrop click
+    document.getElementById('budgetModal1').addEventListener('click', function(e) {
+        if (e.target === this) closeBudgetModal();
+    });
+    document.getElementById('budgetModal2').addEventListener('click', function(e) {
+        if (e.target === this) closeBudgetModal();
+    });
+</script>
+</body>
+</html>
