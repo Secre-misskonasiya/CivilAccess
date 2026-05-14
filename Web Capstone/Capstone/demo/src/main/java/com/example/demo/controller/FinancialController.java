@@ -132,7 +132,7 @@ public class FinancialController {
         model.addAttribute("totalIncomeAll",   getTotalIncomeAll(allTimeStart, allTimeEnd));
         model.addAttribute("totalExpensesAll", getTotalExpensesAll(allTimeStart, allTimeEnd));
 
-        return "finance";
+        return "Finance";
     }
 
     // ========== SAFE GETTER METHODS ==========
