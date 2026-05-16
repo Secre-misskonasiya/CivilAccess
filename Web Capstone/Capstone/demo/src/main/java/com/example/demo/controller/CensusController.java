@@ -27,41 +27,41 @@ public class CensusController {
 
     // ── GET /Resident-census ──────────────────────────────────────
 
+    @GetMapping
+    public String censusPage(Principal principal, Model model) {
+        AdminUser admin = getAdmin(principal);
+        if (isArchived(admin)) return "redirect:/logout";
 
-@GetMapping
-public String censusPage(Principal principal, Model model) {
-    AdminUser admin = getAdmin(principal);
-    if (isArchived(admin)) return "redirect:/logout";
+        List<CensusRecordDTO> active   = censusService.getAllActiveForTable();
+        List<CensusRecordDTO> archived = censusService.getAllArchivedForTable();
 
-    List<CensusRecordDTO> active   = censusService.getAllActiveForTable();
-    List<CensusRecordDTO> archived = censusService.getAllArchivedForTable();
+        // ── TEMPORARY DEBUG — remove after fixing ──
+        System.out.println("=== CENSUS DEBUG ===");
+        System.out.println("Active count:   " + active.size());
+        System.out.println("Archived count: " + archived.size());
+        if (!active.isEmpty()) {
+            CensusRecordDTO first = active.get(0);
+            System.out.println("First record ID:        " + first.getId());
+            System.out.println("First record firstName: " + first.getFirstName());
+            System.out.println("First record status:    " + first.getCensusStatus());
+        }
+        String json = censusService.buildCensusJson(active, archived);
+        System.out.println("JSON length: " + json.length());
+        System.out.println("JSON preview: " + json.substring(0, Math.min(200, json.length())));
+        System.out.println("====================");
+        // ── END DEBUG ──
 
-    // ── TEMPORARY DEBUG — remove after fixing ──
-    System.out.println("=== CENSUS DEBUG ===");
-    System.out.println("Active count:   " + active.size());
-    System.out.println("Archived count: " + archived.size());
-    if (!active.isEmpty()) {
-        CensusRecordDTO first = active.get(0);
-        System.out.println("First record ID:        " + first.getId());
-        System.out.println("First record firstName: " + first.getFirstName());
-        System.out.println("First record status:    " + first.getCensusStatus());
+        addAdminAttrs(model, admin);
+        model.addAttribute("activeRecords",   active);
+        model.addAttribute("archivedRecords", archived);
+        model.addAttribute("activeCount",     active.size());
+        model.addAttribute("archivedCount",   archived.size());
+        model.addAttribute("newRecord",       new CensusRecord());
+        model.addAttribute("censusJson",      json);
+
+        return "Census";
     }
-    String json = censusService.buildCensusJson(active, archived);
-    System.out.println("JSON length: " + json.length());
-    System.out.println("JSON preview: " + json.substring(0, Math.min(200, json.length())));
-    System.out.println("====================");
-    // ── END DEBUG ──
 
-    addAdminAttrs(model, admin);
-    model.addAttribute("activeRecords",   active);
-    model.addAttribute("archivedRecords", archived);
-    model.addAttribute("activeCount",     active.size());
-    model.addAttribute("archivedCount",   archived.size());
-    model.addAttribute("newRecord",       new CensusRecord());
-    model.addAttribute("censusJson",      json);
-
-    return "Census";
-}
     // ── GET /Resident-census/view/{id} ────────────────────────────
 
     @GetMapping("/view/{id}")
@@ -162,6 +162,14 @@ public String censusPage(Principal principal, Model model) {
         return "redirect:/Resident-census";
     }
 
+    // ── GET /Resident-census/household/{householdId} ──────────────
+
+    @GetMapping("/household/{householdId}")
+    @ResponseBody
+    public List<CensusRecordDTO> getHouseholdMembers(@PathVariable String householdId) {
+        return censusService.getHouseholdMembers(householdId);
+    }
+
     // ── GET /Resident-census/search ───────────────────────────────
 
     @GetMapping("/search")
@@ -236,22 +244,34 @@ public String censusPage(Principal principal, Model model) {
     /**
      * Maps a CensusView projection to a CensusRecordDTO.
      * Used only by the search path — no entity load needed.
+     *
+     * Parameter order must exactly match the CensusRecordDTO constructor.
      */
     private CensusRecordDTO toDTO(CensusView v) {
         return new CensusRecordDTO(
-            v.getId(), v.getRecordId(),
-            v.getFirstName(), null, v.getLastName(), null,
+            v.getId(), v.getRecordId(), v.getHouseholdId(),
+            v.getFirstName(), v.getMiddleName(), v.getLastName(), v.getSuffix(),
             v.getGender(), v.getDateOfBirth(),
             v.getAddress(), v.getMobile(),
             v.getOccupation(),
             v.getAccountStatus(), v.getCensusStatus(),
-            v.getGovernmentIdUrl(), v.getSelfieWithIdUrl(), null,
+            v.getGovernmentIdUrl(), v.getSelfieWithIdUrl(), v.getBirthCertificate(),
             v.getHouseholdRelation(), v.getHomeOwnership(),
             v.getEvacuationPriority(),
             v.isSeniorCitizen(), v.isPwd(),
-            false, false, false,
-            v.getEmergencyContactName(), v.getEmergencyContactNumber()
+            v.isSoloParent(), v.isRegisteredVoter(), v.is4psBeneficiary(),
+            v.getEmergencyContactName(), v.getEmergencyContactNumber(),
+            v.getEmergencyContactRelation(),                              // ★ ADDED
+            v.getNationality(), v.getPlaceOfBirth(), v.getCivilStatus(),
+            v.getReligion(), v.getBloodType(), v.getIdType(),
+            v.getHoaMembership(), v.getHouseholdMemberCount(),
+            v.getDwellingType(), v.getHouseholdMemberNames(),
+            v.getEducationalAttainment(), v.getEmploymentStatus(),
+            v.getMonthlyIncomeRange(), v.isIndigenousPeople(),
+            v.getPrecinctNumber(), v.getMedicalHistory(),
+            v.getPhilhealthId(), v.getPhilhealthCategory(),
+            v.getBloodPressureHistory(), v.getVaccCovid19(),
+            v.getVaccInfluenza(), v.getVaccHpv()
         );
     }
-    
 }

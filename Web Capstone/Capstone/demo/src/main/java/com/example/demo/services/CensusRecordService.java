@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,7 +43,9 @@ public class CensusRecordService {
     }
 
     public List<CensusRecordDTO> filterByStatus(String status) {
-        return censusRepo.findByStatus(status.toUpperCase());
+        return censusRepo.findAllActiveOptimized().stream()
+            .filter(dto -> status.equalsIgnoreCase(dto.getCensusStatus()))
+            .collect(Collectors.toList());
     }
 
     // ── Validation helpers ────────────────────────────────────────
@@ -58,6 +61,10 @@ public class CensusRecordService {
             .collect(Collectors.toList());
     }
 
+    public List<CensusRecordDTO> getHouseholdMembers(String householdId) {
+        if (householdId == null || householdId.isBlank()) return List.of();
+        return censusRepo.findByHouseholdId(householdId);
+    }
     /**
      * Serializes active + archived DTOs to JSON for the Thymeleaf
      * censusJson model attribute (client-side seed).
@@ -77,10 +84,24 @@ public class CensusRecordService {
         }
     }
 
+    public String generateNewHouseholdId() {
+        String max = censusRepo.findMaxHouseholdId();
+        if (max == null) return "HH-0001";
+        int num = Integer.parseInt(max.substring(3)) + 1;
+        return String.format("HH-%04d", num);
+    }
+
     // ── Write ─────────────────────────────────────────────────────
 
+    // CensusRecordService.save() — generate it before saving
     @Transactional
     public CensusRecord save(@NonNull CensusRecord record) {
+        if (record.getId() == null) {                        // new record only
+            record.setRecordId("2026-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        }
+        if (record.getHouseholdId() == null || record.getHouseholdId().isBlank()) {
+            record.setHouseholdId(generateNewHouseholdId());
+        }
         record.setCensusStatus(deriveStatus(record));
         return censusRepo.save(record);
     }

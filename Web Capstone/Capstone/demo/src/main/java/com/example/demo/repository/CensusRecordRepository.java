@@ -19,18 +19,28 @@ public interface CensusRecordRepository extends JpaRepository<CensusRecord, Long
 
     Optional<CensusRecord> findByRecordId(String recordId);
 
-    // ── Optimised list queries ────────────────────────────────────
-
     @Query("""
             SELECT new com.example.demo.dto.CensusRecordDTO(
-                c.id, c.recordId, c.firstName, c.middleName, c.lastName, c.suffix,
+                c.id, c.recordId, c.householdId,
+                c.firstName, c.middleName, c.lastName, c.suffix,
                 c.gender, c.dateOfBirth, c.address, c.mobile, c.occupation,
                 c.accountStatus, c.censusStatus,
                 c.governmentIdUrl, c.selfieWithIdUrl, c.birthCertificate,
                 c.householdRelation, c.homeOwnership, c.evacuationPriority,
                 c.isSeniorCitizen, c.isPwd, c.isSoloParent,
                 c.isRegisteredVoter, c.is4psBeneficiary,
-                c.emergencyContactName, c.emergencyContactNumber
+                c.emergencyContactName, c.emergencyContactNumber,
+                c.emergencyContactRelation,
+                c.nationality, c.placeOfBirth, c.civilStatus,
+                c.religion, c.bloodType, c.idType,
+                c.hoaMembership, c.householdMemberCount,
+                c.dwellingType, c.householdMemberNames,
+                c.educationalAttainment, c.employmentStatus,
+                c.monthlyIncomeRange, c.isIndigenousPeople,
+                c.precinctNumber, c.medicalHistory,
+                c.philhealthId, c.philhealthCategory,
+                c.bloodPressureHistory, c.vaccCovid19,
+                c.vaccInfluenza, c.vaccHpv
             )
             FROM CensusRecord c
             WHERE c.censusStatus <> 'ARCHIVED'
@@ -40,14 +50,26 @@ public interface CensusRecordRepository extends JpaRepository<CensusRecord, Long
 
     @Query("""
             SELECT new com.example.demo.dto.CensusRecordDTO(
-                c.id, c.recordId, c.firstName, c.middleName, c.lastName, c.suffix,
+                c.id, c.recordId, c.householdId,
+                c.firstName, c.middleName, c.lastName, c.suffix,
                 c.gender, c.dateOfBirth, c.address, c.mobile, c.occupation,
                 c.accountStatus, c.censusStatus,
                 c.governmentIdUrl, c.selfieWithIdUrl, c.birthCertificate,
                 c.householdRelation, c.homeOwnership, c.evacuationPriority,
                 c.isSeniorCitizen, c.isPwd, c.isSoloParent,
                 c.isRegisteredVoter, c.is4psBeneficiary,
-                c.emergencyContactName, c.emergencyContactNumber
+                c.emergencyContactName, c.emergencyContactNumber,
+                c.emergencyContactRelation,
+                c.nationality, c.placeOfBirth, c.civilStatus,
+                c.religion, c.bloodType, c.idType,
+                c.hoaMembership, c.householdMemberCount,
+                c.dwellingType, c.householdMemberNames,
+                c.educationalAttainment, c.employmentStatus,
+                c.monthlyIncomeRange, c.isIndigenousPeople,
+                c.precinctNumber, c.medicalHistory,
+                c.philhealthId, c.philhealthCategory,
+                c.bloodPressureHistory, c.vaccCovid19,
+                c.vaccInfluenza, c.vaccHpv
             )
             FROM CensusRecord c
             WHERE c.censusStatus = 'ARCHIVED'
@@ -57,22 +79,44 @@ public interface CensusRecordRepository extends JpaRepository<CensusRecord, Long
 
     @Query("""
             SELECT new com.example.demo.dto.CensusRecordDTO(
-                c.id, c.recordId, c.firstName, c.middleName, c.lastName, c.suffix,
+                c.id, c.recordId, c.householdId,
+                c.firstName, c.middleName, c.lastName, c.suffix,
                 c.gender, c.dateOfBirth, c.address, c.mobile, c.occupation,
                 c.accountStatus, c.censusStatus,
                 c.governmentIdUrl, c.selfieWithIdUrl, c.birthCertificate,
                 c.householdRelation, c.homeOwnership, c.evacuationPriority,
                 c.isSeniorCitizen, c.isPwd, c.isSoloParent,
                 c.isRegisteredVoter, c.is4psBeneficiary,
-                c.emergencyContactName, c.emergencyContactNumber
+                c.emergencyContactName, c.emergencyContactNumber,
+                c.emergencyContactRelation,
+                c.nationality, c.placeOfBirth, c.civilStatus,
+                c.religion, c.bloodType, c.idType,
+                c.hoaMembership, c.householdMemberCount,
+                c.dwellingType, c.householdMemberNames,
+                c.educationalAttainment, c.employmentStatus,
+                c.monthlyIncomeRange, c.isIndigenousPeople,
+                c.precinctNumber, c.medicalHistory,
+                c.philhealthId, c.philhealthCategory,
+                c.bloodPressureHistory, c.vaccCovid19,
+                c.vaccInfluenza, c.vaccHpv
             )
             FROM CensusRecord c
-            WHERE c.censusStatus = :status
-            ORDER BY c.id DESC
+            WHERE c.householdId = :householdId
+              AND c.censusStatus <> 'ARCHIVED'
+            ORDER BY
+              CASE c.householdRelation
+                WHEN 'Head'   THEN 1
+                WHEN 'Spouse' THEN 2
+                WHEN 'Child'  THEN 3
+                WHEN 'Parent' THEN 4
+                ELSE 5
+              END,
+              c.lastName ASC
             """)
-    List<CensusRecordDTO> findByStatus(@Param("status") String status);
+    List<CensusRecordDTO> findByHouseholdId(@Param("householdId") String householdId);
 
-    // ── Search — returns CensusView projection (no full entity load) ──
+    @Query("SELECT MAX(c.householdId) FROM CensusRecord c WHERE c.householdId LIKE 'HH-%'")
+    String findMaxHouseholdId();
 
     @Query("""
             SELECT c FROM CensusRecord c
@@ -85,8 +129,6 @@ public interface CensusRecordRepository extends JpaRepository<CensusRecord, Long
             """)
     List<CensusView> searchActive(@Param("q") String query);
 
-    // ── Soft archive / restore ────────────────────────────────────
-
     @Modifying
     @Query("UPDATE CensusRecord c SET c.censusStatus = 'ARCHIVED' WHERE c.id = :id")
     void archiveById(@Param("id") Long id);
@@ -94,8 +136,6 @@ public interface CensusRecordRepository extends JpaRepository<CensusRecord, Long
     @Modifying
     @Query("UPDATE CensusRecord c SET c.censusStatus = 'PENDING' WHERE c.id = :id")
     void restoreById(@Param("id") Long id);
-
-    // ── Scalar helpers ────────────────────────────────────────────
 
     @Query("SELECT c.mobile FROM CensusRecord c WHERE c.mobile IS NOT NULL")
     List<String> findAllMobileNumbers();

@@ -16,8 +16,8 @@ public class CensusRecord {
     @Column(updatable = false, nullable = false)
     private Long id;
 
-    @Column(name = "record_id", unique = true, insertable = false, updatable = false)
-    private String recordId;                       // e.g. BRY-90c8c01c-…
+    @Column(name = "record_id", unique = true, updatable = false)
+    private String recordId;
 
     // ── Account / status ─────────────────────────────────────────
     @Column(name = "account_status")
@@ -83,6 +83,12 @@ public class CensusRecord {
 
     @Column(name = "hoa_membership")
     private String hoaMembership;
+
+    @Column(name = "dwelling_type")
+    private String dwellingType;
+
+    @Column(name = "household_id")
+    private String householdId;
 
     @Column(name = "household_member_count")
     private Integer householdMemberCount;
@@ -182,6 +188,11 @@ public class CensusRecord {
     @Column(name = "emergency_contact_number")
     private String emergencyContactNumber;
 
+    // After: private String emergencyContactNumber;  (around line 195 area)
+
+    @Column(name = "emergency_contact_relation")
+    private String emergencyContactRelation;
+
     // ── Computed helpers ─────────────────────────────────────────
 
     @Transient
@@ -263,6 +274,12 @@ public class CensusRecord {
 
     public String getBirthCertificate() { return birthCertificate; }
     public void setBirthCertificate(String birthCertificate) { this.birthCertificate = birthCertificate; }
+
+    public String getHouseholdId() { return householdId; }
+    public void setHouseholdId(String householdId) { this.householdId = householdId; }
+
+    public String getDwellingType() { return dwellingType; }
+    public void setDwellingType(String dwellingType) { this.dwellingType = dwellingType; }
 
     public String getHouseholdRelation() { return householdRelation; }
     public void setHouseholdRelation(String householdRelation) { this.householdRelation = householdRelation; }
@@ -362,4 +379,8 @@ public class CensusRecord {
 
     public String getEmergencyContactNumber() { return emergencyContactNumber; }
     public void setEmergencyContactNumber(String emergencyContactNumber) { this.emergencyContactNumber = emergencyContactNumber; }
+
+    public String getEmergencyContactRelation() { return emergencyContactRelation; }
+    public void setEmergencyContactRelation(String emergencyContactRelation) { this.emergencyContactRelation = emergencyContactRelation; }
+
 }
