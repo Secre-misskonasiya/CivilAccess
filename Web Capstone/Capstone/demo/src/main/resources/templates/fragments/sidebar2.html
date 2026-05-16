@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<script>
+    // Define functions at global scope FIRST
+    window.openLogoutModal = function() {
+        var modal = document.getElementById('logoutModal');
+        if (modal) modal.style.display = 'flex';
+    };
+    
+    window.closeLogoutModal = function() {
+        var modal = document.getElementById('logoutModal');
+        if (modal) modal.style.display = 'none';
+    };
+    
+    window.confirmLogout = function() {
+        // Clear local storage
+        localStorage.clear();
+        // Redirect to logout endpoint
+        window.location.href = '/resident-logout';
+    };
+    
+    window.toggleMobileMenu = function() {
+        var sidebar = document.getElementById('mainSidebar');
+        if (sidebar) sidebar.classList.toggle('mobile-open');
+    };
+</script>
+
+<!-- Logout Modal Fragment -->
+<div th:fragment="logoutModal" class="logout-modal" id="logoutModal">
+    <div class="logout-modal-content">
+        <h3><i class="bi bi-box-arrow-right"></i> Confirm Logout</h3>
+        <p>Are you sure you want to logout?</p>
+        <div class="logout-buttons">
+            <button class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+            <button class="btn-confirm" onclick="confirmLogout()">Logout</button>
+        </div>
+    </div>
+</div>
+
+<!-- Sidebar Fragment -->
+<div th:fragment="sidebar" class="sidebar" id="mainSidebar">
+
+    <div class="header">
+        <div class="header-title">
+            <img src="/images/brgy.png" th:src="@{/images/brgy.png}" class="brgy" alt="Barangay Logo"/>
+            <span>Brgy. San Sebastian</span>
+        </div>
+    </div>
+
+    <div class="header-user">
+        <i class="bi bi-person-circle"></i>
+        <span th:text="${session.residentName}">Resident</span>
+        <span th:if="${session.userType == 'ADMIN_AS_RESIDENT'}" style="color: #f4c542; font-size:0.7rem;"> (Admin)</span>
+    </div>
+
+    <ul class="menu">
+        <li onclick="window.location.href='/resident/announcements'" id="nav-announcements">
+            <i class="bi bi-megaphone"></i> Announcements
+        </li>
+        <li onclick="window.location.href='/resident/my-requests'" id="nav-requests">
+            <i class="bi bi-list-check"></i> Barangay Services
+        </li>
+        <li onclick="window.location.href='/resident/safety-reports'" id="nav-safety">
+            <i class="bi bi-shield-exclamation"></i> Safety Reports
+        </li>
+        <li onclick="window.location.href='/resident/emergency-alerts'" id="nav-alerts">
+            <i class="bi bi-bell"></i> Emergency Alerts
+        </li>
+        <li onclick="window.location.href='/resident/contact'" id="nav-contact">
+            <i class="bi bi-envelope"></i> Contact
+        </li>
+    </ul>
+
+    <hr class="sidebar-divider">
+
+    <div class="logout-item" onclick="window.location.href='/resident-logout'">
+        <i class="bi bi-box-arrow-right"></i> Logout
+    </div>
+
+</div>
+
+<!-- Mobile menu toggle button -->
+<button class="menu-toggle" onclick="toggleMobileMenu()" id="menuToggle">
+    <i class="bi bi-list"></i>
+</button>
+
+<script>
+    // Highlight active menu item
+    document.addEventListener('DOMContentLoaded', function() {
+        const path = window.location.pathname;
+        
+        const menuMap = {
+            '/resident/announcements': 'nav-announcements',
+            '/resident/my-requests': 'nav-requests',
+            '/resident/safety-reports': 'nav-safety',
+            '/resident/emergency-alerts': 'nav-alerts',
+            '/resident/contact': 'nav-contact'
+        };
+        
+        document.querySelectorAll('.menu li').forEach(item => item.classList.remove('active'));
+        
+        for (const [route, id] of Object.entries(menuMap)) {
+            if (path === route || path.startsWith(route)) {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('active');
+                break;
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
