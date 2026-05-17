@@ -23,7 +23,6 @@ public class BarangayIncomeService {
     @Autowired
     private ProgramBudgetService programBudgetService;
 
-    private long lastORNumber = 0;
 
     /**
      * Create a new income record.
@@ -183,9 +182,28 @@ public class BarangayIncomeService {
         return breakdown;
     }
 
-    // Generate OR number (e.g., OR-2024-00001)
+    // Generate OR number (e.g., OR-2026-00001)
+    // Queries the DB for the highest existing number so it is safe across server restarts.
     private synchronized String generateORNumber() {
-        lastORNumber++;
-        return String.format("OR-%d-%05d", LocalDate.now().getYear(), lastORNumber);
+        int currentYear = LocalDate.now().getYear();
+        int maxNumber = 0;
+        try {
+            List<BarangayIncome> allIncome = barangayIncomeRepository.findAll();
+            for (BarangayIncome inc : allIncome) {
+                String or = inc.getOrNumber();
+                if (or != null) {
+                    // Extract the trailing digits from any format, e.g. "OR-2025-00003" → "00003"
+                    String digits = or.replaceAll(".*?(\\d{1,10})$", "$1");
+                    try {
+                        int num = Integer.parseInt(digits);
+                        if (num > maxNumber) maxNumber = num;
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+        } catch (Exception e) {
+            // Fallback: use timestamp suffix to guarantee uniqueness
+            return String.format("OR-%d-%d", currentYear, System.currentTimeMillis());
+        }
+        return String.format("OR-%d-%05d", currentYear, maxNumber + 1);
     }
 }

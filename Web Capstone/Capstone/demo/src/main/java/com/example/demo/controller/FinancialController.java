@@ -61,16 +61,16 @@ public class FinancialController {
             for (BarangayIncome inc : allIncome) {
                 String or = inc.getOrNumber();
                 if (or != null) {
-                    String digits = or.replaceAll(".*?(\\d{1,5})$", "$1");
+                    String digits = or.replaceAll(".*?(\\d{1,10})$", "$1");
                     try {
                         int num = Integer.parseInt(digits);
                         if (num > maxNumber) maxNumber = num;
                     } catch (NumberFormatException ignored) {}
                 }
             }
-            return String.format("%d-%05d", currentYear, maxNumber + 1);
+            return String.format("OR-%d-%05d", currentYear, maxNumber + 1);
         } catch (Exception e) {
-            return LocalDate.now().getYear() + "-" + System.currentTimeMillis();
+            return "OR-" + LocalDate.now().getYear() + "-" + System.currentTimeMillis();
         }
     }
 

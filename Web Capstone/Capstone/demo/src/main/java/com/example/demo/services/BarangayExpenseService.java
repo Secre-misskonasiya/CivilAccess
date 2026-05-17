@@ -29,6 +29,10 @@ public class BarangayExpenseService {
         if (expense.getStatus() == null) {
             expense.setStatus(ExpenseStatus.PENDING);
         }
+        // Ensure programId defaults to 0L (TOTAL_BUDGET) if not set
+        if (expense.getProgramId() == null) {
+            expense.setProgramId(0L);
+        }
         return barangayExpenseRepository.save(expense);
     }
 
@@ -52,7 +56,7 @@ public class BarangayExpenseService {
     public BarangayExpense updateExpense(Long id, BarangayExpense expenseDetails) {
         BarangayExpense existing = getExpenseById(id);
         Double oldAmount = existing.getAmount();
-        Long oldProgramId = existing.getProgramId();
+        Long oldProgramId = existing.getProgramId() != null ? existing.getProgramId() : 0L;
         ExpenseStatus oldStatus = existing.getStatus();
 
         existing.setExpenseDate(expenseDetails.getExpenseDate());
@@ -63,13 +67,19 @@ public class BarangayExpenseService {
         existing.setPayee(expenseDetails.getPayee());
         existing.setReceiptNumber(expenseDetails.getReceiptNumber());
         existing.setReceiptFileUrl(expenseDetails.getReceiptFileUrl());
-        existing.setProgramId(expenseDetails.getProgramId());
+        // Preserve programId — default to 0L if not provided
+        Long newProgramId = expenseDetails.getProgramId() != null ? expenseDetails.getProgramId() : 0L;
+        existing.setProgramId(newProgramId);
+
         BarangayExpense saved = barangayExpenseRepository.save(existing);
 
         // Budget rebalance only if expense already reduced the budget (was APPROVED)
         if (ExpenseStatus.APPROVED.equals(oldStatus) && !oldAmount.equals(saved.getAmount())) {
             programBudgetService.reverseExpenseFromBudget(oldProgramId, oldAmount);
-            programBudgetService.applyExpenseToBudget(saved.getProgramId(), saved.getAmount());
+            programBudgetService.applyExpenseToBudget(
+                saved.getProgramId() != null ? saved.getProgramId() : 0L,
+                saved.getAmount()
+            );
         }
 
         return saved;
@@ -87,24 +97,41 @@ public class BarangayExpenseService {
 
         // Reverse budget only if the expense had already been approved
         if (ExpenseStatus.APPROVED.equals(expense.getStatus())) {
-            programBudgetService.reverseExpenseFromBudget(expense.getProgramId(), expense.getAmount());
+            Long programId = expense.getProgramId() != null ? expense.getProgramId() : 0L;
+            programBudgetService.reverseExpenseFromBudget(programId, expense.getAmount());
         }
     }
 
     /**
      * Approve an expense (PENDING → APPROVED).
      *
-     * This is the final step in the UI. Approval triggers the budget deduction —
-     * the amount is subtracted from the linked program's budget and TOTAL_BUDGET.
+     * FIX: Guard against double-approval and handle null programId by
+     * falling back to 0L (TOTAL_BUDGET record) so the deduction always lands.
+     *
+     * Root cause of the original bug: expenses submitted from the UI form
+     * had no programId field, leaving it null. applyExpenseToBudget() then
+     * could not find the correct budget record and silently skipped the deduction.
      */
     @Transactional
     public BarangayExpense approveExpense(Long id, Long approvedBy) {
         BarangayExpense expense = getExpenseById(id);
+
+        // Guard: only approve if currently PENDING — prevents double-deduction
+        if (!ExpenseStatus.PENDING.equals(expense.getStatus())) {
+            throw new RuntimeException("Expense #" + id + " is already " + expense.getStatus() + " and cannot be approved again.");
+        }
+
         expense.setStatus(ExpenseStatus.APPROVED);
         expense.setApprovedBy(approvedBy);
+
+        // FIX: default null programId to 0L so it targets the TOTAL_BUDGET record
+        if (expense.getProgramId() == null) {
+            expense.setProgramId(0L);
+        }
+
         BarangayExpense saved = barangayExpenseRepository.save(expense);
 
-        // ── Budget integration: deduct from program budget + TOTAL_BUDGET ──
+        // Budget integration: deduct from program budget + TOTAL_BUDGET
         programBudgetService.applyExpenseToBudget(saved.getProgramId(), saved.getAmount());
 
         return saved;
@@ -119,7 +146,8 @@ public class BarangayExpenseService {
         BarangayExpense expense = getExpenseById(id);
 
         if (ExpenseStatus.APPROVED.equals(expense.getStatus())) {
-            programBudgetService.reverseExpenseFromBudget(expense.getProgramId(), expense.getAmount());
+            Long programId = expense.getProgramId() != null ? expense.getProgramId() : 0L;
+            programBudgetService.reverseExpenseFromBudget(programId, expense.getAmount());
         }
 
         expense.setStatus(ExpenseStatus.PENDING);

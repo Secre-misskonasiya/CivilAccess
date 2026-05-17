@@ -30,7 +30,7 @@ public class ResidentAuthController {
     @GetMapping("/resident-login")
     public String showLoginPage(HttpSession session) {
         if (session.getAttribute("residentId") != null || session.getAttribute("adminAsResidentId") != null) {
-            return "redirect:/announcements";
+            return "redirect:/resident/announcements";
         }
         return "ResidentLogin";
     }
@@ -110,7 +110,7 @@ public class ResidentAuthController {
                 session.setAttribute("residentStatus", resident.getAccount_status());
                 session.setAttribute("userType", "RESIDENT");
                 session.setMaxInactiveInterval(60 * 60);
-                return "redirect:/announcements";
+                return "redirect:/resident/announcements";
             }
         }
         
@@ -133,7 +133,7 @@ public class ResidentAuthController {
                 session.setAttribute("userType", "ADMIN_AS_RESIDENT");
                 session.setAttribute("residentStatus", "ACTIVE");
                 session.setMaxInactiveInterval(60 * 60);
-                return "redirect:/announcements";
+                return "redirect:/resident/announcements";
             }
         }
         

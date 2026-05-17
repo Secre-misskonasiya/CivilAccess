@@ -100,31 +100,85 @@
 
             <!-- DASHBOARD TAB -->
             <div id="tab-dashboard" class="tab-content active">
+
+                <!-- Row 1: 4 primary stat cards -->
                 <div class="row g-3 mb-4">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="stat-card income">
-                            <div class="stat-title"><i class="bi bi-graph-up"></i> Total Income (This Month)</div>
-                            <div class="stat-amount" th:text="'₱' + ${monthIncome}">₱0</div>
-                            <small class="text-muted">Today: <span th:text="'₱' + ${todayIncome}">₱0</span></small>
+                            <div class="stat-title"><i class="bi bi-graph-up"></i> Income This Month</div>
+                            <div class="stat-amount" th:text="'₱' + ${#numbers.formatDecimal(monthIncome,1,2)}">₱0.00</div>
+                            
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="stat-card expense">
-                            <div class="stat-title"><i class="bi bi-graph-down"></i> Total Expenses (This Month)</div>
-                            <div class="stat-amount" th:text="'₱' + ${monthExpenses}">₱0</div>
-                            <small class="text-muted">Today: <span th:text="'₱' + ${todayExpenses}">₱0</span></small>
+                            <div class="stat-title"><i class="bi bi-graph-down"></i> Expenses This Month</div>
+                            <div class="stat-amount" th:text="'₱' + ${#numbers.formatDecimal(monthExpenses,1,2)}">₱0.00</div>
+                          
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <div class="stat-card savings">
+                            <div class="stat-title"><i class="bi bi-piggy-bank"></i> Net Savings (Month)</div>
+                            <div class="stat-amount" th:classappend="${netSavings >= 0} ? 'text-success' : 'text-danger'" th:text="'₱' + ${#numbers.formatDecimal(netSavings,1,2)}">₱0.00</div>
+
+                        </div>
+                    </div>
+                    <div class="col-md-3">
                         <div class="stat-card budget">
-                            <div class="stat-title"><i class="bi bi-calculator"></i> Remaining Budget</div>
-                            <div class="stat-amount" th:text="'₱' + ${remainingBudget}">₱0</div>
-                            <small class="text-muted">Total: ₱<span th:text="${totalBudget}">0</span></small>
+                            <div class="stat-title"><i class="bi bi-wallet2"></i> Remaining Budget</div>
+                            <div class="stat-amount" th:text="'₱' + ${#numbers.formatDecimal(remainingBudget,1,2)}">₱0.00</div>
+
                         </div>
                     </div>
                 </div>
-                
-                <div class="form-panel" style="margin-top: 20px;">
+
+                <!-- Row 2: secondary stat cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card income" style="border-left-color:#1abc9c;">
+                            <div class="stat-title"><i class="bi bi-file-earmark-text"></i> Document Fees (Month)</div>
+                            <div class="stat-amount" style="font-size:22px;" th:text="'₱' + ${#numbers.formatDecimal(documentFeeIncome,1,2)}">₱0.00</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card income" style="border-left-color:#f39c12;">
+                            <div class="stat-title"><i class="bi bi-house-door"></i> Rental Income (Month)</div>
+                            <div class="stat-amount" style="font-size:22px;" th:text="'₱' + ${#numbers.formatDecimal(rentalIncome,1,2)}">₱0.00</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card savings" style="border-left-color:#8e44ad;">
+                            <div class="stat-title"><i class="bi bi-calendar-range"></i> All-Time Income</div>
+                            <div class="stat-amount" style="font-size:22px;" th:text="'₱' + ${#numbers.formatDecimal(totalIncomeAll,1,2)}">₱0.00</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card expense" style="border-left-color:#c0392b;">
+                            <div class="stat-title"><i class="bi bi-calendar-range"></i> All-Time Expenses</div>
+                            <div class="stat-amount" style="font-size:22px;" th:text="'₱' + ${#numbers.formatDecimal(totalExpensesAll,1,2)}">₱0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 3: Charts -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="form-panel" style="height:320px; display:flex; flex-direction:column;">
+                            <div class="form-title"><i class="bi bi-bar-chart"></i> Income Breakdown (Month)</div>
+                            <div id="incomeChartWrap" style="flex:1; position:relative;"><canvas id="incomeChart" style="position:absolute;inset:0;width:100%!important;height:100%!important;"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-panel" style="height:320px; display:flex; flex-direction:column;">
+                            <div class="form-title"><i class="bi bi-bar-chart"></i> Expenses by Category (Month)</div>
+                            <div id="expenseChartWrap" style="flex:1; position:relative;"><canvas id="expenseChart" style="position:absolute;inset:0;width:100%!important;height:100%!important;"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 4: Pending expenses -->
+                <div class="form-panel">
                     <div class="form-title"><i class="bi bi-clock-history"></i> Pending Expenses (Need Approval)</div>
                     <div class="table-responsive">
                         <table class="data-table table">
@@ -157,18 +211,26 @@
                                 <label class="form-label">Income Type</label>
                                 <select name="incomeType" class="form-select" id="incomeTypeSelect" required onchange="toggleIncomeFields()">
                                     <option value="DOCUMENT_FEE">Document Fee</option>
+                                    <option value="RENTAL">Rental</option>
                                     <option value="DONATION">Donation</option>
+                                    <option value="OTHER">Other Services</option>
                                 </select>
                             </div>
-                            <div class="col-md-3" id="documentTypeDiv"><label class="form-label">Document Type</label>
+                            <div class="col-md-3" id="documentTypeDiv">
+                                <label class="form-label">Document Type</label>
                                 <select name="documentType" class="form-select">
                                     <option value="CLEARANCE">Barangay Clearance</option>
                                     <option value="INDIGENCY">Certificate of Indigency</option>
                                     <option value="BARANGAY_ID">Barangay ID</option>
+                                    <option value="CERTIFICATE">Certificate of Residency</option>
                                     <option value="OTHER">Other</option>
                                 </select>
                             </div>
-                            <div class="col-md-3"><label class="form-label">Source Name</label><input type="text" name="sourceName" class="form-control" placeholder="Resident/Renter name" required></div>
+                            <div class="col-md-3" id="rentalItemDiv" style="display:none;">
+                                <label class="form-label">Rental Item</label>
+                                <input type="text" name="rentalItem" class="form-control" placeholder="e.g. Barangay Hall">
+                            </div>
+                            <div class="col-md-3"><label class="form-label">Source / Payer Name</label><input type="text" name="sourceName" class="form-control" placeholder="Resident or renter name" required></div>
                             <div class="col-md-2"><label class="form-label">Amount (₱)</label><input type="number" name="amount" class="form-control" step="0.01" required></div>
                             <div class="col-md-12"><button type="submit" class="btn-save"><i class="bi bi-save"></i> Save Income</button></div>
                         </div>
@@ -179,7 +241,13 @@
                     <div class="form-title"><i class="bi bi-list-ul"></i> All Income Records</div>
                     <div class="search-filter">
                         <input type="text" id="incomeSearch" class="search-input" placeholder="Search by source or OR#...">
-                        <select id="incomeTypeFilter" class="filter-select"><option value="">All Types</option><option value="DOCUMENT_FEE">Document Fee</option></select>
+                        <select id="incomeTypeFilter" class="filter-select">
+                            <option value="">All Types</option>
+                            <option value="DOCUMENT_FEE">Document Fee</option>
+                            <option value="RENTAL">Rental</option>
+                            <option value="DONATION">Donation</option>
+                            <option value="OTHER">Other Services</option>
+                        </select>
                     </div>
                     <div class="table-responsive">
                         <table class="data-table table">
@@ -187,11 +255,12 @@
                                 <tr><th>Date</th><th>OR#</th><th>Source</th><th>Type</th><th>Amount</th><th>Actions</th></tr>
                             </thead>
                             <tbody id="incomeTableBody">
-                                <tr th:each="inc : ${incomeList}">
+                                <tr th:each="inc : ${incomeList}" th:attr="data-type=${inc.incomeType.name()}">
                                     <td th:text="${inc.incomeDate}">-</td>
                                     <td><strong th:text="${inc.orNumber}">-</strong></td>
                                     <td th:text="${inc.sourceName}">-</td>
-                                    <td><span class="badge-income" th:text="${inc.incomeType.getDisplayName()}">-</span></td>
+                                    <td><span th:classappend="${inc.incomeType.name() == 'RENTAL'} ? 'badge-rental' : 'badge-income'"
+                                              class="badge-income" th:text="${inc.incomeType.getDisplayName()}">-</span></td>
                                     <td class="amount-positive" th:text="'₱' + ${inc.amount}">-</td>
                                     <td><a th:href="@{|/finance/income/delete/${inc.id}|}" class="action-btn delete" onclick="return confirm('Delete this income record?')"><i class="bi bi-trash"></i> Delete</a></td>
                                 </tr>
@@ -270,9 +339,12 @@
                 <div class="form-panel" style="max-width: 420px; margin: 0 auto;">
                     <div class="form-title"><i class="bi bi-wallet2"></i> Current Budget</div>
                     <div style="background: #f0f4f3; border-radius: 10px; padding: 28px 20px; text-align: center; margin-bottom: 20px;">
-                        <div style="font-size: 11px; font-weight: 700; color: #2d4a44; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Available Funds</div>
-                        <div style="font-size: 36px; font-weight: bold; color: #2d4a44;" th:text="'₱' + ${#numbers.formatDecimal(totalBudget, 1, 2)}">₱0.00</div>
-                        <div style="font-size: 11px; color: #888; margin-top: 8px;">Last updated: <span th:text="${#temporals.format(#temporals.createNow(), 'MMMM dd, yyyy')}">Today</span></div>
+                        <div style="font-size: 11px; font-weight: 700; color: #2d4a44; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Remaining / Available Funds</div>
+                        <div style="font-size: 36px; font-weight: bold; color: #2d4a44;" th:text="'₱' + ${#numbers.formatDecimal(remainingBudget, 1, 2)}">&#8369;0.00</div>
+                        <div style="margin-top: 16px; display: flex; justify-content: space-between; font-size: 12px; color: #666; border-top: 1px solid #dde; padding-top: 14px;">
+                            <span><i class="bi bi-wallet2 me-1"></i>Total Budget<br><strong style="color:#2d4a44;" th:text="'₱' + ${#numbers.formatDecimal(totalBudget, 1, 2)}">&#8369;0.00</strong></span>
+                            <span><i class="bi bi-dash-circle me-1 text-danger"></i>Total Spent<br><strong style="color:#e74c3c;" th:text="'₱' + ${#numbers.formatDecimal(totalBudget - remainingBudget, 1, 2)}">&#8369;0.00</strong></span>
+                        </div>
                     </div>
                     <button type="button" onclick="openBudgetModal()" style="width: 100%; background: #FED734; color: #2d4a44; border: none; padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                         <i class="bi bi-pencil-fill"></i> Update Budget
@@ -322,7 +394,7 @@
 <script src="/js/sidebar.js"></script>
 <script src="/js/notif.js"></script>
 
-<script>
+<script th:inline="javascript">
     // Tab switching
     function showTab(tabName, el) {
         var tabs = document.querySelectorAll('.tab-content');
@@ -351,12 +423,10 @@
     function toggleIncomeFields() {
         var type = document.getElementById('incomeTypeSelect');
         if (!type) return;
-        var docDiv = document.getElementById('documentTypeDiv');
-        if (type.value === 'DOCUMENT_FEE') {
-            if (docDiv) docDiv.style.display = 'block';
-        } else {
-            if (docDiv) docDiv.style.display = 'none';
-        }
+        var docDiv    = document.getElementById('documentTypeDiv');
+        var rentalDiv = document.getElementById('rentalItemDiv');
+        if (docDiv)    docDiv.style.display    = (type.value === 'DOCUMENT_FEE') ? 'block' : 'none';
+        if (rentalDiv) rentalDiv.style.display = (type.value === 'RENTAL')       ? 'block' : 'none';
     }
     
     function filterExpenses(status, el) {
@@ -379,31 +449,24 @@
     }
     
     // Search filters
+    function filterIncomeTable() {
+        var search      = (document.getElementById('incomeSearch')?.value || '').toLowerCase();
+        var filterValue = document.getElementById('incomeTypeFilter')?.value || '';
+        var rows = document.querySelectorAll('#incomeTableBody tr');
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i].cells.length < 5) continue;
+            var source   = rows[i].cells[2]?.textContent.toLowerCase() || '';
+            var orNum    = rows[i].cells[1]?.textContent.toLowerCase() || '';
+            var rowType  = rows[i].getAttribute('data-type') || '';
+            var matchesSearch = !search || source.indexOf(search) !== -1 || orNum.indexOf(search) !== -1;
+            var matchesType   = !filterValue || rowType === filterValue;
+            rows[i].style.display = (matchesSearch && matchesType) ? '' : 'none';
+        }
+    }
     var incomeSearch = document.getElementById('incomeSearch');
-    if (incomeSearch) {
-        incomeSearch.addEventListener('keyup', function() {
-            var search = this.value.toLowerCase();
-            var typeFilter = document.getElementById('incomeTypeFilter');
-            var filterValue = typeFilter ? typeFilter.value : '';
-            var rows = document.querySelectorAll('#incomeTableBody tr');
-            for (var i = 0; i < rows.length; i++) {
-                if (rows[i].cells.length < 5) continue;
-                var source = rows[i].cells[2]?.textContent.toLowerCase() || '';
-                var orNum = rows[i].cells[1]?.textContent.toLowerCase() || '';
-                var type = rows[i].cells[3]?.textContent || '';
-                var matchesSearch = source.indexOf(search) !== -1 || orNum.indexOf(search) !== -1;
-                var matchesType = !filterValue || type.indexOf(filterValue === 'DOCUMENT_FEE' ? 'Document Fee' : 'Rental') !== -1;
-                rows[i].style.display = (matchesSearch && matchesType) ? '' : 'none';
-            }
-        });
-    }
-    
+    if (incomeSearch) incomeSearch.addEventListener('keyup', filterIncomeTable);
     var incomeTypeFilter = document.getElementById('incomeTypeFilter');
-    if (incomeTypeFilter) {
-        incomeTypeFilter.addEventListener('change', function() {
-            if (incomeSearch) incomeSearch.dispatchEvent(new Event('keyup'));
-        });
-    }
+    if (incomeTypeFilter) incomeTypeFilter.addEventListener('change', filterIncomeTable);
     
     var expenseSearch = document.getElementById('expenseSearch');
     if (expenseSearch) {
@@ -715,6 +778,59 @@
     document.getElementById('budgetModal2').addEventListener('click', function(e) {
         if (e.target === this) closeBudgetModal();
     });
+
+    // ── Dashboard Charts ──────────────────────────────────────────────────────
+    (function() {
+        var rawIncome  = /*[[${incomeByType}]]*/ null;
+        var rawExpense = /*[[${expenseByType}]]*/ null;
+
+        function buildChart(canvasId, wrapId, type, labels, values, colors, label) {
+            var canvas = document.getElementById(canvasId);
+            var wrap   = document.getElementById(wrapId);
+            if (!canvas || !wrap) return;
+            if (!labels || labels.length === 0) {
+                wrap.innerHTML = '<p style="color:#aaa;text-align:center;padding:50px 0;font-size:13px;">No data this month</p>';
+                return;
+            }
+            var ctx = canvas.getContext('2d');
+            new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: values,
+                        backgroundColor: colors,
+                        borderRadius: type === 'bar' ? 6 : 0,
+                        borderWidth: type === 'doughnut' ? 2 : 0,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                        x: { ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        var incomeColors  = ['#27ae60','#1abc9c','#2ecc71','#16a085','#27ae60','#0e6655'];
+        var expenseColors = ['#e74c3c','#c0392b','#e67e22','#d35400','#922b21','#78281f','#f1948a','#aaa'];
+
+        var incomeLabels  = rawIncome  ? Object.keys(rawIncome)  : [];
+        var incomeValues  = rawIncome  ? Object.values(rawIncome)  : [];
+        var expenseLabels = rawExpense ? Object.keys(rawExpense) : [];
+        var expenseValues = rawExpense ? Object.values(rawExpense) : [];
+
+        buildChart('incomeChart',  'incomeChartWrap',  'bar', incomeLabels,  incomeValues,  incomeColors,  'Amount (₱)');
+        buildChart('expenseChart', 'expenseChartWrap', 'bar', expenseLabels, expenseValues, expenseColors, 'Amount (₱)');
+    })();
 </script>
 </body>
 </html>

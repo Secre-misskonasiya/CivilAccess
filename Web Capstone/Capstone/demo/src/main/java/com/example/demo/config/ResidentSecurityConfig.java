@@ -29,7 +29,7 @@ public class ResidentSecurityConfig {
                 "/resident-check-status",
                 "/resident-register",
                 "/api/resident/**",
-                "/announcements/**",
+             
                 "/resident-home/**",
                 "/resident-profile/**"
             )
@@ -79,7 +79,7 @@ public class ResidentSecurityConfig {
 
         // ── Paths that require a resident session ──
         registration.addUrlPatterns(
-            "/announcements/*",
+        
             "/resident-home/*",
             "/resident-profile/*"
             // Add more resident-only routes here as you build them
