@@ -1,5 +1,9 @@
 package com.example.demo.controller;
 
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.springframework.http.ResponseEntity;
+import com.example.demo.repository.CensusRecordRepository;
 import com.example.demo.dto.CensusRecordDTO;
 import com.example.demo.dto.CensusView;
 import com.example.demo.model.AdminUser;
@@ -22,6 +26,7 @@ import java.util.List;
 public class CensusController {
 
     @Autowired private CensusRecordService censusService;
+    @Autowired private CensusRecordRepository censusRepo;
     @Autowired private AdminUserServices   adminUserService;
     @Autowired private ActivityLogService  activityLogService;
 
@@ -241,6 +246,26 @@ public class CensusController {
             model.addAttribute("currentAdminProfilePicture", pic);
     }
 
+    @GetMapping("/api/priority-residents")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> getPriorityResidents() {
+        List<CensusRecord> residents = censusRepo.findVerifiedPriorityResidents();
+        List<Map<String, Object>> result = residents.stream().map(r -> {
+            Map<String, Object> m = new java.util.HashMap<>();
+            m.put("id",              r.getId());
+            m.put("firstName",       r.getFirstName());
+            m.put("lastName",        r.getLastName());
+            m.put("address",         r.getAddress());
+            m.put("latitude",        r.getLatitude());
+            m.put("longitude",       r.getLongitude());
+            m.put("isSeniorCitizen", r.isSeniorCitizen());
+            m.put("isPwd",           r.isPwd());
+            m.put("verificationStatus", r.getAccountStatus()); // "verified"
+            return m;
+        }).collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(result);
+    }
+
     /**
      * Maps a CensusView projection to a CensusRecordDTO.
      * Used only by the search path — no entity load needed.
@@ -271,7 +296,7 @@ public class CensusController {
             v.getPrecinctNumber(), v.getMedicalHistory(),
             v.getPhilhealthId(), v.getPhilhealthCategory(),
             v.getBloodPressureHistory(), v.getVaccCovid19(),
-            v.getVaccInfluenza(), v.getVaccHpv()
+            v.getVaccInfluenza(), v.getVaccHpv(), null, null
         );
     }
 }

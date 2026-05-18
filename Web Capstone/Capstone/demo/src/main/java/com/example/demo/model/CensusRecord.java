@@ -21,7 +21,7 @@ public class CensusRecord {
 
     // ── Account / status ─────────────────────────────────────────
     @Column(name = "account_status")
-    private String accountStatus = "pending";      // pending | verified | flagged
+    private String accountStatus = "unverified";
 
     @Column(name = "census_status")
     private String censusStatus = "PENDING";       // PENDING | INCOMPLETE | COMPLETE | FLAGGED | ARCHIVED
@@ -164,6 +164,12 @@ public class CensusRecord {
 
     @Column(name = "vacc_hpv")
     private String vaccHpv;
+
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
 
     // ── Disability (boolean flags) ───────────────────────────────
     @Column(name = "disability_visual")
@@ -358,6 +364,12 @@ public class CensusRecord {
 
     public String getVaccHpv() { return vaccHpv; }
     public void setVaccHpv(String vaccHpv) { this.vaccHpv = vaccHpv; }
+
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
+
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 
     public boolean isDisabilityVisual() { return disabilityVisual; }
     public void setDisabilityVisual(boolean disabilityVisual) { this.disabilityVisual = disabilityVisual; }

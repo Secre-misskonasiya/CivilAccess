@@ -9,6 +9,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"></script>
 <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;overflow:hidden}
@@ -60,6 +62,7 @@ td{padding:12px 14px !important;vertical-align:middle !important}
 .badge-status.archived  {background:#e2e3e5;color:#495057;border:1px solid #d6d8db}
 /* FIX: added verified badge style (was missing — showed invisible white-on-white) */
 .badge-status.verified  {background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+.badge-status.unverified { background:#fff3cd;color:#856404;border:1px solid #ffeeba }
 
 .badge-section{display:inline-block;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:600;background:#f0f0f0;color:#666;border:1px solid #ddd}
 .badge-section.s1{background:#cce5ff;color:#004085;border-color:#b8daff}
@@ -162,6 +165,7 @@ td{padding:12px 14px !important;vertical-align:middle !important}
 .s-btn.pending.on {background:#cce5ff;color:#004085;border-color:#b8daff}
 .s-btn.verified.on{background:#d4edda;color:#155724;border-color:#c3e6cb}
 .s-btn.flagged.on {background:#f8d7da;color:#721c24;border-color:#f5c6cb}
+.s-btn.unverified.on { background:#fff3cd;color:#856404;border-color:#ffeeba }
 
 .check-group{display:flex;flex-direction:column;gap:7px;margin-top:4px}
 .check-item{display:flex;align-items:center;gap:8px;font-size:13px;color:#555;cursor:pointer}
@@ -314,6 +318,20 @@ td{padding:12px 14px !important;vertical-align:middle !important}
 .hh-btn-add:hover { background: #2ea05e; }
 .hh-empty-state { text-align: center; padding: 32px 16px; color: #bbb; }
 .hh-empty-state i { font-size: 36px; display: block; margin-bottom: 10px; }
+
+#censusPinMap {
+    z-index: 1;
+}
+#censusMapContainer {
+    position: relative;
+}
+/* Fix Leaflet z-index issues inside modal */
+.modal .leaflet-container {
+    z-index: 1;
+}
+.modal .leaflet-pane {
+    z-index: 1;
+}
 </style>
 </head>
 <body>
@@ -518,6 +536,8 @@ td{padding:12px 14px !important;vertical-align:middle !important}
                                         data-vaccovid=${r.vaccCovid19},
                                         data-vaccflu=${r.vaccInfluenza},
                                         data-vacchpv=${r.vaccHpv},
+                                        data-lat=${r.latitude}, 
+                                        data-lng=${r.longitude},
                                         data-ecname=${r.emergencyContactName},
                                         data-ecnum=${r.emergencyContactNumber},
                                         data-ecrel=${r.emergencyContactRelation}"
@@ -550,127 +570,135 @@ td{padding:12px 14px !important;vertical-align:middle !important}
           </div>
         </div>
 
-        <!-- ARCHIVED RECORDS -->
-        <div id="tab-archived" style="display:none">
-          <div class="panel-header">
-            <span><i class="bi bi-archive me-2"></i>Archived Records</span>
-          </div>
-          <div style="overflow-x:auto">
-            <table class="table table-hover mb-0" id="archived-table">
-              <thead>
-                <tr>
-                  <th style="width:120px;min-width:120px">Record ID</th>
-                  <th style="width:175px;min-width:155px">Resident</th>
-                  <th style="width:110px;min-width:100px">Status</th>
-                  <th style="min-width:160px;max-width:260px">Address</th>
-                  <th style="width:115px;min-width:100px">Sections</th>
-                  <th style="width:175px;min-width:175px">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr th:each="r : ${archivedRecords}"
-                    th:attr="data-name=${r.firstName + ' ' + r.lastName},
-                             data-address=${r.address},
-                             data-id=${r.recordId},
-                             data-status=${r.censusStatus}">
-                  <td><span class="cell-inner mono" th:text="${r.recordId}">—</span></td>
-                  <td>
-                    <span class="cell-inner">
-                      <span class="name-primary" th:text="${r.lastName + ', ' + r.firstName}">—</span>
-                      <span class="name-sub">
-                        <span th:text="${r.gender != null ? r.gender : '—'}">—</span> ·
-                        <span th:text="${r.age() != null ? r.age() + ' yrs' : '—'}">—</span>
-                      </span>
-                    </span>
-                  </td>
-                  <td><span class="cell-inner"><span class="badge-status archived">Archived</span></span></td>
-                  <td style="max-width:0;overflow:hidden"><span class="addr-cell" th:text="${r.address != null ? r.address : '—'}">—</span></td>
-                  <td>
-                    <span class="cell-inner">
-                      <span th:with="sc=${r.sectionsComplete()}"
-                            th:classappend="${sc == 3 ? 's2' : (sc == 2 ? 's1' : '')}"
-                            class="badge-section"
-                            th:text="${sc == 3 ? 'All 3 done' : (sc == 2 ? 'Sec 1–2' : (sc == 1 ? 'Sec 1 only' : 'Not started'))}">—</span>
-                    </span>
-                  </td>
-                  <td>
-                    <div class="action-buttons">
-                          <button class="view-btn"
-                      th:attr="data-id=${r.id},
-                              data-recordid=${r.recordId}, 
-                              data-household=${r.householdId},
-                              data-fname=${r.firstName},
-                              data-lname=${r.lastName},
-                              data-mname=${r.middleName},
-                              data-suffix=${r.suffix},
-                              data-gender=${r.gender},
-                              data-dob=${r.dateOfBirth},
+            <!-- ARCHIVED RECORDS -->
+          <div id="tab-archived" style="display:none">
+            <div class="panel-header">
+              <span><i class="bi bi-archive me-2"></i>Archived Records</span>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="table table-hover mb-0" id="archived-table">
+                <thead>
+                  <tr>
+                    <th style="width:120px;min-width:120px">Record ID</th>
+                    <th style="width:175px;min-width:155px">Resident</th>
+                    <th style="width:110px;min-width:100px">Status</th>
+                    <th style="min-width:160px;max-width:260px">Address</th>
+                    <th style="width:115px;min-width:100px">Sections</th>
+                    <th style="width:175px;min-width:175px">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="r : ${archivedRecords}"
+                      th:attr="data-name=${r.firstName + ' ' + r.lastName},
                               data-address=${r.address},
-                              data-mobile=${r.mobile},
-                              data-occupation=${r.occupation},
-                              data-ecname=${r.emergencyContactName},
-                              data-ecnum=${r.emergencyContactNumber},
-                              data-status=${r.censusStatus},
-                              data-acctstatus=${r.accountStatus},
-                              data-nationality=${r.nationality},
-                              data-pob=${r.placeOfBirth},
-                              data-civil=${r.civilStatus},
-                              data-religion=${r.religion},
-                              data-blood=${r.bloodType},
-                              data-idtype=${r.idType},
-                              data-hrel=${r.householdRelation},
-                              data-hown=${r.homeOwnership},
-                              data-hoa=${r.hoaMembership},
-                              data-hhcount=${r.householdMemberCount},
-                              data-dwelling=${r.dwellingType},
-                              data-members=${r.householdMemberNames},
-                              data-educ=${r.educationalAttainment},
-                              data-employment=${r.employmentStatus},
-                              data-income=${r.monthlyIncomeRange},
-                              data-senior=${r.isSeniorCitizen},
-                              data-pwd=${r.isPwd},
-                              data-solo=${r.isSoloParent},
-                              data-ip=${r.isIndigenousPeople},
-                              data-voter=${r.isRegisteredVoter},
-                              data-fourps=${r.is4psBeneficiary},
-                              data-precinct=${r.precinctNumber},
-                              data-medhist=${r.medicalHistory},
-                              data-philhealth=${r.philhealthId},
-                              data-philcat=${r.philhealthCategory},
-                              data-bp=${r.bloodPressureHistory},
-                              data-evac=${r.evacuationPriority},
-                              data-vaccovid=${r.vaccCovid19},
-                              data-vaccflu=${r.vaccInfluenza},
-                              data-vacchpv=${r.vaccHpv},
-                              data-ecrel=${r.emergencyContactRelation}"
-                      onclick="viewRecord(this)">View</button>
-                      <button class="restore-btn"
-                        th:attr="data-url='/Resident-census/restore/' + ${r.id},
-                                 data-name=${r.firstName + ' ' + r.lastName}"
-                        onclick="triggerRestore(this)">Restore</button>
-                    </div>
-                  </td>
-                </tr>
-                <tr th:if="${archivedRecords == null or #lists.isEmpty(archivedRecords)}" class="empty-row">
-                  <td colspan="6">
-                    <div class="empty-state">
-                      <i class="bi bi-archive"></i>
-                      <div>No archived census records</div>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                              data-id=${r.recordId},
+                              data-status=${r.censusStatus}">
+                    <td><span class="cell-inner mono" th:text="${r.recordId}">—</span></td>
+                    <td>
+                      <span class="cell-inner">
+                        <span class="name-primary" th:text="${r.lastName + ', ' + r.firstName}">—</span>
+                        <span class="name-sub">
+                          <span th:text="${r.gender != null ? r.gender : '—'}">—</span> ·
+                          <span th:text="${r.age() != null ? r.age() + ' yrs' : '—'}">—</span>
+                        </span>
+                      </span>
+                    </td>
+                    <td><span class="cell-inner"><span class="badge-status archived">Archived</span></span></td>
+                    <td style="max-width:0;overflow:hidden"><span class="addr-cell" th:text="${r.address != null ? r.address : '—'}">—</span></td>
+                    <td>
+                      <span class="cell-inner">
+                        <span th:with="sc=${r.sectionsComplete()}"
+                              th:classappend="${sc == 3 ? 's2' : (sc == 2 ? 's1' : '')}"
+                              class="badge-section"
+                              th:text="${sc == 3 ? 'All 3 done' : (sc == 2 ? 'Sec 1–2' : (sc == 1 ? 'Sec 1 only' : 'Not started'))}">—</span>
+                      </span>
+                    </td>
+                    <td>
+                      <div class="action-buttons">
+                        <button class="add-member-btn"
+                          th:attr="data-id=${r.id},
+                                  data-household=${r.householdId},
+                                  data-address=${r.address},
+                                  data-dwelling=${r.dwellingType},
+                                  data-hown=${r.homeOwnership},
+                                  data-hoa=${r.hoaMembership}"
+                          onclick="openHouseholdModal(this)">View Household</button>
+                        <button class="view-btn"
+                          th:attr="data-id=${r.id},
+                                  data-recordid=${r.recordId}, 
+                                  data-household=${r.householdId},
+                                  data-fname=${r.firstName},
+                                  data-lname=${r.lastName},
+                                  data-mname=${r.middleName},
+                                  data-suffix=${r.suffix},
+                                  data-gender=${r.gender},
+                                  data-dob=${r.dateOfBirth},
+                                  data-address=${r.address},
+                                  data-mobile=${r.mobile},
+                                  data-occupation=${r.occupation},
+                                  data-ecname=${r.emergencyContactName},
+                                  data-ecnum=${r.emergencyContactNumber},
+                                  data-status=${r.censusStatus},
+                                  data-acctstatus=${r.accountStatus},
+                                  data-nationality=${r.nationality},
+                                  data-pob=${r.placeOfBirth},
+                                  data-civil=${r.civilStatus},
+                                  data-religion=${r.religion},
+                                  data-blood=${r.bloodType},
+                                  data-idtype=${r.idType},
+                                  data-hrel=${r.householdRelation},
+                                  data-hown=${r.homeOwnership},
+                                  data-hoa=${r.hoaMembership},
+                                  data-hhcount=${r.householdMemberCount},
+                                  data-dwelling=${r.dwellingType},
+                                  data-members=${r.householdMemberNames},
+                                  data-educ=${r.educationalAttainment},
+                                  data-employment=${r.employmentStatus},
+                                  data-income=${r.monthlyIncomeRange},
+                                  data-senior=${r.isSeniorCitizen},
+                                  data-pwd=${r.isPwd},
+                                  data-solo=${r.isSoloParent},
+                                  data-ip=${r.isIndigenousPeople},
+                                  data-voter=${r.isRegisteredVoter},
+                                  data-fourps=${r.is4psBeneficiary},
+                                  data-precinct=${r.precinctNumber},
+                                  data-medhist=${r.medicalHistory},
+                                  data-philhealth=${r.philhealthId},
+                                  data-philcat=${r.philhealthCategory},
+                                  data-bp=${r.bloodPressureHistory},
+                                  data-evac=${r.evacuationPriority},
+                                  data-vaccovid=${r.vaccCovid19},
+                                  data-vaccflu=${r.vaccInfluenza},
+                                  data-vacchpv=${r.vaccHpv},
+                                  data-ecrel=${r.emergencyContactRelation}"
+                          onclick="viewRecord(this)">View</button>
+                        <button class="restore-btn"
+                          th:attr="data-url='/Resident-census/restore/' + ${r.id},
+                                  data-name=${r.firstName + ' ' + r.lastName}"
+                          onclick="triggerRestore(this)">Restore</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr th:if="${archivedRecords == null or #lists.isEmpty(archivedRecords)}" class="empty-row">
+                    <td colspan="6">
+                      <div class="empty-state">
+                        <i class="bi bi-archive"></i>
+                        <div>No archived census records</div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="table-footer" id="footer-archived">
+              <span>Showing <span th:text="${archivedCount}">0</span> archived records</span>
+              <nav><ul class="pagination pagination-sm mb-0">
+                <li class="page-item"><a class="page-link" href="#"><i class="bi bi-arrow-left"></i> Prev</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">Next <i class="bi bi-arrow-right"></i></a></li>
+              </ul></nav>
+            </div>
           </div>
-          <div class="table-footer" id="footer-archived">
-            <span>Showing <span th:text="${archivedCount}">0</span> archived records</span>
-            <nav><ul class="pagination pagination-sm mb-0">
-              <li class="page-item"><a class="page-link" href="#"><i class="bi bi-arrow-left"></i> Prev</a></li>
-              <li class="page-item active"><a class="page-link" href="#">1</a></li>
-              <li class="page-item"><a class="page-link" href="#">Next <i class="bi bi-arrow-right"></i></a></li>
-            </ul></nav>
-          </div>
-        </div>
 
       </div>
     </div>
@@ -703,9 +731,16 @@ td{padding:12px 14px !important;vertical-align:middle !important}
 
                 <!-- STEP 1 -->
         <div id="step0">
-            <input type="hidden" name="accountStatus" id="f_accountStatus" value="pending">
-          <div class="sec-hdr">Identification details</div>
-          
+            <div class="sec-hdr">Identification details</div>
+            <input type="hidden" name="accountStatus" id="f_accountStatus" value="unverified">
+            <div class="field" style="margin:10px 24px 0">
+            <label>Account Status</label>
+            <div class="status-group">
+              <button type="button" class="s-btn unverified on" onclick="setStatus(this,'unverified')">Unverified</button>
+              <button type="button" class="s-btn verified"      onclick="setStatus(this,'verified')">Verified</button>
+              <button type="button" class="s-btn flagged"       onclick="setStatus(this,'flagged')">Flagged</button>
+            </div>
+          </div>
           <div class="fgrid g4" style="padding-top:10px">
             <div class="field">
               <label>First name <span class="req">*</span></label>
@@ -749,7 +784,32 @@ td{padding:12px 14px !important;vertical-align:middle !important}
               <span class="field-err" id="err_address">This field is required</span>
             </div>
           </div>
-
+          <div class="sec-divider" style="margin-top:16px"></div>
+          <div class="sec-hdr">Pin Location on Map</div>
+          <div style="padding:0 24px;margin-top:10px;">
+              <div style="display:flex;gap:10px;margin-bottom:8px;">
+                  <button type="button" class="btn-nav btn-prev-n" onclick="useCurrentLocation()" style="font-size:12px;padding:6px 14px;">
+                      <i class="bi bi-geo-alt"></i> Use My Location
+                  </button>
+                  <button type="button" class="btn-nav btn-prev-n" onclick="searchAddressOnMap()" style="font-size:12px;padding:6px 14px;">
+                      <i class="bi bi-search"></i> Search Address
+                  </button>
+                  <span style="font-size:11px;color:#888;margin-left:auto;align-self:center;" id="pin-coords-display">
+                      Lat: —, Lng: —
+                  </span>
+              </div>
+              <div id="censusMapContainer" style="width:100%;height:320px;border:1px solid #d0d5dd;border-radius:8px;overflow:hidden;position:relative;">
+                  <div id="censusPinMap" style="width:100%;height:100%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:13px;">
+                      <i class="bi bi-map" style="font-size:36px;margin-right:8px;"></i> Map loading…
+                  </div>
+                  <!-- Crosshair in center -->
+                  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:1000;">
+                      <i class="bi bi-geo-alt-fill" style="font-size:32px;color:#e74c3c;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));"></i>
+                  </div>
+              </div>
+              <input type="hidden" name="latitude" id="f_latitude" value="">
+              <input type="hidden" name="longitude" id="f_longitude" value="">
+          </div>
           <div class="fgrid g3" style="padding-top:10px">
             <div class="field">
               <label>Place of birth <span class="req">*</span></label>
@@ -987,13 +1047,16 @@ td{padding:12px 14px !important;vertical-align:middle !important}
 <div id="viewModal" class="modal" >
   <div class="modal-content-box" style="width:1500px">
     <div class="view-hero">
+      
       <div class="view-avatar"><i class="bi bi-person-fill"></i></div>
       <div>
         <div class="view-name" id="vm_name">—</div>
         <div class="view-id" id="vm_id">—</div>
         <div class="view-badges" id="vm_badges"></div>
       </div>
+      <span class="close-x" style="margin-left:auto;align-self:flex-start" onclick="closeViewModal()">×</span>
     </div>
+    
     <div class="view-body" id="vm_body"></div>
     <div style="background:#f8f9fa;border-top:1px solid #eee;padding:12px 20px;display:flex;justify-content:flex-end;flex-shrink:0">
       <button type="button" class="btn-nav btn-prev-n" onclick="closeViewModal()">Close</button>
@@ -1046,11 +1109,24 @@ td{padding:12px 14px !important;vertical-align:middle !important}
 <script src="/js/sidebar.js"></script>
 
 <script>
+  
 function switchTab(tab) {
-  document.getElementById('tab-active').style.display    = tab === 'active'   ? '' : 'none';
-  document.getElementById('tab-archived').style.display  = tab === 'archived' ? '' : 'none';
-  document.getElementById('tab-active-btn').classList.toggle('active',   tab === 'active');
-  document.getElementById('tab-archived-btn').classList.toggle('active', tab === 'archived');
+  const activeDiv = document.getElementById('tab-active');
+  const archivedDiv = document.getElementById('tab-archived');
+  const activeBtn = document.getElementById('tab-active-btn');
+  const archivedBtn = document.getElementById('tab-archived-btn');
+  
+  if (tab === 'active') {
+    activeDiv.style.display = 'block';
+    archivedDiv.style.display = 'none';
+    activeBtn.classList.add('active');
+    archivedBtn.classList.remove('active');
+  } else {
+    activeDiv.style.display = 'none';
+    archivedDiv.style.display = 'block';
+    activeBtn.classList.remove('active');
+    archivedBtn.classList.add('active');
+  }
 }
 
 let activeStatusFilter = '';
@@ -1439,8 +1515,8 @@ function clearForm() {
   document.getElementById('f_householdId').value  = '';
   window._hhHasHead = false;
   document.querySelectorAll('.s-btn').forEach(b => b.classList.remove('on'));
-  document.querySelector('.s-btn.pending')?.classList.add('on');
-  document.getElementById('f_accountStatus').value = 'pending';
+  document.querySelector('.s-btn.unverified')?.classList.add('on');
+  document.getElementById('f_accountStatus').value = 'unverified';
   document.querySelectorAll('.v-btn').forEach(b => b.classList.remove('on'));
   ['f_idfile_prev','f_selfie_prev'].forEach(id => {
     const el = document.getElementById(id);
@@ -1781,12 +1857,13 @@ function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase(
 function statusClass(s) {
   if (!s) return 'pending';
   switch (s.toUpperCase()) {
-    case 'COMPLETE':   return 'complete';
-    case 'INCOMPLETE': return 'incomplete';
-    case 'FLAGGED':    return 'flagged';
-    case 'ARCHIVED':   return 'archived';
-    case 'VERIFIED':   return 'verified';
-    default:           return 'pending';
+    case 'COMPLETE':    return 'complete';
+    case 'INCOMPLETE':  return 'incomplete';
+    case 'FLAGGED':     return 'flagged';
+    case 'ARCHIVED':    return 'archived';
+    case 'VERIFIED':    return 'verified';
+    case 'UNVERIFIED':  return 'unverified';
+    default:            return 'pending';
   }
 }
 
@@ -2023,6 +2100,248 @@ function submitPost(url) {
   document.body.appendChild(form);
   form.submit();
 }
+
+// ★ CENSUS MAP PIN VARIABLES ★
+let censusPinMap = null;
+let censusPinMarker = null;
+let censusMapInitialized = false;
+
+function initCensusPinMap() {
+    if (censusMapInitialized && censusPinMap) {
+        // Map already exists, just invalidate size
+        setTimeout(() => censusPinMap.invalidateSize(), 200);
+        return;
+    }
+
+    const mapContainer = document.getElementById('censusPinMap');
+    if (!mapContainer) return;
+
+    // Initialize map centered on Barangay San Sebastian, Kawit
+    censusPinMap = L.map('censusPinMap', {
+        zoomControl: true,
+        scrollWheelZoom: true
+    }).setView([14.4160, 120.8950], 14);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(censusPinMap);
+
+    // Draw barangay boundary (same polygon as safety reports)
+    L.polygon(SAN_SEBASTIAN_POLYGON, {
+        color: '#2d4a44',
+        weight: 2.5,
+        opacity: 0.75,
+        fillColor: '#2d4a44',
+        fillOpacity: 0.06,
+        dashArray: '6 4',
+        interactive: false
+    }).addTo(censusPinMap);
+
+    // Add click-to-pin functionality
+    censusPinMap.on('click', function(e) {
+        setPinLocation(e.latlng.lat, e.latlng.lng);
+    });
+
+    // Check if editing and already has coordinates
+    const lat = parseFloat(document.getElementById('f_latitude').value);
+    const lng = parseFloat(document.getElementById('f_longitude').value);
+    if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+        setPinLocation(lat, lng, false); // don't re-center
+        censusPinMap.setView([lat, lng], 16);
+    }
+
+    censusMapInitialized = true;
+    setTimeout(() => censusPinMap.invalidateSize(), 300);
+}
+
+function setPinLocation(lat, lng, shouldCenter = true) {
+    // Remove existing marker
+    if (censusPinMarker) {
+        censusPinMap.removeLayer(censusPinMarker);
+    }
+
+    // Add new marker
+    censusPinMarker = L.marker([lat, lng], {
+        draggable: true,
+        icon: L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        })
+    }).addTo(censusPinMap);
+
+    // Update hidden fields
+    document.getElementById('f_latitude').value = lat.toFixed(6);
+    document.getElementById('f_longitude').value = lng.toFixed(6);
+
+    // Update display
+    document.getElementById('pin-coords-display').textContent = 
+        `Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`;
+
+    // Draggable marker updates coords
+    censusPinMarker.on('dragend', function(e) {
+        const pos = e.target.getLatLng();
+        document.getElementById('f_latitude').value = pos.lat.toFixed(6);
+        document.getElementById('f_longitude').value = pos.lng.toFixed(6);
+        document.getElementById('pin-coords-display').textContent = 
+            `Lat: ${pos.lat.toFixed(5)}, Lng: ${pos.lng.toFixed(5)}`;
+    });
+
+    if (shouldCenter) {
+        censusPinMap.setView([lat, lng], censusPinMap.getZoom());
+    }
+}
+
+function useCurrentLocation() {
+    if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser');
+        return;
+    }
+    
+    document.getElementById('censusPinMap').innerHTML = 
+        '<div style="display:flex;align-items:center;justify-content:center;height:100%;">' +
+        '<i class="bi bi-hourglass-split" style="font-size:24px;margin-right:8px;"></i> Getting location…</div>';
+    
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            // Re-initialize map if needed
+            if (!censusMapInitialized) {
+                initCensusPinMap();
+            }
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            censusPinMap.setView([lat, lng], 17);
+            setPinLocation(lat, lng);
+        },
+        function(error) {
+            alert('Unable to retrieve your location: ' + error.message);
+            if (!censusMapInitialized) initCensusPinMap();
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
+}
+
+function searchAddressOnMap() {
+    const address = document.getElementById('f_address').value.trim();
+    if (!address) {
+        alert('Please enter an address first, then click "Search Address" to find it on the map.');
+        return;
+    }
+    
+    const searchQuery = address + ', Kawit, Cavite, Philippines';
+    document.getElementById('censusPinMap').innerHTML = 
+        '<div style="display:flex;align-items:center;justify-content:center;height:100%;">' +
+        '<i class="bi bi-hourglass-split" style="font-size:24px;margin-right:8px;"></i> Searching address…</div>';
+    
+    // Use Nominatim (OpenStreetMap) geocoding
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`)
+        .then(r => r.json())
+        .then(data => {
+            if (!censusMapInitialized) initCensusPinMap();
+            
+            if (data && data.length > 0) {
+                const lat = parseFloat(data[0].lat);
+                const lng = parseFloat(data[0].lon);
+                censusPinMap.setView([lat, lng], 17);
+                setPinLocation(lat, lng);
+            } else {
+                alert('Address not found. You can manually click on the map to place a pin.');
+                if (!censusMapInitialized) initCensusPinMap();
+            }
+        })
+        .catch(() => {
+            alert('Geocoding service unavailable. Please click on the map to place a pin manually.');
+            if (!censusMapInitialized) initCensusPinMap();
+        });
+}
+
+// Modified openCreateModal to initialize map after modal opens
+const originalOpenCreateModal = openCreateModal;
+openCreateModal = function() {
+    originalOpenCreateModal();
+    // Initialize map after modal is displayed
+    setTimeout(initCensusPinMap, 400);
+};
+
+// Modified editRecord to initialize map and set pin
+const originalEditRecord = editRecord;
+editRecord = function(btn) {
+    originalEditRecord(btn);
+    // Set coordinates from edit button data
+    const lat = btn.getAttribute('data-lat');
+    const lng = btn.getAttribute('data-lng');
+    document.getElementById('f_latitude').value = lat || '';
+    document.getElementById('f_longitude').value = lng || '';
+    
+    // Initialize map after modal is displayed
+    setTimeout(() => {
+        initCensusPinMap();
+        if (lat && lng && lat !== 'null' && lng !== 'null') {
+            const latNum = parseFloat(lat);
+            const lngNum = parseFloat(lng);
+            if (!isNaN(latNum) && !isNaN(lngNum)) {
+                setPinLocation(latNum, lngNum);
+            }
+        }
+    }, 500);
+};
+
+// Close modal cleanup
+const originalCloseCensusModal = closeCensusModal;
+closeCensusModal = function() {
+    if (censusPinMap) {
+        censusPinMap.remove();
+        censusPinMap = null;
+        censusPinMarker = null;
+        censusMapInitialized = false;
+    }
+    originalCloseCensusModal();
+};
+
+// Make sure map resizes when stepping between form steps
+const originalGoStep = goStep;
+goStep = function(n) {
+    originalGoStep(n);
+    // If moving to step with map, invalidate size
+    if (censusPinMap) {
+        setTimeout(() => censusPinMap.invalidateSize(), 300);
+    }
+};
+// Barangay San Sebastian, Kawit boundary polygon
+const SAN_SEBASTIAN_POLYGON = [
+    [14.418865, 120.886515],
+    [14.418666, 120.887862], [14.418969, 120.887902],
+    [14.419010, 120.889089], [14.419495, 120.890312],
+    [14.419868, 120.891458], [14.421015, 120.892997],
+    [14.420850, 120.894121], [14.421649, 120.895839],
+    [14.422202, 120.897952], [14.423068, 120.897849],
+    [14.423119, 120.901125], [14.424041, 120.901272],
+    [14.424003, 120.901537], [14.423712, 120.901693],
+    [14.423442, 120.901698], [14.422226, 120.902297],
+    [14.421938, 120.902353], [14.421616, 120.902259],
+    [14.421310, 120.901863], [14.421144, 120.901766],
+    [14.420634, 120.901951], [14.420445, 120.901895],
+    [14.420210, 120.902035], [14.420090, 120.902842],
+    [14.419753, 120.902879], [14.419026, 120.902860],
+    [14.419009, 120.903096], [14.418809, 120.903301],
+    [14.418490, 120.902674], [14.418246, 120.902392],
+    [14.417720, 120.901458], [14.416779, 120.900345],
+    [14.415834, 120.899736], [14.414386, 120.896173],
+    [14.413767, 120.895386], [14.411402, 120.895039],
+    [14.410154, 120.894599], [14.409451, 120.893831],
+    [14.408851, 120.892746],
+    [14.409384, 120.892449], [14.409930, 120.891833],
+    [14.410030, 120.891627], [14.411015, 120.890809],
+    [14.411201, 120.890131], [14.411176, 120.889748],
+    [14.411426, 120.889479], [14.411647, 120.889479],
+    [14.414170, 120.887581], [14.415289, 120.887273],
+    [14.415541, 120.886679], [14.415663, 120.886825],
+    [14.418853, 120.886512]
+];
 </script>
 </body>
 </html>
