@@ -55,6 +55,8 @@ public class CensusRecordDTO {
     private String    vaccCovid19;
     private String    vaccInfluenza;
     private String    vaccHpv;
+    private Double    latitude;
+    private Double    longitude;
 
     public CensusRecordDTO(
         Long id, String recordId, String householdId,
@@ -76,7 +78,7 @@ public class CensusRecordDTO {
         String precinctNumber, String medicalHistory,
         String philhealthId, String philhealthCategory,
         String bloodPressureHistory, String vaccCovid19,
-        String vaccInfluenza, String vaccHpv
+        String vaccInfluenza, String vaccHpv,   Double latitude,    Double longitude
     ) {
         this.id                       = id;
         this.recordId                 = recordId;
@@ -128,6 +130,8 @@ public class CensusRecordDTO {
         this.vaccCovid19              = vaccCovid19;
         this.vaccInfluenza            = vaccInfluenza;
         this.vaccHpv                  = vaccHpv;
+        this.latitude                 = latitude;
+        this.longitude                = longitude;
     }
 
     // ── Getters ──────────────────────────────────────────────────
@@ -187,6 +191,8 @@ public class CensusRecordDTO {
     public String    getVaccCovid19()             { return vaccCovid19; }
     public String    getVaccInfluenza()           { return vaccInfluenza; }
     public String    getVaccHpv()                 { return vaccHpv; }
+    public Double    getLatitude()                { return latitude; }
+    public Double    getLongitude()               { return longitude; }
 
     // ── Computed helpers ─────────────────────────────────────────
     public String fullName() {
@@ -208,6 +214,7 @@ public class CensusRecordDTO {
             case "INCOMPLETE" -> "incomplete";
             case "FLAGGED"    -> "flagged";
             case "ARCHIVED"   -> "archived";
+            case "UNVERIFIED" -> "unverified";
             default           -> "pending";
         };
     }

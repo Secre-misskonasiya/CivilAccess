@@ -157,6 +157,33 @@ public class SafetyReportsController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/api/all")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> getAllReportsForMap() {
+        List<SafetyReports> allReports = safetyReportService.getAllReports();
+
+        List<Map<String, Object>> result = allReports.stream()
+                .filter(r -> r.getLatitude() != null && r.getLongitude() != null)
+                .map(r -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("id", r.getId());
+                    m.put("title", r.getTitle() != null ? r.getTitle() : "Untitled");
+                    m.put("location", r.getLocation() != null ? r.getLocation() : "No location");
+                    m.put("type", r.getType() != null ? r.getType() : "Safety");
+                    m.put("priority", r.getPriority() != null ? r.getPriority() : "LOW");
+                    m.put("status", r.getStatus() != null ? r.getStatus() : "INCOMING");
+                    m.put("reporterName", r.getReporterName() != null ? r.getReporterName() : "N/A");
+                    m.put("dateSubmitted", r.getDateSubmitted() != null ? r.getDateSubmitted().toString() : null);
+                    m.put("description", r.getDescription() != null ? r.getDescription() : "");
+                    m.put("latitude", r.getLatitude());
+                    m.put("longitude", r.getLongitude());
+                    return m;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(result);
+    }
+
     @GetMapping("/api/poll")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> pollReports(@RequestParam Long lastId) {

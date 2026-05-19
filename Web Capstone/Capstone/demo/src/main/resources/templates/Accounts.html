@@ -1213,10 +1213,20 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
         modal.style.display = "block";
     }
     window.onload = function () {
-        const status = document.getElementById("accountStatus").value;
-        if (status === "New" || status === "Newly Updated") {
-            document.getElementById("forcePasswordModal").style.display = "block";
-            document.body.style.overflow = "hidden";
+        try {
+            const accountStatusEl = document.getElementById("accountStatus");
+            if (accountStatusEl) {
+                const status = accountStatusEl.value;
+                if (status === "New" || status === "Newly Updated") {
+                    const forceModal = document.getElementById("forcePasswordModal");
+                    if (forceModal) {
+                        forceModal.style.display = "block";
+                        document.body.style.overflow = "hidden";
+                    }
+                }
+            }
+        } catch(e) {
+            console.log("Force password check skipped:", e.message);
         }
     };
     function redirectToPassword() { window.location.href = "/user-profile"; }

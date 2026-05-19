@@ -533,15 +533,16 @@
 
         <!-- ===== INCOMING ===== -->
         <div id="tab-incoming" class="panel-inner" th:classappend="${currentTab != 'incoming' ? 'd-none' : ''}">
-            <div class="panel-header">Incoming SoS Alerts</div>
+            <div class="panel-header">Incoming SOS Alerts</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0" id="sos-table-incoming">
-                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Date/TimeStamp</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="incoming-tbody">
                         <tr th:each="report : ${incomingReports}" th:if="${not #lists.isEmpty(incomingReports)}" th:attr="data-id=${report.id}">
                             <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
                             <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
+                            <td class="sos-type-cell" th:text="${report.dateReported != null ? #temporals.format(report.dateReported, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>
                             <td th:text="${report.location != null and report.location != 'N/A' 
                                 ? report.location 
                                 : (report.latitude != null and report.longitude != null 
@@ -558,15 +559,16 @@
 
         <!-- ===== PROCESSING ===== -->
         <div id="tab-processing" class="panel-inner" th:classappend="${currentTab != 'processing' ? 'd-none' : ''}">
-            <div class="panel-header">Processing SoS Alerts</div>
+            <div class="panel-header">Processing SOS Alerts</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
-                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Date/TimeStamp</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="processing-tbody">
                         <tr th:each="report : ${processingReports}" th:if="${processingReports != null and not #lists.isEmpty(processingReports)}" th:attr="data-id=${report.id}">
                             <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
                             <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
+                            <td class="sos-type-cell" th:text="${report.dateReported != null ? #temporals.format(report.dateReported, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>
                             <td th:text="${report.location != null and report.location != 'N/A' 
                                 ? report.location 
                                 : (report.latitude != null and report.longitude != null 
@@ -583,15 +585,16 @@
 
         <!-- ===== RESOLVED ===== -->
         <div id="tab-resolved" class="panel-inner" th:classappend="${currentTab != 'resolved' ? 'd-none' : ''}">
-            <div class="panel-header">Resolved SoS Alerts</div>
+            <div class="panel-header">Resolved SOS Alerts</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
-                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Date/TimeStamp</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
                         <tr th:each="report : ${resolvedReports}" th:if="${not #lists.isEmpty(resolvedReports)}">
                             <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
                             <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
+                            <td th:text="${report.dateReported != null ? #temporals.format(report.dateReported, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>                       
                             <td th:text="${report.location != null and report.location != 'N/A' 
                                 ? report.location 
                                 : (report.latitude != null and report.longitude != null 
@@ -608,15 +611,16 @@
 
         <!-- ===== ARCHIVE ===== -->
         <div id="tab-archive" class="panel-inner" th:classappend="${currentTab != 'archive' ? 'd-none' : ''}">
-            <div class="panel-header">Archived SoS Alerts</div>
+            <div class="panel-header">Archived SOS Alerts</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
-                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Location</th><th>Status</th><th>Actions</th><tr></thead>
+                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Date/TimeStamp</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
                         <tr th:each="report : ${archivedReports}" th:if="${not #lists.isEmpty(archivedReports)}">
                             <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
                             <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
+                            <td th:text="${report.dateReported != null ? #temporals.format(report.dateReported, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>       
                             <td th:text="${report.location != null and report.location != 'N/A' 
                                 ? report.location 
                                 : (report.latitude != null and report.longitude != null 
@@ -633,15 +637,16 @@
 
         <!-- ===== CANCELLED ===== -->
         <div id="tab-cancelled" class="panel-inner" th:classappend="${currentTab != 'cancelled' ? 'd-none' : ''}">
-            <div class="panel-header">Cancelled SoS Alerts</div>
+            <div class="panel-header">Cancelled SOS Alerts</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
-                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Date/TimeStamp</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="cancelled-tbody">
                         <tr th:each="report : ${cancelledReports}" th:if="${cancelledReports != null and not #lists.isEmpty(cancelledReports)}" th:attr="data-id=${report.id}">
                             <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
                             <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
+                            <td th:text="${report.dateReported != null ? #temporals.format(report.dateReported, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>     
                             <td th:text="${report.location != null and report.location != 'N/A' 
                                 ? report.location 
                                 : (report.latitude != null and report.longitude != null 

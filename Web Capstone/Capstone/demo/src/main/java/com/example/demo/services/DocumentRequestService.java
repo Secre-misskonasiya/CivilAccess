@@ -59,7 +59,7 @@ public class DocumentRequestService {
     }
 
     public List<DocumentRequest> getByStatus(String status) {
-        return repository.findByStatus(status);
+        return repository.findByStatusOrderByIdDesc(status);
     }
 
     public List<DocumentRequest> searchRequests(String query) {
@@ -114,6 +114,12 @@ public class DocumentRequestService {
     public long countPending() {
         return repository.countByStatusNotIn(List.of("RESOLVED", "ARCHIVED"));
     }
+
+        
+    public long countThisMonth() {
+        return repository.countThisMonth();
+    }
+    
 
     public DocumentRequest getById(Long id) {
         return repository.findById(id)

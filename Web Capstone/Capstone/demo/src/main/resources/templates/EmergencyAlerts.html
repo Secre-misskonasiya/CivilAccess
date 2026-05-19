@@ -442,6 +442,7 @@
                 <div class="d-flex gap-3 mb-3">
                     <select class="form-select" id="alertType">
                         <option value="">Alert Type</option>
+                        <option value="Evacuation">Evacuation</option>
                         <option value="Fire Emergency">Fire Emergency</option>
                         <option value="Flood">Flood</option>
                         <option value="Earthquake">Earthquake</option>
@@ -730,6 +731,10 @@
             alert('Please fill in all required fields');
             return;
         }
+                // For Evacuation, auto-set priority to Level 4
+        if (alertData.type === 'Evacuation') {
+            alertData.priority = 'Level 4';
+        }
         if (!alertData.latitude || !alertData.longitude) {
             alert('Please select a valid location within Barangay San Sebastian');
             return;
@@ -839,20 +844,28 @@
     }
     
     function initCreateMap(lat = 14.418865, lng = 120.886515) {
-        const mapContainer = document.getElementById('createMap');
+    const mapContainer = document.getElementById('createMap');
         if (!mapContainer) return;
+        
+        // Check if tab is hidden
+        const tabCreate = document.getElementById('tab-create');
+        if (tabCreate.classList.contains('d-none')) {
+            // Wait for tab to become visible
+            setTimeout(() => initCreateMap(lat, lng), 200);
+            return;
+        }
         
         if (createMap) {
             createMap.remove();
         }
         
-        createMap = L.map('createMap').setView([lat, lng], 15);
+        createMap = L.map('createMap').setView([lat, lng], 16);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(createMap);
         
         // Draw barangay boundary
-        const boundaryPolygon = L.polygon(BARANGAY_BOUNDARY, {
+        L.polygon(BARANGAY_BOUNDARY, {
             color: '#2d4a44',
             weight: 3,
             fillColor: '#2d4a44',
@@ -864,12 +877,10 @@
             const lat = e.latlng.lat;
             const lng = e.latlng.lng;
             
-            // Remove existing marker
             if (createMarker) {
                 createMap.removeLayer(createMarker);
             }
             
-            // Create red marker icon
             const redIcon = L.icon({
                 iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -879,18 +890,13 @@
                 shadowSize: [41, 41]
             });
             
-            // Add marker
             createMarker = L.marker([lat, lng], { icon: redIcon }).addTo(createMap);
-            
-            // Update boundary status
             updateBoundaryStatus(lat, lng);
             
-            // Reverse geocode to get address
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`)
                 .then(response => response.json())
                 .then(data => {
-                    const address = data.display_name || `${lat}, ${lng}`;
-                    document.getElementById('location').value = address;
+                    document.getElementById('location').value = data.display_name || `${lat}, ${lng}`;
                 })
                 .catch(() => {
                     document.getElementById('location').value = `${lat}, ${lng}`;
@@ -900,74 +906,136 @@
     
     // Handle Alert Type change
     function handleAlertTypeChange() {
-        const alertType = document.getElementById('alertType').value;
-        const mapSection = document.getElementById('mapSection');
-        const locationField = document.getElementById('location');
-        const latitudeField = document.getElementById('latitude');
-        const longitudeField = document.getElementById('longitude');
-        const boundaryStatusDiv = document.getElementById('boundaryStatus');
-        
-        if (alertType === 'Severe Weather') {
-            // Hide map section
-            mapSection.classList.add('hidden');
-            // Set location to San Sebastian, Kawit Cavite (fixed location)
-            locationField.value = 'San Sebastian, Kawit Cavite';
-            latitudeField.value = '14.418865';
-            longitudeField.value = '120.886515';
-            // Clear any existing marker from map if map exists, but do not recreate map
-            if (createMarker && createMap) {
-                createMap.removeLayer(createMarker);
-                createMarker = null;
-            }
-            // Show valid boundary status for clarity
-            boundaryStatusDiv.style.display = 'flex';
-            boundaryStatusDiv.className = 'boundary-status valid';
-            boundaryStatusDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> Location is within Barangay San Sebastian boundaries (Severe Weather default)';
-        } else {
-            // Show map section again
-            mapSection.classList.remove('hidden');
-            const currentLoc = locationField.value;
-            const currentLat = latitudeField.value;
-            const currentLng = longitudeField.value;
-            const isDefaultSevereLoc = (currentLoc === 'San Sebastian, Kawit Cavite' && currentLat === '14.418865' && currentLng === '120.886515');
-            
-            if (isDefaultSevereLoc || !currentLat || !currentLng || currentLat === '' || currentLng === '') {
-                locationField.value = '';
-                latitudeField.value = '';
-                longitudeField.value = '';
-                boundaryStatusDiv.style.display = 'none';
-                if (createMarker && createMap) {
-                    createMap.removeLayer(createMarker);
-                    createMarker = null;
-                }
-            } else {
-                if (currentLat && currentLng && isPointInsideBoundary(parseFloat(currentLat), parseFloat(currentLng))) {
+    const alertType = document.getElementById('alertType').value;
+    const mapSection = document.getElementById('mapSection');
+    const locationField = document.getElementById('location');
+    const latitudeField = document.getElementById('latitude');
+    const longitudeField = document.getElementById('longitude');
+    const boundaryStatusDiv = document.getElementById('boundaryStatus');
+    const prioritySelect = document.getElementById('priority');
+    const messageField = document.getElementById('message');
+                
+                // Handle Evacuation type
+                if (alertType === 'Evacuation') {
+                    // Lock priority to Level 4
+                    prioritySelect.value = 'Level 4';
+                    prioritySelect.disabled = true;
+                    
+                    // Set evacuation point to Barangay Hall
+                    const evacLat = 14.4122909076492;
+                    const evacLng = 120.891226530075;
+                    latitudeField.value = evacLat;
+                    longitudeField.value = evacLng;
+                    locationField.value = 'Barangay Hall - Evacuation Center';
+                    
+                    // Show map with evacuation pin
+                    mapSection.classList.remove('hidden');
+                    
+                    // Auto-fill evacuation instructions
+                    messageField.value = `EVACUATION INSTRUCTIONS:
+                    
+            1. REMAIN CALM and gather your emergency kit if already prepared.
+            2. Secure your home - turn off gas, electricity, and lock all doors.
+            3. Proceed IMMEDIATELY to the Evacuation Location Pinned in the map provided.
+            4. Bring only essential items: IDs, medications, drinking water, and ready-to-eat food.
+            5. Wear face masks and follow health protocols at the center.
+            6. Assist elderly, children, and persons with disabilities.
+            7. Register at the evacuation center upon arrival for proper headcount.
+            8. Stay tuned to official Barangay announcements for updates.
+            9. DO NOT return home until authorities declare it safe.
+            10. For emergencies, contact Barangay Hotline: 0945 577 9766
+
+            - Barangay San Sebastian Disaster Response Team`;
+                    
+                    // Update boundary status
                     boundaryStatusDiv.style.display = 'flex';
                     boundaryStatusDiv.className = 'boundary-status valid';
-                    boundaryStatusDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> Location is within Barangay San Sebastian boundaries';
-                } else if (currentLat && currentLng) {
+                    boundaryStatusDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> Evacuation Point: Barangay Hall';
+                    
+                    // Update map with evacuation pin
+                    if (createMap) {
+                        if (createMarker) createMap.removeLayer(createMarker);
+                        const greenIcon = L.icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                            iconSize: [25, 41],
+                            iconAnchor: [12, 41],
+                            popupAnchor: [1, -34],
+                            shadowSize: [41, 41]
+                        });
+                        createMarker = L.marker([evacLat, evacLng], { icon: greenIcon }).addTo(createMap);
+                        createMarker.bindPopup('<b>Barangay Hall</b>').openPopup();
+                        createMap.setView([evacLat, evacLng], 17);
+                    }
+                    
+                } else if (alertType === 'Severe Weather') {
+                    // Reset priority
+                    prioritySelect.disabled = false;
+                    prioritySelect.value = '';
+                    
+                    // Hide map section
+                    mapSection.classList.add('hidden');
+                    locationField.value = 'San Sebastian, Kawit Cavite';
+                    latitudeField.value = '14.418865';
+                    longitudeField.value = '120.886515';
+                    
+                    if (createMarker && createMap) {
+                        createMap.removeLayer(createMarker);
+                        createMarker = null;
+                    }
+                    
                     boundaryStatusDiv.style.display = 'flex';
-                    boundaryStatusDiv.className = 'boundary-status invalid';
-                    boundaryStatusDiv.innerHTML = '<i class="bi bi-x-circle-fill"></i> Location is OUTSIDE Barangay San Sebastian boundaries.';
-                }
-                if (createMap && currentLat && currentLng && !createMarker) {
-                    const redIcon = L.icon({
-                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                        iconSize: [25, 41],
-                        iconAnchor: [12, 41],
-                        popupAnchor: [1, -34],
-                        shadowSize: [41, 41]
-                    });
-                    createMarker = L.marker([parseFloat(currentLat), parseFloat(currentLng)], { icon: redIcon }).addTo(createMap);
+                    boundaryStatusDiv.className = 'boundary-status valid';
+                    boundaryStatusDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> Location is within Barangay San Sebastian boundaries (Severe Weather default)';
+                    
+                } else {
+                    // Reset priority (not disabled)
+                    prioritySelect.disabled = false;
+                    
+                    // Show map section again
+                    mapSection.classList.remove('hidden');
+                    const currentLoc = locationField.value;
+                    const currentLat = latitudeField.value;
+                    const currentLng = longitudeField.value;
+                    const isDefaultSevereLoc = (currentLoc === 'San Sebastian, Kawit Cavite' && currentLat === '14.418865' && currentLng === '120.886515');
+                    
+                    if (isDefaultSevereLoc || !currentLat || !currentLng || currentLat === '' || currentLng === '') {
+                        locationField.value = '';
+                        latitudeField.value = '';
+                        longitudeField.value = '';
+                        boundaryStatusDiv.style.display = 'none';
+                        if (createMarker && createMap) {
+                            createMap.removeLayer(createMarker);
+                            createMarker = null;
+                        }
+                    } else {
+                        if (currentLat && currentLng && isPointInsideBoundary(parseFloat(currentLat), parseFloat(currentLng))) {
+                            boundaryStatusDiv.style.display = 'flex';
+                            boundaryStatusDiv.className = 'boundary-status valid';
+                            boundaryStatusDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> Location is within Barangay San Sebastian boundaries';
+                        } else if (currentLat && currentLng) {
+                            boundaryStatusDiv.style.display = 'flex';
+                            boundaryStatusDiv.className = 'boundary-status invalid';
+                            boundaryStatusDiv.innerHTML = '<i class="bi bi-x-circle-fill"></i> Location is OUTSIDE Barangay San Sebastian boundaries.';
+                        }
+                        if (createMap && currentLat && currentLng && !createMarker) {
+                            const redIcon = L.icon({
+                                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41]
+                            });
+                            createMarker = L.marker([parseFloat(currentLat), parseFloat(currentLng)], { icon: redIcon }).addTo(createMap);
+                        }
+                    }
+                    if (!createMap) {
+                        setTimeout(initCreateMap, 300);
+                    }
                 }
             }
-            if (!createMap) {
-                setTimeout(initCreateMap, 100);
-            }
-        }
-    }
-    
+        
     function getCurrentLocation() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function(position) {
@@ -1003,6 +1071,7 @@
             const modalBody = document.getElementById('viewModalBody');
             const hasLocation = data.latitude && data.longitude && data.latitude !== 0 && data.longitude !== 0;
             const priorityClass = data.priority === 'Level 4' ? 'high' : '';
+            const isEvacuation = data.type === 'Evacuation';
             
             modalBody.innerHTML = `
                 <div class="view-post-header">
@@ -1036,9 +1105,18 @@
                             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
                                 attribution: '© OpenStreetMap contributors' 
                             }).addTo(viewMap);
-                            L.marker([data.latitude, data.longitude])
+                            const markerIcon = isEvacuation ? L.icon({
+                                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41]
+                            }) : new L.Icon.Default();
+
+                            L.marker([data.latitude, data.longitude], { icon: markerIcon })
                                 .addTo(viewMap)
-                                .bindPopup(`<b>${escapeHtml(data.title || 'Alert Location')}</b>`)
+                                .bindPopup(`<b>${escapeHtml(isEvacuation ? 'Barangay Hall Evacuation Center' : (data.title || 'Alert Location'))}</b>`)
                                 .openPopup();
                             setTimeout(function() {
                                 viewMap.invalidateSize();
@@ -1077,11 +1155,14 @@
     document.getElementById('alertType')?.addEventListener('change', handleAlertTypeChange);
     
     window.onload = function() {
-        const status = document.getElementById('accountStatus').value;
-        if (status === 'New' || status === 'Newly Updated') {
-            document.getElementById('forcePasswordModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        }
+            const accountStatusEl = document.getElementById('accountStatus');
+            if (accountStatusEl) {
+                const status = accountStatusEl.value;
+                if (status === 'New' || status === 'Newly Updated') {
+                    document.getElementById('forcePasswordModal').style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+                }
+            }
         // Initialize map if on create tab
         const createTab = document.getElementById('tab-create');
         if (createTab && !createTab.classList.contains('d-none')) {
@@ -1091,8 +1172,11 @@
                 document.getElementById('location').value = 'San Sebastian, Kawit Cavite';
                 document.getElementById('latitude').value = '14.418865';
                 document.getElementById('longitude').value = '120.886515';
+            } else if (alertType === 'Evacuation') {
+                handleAlertTypeChange();
             } else {
-                setTimeout(initCreateMap, 300);
+                initCreateMap();
+                
             }
         }
     };
