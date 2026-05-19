@@ -223,7 +223,7 @@
                     <div class="filter-option" onclick="applyFilter('employee','ADMIN','Administrator','employee-filter-label',3)">ADMIN <i class="bi bi-check filter-check"></i></div>
                     <div class="filter-option" onclick="applyFilter('employee','BARANGAY-CAPTAIN','Barangay Captain','employee-filter-label',3)">Barangay Captain <i class="bi bi-check filter-check"></i></div>
                     <div class="filter-option" onclick="applyFilter('employee','TREASURER','Treasurer','employee-filter-label',3)">Treasurer <i class="bi bi-check filter-check"></i></div>
-                    <div class="filter-option" onclick="applyFilter('employee','SECRETARY','Secretary','employee-filter-label',3)">Secretary <i class="bi bi-check filter-check"></i></div>
+                    <div class="filter-option" onclick="applyFilter('employee','TANOD','Tanod','employee-filter-label',3)">Tanod <i class="bi bi-check filter-check"></i></div>
                 </div>
             </div>
             <button class="new-account-btn" onclick="openModal()"
@@ -1282,6 +1282,15 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
         document.getElementById("edit-birthDate").value = birth || '';
         document.getElementById("edit-birthDate").setAttribute('max', maxDateString);
         document.getElementById("edit-role").value     = role   || '';
+        const currentRoleEdit = document.getElementById('currentUserRole').value;
+        const roleSelectEdit = document.getElementById('edit-role');
+        const allowedRolesEdit = currentRoleEdit === 'ADMIN'
+            ? ['ADMIN', 'BARANGAY-CAPTAIN', 'TREASURER', 'SECRETARY', 'TANOD']
+            : ['TREASURER', 'BARANGAY-CAPTAIN', 'TANOD'];
+        Array.from(roleSelectEdit.options).forEach(opt => {
+            if (opt.value === '') return;
+            opt.style.display = allowedRolesEdit.includes(opt.value) ? '' : 'none';
+        });
         const empInput = document.getElementById('edit-employeeId');
         if (empInput) { empInput.value = employee || ''; empInput.readOnly = true; empInput.style.backgroundColor = "#f0f0f0"; }
         document.getElementById('create-password-row').style.display = 'none';
