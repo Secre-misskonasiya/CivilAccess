@@ -59,9 +59,10 @@ public class ResidentContactController {
 
     @GetMapping("/resident/contact")
     public String residentContactPage(HttpSession session) {
-        // if (session.getAttribute("resident") == null) {
-        //     return "redirect:/resident-login";
-        // }
+        // FIXED: Uncommented authentication check
+        if (session.getAttribute("resident") == null) {
+            return "redirect:/resident-login";
+        }
         return "ResidentContact";
     }
 
@@ -69,20 +70,40 @@ public class ResidentContactController {
     //  Current user
     // ─────────────────────────────────────────────────────────────────────
 
-    @GetMapping("/api/resident/me")
-    @ResponseBody
-    public ResponseEntity<?> getCurrentResident(HttpSession session) {
-        ResidentUser resident = (ResidentUser) session.getAttribute("resident");
-        if (resident == null) return ResponseEntity.status(401).body("Not authenticated");
-
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("id",        resident.getId());
-        data.put("firstName", resident.getFirstName());
-        data.put("lastName",  resident.getLastName());
-        data.put("email",     resident.getEmail());
-        data.put("phone",     resident.getMobileNumber());
-        return ResponseEntity.ok(data);
+   // Update the getCurrentResident method in ResidentContactController.java
+@GetMapping("/api/resident/me")
+@ResponseBody
+public ResponseEntity<?> getCurrentResident(HttpSession session) {
+    // Debug logging
+    System.out.println("Session ID: " + session.getId());
+    ResidentUser resident = (ResidentUser) session.getAttribute("resident");
+    
+    // If resident object not found, check if this is an admin logging in as resident
+    if (resident == null) {
+        String userType = (String) session.getAttribute("userType");
+        if ("ADMIN_AS_RESIDENT".equals(userType)) {
+            // Build a response from individual session attributes
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("id", session.getAttribute("adminAsResidentId"));
+            data.put("firstName", session.getAttribute("residentFirstName"));
+            data.put("lastName", session.getAttribute("residentLastName"));
+            data.put("email", session.getAttribute("residentEmail"));
+            data.put("phone", session.getAttribute("residentMobileNumber"));
+            return ResponseEntity.ok(data);
+        }
+        return ResponseEntity.status(401).body("Not authenticated");
     }
+    
+    System.out.println("Resident from session: " + (resident != null ? resident.getEmail() : "null"));
+    
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("id",        resident.getId());
+    data.put("firstName", resident.getFirstName());
+    data.put("lastName",  resident.getLastName());
+    data.put("email",     resident.getEmail());
+    data.put("phone",     resident.getMobileNumber());
+    return ResponseEntity.ok(data);
+}
 
     // ─────────────────────────────────────────────────────────────────────
     //  Contact help requests

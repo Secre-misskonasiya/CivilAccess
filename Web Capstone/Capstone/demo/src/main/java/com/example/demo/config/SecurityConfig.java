@@ -23,7 +23,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/landing-page", "/login", "/images/**", "/icons/**", "/css/**",
                 "/check-admin-email", "/send-otp", "/verify-otp",
-                "/api/forgot-password/**").permitAll()
+                "/api/forgot-password/**",
+                "/resident-login", "/resident-logout", "/resident-check-status",
+                "/resident-register", "/api/resident/**", "/resident/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

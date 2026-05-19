@@ -29,7 +29,7 @@ public class ResidentSecurityConfig {
                 "/resident-check-status",
                 "/resident-register",
                 "/api/resident/**",
-             
+                "/resident/**",
                 "/resident-home/**",
                 "/resident-profile/**"
             )
@@ -66,7 +66,8 @@ public class ResidentSecurityConfig {
 
                 HttpSession session = request.getSession(false);
                 boolean loggedIn   = session != null
-                        && session.getAttribute("residentId") != null;
+                        && (session.getAttribute("residentId") != null
+                            || session.getAttribute("adminAsResidentId") != null);
 
                 if (!loggedIn) {
                     response.sendRedirect(request.getContextPath() + "/resident-login");
@@ -79,10 +80,9 @@ public class ResidentSecurityConfig {
 
         // ── Paths that require a resident session ──
         registration.addUrlPatterns(
-        
+            "/resident/*",
             "/resident-home/*",
             "/resident-profile/*"
-            // Add more resident-only routes here as you build them
         );
 
         registration.setName("residentSessionFilter");

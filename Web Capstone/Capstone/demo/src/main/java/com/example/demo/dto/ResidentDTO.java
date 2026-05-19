@@ -18,5 +18,9 @@ public record ResidentDTO(
     String validId,
     String barangayIndigency,
     String account_status,
-    String avatar_url  // Add this line
+    String avatar_url,
+    String pwdImage,
+    String seniorImage,
+    boolean isPwd,
+    boolean isSenior
 ) {}

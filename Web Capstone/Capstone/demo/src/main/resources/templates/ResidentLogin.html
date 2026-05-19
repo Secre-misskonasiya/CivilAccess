@@ -798,6 +798,24 @@
       });
     }
 
+    // Clear any existing Supabase session when on login page (prevents auto-login on refresh).
+    // NOTE: Do NOT call localStorage.clear() here — it wipes Supabase's internal token store
+    // and triggers an internal refresh that reloads the page, breaking the register OTP flow.
+    async function clearExistingSession() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          console.log('Clearing existing Supabase session on login page');
+          await supabase.auth.signOut();
+        }
+      } catch (err) {
+        console.warn('clearExistingSession error (ignored):', err);
+      }
+    }
+    
+    // Call this to prevent auto-login on refresh
+    clearExistingSession();
+
     const loginForm = document.getElementById('loginForm');
 
     if (loginForm) {
@@ -820,28 +838,65 @@
         }
 
         try {
-          const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password,
-          });
+          // First, check with backend to see if credentials are valid
+          const checkUrl = `/resident-check-status?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
+          const checkRes = await fetch(checkUrl);
           
-          if (authError) {
-            console.error('Auth error:', authError);
-            showLoginError('Invalid email or password.');
+          if (!checkRes.ok) {
+            const errorMsg = await checkRes.text();
+            showLoginError(errorMsg);
             resetLoginButton();
             return;
           }
           
-          console.log('Auth successful:', authData.user?.email);
+          const result = await checkRes.text();
+          const isAdmin = result === 'OK_ADMIN';
           
-          const { data: residentData, error: residentError } = await supabase
-            .from('residents')
-            .select('account_status, first_name, last_name, id')
-            .eq('email', email)
-            .single();
+          // Only try Supabase auth for residents (not for admin users)
+          let authData = null;
           
-          if (residentError) {
-            console.error('Error fetching resident:', residentError);
+          if (!isAdmin) {
+            // Try Supabase authentication for residents
+            const { data, error: authError } = await supabase.auth.signInWithPassword({
+              email: email,
+              password: password,
+            });
+            
+            if (authError) {
+              console.error('Auth error:', authError);
+              // Check if this resident has a local password (valid_id)
+              const { data: residentCheck } = await supabase
+                .from('residents')
+                .select('valid_id')
+                .eq('email', email)
+                .single();
+              
+              // If they don't have a valid_id, show error
+              if (!residentCheck || !residentCheck.valid_id) {
+                showLoginError('Invalid email or password.');
+                resetLoginButton();
+                return;
+              }
+            } else {
+              authData = data;
+              console.log('Auth successful:', authData.user?.email);
+            }
+          }
+          
+          // Fetch resident data (only for residents, not admins)
+          let residentData = null;
+          if (!isAdmin) {
+            const { data, error: residentError } = await supabase
+              .from('residents')
+              .select('account_status, first_name, last_name, id')
+              .eq('email', email)
+              .single();
+            
+            if (residentError) {
+              console.error('Error fetching resident:', residentError);
+            } else {
+              residentData = data;
+            }
           }
           
           if (residentData && residentData.account_status === 'DEACTIVATED') {
@@ -853,7 +908,9 @@
           }
           
           localStorage.setItem('userEmail', email);
-          localStorage.setItem('userId', authData.user?.id);
+          if (authData?.user?.id) {
+            localStorage.setItem('userId', authData.user.id);
+          }
           
           if (residentData) {
             localStorage.setItem('residentName', `${residentData.first_name || ''} ${residentData.last_name || ''}`.trim() || email);
@@ -871,19 +928,34 @@
             body: formData
           });
           
-          const result = await sessionRes.text();
-          
-          if (result === 'success') {
-            showSuccess('Login successful! Redirecting...');
-            setTimeout(() => {
-              window.location.href = '/resident/announcements';
-            }, 1500);
-          } else if (result === 'deactivated') {
-            document.getElementById('deactivatedOverlay').classList.add('show');
-            resetLoginButton();
+          // Check where we're being redirected
+          if (sessionRes.redirected) {
+            const redirectUrl = sessionRes.url;
+            if (redirectUrl.includes('error')) {
+              showLoginError('Invalid email or password.');
+              resetLoginButton();
+            } else if (redirectUrl.includes('deactivated')) {
+              document.getElementById('deactivatedOverlay').classList.add('show');
+              resetLoginButton();
+            } else {
+              // Success - redirect to announcements
+              showSuccess('Login successful! Redirecting...');
+              setTimeout(() => {
+                window.location.href = '/resident/announcements';
+              }, 1500);
+            }
           } else {
-            showLoginError('Login failed. Please try again.');
-            resetLoginButton();
+            // Handle non-redirect response
+            const text = await sessionRes.text();
+            if (text.includes('redirect') || text === '') {
+              window.location.href = '/resident/announcements';
+            } else if (text === 'deactivated') {
+              document.getElementById('deactivatedOverlay').classList.add('show');
+              resetLoginButton();
+            } else {
+              showLoginError('Login failed. Please try again.');
+              resetLoginButton();
+            }
           }
           
         } catch (err) {

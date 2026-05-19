@@ -1,6 +1,5 @@
 package com.example.demo.repository;
 
-
 import com.example.demo.model.DocumentRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -12,8 +11,13 @@ public interface DocumentRequestRepository extends JpaRepository<DocumentRequest
 
     List<DocumentRequest> findByStatus(String status);
 
+    List<DocumentRequest> findByResidentIdOrderByDateSubmittedDesc(String residentId);
+
+    List<DocumentRequest> findByResidentId(String residentId);
+
     List<DocumentRequest> findByFullNameContainingIgnoreCaseOrDocumentTypeContainingIgnoreCase(
         String fullName, String documentType
     );
+
     long countByStatusNotIn(List<String> statuses);
 }

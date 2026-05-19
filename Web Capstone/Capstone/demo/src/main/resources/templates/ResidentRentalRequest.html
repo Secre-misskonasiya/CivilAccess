@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rent Equipment – CivilAccess</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Lato&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --brand-dark: #2d4a44;
+            --brand-mid:  #386660;
+            --gold:       #fed734;
+            --bg:         #f0f2f5;
+            --border:     #e4e6eb;
+            --error:      #c62828;
+            --success:    #4caf50;
+            --font-h:     'Sora', sans-serif;
+            --font-b:     'Lato', sans-serif;
+        }
+        body { font-family: var(--font-b); background: var(--bg); }
+
+        .layout {
+  display: flex;
+  height: 100vh;
+ 
+}
+
+
+.content {
+  flex: 1;          
+  min-width: 0;     
+  overflow-y: auto; 
+  overflow-x: hidden;
+}
+
+        /* ── Top nav ── */
+        .topnav {
+            background: var(--brand-dark); border-bottom: 3px solid var(--gold);
+            padding: 15px 24px; display: flex; align-items: center; gap: 14px;
+        }
+        .back-btn {
+            background: none; border: none; color: white;
+            font-size: 22px; cursor: pointer; display: flex; align-items: center;
+            padding: 4px; border-radius: 6px; transition: background 0.2s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.12); }
+        .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-icon {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: rgba(254,215,52,.15); border: 2px solid var(--gold);
+            display: flex; align-items: center; justify-content: center; color: var(--gold);
+        }
+        .nav-name { font-family: var(--font-h); font-weight: 800; color: #fff; }
+        .nav-sub  { font-size: 10px; color: rgba(255,255,255,.5); }
+
+        .scroll-area { padding: 20px; max-width: 640px; margin: 0 auto; width: 100%; padding-bottom: 48px; }
+
+        /* ── Form card ── */
+        .form-card {
+            background: white; border-radius: 12px; padding: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.09);
+        }
+        .form-header {
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; margin-bottom: 10px;
+        }
+        .form-header i { font-size: 22px; color: var(--brand-mid); }
+        .form-title   { font-family: var(--font-h); font-size: 20px; font-weight: 800; color: #1a3c34; }
+        .title-underline { width: 100%; height: 1px; background: var(--border); margin-bottom: 20px; }
+
+        /* ── Fields ── */
+        label {
+            display: block;
+            font-family: var(--font-h); font-size: 13px; font-weight: 600; color: #1a3c34;
+            margin-top: 14px; margin-bottom: 7px;
+        }
+        input[type=text], input[type=number] {
+            width: 100%; background: #f8f9fa;
+            border: 1.5px solid var(--border); border-radius: 10px;
+            padding: 12px 14px; font-family: var(--font-b); font-size: 15px; color: #050505;
+            outline: none; transition: border-color 0.2s;
+        }
+        input:focus { border-color: var(--brand-mid); }
+        input.has-error { border-color: var(--error) !important; }
+
+        .error-text { color: var(--error); font-size: 12px; margin-top: 4px; display: none; }
+        .error-text.show { display: block; }
+        .hint-text { color: var(--success); font-size: 12px; margin-top: 4px; font-weight: 600; display: none; }
+        .hint-text.show { display: block; }
+
+        /* ── Equipment dropdown — mirrors dropdownPlaceholder ── */
+        .equip-selector {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #f8f9fa; border: 1.5px solid var(--border);
+            border-radius: 10px; padding: 10px 14px;
+            cursor: pointer; transition: border-color 0.2s;
+        }
+        .equip-selector:hover, .equip-selector.open { border-color: var(--brand-mid); }
+        .equip-selector.has-error { border-color: var(--error); }
+        .equip-name  { font-size: 15px; font-weight: 500; color: #050505; }
+        .equip-price { font-size: 12px; color: var(--brand-mid); margin-top: 2px; }
+        .equip-selector i { color: var(--brand-mid); font-size: 18px; }
+
+        /* Equipment picker sheet — mirrors Modal/sheet bottom sheet */
+        .sheet-backdrop {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); z-index: 500;
+        }
+        .sheet-backdrop.show { display: block; }
+        .bottom-sheet {
+            position: fixed; bottom: 0; left: 260px; right: 0;
+            background: white;
+            border-top-left-radius: 22px; border-top-right-radius: 22px;
+            max-height: 55vh; overflow-y: auto;
+            z-index: 501; padding-bottom: 32px;
+            transform: translateY(100%); transition: transform 0.3s ease;
+        }
+        .bottom-sheet.show { transform: translateY(0); }
+        .sheet-handle {
+            width: 36px; height: 4px; border-radius: 2px; background: #ddd;
+            margin: 12px auto 4px;
+        }
+        .sheet-title {
+            font-family: var(--font-h); font-size: 14px; font-weight: 700; color: #1a3c34;
+            text-align: center; padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .sheet-option {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 24px; border-bottom: 1px solid #f0f0f0;
+            cursor: pointer; transition: background 0.15s;
+        }
+        .sheet-option:hover, .sheet-option.active { background: #ebf5f3; }
+        .sheet-option-name  { font-size: 15px; color: #333; font-weight: 500; }
+        .sheet-option.active .sheet-option-name { color: var(--brand-mid); font-weight: 700; }
+        .sheet-option-price { font-size: 12px; color: #888; margin-top: 2px; }
+        .sheet-check { color: var(--brand-mid); font-size: 18px; display: none; }
+        .sheet-option.active .sheet-check { display: block; }
+
+        /* ── Quantity row — mirrors quantityRow ── */
+        .qty-row { display: flex; align-items: center; gap: 10px; }
+        .qty-btn {
+            width: 42px; height: 42px; border-radius: 10px;
+            background: #ebf5f3; border: 1.5px solid #c8dcd9;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 20px; color: var(--brand-mid);
+            transition: background 0.15s; flex-shrink: 0;
+        }
+        .qty-btn:hover { background: #d6ece7; }
+        .qty-input {
+            flex: 1; height: 42px; background: #f8f9fa;
+            border: 1.5px solid var(--border); border-radius: 10px;
+            text-align: center; font-size: 18px; font-weight: 700; color: #1a3c34;
+            outline: none;
+        }
+        .qty-input:focus { border-color: var(--brand-mid); }
+
+        /* ── Duration chip — mirrors durationChip ── */
+        .duration-chip {
+            display: none; align-items: center; gap: 6px;
+            background: #e3f2fd; border: 1px solid #bbdefb;
+            border-radius: 8px; padding: 7px 10px;
+            font-size: 12px; color: #1565c0; font-weight: 600;
+            align-self: flex-start; margin-top: 6px;
+        }
+        .duration-chip.show { display: flex; }
+
+        /* ── Total card — mirrors totalCard ── */
+        .total-card {
+            background: #ebf5f3; border: 1px solid #c8dcd9;
+            border-radius: 10px; padding: 14px; margin-top: 18px;
+        }
+        .total-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 6px; font-size: 13px;
+        }
+        .total-label { color: #555; }
+        .total-value { color: #333; font-weight: 500; }
+        .total-divider { height: 1px; background: #c8dcd9; margin: 8px 0; }
+        .total-final-label  { font-size: 15px; font-weight: 700; color: #1a3c34; }
+        .total-final-amount { font-size: 18px; font-weight: 800; color: var(--brand-mid); }
+
+        /* ── Info box ── */
+        .info-box {
+            display: flex; align-items: flex-start; gap: 8px;
+            background: #ebf5f3; border: 1px solid #c8dcd9;
+            border-radius: 8px; padding: 12px; margin-top: 14px;
+            font-size: 12px; color: var(--brand-mid); line-height: 1.6;
+        }
+        .info-box i { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+        /* ── Submit ── */
+        .submit-btn {
+            width: 100%; height: 52px; background: var(--brand-mid); color: white;
+            border: none; border-radius: 10px;
+            font-family: var(--font-h); font-size: 15px; font-weight: 700;
+            cursor: pointer; margin-top: 20px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: opacity 0.2s;
+        }
+        .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .submit-btn .spinner {
+            width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.4);
+            border-top-color: white; border-radius: 50%;
+            animation: spin 0.8s linear infinite; display: none;
+        }
+        .submit-btn.loading .spinner { display: block; }
+        .submit-btn.loading .btn-label { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Success modal ── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: white; border-radius: 20px; padding: 28px;
+            text-align: center; width: 100%; max-width: 360px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .modal-icon  { font-size: 70px; color: var(--success); display: block; margin-bottom: 12px; }
+        .modal-title { font-family: var(--font-h); font-size: 22px; font-weight: 800; color: #1a3c34; margin-bottom: 10px; }
+        .modal-msg   { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 16px; }
+        .modal-total-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #ebf5f3; padding: 12px; border-radius: 10px; margin-bottom: 20px;
+        }
+        .modal-total-label  { font-size: 14px; font-weight: 600; color: #1a3c34; }
+        .modal-total-amount { font-size: 18px; font-weight: 800; color: var(--brand-mid); }
+        .modal-btn {
+            background: var(--brand-mid); color: white; border: none;
+            border-radius: 10px; padding: 12px 32px;
+            font-family: var(--font-h); font-weight: 700; font-size: 15px;
+            cursor: pointer; min-width: 120px;
+        }
+
+        @media (max-width: 768px) {
+            .content      { margin-left: 0; }
+            .bottom-sheet { left: 0; }
+        }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <div th:replace="~{fragments/sidebar2 :: sidebar}"></div>
+
+    <div class="content">
+        <nav class="topnav">
+            <button class="back-btn" onclick="history.back()"><i class="bi bi-arrow-left"></i></button>
+            <a class="nav-brand" href="#">
+                <div class="nav-icon"><i class="bi bi-building-fill"></i></div>
+                <div>
+                    <div class="nav-name">CivilAccess</div>
+                    <div class="nav-sub">Barangay Portal</div>
+                </div>
+            </a>
+        </nav>
+
+        <div class="scroll-area">
+            <div class="form-card">
+
+                <div class="form-header">
+                    <i class="bi bi-box-seam"></i>
+                    <span class="form-title">New Equipment Rental</span>
+                </div>
+                <div class="title-underline"></div>
+
+                <!-- Renter Name -->
+                <label for="renterName">Renter Name *</label>
+                <input type="text" id="renterName" placeholder="Your full name"
+                       oninput="validateField('renterName', this.value)">
+                <span class="error-text" id="err-renterName">Renter name is required</span>
+
+                <!-- Equipment Type — mirrors dropdownPlaceholder + EquipmentSheet -->
+                <label>Equipment Type *</label>
+                <div class="equip-selector" id="equipSelector" onclick="openSheet()">
+                    <div>
+                        <div class="equip-name"  id="equipName">Chair</div>
+                        <div class="equip-price" id="equipPriceSub">₱15/day</div>
+                    </div>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <span class="error-text" id="err-equipment">Please select equipment</span>
+
+                <!-- Quantity — mirrors quantityRow ── -->
+                <label>Quantity *</label>
+                <div class="qty-row">
+                    <button type="button" class="qty-btn" onclick="changeQty(-1)"><i class="bi bi-dash"></i></button>
+                    <input type="number" class="qty-input" id="quantity" value="1" min="1" max="100"
+                           oninput="onQtyChange(this.value)">
+                    <button type="button" class="qty-btn" onclick="changeQty(1)"><i class="bi bi-plus"></i></button>
+                </div>
+                <span class="error-text" id="err-quantity">Quantity must be at least 1</span>
+
+                <!-- Rental Date -->
+                <label for="rentalDate">Rental Date *</label>
+                <input type="date" id="rentalDate" 
+                       oninput="onRentalDateChange(this.value)">
+                <span class="error-text" id="err-rentalDate">Rental date is required</span>
+                <span class="hint-text"  id="hint-rentalDate">✓ Valid rental date</span>
+
+                <!-- Expected Return Date -->
+                <label for="expectedReturn">Expected Return Date *</label>
+                <input type="date" id="expectedReturn"
+                       oninput="onReturnDateChange(this.value)">
+                <span class="error-text" id="err-expectedReturn">Expected return date is required</span>
+                <span class="hint-text"  id="hint-expectedReturn">✓ Valid return date</span>
+
+                <!-- Duration chip — mirrors durationChip -->
+                <div class="duration-chip" id="durationChip">
+                    <i class="bi bi-clock"></i>
+                    <span id="durationText">1 day rental period</span>
+                </div>
+
+                <!-- Total card — mirrors totalCard -->
+                <div class="total-card">
+                    <div class="total-row">
+                        <span class="total-label">Unit Price</span>
+                        <span class="total-value" id="totalUnitPrice">₱15/day</span>
+                    </div>
+                    <div class="total-row">
+                        <span class="total-label">Quantity</span>
+                        <span class="total-value" id="totalQty">× 1</span>
+                    </div>
+                    <div class="total-row">
+                        <span class="total-label">Duration</span>
+                        <span class="total-value" id="totalDays">× 0 days</span>
+                    </div>
+                    <div class="total-divider"></div>
+                    <div class="total-row">
+                        <span class="total-final-label">Total</span>
+                        <span class="total-final-amount" id="totalAmount">₱0.00</span>
+                    </div>
+                </div>
+
+                <!-- Info box -->
+                <div class="info-box">
+                    <i class="bi bi-info-circle"></i>
+                    Payment is collected upon pickup at the barangay hall. Please return equipment on or before
+                    the expected return date to avoid overdue charges.
+                </div>
+
+                <!-- Submit -->
+                <button class="submit-btn" id="submitBtn" onclick="handleSubmit()">
+                    <div class="spinner"></div>
+                    <span class="btn-label" id="submitLabel">Create Rental  (₱0.00)</span>
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Equipment bottom sheet — mirrors EquipmentSheet Modal -->
+<div class="sheet-backdrop" id="sheetBackdrop" onclick="closeSheet()"></div>
+<div class="bottom-sheet" id="bottomSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Select Equipment</div>
+    <!-- options injected by JS -->
+</div>
+
+<!-- Success Modal — mirrors Modal animationType="fade" -->
+<div class="modal-overlay" id="successModal">
+    <div class="modal-box">
+        <i class="bi bi-check-circle-fill modal-icon"></i>
+        <div class="modal-title">Rental Submitted!</div>
+        <p class="modal-msg">
+            Your equipment rental request has been submitted. Please proceed to the barangay hall
+            to pick up your equipment once approved.
+        </p>
+        <div class="modal-total-row">
+            <span class="modal-total-label">Total Amount:</span>
+            <span class="modal-total-amount" id="modalTotal">₱0.00</span>
+        </div>
+        <button class="modal-btn" onclick="closeModal()">OK</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    /* ── Supabase ── */
+    const SUPABASE_URL      = 'https://upfrofppponiqffbssqb.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_tZyxrTJrpd_OD5-TKUkT8Q__DnuY0tj';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    /* ── EQUIPMENT — mirrors EQUIPMENT array ── */
+    const EQUIPMENT = [
+        { label: 'Chair',        value: 'Chair',        price: 15,  unit: 'day' },
+        { label: 'Canopy Tent',  value: 'Canopy Tent',  price: 250, unit: 'day' },
+        { label: 'Sound System', value: 'Sound System', price: 500, unit: 'day' },
+        { label: 'Table',        value: 'Table',        price: 25,  unit: 'day' },
+    ];
+
+    let currentUser = null;
+    let equipment   = EQUIPMENT[0]; // default: Chair
+
+    /* ── Date helpers — mirrors date helpers in RentalScreen ── */
+    const todayStr = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    };
+    const parseLocalDate = (val) => {
+        if (!val || !/^\d{4}-\d{2}-\d{2}$/.test(val)) return null;
+        const [y,m,d] = val.split('-').map(Number);
+        const dt = new Date(y, m-1, d);
+        if (dt.getFullYear()!==y || dt.getMonth()!==m-1 || dt.getDate()!==d) return null;
+        return dt;
+    };
+    const daysBetween = (s, e) => {
+        const sd = parseLocalDate(s), ed = parseLocalDate(e);
+        if (!sd || !ed || ed < sd) return 0;
+        return Math.round((ed - sd) / 86400000) + 1;
+    };
+    const validateRentalDate = (val) => {
+        if (!val) return 'Rental date is required';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) return 'Use format YYYY-MM-DD';
+        const d = parseLocalDate(val);
+        if (!d) return 'Invalid date';
+        if (d < parseLocalDate(todayStr())) return 'Rental date cannot be in the past';
+        return '';
+    };
+    const validateReturnDate = (val, rentalVal) => {
+        if (!val) return 'Expected return date is required';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) return 'Use format YYYY-MM-DD';
+        const d = parseLocalDate(val);
+        if (!d) return 'Invalid date';
+        if (d < parseLocalDate(todayStr())) return 'Return date cannot be in the past';
+        const rd = parseLocalDate(rentalVal);
+        if (rd && d < rd) return 'Return date must be on or after the rental date';
+        return '';
+    };
+
+    /* ── Fetch profile on load — mirrors fetchProfile() ── */
+    (async () => {
+        const { data: { user }, error } = await sb.auth.getUser();
+        if (error || !user) return;
+        currentUser = user;
+        const { data } = await sb.from('residents').select('first_name, last_name').eq('id', user.id).single();
+        if (data) document.getElementById('renterName').value = `${data.first_name} ${data.last_name}`;
+    })();
+
+    /* ── Build sheet options ── */
+    const sheet = document.getElementById('bottomSheet');
+    EQUIPMENT.forEach(eq => {
+        const div = document.createElement('div');
+        div.className = 'sheet-option' + (eq.value === equipment.value ? ' active' : '');
+        div.innerHTML = `
+            <div>
+                <div class="sheet-option-name">${eq.label}</div>
+                <div class="sheet-option-price">₱${eq.price.toLocaleString()}/${eq.unit}</div>
+            </div>
+            <i class="bi bi-check-circle-fill sheet-check"></i>`;
+        div.onclick = () => selectEquipment(eq);
+        sheet.appendChild(div);
+    });
+
+    function selectEquipment(eq) {
+        equipment = eq;
+        document.getElementById('equipName').textContent     = eq.label;
+        document.getElementById('equipPriceSub').textContent = `₱${eq.price.toLocaleString()}/${eq.unit}`;
+        document.querySelectorAll('.sheet-option').forEach((el, i) => {
+            el.classList.toggle('active', EQUIPMENT[i].value === eq.value);
+        });
+        showErr('equipment', false);
+        recalcTotal();
+        closeSheet();
+    }
+
+    /* ── Sheet open/close ── */
+    function openSheet() {
+        document.getElementById('sheetBackdrop').classList.add('show');
+        document.getElementById('bottomSheet').classList.add('show');
+    }
+    function closeSheet() {
+        document.getElementById('sheetBackdrop').classList.remove('show');
+        document.getElementById('bottomSheet').classList.remove('show');
+    }
+
+    /* ── Quantity — mirrors decQty/incQty ── */
+    function changeQty(delta) {
+        const input = document.getElementById('quantity');
+        const val   = Math.max(1, Math.min(100, (parseInt(input.value) || 1) + delta));
+        input.value = val;
+        onQtyChange(val);
+    }
+    function onQtyChange(val) {
+        const n = parseInt(val) || 0;
+        if (n < 1)        showErr('quantity', true, 'Quantity must be at least 1');
+        else if (n > 100) showErr('quantity', true, 'Quantity cannot exceed 100');
+        else              showErr('quantity', false);
+        recalcTotal();
+    }
+
+    /* ── Date change handlers ── */
+    function onRentalDateChange(val) {
+        const err = validateRentalDate(val);
+        if (err) { showErr('rentalDate', true, err); showHint('rentalDate', false); }
+        else      { showErr('rentalDate', false); showHint('rentalDate', true); }
+        // re-validate return date if already set
+        const ret = document.getElementById('expectedReturn').value;
+        if (ret) onReturnDateChange(ret);
+        recalcTotal();
+    }
+    function onReturnDateChange(val) {
+        const rental = document.getElementById('rentalDate').value;
+        const err    = validateReturnDate(val, rental);
+        if (err) { showErr('expectedReturn', true, err); showHint('expectedReturn', false); }
+        else      { showErr('expectedReturn', false); showHint('expectedReturn', true); }
+        recalcTotal();
+    }
+
+    /* ── Recalc total — mirrors totalPrice computed value ── */
+    function recalcTotal() {
+        const qty   = Math.max(0, parseInt(document.getElementById('quantity').value) || 0);
+        const days  = daysBetween(
+            document.getElementById('rentalDate').value,
+            document.getElementById('expectedReturn').value
+        );
+        const total = equipment.price * qty * days;
+
+        document.getElementById('totalUnitPrice').textContent = `₱${equipment.price.toLocaleString()}/${equipment.unit}`;
+        document.getElementById('totalQty').textContent       = `× ${qty}`;
+        document.getElementById('totalDays').textContent      = `× ${days} day${days !== 1 ? 's' : ''}`;
+        document.getElementById('totalAmount').textContent    = `₱${total.toLocaleString()}.00`;
+        document.getElementById('submitLabel').textContent    = `Create Rental  (₱${total.toLocaleString()}.00)`;
+
+        // Duration chip
+        const chip = document.getElementById('durationChip');
+        if (days > 0 && document.getElementById('rentalDate').value && document.getElementById('expectedReturn').value) {
+            document.getElementById('durationText').textContent = `${days} day${days !== 1 ? 's' : ''} rental period`;
+            chip.classList.add('show');
+        } else {
+            chip.classList.remove('show');
+        }
+    }
+
+    /* ── Validation — mirrors validate() ── */
+    function validateField(field, val) {
+        if (field === 'renterName') {
+            if (!val.trim()) { showErr('renterName', true, 'Renter name is required'); return false; }
+            showErr('renterName', false); return true;
+        }
+    }
+    function validateAll() {
+        let ok = true;
+        if (!document.getElementById('renterName').value.trim()) {
+            showErr('renterName', true, 'Renter name is required'); ok = false;
+        } else { showErr('renterName', false); }
+        const qty = parseInt(document.getElementById('quantity').value) || 0;
+        if (qty < 1)   { showErr('quantity', true, 'Quantity must be at least 1'); ok = false; }
+        if (qty > 100) { showErr('quantity', true, 'Quantity cannot exceed 100'); ok = false; }
+        const rdErr = validateRentalDate(document.getElementById('rentalDate').value);
+        if (rdErr) { showErr('rentalDate', true, rdErr); ok = false; }
+        const retErr = validateReturnDate(
+            document.getElementById('expectedReturn').value,
+            document.getElementById('rentalDate').value
+        );
+        if (retErr) { showErr('expectedReturn', true, retErr); ok = false; }
+        return ok;
+    }
+
+    /* ── handleSubmit — mirrors handleSubmit() ── */
+    async function handleSubmit() {
+        if (!validateAll()) {
+            alert('Please fix the errors before submitting.');
+            return;
+        }
+        if (!currentUser) {
+            alert('Please log in to submit a rental request.');
+            return;
+        }
+
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.classList.add('loading');
+
+        try {
+            const qty   = parseInt(document.getElementById('quantity').value);
+            const days  = daysBetween(
+                document.getElementById('rentalDate').value,
+                document.getElementById('expectedReturn').value
+            );
+            const total = equipment.price * qty * days;
+            const now   = new Date().toISOString();
+
+            const { error } = await sb.from('rentals').insert([{
+                renter_name:          document.getElementById('renterName').value.trim(),
+                equipment_type:       equipment.value,
+                quantity:             qty,
+                rental_date:          document.getElementById('rentalDate').value,
+                expected_return_date: document.getElementById('expectedReturn').value,
+                total_price:          total,
+                status:               'INCOMING',
+                resident_id:          currentUser.id,
+                created_at:           now,
+                updated_at:           now,
+            }]);
+            if (error) throw error;
+
+            document.getElementById('modalTotal').textContent = `₱${total.toLocaleString()}.00`;
+            document.getElementById('successModal').classList.add('show');
+
+        } catch (err) {
+            alert('Submission Failed: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('successModal').classList.remove('show');
+        window.location.href = '/resident/my-requests';
+    }
+
+    /* ── helpers ── */
+    function showErr(field, show, msg) {
+        const el = document.getElementById('err-' + field);
+        if (!el) return;
+        if (msg) el.textContent = msg;
+        el.classList.toggle('show', show);
+        const input = document.getElementById(field);
+        if (input) input.classList.toggle('has-error', show);
+    }
+    function showHint(field, show) {
+        const el = document.getElementById('hint-' + field);
+        if (el) el.classList.toggle('show', show);
+    }
+</script>
+
+<script src="/js/sidebar2.js"></script>
+<script>
+    function openLogoutModal()  { const m = document.getElementById('logoutModal'); if (m) m.style.display = 'flex'; }
+    function closeLogoutModal() { const m = document.getElementById('logoutModal'); if (m) m.style.display = 'none'; }
+    function confirmLogout()    { localStorage.clear(); window.location.href = '/resident-logout'; }
+</script>
+</body>
+</html>

@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @Controller
 public class ResidentAuthController {
@@ -29,7 +30,11 @@ public class ResidentAuthController {
 
     @GetMapping("/resident-login")
     public String showLoginPage(HttpSession session) {
-        if (session.getAttribute("residentId") != null || session.getAttribute("adminAsResidentId") != null) {
+        // Check for both possible session attributes
+        if (session.getAttribute("residentId") != null || session.getAttribute("resident") != null) {
+            return "redirect:/resident/announcements";
+        }
+        if (session.getAttribute("adminAsResidentId") != null) {
             return "redirect:/resident/announcements";
         }
         return "ResidentLogin";
@@ -104,6 +109,8 @@ public class ResidentAuthController {
             boolean localOk = password != null && resident.getValidId() != null && password.equals(resident.getValidId());
             
             if (supabaseOk || localOk) {
+                // Store the actual ResidentUser object
+                session.setAttribute("resident", resident);
                 session.setAttribute("residentId", resident.getId().toString());
                 session.setAttribute("residentEmail", resident.getEmail());
                 session.setAttribute("residentName", resident.getFirstName().trim() + " " + resident.getLastName().trim());
@@ -123,7 +130,10 @@ public class ResidentAuthController {
             // Check admin password
             if (password != null && admin.getPassword() != null && password.equals(admin.getPassword())) {
                 // Admin logging in as resident
-                session.setAttribute("adminAsResidentId", admin.getId().toString());
+                // Don't create a ResidentUser object - just set individual attributes
+                // and let ResidentContactController use getAttribute with proper keys
+                
+                session.setAttribute("adminAsResidentId", admin.getId());
                 session.setAttribute("residentEmail", admin.getEmail());
                 
                 // Use admin's name
@@ -132,6 +142,12 @@ public class ResidentAuthController {
                 session.setAttribute("residentName", adminName.trim().isEmpty() ? admin.getUsername() : adminName.trim());
                 session.setAttribute("userType", "ADMIN_AS_RESIDENT");
                 session.setAttribute("residentStatus", "ACTIVE");
+                
+                // Also store individual attributes that ResidentContactController needs
+                session.setAttribute("residentFirstName", admin.getFirstName());
+                session.setAttribute("residentLastName", admin.getLastName());
+                session.setAttribute("residentMobileNumber", admin.getPhoneNumber());
+                
                 session.setMaxInactiveInterval(60 * 60);
                 return "redirect:/resident/announcements";
             }
