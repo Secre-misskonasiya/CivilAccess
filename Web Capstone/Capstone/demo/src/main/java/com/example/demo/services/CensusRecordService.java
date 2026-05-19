@@ -13,7 +13,9 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -119,7 +121,8 @@ public class CensusRecordService {
     // ── Business logic ────────────────────────────────────────────
 
     private String deriveStatus(CensusRecord r) {
-        if ("flagged".equalsIgnoreCase(r.getAccountStatus())) return "FLAGGED";
+        if ("flagged".equalsIgnoreCase(r.getAccountStatus()))    return "FLAGGED";
+        if ("unverified".equalsIgnoreCase(r.getAccountStatus())) return "INCOMPLETE";
 
         boolean s1 = r.getFirstName()   != null && !r.getFirstName().isBlank()
                   && r.getLastName()    != null && !r.getLastName().isBlank()
@@ -146,4 +149,93 @@ public class CensusRecordService {
         if (s1)             return 1;
         return 0;
     }
+    
+    public String getDemographicSummary() {
+    try {
+        List<CensusRecord> all = censusRepo.findAll();
+        
+        long totalResidents = all.size();
+        
+        if (totalResidents == 0) {
+            return "CENSUS STATUS: No census records collected yet. " +
+                   "The barangay needs a census to gather demographic data. " +
+                   "Suggest a Community Census Drive as the first program.";
+        }
+        
+        long male = all.stream().filter(r -> r != null && "Male".equalsIgnoreCase(r.getGender())).count();
+        long female = all.stream().filter(r -> r != null && "Female".equalsIgnoreCase(r.getGender())).count();
+        long seniors = all.stream().filter(r -> r != null && r.isSeniorCitizen() != null && r.isSeniorCitizen()).count();
+        long pwd = all.stream().filter(r -> r != null && r.isPwd() != null && r.isPwd()).count();
+        long soloParents = all.stream().filter(r -> r != null && r.isSoloParent() != null && r.isSoloParent()).count();
+        long students = all.stream()
+            .filter(r -> r != null && r.getOccupation() != null && r.getOccupation().toLowerCase().contains("student"))
+            .count();
+        long unemployed = all.stream()
+            .filter(r -> r != null && "Unemployed".equalsIgnoreCase(r.getEmploymentStatus()))
+            .count();
+        long fourPs = all.stream().filter(r -> r != null && r.is4psBeneficiary() != null && r.is4psBeneficiary()).count();
+        long withMedicalHistory = all.stream()
+            .filter(r -> r != null && r.getMedicalHistory() != null && !r.getMedicalHistory().isEmpty())
+            .count();
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append("BARANGAY SAN SEBASTIAN COMMUNITY PROFILE (REAL DATA - ").append(totalResidents).append(" residents):\n");
+        sb.append("- Total Residents: ").append(totalResidents).append("\n");
+        sb.append("- Male: ").append(male).append(" | Female: ").append(female).append("\n");
+        sb.append("- Senior Citizens: ").append(seniors).append("\n");
+        sb.append("- PWDs: ").append(pwd).append("\n");
+        sb.append("- Solo Parents: ").append(soloParents).append("\n");
+        sb.append("- Students: ").append(students).append("\n");
+        sb.append("- Unemployed: ").append(unemployed).append("\n");
+        sb.append("- 4Ps Beneficiaries: ").append(fourPs).append("\n");
+        sb.append("- Residents with Medical History: ").append(withMedicalHistory).append("\n");
+        
+        return sb.toString();
+        
+    } catch (Exception e) {
+        System.err.println("ERROR in getDemographicSummary: " + e.getMessage());
+        e.printStackTrace();
+        return "Census data is currently being processed. General community programs are recommended.";
+    }
+}
+
+        public long getTotalCount() {
+            return censusRepo.count();
+        }
+    /**
+     * Returns full demographics as a Map
+     */
+        public Map<String, Object> getCommunityDemographics() {
+            List<CensusRecord> all = censusRepo.findAll();
+            Map<String, Object> stats = new LinkedHashMap<>();
+            
+            long totalResidents = all.size();
+            stats.put("totalResidents", totalResidents);
+            stats.put("hasData", totalResidents > 0);
+            
+            if (totalResidents == 0) {
+                stats.put("male", 0);
+                stats.put("female", 0);
+                stats.put("seniors", 0);
+                stats.put("pwd", 0);
+                stats.put("soloParents", 0);
+                stats.put("students", 0);
+                stats.put("unemployed", 0);
+                stats.put("fourPs", 0);
+                stats.put("withMedicalHistory", 0);
+                return stats;
+            }
+            
+            stats.put("male", all.stream().filter(r -> "Male".equalsIgnoreCase(r.getGender())).count());
+            stats.put("female", all.stream().filter(r -> "Female".equalsIgnoreCase(r.getGender())).count());
+            stats.put("seniors", all.stream().filter(CensusRecord::isSeniorCitizen).count());
+            stats.put("pwd", all.stream().filter(CensusRecord::isPwd).count());
+            stats.put("soloParents", all.stream().filter(CensusRecord::isSoloParent).count());
+            stats.put("students", all.stream().filter(r -> r.getOccupation() != null && r.getOccupation().toLowerCase().contains("student")).count());
+            stats.put("unemployed", all.stream().filter(r -> "Unemployed".equalsIgnoreCase(r.getEmploymentStatus())).count());
+            stats.put("fourPs", all.stream().filter(CensusRecord::is4psBeneficiary).count());
+            stats.put("withMedicalHistory", all.stream().filter(r -> r.getMedicalHistory() != null && !r.getMedicalHistory().isEmpty()).count());
+            
+            return stats;
+        }
 }

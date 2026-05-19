@@ -226,7 +226,10 @@
                     <div class="filter-option" onclick="applyFilter('employee','SECRETARY','Secretary','employee-filter-label',3)">Secretary <i class="bi bi-check filter-check"></i></div>
                 </div>
             </div>
-            <button class="new-account-btn" onclick="openModal()"><i class="bi bi-person-plus"></i> Create New Account</button>
+            <button class="new-account-btn" onclick="openModal()"
+                th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY'}">
+                <i class="bi bi-person-plus"></i> Create New Account
+            </button>
             <button class="export-btn" onclick="exportToPDF('employee-panel')">Export</button>
         </div>
         <div class="panel-inner">
@@ -599,6 +602,7 @@
                     </div>
                     <input type="hidden" th:field="*{empstatus}" id="edit-employeeStatus"/>
                     <input type="hidden" id="accountStatus" th:value="${currentstatus}">
+                    <input type="hidden" id="currentUserRole" th:value="${currentrole}">
                 </div>
                 <div class="modal-two-col">
                     <div class="modal-section-title">Personal Information
@@ -646,6 +650,7 @@
                             <option value="BARANGAY-CAPTAIN">Barangay Captain</option>
                             <option value="TREASURER">Treasurer</option>
                             <option value="SECRETARY">Secretary</option>
+                            <option value="TANOD">Tanod</option>
                         </select>
                         <small class="error-msg" id="role-error" style="color:#e74c3c;display:none;font-size:11px;">Role is required</small>
                     </div>
@@ -1196,6 +1201,15 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
         isEditMode = false;
         document.getElementById("modalTitle").innerText = "Create New Account";
         document.getElementById("submitBtn").innerText  = "Save Account";
+        const currentRole = document.getElementById('currentUserRole').value;
+        const roleSelect = document.getElementById('edit-role');
+        const allowedRoles = currentRole === 'ADMIN'
+            ? ['ADMIN', 'BARANGAY-CAPTAIN', 'TREASURER', 'SECRETARY', 'TANOD']
+            : ['TREASURER', 'BARANGAY-CAPTAIN', 'TANOD'];
+        Array.from(roleSelect.options).forEach(opt => {
+            if (opt.value === '') return; // keep the placeholder
+            opt.style.display = allowedRoles.includes(opt.value) ? '' : 'none';
+        });
         adminForm.reset();
         document.getElementById("edit-id").value = "";
         originalUsername = ''; originalEmail = ''; originalPhone = '';

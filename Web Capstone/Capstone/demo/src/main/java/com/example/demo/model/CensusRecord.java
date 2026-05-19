@@ -12,7 +12,7 @@ public class CensusRecord {
 
     // ── Primary key ──────────────────────────────────────────────
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Changed from AUTO
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(updatable = false, nullable = false)
     private Long id;
 
@@ -24,7 +24,7 @@ public class CensusRecord {
     private String accountStatus = "unverified";
 
     @Column(name = "census_status")
-    private String censusStatus = "PENDING";       // PENDING | INCOMPLETE | COMPLETE | FLAGGED | ARCHIVED
+    private String censusStatus = "PENDING";
 
     // ── Contact ──────────────────────────────────────────────────
     private String mobile;
@@ -108,25 +108,25 @@ public class CensusRecord {
     @Column(name = "monthly_income_range")
     private String monthlyIncomeRange;
 
-    // ── Priority sector (boolean flags) ──────────────────────────
+    // ── Priority sector ──────────────────────────────────────────
     @Column(name = "is_senior_citizen")
-    private boolean isSeniorCitizen = false;
+    private Boolean isSeniorCitizen = false;
 
     @Column(name = "is_pwd")
-    private boolean isPwd = false;
+    private Boolean isPwd = false;
 
     @Column(name = "is_solo_parent")
-    private boolean isSoloParent = false;
+    private Boolean isSoloParent = false;
 
     @Column(name = "is_indigenous_people")
-    private boolean isIndigenousPeople = false;
+    private Boolean isIndigenousPeople = false;
 
     // ── Civic ────────────────────────────────────────────────────
     @Column(name = "is_registered_voter")
-    private boolean isRegisteredVoter = false;
+    private Boolean isRegisteredVoter = false;
 
     @Column(name = "is_4ps_beneficiary")
-    private boolean is4psBeneficiary = false;
+    private Boolean is4psBeneficiary = false;
 
     @Column(name = "precinct_number")
     private String precinctNumber;
@@ -171,21 +171,21 @@ public class CensusRecord {
     @Column(name = "longitude")
     private Double longitude;
 
-    // ── Disability (boolean flags) ───────────────────────────────
+    // ── Disability ───────────────────────────────────────────────
     @Column(name = "disability_visual")
-    private boolean disabilityVisual = false;
+    private Boolean disabilityVisual = false;
 
     @Column(name = "disability_hearing")
-    private boolean disabilityHearing = false;
+    private Boolean disabilityHearing = false;
 
     @Column(name = "disability_psychosocial")
-    private boolean disabilityPsychosocial = false;
+    private Boolean disabilityPsychosocial = false;
 
     @Column(name = "disability_orthopedic")
-    private boolean disabilityOrthopedic = false;
+    private Boolean disabilityOrthopedic = false;
 
     @Column(name = "disability_intellectual")
-    private boolean disabilityIntellectual = false;
+    private Boolean disabilityIntellectual = false;
 
     // ── Emergency contact ────────────────────────────────────────
     @Column(name = "emergency_contact_name")
@@ -193,8 +193,6 @@ public class CensusRecord {
 
     @Column(name = "emergency_contact_number")
     private String emergencyContactNumber;
-
-    // After: private String emergencyContactNumber;  (around line 195 area)
 
     @Column(name = "emergency_contact_relation")
     private String emergencyContactRelation;
@@ -314,23 +312,23 @@ public class CensusRecord {
     public String getMonthlyIncomeRange() { return monthlyIncomeRange; }
     public void setMonthlyIncomeRange(String monthlyIncomeRange) { this.monthlyIncomeRange = monthlyIncomeRange; }
 
-    public boolean isSeniorCitizen() { return isSeniorCitizen; }
-    public void setSeniorCitizen(boolean seniorCitizen) { isSeniorCitizen = seniorCitizen; }
+    public Boolean isSeniorCitizen() { return isSeniorCitizen; }
+    public void setSeniorCitizen(Boolean seniorCitizen) { isSeniorCitizen = seniorCitizen; }
 
-    public boolean isPwd() { return isPwd; }
-    public void setPwd(boolean pwd) { isPwd = pwd; }
+    public Boolean isPwd() { return isPwd; }
+    public void setPwd(Boolean pwd) { isPwd = pwd; }
 
-    public boolean isSoloParent() { return isSoloParent; }
-    public void setSoloParent(boolean soloParent) { isSoloParent = soloParent; }
+    public Boolean isSoloParent() { return isSoloParent; }
+    public void setSoloParent(Boolean soloParent) { isSoloParent = soloParent; }
 
-    public boolean isIndigenousPeople() { return isIndigenousPeople; }
-    public void setIndigenousPeople(boolean indigenousPeople) { isIndigenousPeople = indigenousPeople; }
+    public Boolean isIndigenousPeople() { return isIndigenousPeople; }
+    public void setIndigenousPeople(Boolean indigenousPeople) { isIndigenousPeople = indigenousPeople; }
 
-    public boolean isRegisteredVoter() { return isRegisteredVoter; }
-    public void setRegisteredVoter(boolean registeredVoter) { isRegisteredVoter = registeredVoter; }
+    public Boolean isRegisteredVoter() { return isRegisteredVoter; }
+    public void setRegisteredVoter(Boolean registeredVoter) { isRegisteredVoter = registeredVoter; }
 
-    public boolean is4psBeneficiary() { return is4psBeneficiary; }
-    public void set4psBeneficiary(boolean beneficiary) { is4psBeneficiary = beneficiary; }
+    public Boolean is4psBeneficiary() { return is4psBeneficiary; }
+    public void set4psBeneficiary(Boolean beneficiary) { is4psBeneficiary = beneficiary; }
 
     public String getPrecinctNumber() { return precinctNumber; }
     public void setPrecinctNumber(String precinctNumber) { this.precinctNumber = precinctNumber; }
@@ -371,20 +369,20 @@ public class CensusRecord {
     public Double getLongitude() { return longitude; }
     public void setLongitude(Double longitude) { this.longitude = longitude; }
 
-    public boolean isDisabilityVisual() { return disabilityVisual; }
-    public void setDisabilityVisual(boolean disabilityVisual) { this.disabilityVisual = disabilityVisual; }
+    public Boolean isDisabilityVisual() { return disabilityVisual; }
+    public void setDisabilityVisual(Boolean disabilityVisual) { this.disabilityVisual = disabilityVisual; }
 
-    public boolean isDisabilityHearing() { return disabilityHearing; }
-    public void setDisabilityHearing(boolean disabilityHearing) { this.disabilityHearing = disabilityHearing; }
+    public Boolean isDisabilityHearing() { return disabilityHearing; }
+    public void setDisabilityHearing(Boolean disabilityHearing) { this.disabilityHearing = disabilityHearing; }
 
-    public boolean isDisabilityPsychosocial() { return disabilityPsychosocial; }
-    public void setDisabilityPsychosocial(boolean disabilityPsychosocial) { this.disabilityPsychosocial = disabilityPsychosocial; }
+    public Boolean isDisabilityPsychosocial() { return disabilityPsychosocial; }
+    public void setDisabilityPsychosocial(Boolean disabilityPsychosocial) { this.disabilityPsychosocial = disabilityPsychosocial; }
 
-    public boolean isDisabilityOrthopedic() { return disabilityOrthopedic; }
-    public void setDisabilityOrthopedic(boolean disabilityOrthopedic) { this.disabilityOrthopedic = disabilityOrthopedic; }
+    public Boolean isDisabilityOrthopedic() { return disabilityOrthopedic; }
+    public void setDisabilityOrthopedic(Boolean disabilityOrthopedic) { this.disabilityOrthopedic = disabilityOrthopedic; }
 
-    public boolean isDisabilityIntellectual() { return disabilityIntellectual; }
-    public void setDisabilityIntellectual(boolean disabilityIntellectual) { this.disabilityIntellectual = disabilityIntellectual; }
+    public Boolean isDisabilityIntellectual() { return disabilityIntellectual; }
+    public void setDisabilityIntellectual(Boolean disabilityIntellectual) { this.disabilityIntellectual = disabilityIntellectual; }
 
     public String getEmergencyContactName() { return emergencyContactName; }
     public void setEmergencyContactName(String emergencyContactName) { this.emergencyContactName = emergencyContactName; }

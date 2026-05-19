@@ -9,13 +9,14 @@ import com.example.demo.services.SuggestedProgramService;
 import com.example.demo.services.ChatHistoryServiceAI;
 import com.example.demo.services.GeminiService;
 import com.example.demo.services.ActivityLogService;
-import com.example.demo.services.SafetyReportService;
+import com.example.demo.services.CensusRecordService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import com.example.demo.services.CensusRecordService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
@@ -36,22 +37,23 @@ public class ProgramCalendarController {
     private final ChatHistoryServiceAI chatHistoryService;
     private final GeminiService geminiService;
     private final ActivityLogService activityLogService;
-    private final SafetyReportService safetyReportService;
+
+    private final CensusRecordService censusRecordService;
 
     public ProgramCalendarController(ProgramCalendarService calendarService,
-                                     ProgramBudgetService budgetService,
-                                     SuggestedProgramService suggestedProgramService,
-                                     ChatHistoryServiceAI chatHistoryService,
-                                     GeminiService geminiService,
-                                     ActivityLogService activityLogService,
-                                     SafetyReportService safetyReportService) {
+                                    ProgramBudgetService budgetService,
+                                    SuggestedProgramService suggestedProgramService,
+                                    ChatHistoryServiceAI chatHistoryService,
+                                    GeminiService geminiService,
+                                    ActivityLogService activityLogService,
+                                    CensusRecordService censusRecordService) {
         this.calendarService = calendarService;
         this.budgetService = budgetService;
         this.suggestedProgramService = suggestedProgramService;
         this.chatHistoryService = chatHistoryService;
         this.geminiService = geminiService;
         this.activityLogService = activityLogService;
-        this.safetyReportService = safetyReportService;
+        this.censusRecordService = censusRecordService;
     }
 
     private String getCurrentUsername() {
@@ -204,19 +206,23 @@ public class ProgramCalendarController {
             Double totalBudget = budgetService.getTotalBudget();
             if (totalBudget == null) totalBudget = 0.0;
 
-            // Get safety reports summary for context
-            String safetyContext = "";
+            LocalDate today = LocalDate.now();
+            // Get census demographics
+            String communityProfile;
             try {
-                safetyContext = "\n\n" + safetyReportService.generateSafetyReportsSummary();
+                communityProfile = censusRecordService.getDemographicSummary();
+                System.out.println("CENSUS DATA LOADED: " + communityProfile.substring(0, Math.min(200, communityProfile.length())));
             } catch (Exception e) {
-                System.err.println("Could not load safety reports summary: " + e.getMessage());
+                System.err.println("CENSUS ERROR: " + e.getMessage());
+                e.printStackTrace();
+                communityProfile = "Census data unavailable.";
             }
 
-            LocalDate today = LocalDate.now();
             String enrichedPrompt = String.format(
-                "Today's date is %s (%s). The current available budget is ₱%.2f. Please include an estimated program_budget in your JSON response. Do NOT suggest or accept any dates that are before today.\n\nUser request: %s%s%s",
+                "You are a barangay program planner for Barangay San Sebastian. Use this REAL census data to make data-driven suggestions:\n\n%s\n\nToday's date is %s (%s). The current available budget is ₱%.2f. Please include an estimated program_budget in your JSON response. Do NOT suggest or accept any dates that are before today. When suggesting programs, reference the specific numbers from the census data above.\n\nUser request: %s%s",
+                communityProfile,
                 today.toString(), today.format(DateTimeFormatter.ofPattern("MMMM d, yyyy")),
-                totalBudget, userText, conversationHistory, safetyContext
+                totalBudget, userText, conversationHistory
             );
 
             String aiResponse = geminiService.getAiResponse(enrichedPrompt);
@@ -285,7 +291,17 @@ public class ProgramCalendarController {
     public List<SuggestedProgram> getSuggestedPrograms() {
         return suggestedProgramService.getAllSuggestedPrograms();
     }
-
+    
+    @GetMapping("/census-test")
+    public ResponseEntity<String> testCensus() {
+        try {
+            long count = censusRecordService.getTotalCount();
+            String summary = censusRecordService.getDemographicSummary();
+            return ResponseEntity.ok("COUNT: " + count + "\n\n" + summary);
+        } catch (Exception e) {
+            return ResponseEntity.ok("ERROR: " + e.getClass().getName() + " - " + e.getMessage());
+        }
+    }
     @PostMapping("/suggested")
     public ResponseEntity<?> addSuggestedProgram(
             @RequestBody Map<String, Object> programData,

@@ -770,12 +770,9 @@
               <span id="total-budget-display">Loading...</span>
             </div>
             <div class="budget-footer">
-              Last updated: <span th:text="${#temporals.format(#temporals.createNow(), 'MMM dd, yyyy')}">Current Date</span>
+              Data as of: <span th:text="${#temporals.format(#temporals.createNow(), 'MMM dd, yyyy')}">Current Date</span>
             </div>
           </div>
-          <button class="update-yellow-btn" onclick="openBudgetModal()">
-            <i class="bi bi-pencil"></i> Update Budget
-          </button>
         </div>
 
       </div>
