@@ -148,4 +148,11 @@ public interface CensusRecordRepository extends JpaRepository<CensusRecord, Long
 
     @Query("SELECT c.mobile FROM CensusRecord c WHERE c.mobile IS NOT NULL")
     List<String> findAllMobileNumbers();
+
+    @Query("""
+        SELECT COUNT(c) FROM CensusRecord c
+        WHERE c.censusStatus != 'ARCHIVED'
+        AND (c.isSeniorCitizen = true OR c.isPwd = true)
+        """)
+    long countSeniorAndPwd();
 }

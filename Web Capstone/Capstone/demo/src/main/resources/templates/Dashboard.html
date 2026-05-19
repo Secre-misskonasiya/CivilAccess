@@ -874,13 +874,13 @@
                         <div class="stat-card" id="statSenior">
                             <div class="stat-icon-wrap ic-p"><i class="bi bi-person-wheelchair"></i></div>
                             <div class="stat-label">Senior &amp; PWD Residents</div>
-                            <div class="stat-number" id="numSenior">14</div>
+                            <div class="stat-number" id="numSenior" th:text="${seniorPwdCount != null ? seniorPwdCount : 0}">0</div>
                         </div>
 
                         <div class="stat-card" id="statNewRequests">
                             <div class="stat-icon-wrap ic-b"><i class="bi bi-envelope-open-fill"></i></div>
                             <div class="stat-label">New Requests This Month</div>
-                            <div class="stat-number" id="numNewRequests">4</div>
+                            <div class="stat-number" id="numNewRequests" th:text="${newRequestsThisMonth != null ? newRequestsThisMonth : 0}">0</div>
                         </div>
 
                         <div class="stat-card" id="statSOS"

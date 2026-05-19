@@ -6,6 +6,7 @@ import com.example.demo.model.Activitylogs;
 import com.example.demo.model.AdminUser;
 import com.example.demo.model.ContactHelpRequest;
 import com.example.demo.model.ResidentUser;
+import com.example.demo.repository.CensusRecordRepository;
 import com.example.demo.services.AdminUserServices;
 import com.example.demo.services.AnnouncementsService;
 import com.example.demo.services.ResidentUserService;
@@ -78,6 +79,8 @@ public class MainController {
     @Autowired private EmailService emailService;
     @Autowired private HttpSession session;
     @Autowired private ProgramBudgetService programBudgetService;
+    @Autowired private CensusRecordRepository censusRecordRepository;
+    
 
 
     @Autowired(required = false)
@@ -660,7 +663,10 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
             model.addAttribute("latestAnnouncement", announcementsService.getLatest());
             model.addAttribute("pendingDocuments",   documentService.countPending());
             model.addAttribute("budget", programBudgetService.getTotalBudget());
+            model.addAttribute("seniorPwdCount",      censusRecordRepository.countSeniorAndPwd());
+            model.addAttribute("newRequestsThisMonth", documentService.countThisMonth());
             model.addAttribute("currentAdminProfilePicture", admin.getProfilePicture());
+            
             if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
                 return "redirect:/logout";
             }

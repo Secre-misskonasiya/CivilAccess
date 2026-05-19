@@ -590,7 +590,7 @@ select {
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
                     <thead>
-                        <tr><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
+                        <tr><th>Request ID</th><th>Date/TimeStamp Created</th><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr th:each="req : ${incomingRequests}"
@@ -617,6 +617,8 @@ select {
                                     data-doc-nb-note=${req.docNbNote},
                                     data-middle-name=${req.middleName}
                                      ">
+                            <td th:text="${req.id}"></td>
+                            <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>   
                             <td th:text="${req.fullName}"></td>
                             <td th:text="${req.contactNumber}"></td>
                             <td><button type="button" class="viewfile-btn" onclick="openViewFileModal(this.closest('tr'))">View File</button></td>
@@ -644,7 +646,7 @@ select {
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
                     <thead>
-                        <tr><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
+                        <tr><th>Request ID</th><th>Date/TimeStamp Created</th><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr th:each="req : ${processingRequests}"
@@ -673,6 +675,8 @@ select {
                                     data-doc-nb-note=${req.docNbNote},
                                     data-middle-name=${req.middleName}
                                      ">
+                            <td th:text="${req.id}"></td>
+                            <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>   
                             <td th:text="${req.fullName}"></td>
                             <td th:text="${req.contactNumber}"></td>
                             <td><button type="button" class="viewfile-btn" onclick="openViewFileModal(this.closest('tr'))">View File</button></td>
@@ -711,7 +715,7 @@ select {
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
                     <thead>
-                        <tr><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
+                        <tr><th>Request ID</th><th>Date/TimeStamp Created</th><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr th:each="req : ${readyRequests}"
@@ -739,6 +743,8 @@ select {
                                     data-doc-purpose=${req.docPurpose},
                                     data-doc-nb-note=${req.docNbNote},
                                     data-middle-name=${req.middleName}">
+                            <td th:text="${req.id}"></td>
+                            <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>   
                             <td th:text="${req.fullName}"></td>
                             <td th:text="${req.contactNumber}"></td>
                             <td><button type="button" class="viewfile-btn" onclick="openViewFileModal(this.closest('tr'))">View File</button></td>
@@ -765,7 +771,7 @@ select {
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
                     <thead>
-                        <tr><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
+                        <tr><th>Request ID</th><th>Date/TimeStamp Created</th><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr th:each="req : ${archivedRequests}"
@@ -782,6 +788,8 @@ select {
                                      data-emergency-contact=${req.emergencyContact},
                                      data-contact=${req.contactNumber},
                                      data-middle-name=${req.middleName}">
+                            <td th:text="${req.id}"></td>
+                            <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>   
                             <td th:text="${req.fullName}"></td>
                             <td th:text="${req.contactNumber}"></td>
                             <td><button type="button" class="viewfile-btn" onclick="openViewFileModal(this.closest('tr'))">View File</button></td>
