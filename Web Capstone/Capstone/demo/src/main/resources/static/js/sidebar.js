@@ -42,8 +42,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const sectionMap = [
         { match: ['/home', '/announcements'],                                    section: 'sec-main' },
-        { match: ['/account', '/user-profile', '/Resident-census'],              section: 'sec-management' },
-        { match: ['/requests-document', '/requests-blotter', '/requests-reservations', '/requests-rentals'],                    section: 'sec-resident', sub: 'sub-requests' },
+        { match: ['/account', '/user-profile', '/Resident-census', '/finance', '/finance#dashboard', '/finance#income', '/finance#expenses', '/finance#budget'],              section: 'sec-management' },
+        { match: ['/requests-document', '/requests-blotter', '/reservations', '/rentals'],                    section: 'sec-resident', sub: 'sub-requests' },
         { match: ['/contact-help', '/facilities'],                               section: 'sec-resident' },
         { match: ['/safety-reports', '/emergency-alerts', '/sos-monitoring'],    section: 'sec-safety' },
         { match: ['/program-calendar', '/program-planner'],                      section: 'sec-programs' },
