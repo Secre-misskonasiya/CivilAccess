@@ -30,5 +30,6 @@ public interface DocumentRequestRepository extends JpaRepository<DocumentRequest
 
     
 
+
     long countByStatusNotIn(List<String> statuses);
 }

@@ -601,6 +601,26 @@
         box-shadow: 0 8px 24px rgba(244, 197, 66, 0.35);
     }
 
+    .contact-resident-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 13px 26px;
+        background: transparent;
+        color: #fff;
+        text-decoration: none;
+        font-weight: 700; font-size: 0.92rem;
+        border-radius: 8px;
+        border: 1.5px solid rgba(255,255,255,0.35);
+        transition: all 0.25s ease;
+        letter-spacing: 0.2px;
+    }
+
+    .contact-resident-btn:hover {
+        background: rgba(255,255,255,0.1);
+        border-color: rgba(255,255,255,0.65);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+
    
     .footer {
         background: #0d3830;
@@ -653,6 +673,7 @@
         <li><a href="#about">About</a></li>
         <li><a href="#features">Features</a></li>
         <li><a href="#contact">Contact</a></li>
+        <li><a th:href="@{/resident-login}" href="/resident-login" style="color:rgba(255,255,255,0.88);font-weight:500;">Resident Login</a></li>
         <li><a th:href="@{/login}" href="/login" style="color:var(--gold);font-weight:700;">Admin Login</a></li>
     </ul>
 </header>
@@ -665,6 +686,7 @@
             Welcome to Barangay San Sebastian's online portal. Access essential services, stay informed, and connect with your community—all in one place.
         </p>
         <a th:href="@{/login}" href="/login">Go to Admin Login</a>
+        <a th:href="@{/resident-login}" href="/resident-login" style="display:inline-flex;align-items:center;gap:8px;padding:13px 26px;background:transparent;color:#fff;text-decoration:none;font-weight:700;font-size:0.92rem;border-radius:8px;border:1.5px solid rgba(255,255,255,0.5);transition:all 0.25s ease;letter-spacing:0.2px;margin-left:12px;">Resident Login</a>
     </div>
 
     
@@ -858,6 +880,8 @@
             <div class="cta-divider"></div>
             <p class="cta-tagline">Are you a barangay official?</p>
             <a th:href="@{/login}" href="/login" class="contact-login-btn">Access the Admin Portal &#8594;</a>
+            <p class="cta-tagline" style="margin-top: 16px;">Are you a registered resident?</p>
+            <a th:href="@{/resident-login}" href="/resident-login" class="contact-resident-btn">Resident Login &#8594;</a>
         </div>
 
     </div>

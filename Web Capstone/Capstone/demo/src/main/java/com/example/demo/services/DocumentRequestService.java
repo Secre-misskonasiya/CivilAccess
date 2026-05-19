@@ -36,14 +36,11 @@ public class DocumentRequestService {
             income.setIncomeType(IncomeType.DOCUMENT_FEE);
             income.setAmount(30.0);
 
-            // sourceName = requester's name so it appears clearly in the income list
             String sourceName = (doc.getFullName() != null && !doc.getFullName().isBlank())
                 ? doc.getFullName()
                 : "Unknown Requester";
             income.setSourceName(sourceName);
 
-            // Map the document request's type string to the DocumentType enum.
-            // Falls back to DocumentType.OTHER if the value doesn't match any known type.
             String docTypeStr = (doc.getDocumentType() != null && !doc.getDocumentType().isBlank())
                 ? doc.getDocumentType().trim().toUpperCase().replace(" ", "_")
                 : "";
@@ -57,7 +54,6 @@ public class DocumentRequestService {
 
             barangayIncomeService.createIncome(income);
         } catch (Exception e) {
-            // Log but don't break the status update if income recording fails
             System.err.println("[DocumentRequestService] Failed to record document fee income: " + e.getMessage());
         }
     }
@@ -94,15 +90,15 @@ public class DocumentRequestService {
     public DocumentRequest updateReadiedDocument(Long id, String readiedDocumentUrl, String processedBy) {
         DocumentRequest request = repository.findById(id)
             .orElseThrow(() -> new RuntimeException("Request not found: " + id));
-        
+
         request.setReadiedDocumentUrl(readiedDocumentUrl);
         request.setStatus("READY");
-        
+
         if (processedBy != null && !processedBy.isBlank()) {
             request.setProcessedBy(processedBy);
             request.setDateProcessed(OffsetDateTime.now());
         }
-        
+
         DocumentRequest saved = repository.save(request);
 
         // Auto-record ₱30 document fee income when document is uploaded and marked READY
@@ -114,7 +110,7 @@ public class DocumentRequestService {
     public void archiveRequest(Long id, String processedBy) {
         updateStatus(id, "RESOLVED", processedBy);
     }
-    
+
     public long countPending() {
         return repository.countByStatusNotIn(List.of("RESOLVED", "ARCHIVED"));
     }
@@ -124,6 +120,7 @@ public class DocumentRequestService {
         return repository.countThisMonth();
     }
     
+
     public DocumentRequest getById(Long id) {
         return repository.findById(id)
             .orElseThrow(() -> new RuntimeException("Request not found: " + id));

@@ -8,9 +8,25 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Lato:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" th:href="@{/css/sidebar.css}">
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Page layout shell (nav sidebar + content) ── */
+    .layout {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .content {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
     :root {
       --brand-dark:   #2d4a44;
@@ -20,7 +36,7 @@
       --gold-dim:     #7d6108;
       --bg:           #eaecef;
       --card:         #ffffff;
-      --sidebar-bg:   #ffffff;
+      --support-panel-bg:   #ffffff;
       --chat-bg:      #f0f2f5;
       --text-1:       #1c1e21;
       --text-2:       #65676b;
@@ -47,7 +63,7 @@
       overflow: hidden;
     }
 
-    /* ── Top nav (matches announcement page exactly) ─────── */
+    /* ── Top nav ── */
     .topnav {
       position: sticky; top: 0; z-index: 100;
       height: var(--nav-h);
@@ -56,6 +72,7 @@
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 24px;
       box-shadow: 0 2px 16px rgba(0,0,0,.22);
+      flex-shrink: 0;
     }
     .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
     .nav-icon {
@@ -67,48 +84,40 @@
     }
     .nav-name { font-family: var(--font-h); font-weight: 800; font-size: 19px; color: #fff; letter-spacing: -.3px; }
     .nav-sub  { font-size: 10px; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .7px; }
-    .nav-right { display: flex; align-items: center; gap: 10px; }
-    .user-pill {
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(255,255,255,.10);
-      border: 1px solid rgba(255,255,255,.18);
-      border-radius: 40px; padding: 5px 14px 5px 5px;
-      cursor: pointer; transition: background .15s;
-    }
-    .user-pill:hover { background: rgba(255,255,255,.18); }
-    .user-avatar {
-      width: 28px; height: 28px; border-radius: 50%;
-      background: var(--gold); display: flex; align-items: center; justify-content: center;
-      font-family: var(--font-h); font-size: 11px; font-weight: 800; color: var(--brand-dark);
-      flex-shrink: 0;
-    }
-    .user-pill span { color: #fff; font-size: 13px; font-weight: 600; font-family: var(--font-h); }
 
-    /* ── App shell ─────────────────────────────────────────── */
+    /* ── App shell: main chat area + right support panel ── */
     .app-shell {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  height: calc(100vh - var(--nav-h));
-}
-
-    /* ── Sidebar (Messenger-style thread list) ─────────────── */
-    .sidebar {
-      background: var(--sidebar-bg);
-      border-right: 1px solid var(--border);
-      display: flex; flex-direction: column;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      flex: 1;
       overflow: hidden;
+      min-height: 0;
     }
 
-    .sidebar-head {
+    /* ══════════════════════════════════════════
+       SUPPORT PANEL (renamed from .sidebar)
+       This is the RIGHT-SIDE thread list panel.
+       Has nothing to do with the nav sidebar.
+    ══════════════════════════════════════════ */
+    .support-panel {
+      background: var(--support-panel-bg);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      order: 2; /* always on the right */
+    }
+
+    .support-panel-head {
       background: var(--brand-dark);
       padding: 16px 18px 12px;
       flex-shrink: 0;
     }
-    .sidebar-head h2 {
+    .support-panel-head h2 {
       font-family: var(--font-h); font-weight: 800; font-size: 17px;
       color: #fff; letter-spacing: -.2px;
     }
-    .sidebar-head p { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 2px; }
+    .support-panel-head p { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 2px; }
 
     /* Active ticket warning */
     .warn-banner {
@@ -175,7 +184,6 @@
     .thread-item.active  { background: #e7f3ee; }
     .thread-item.unread  { background: #fff8e1; }
 
-    /* Thread avatar (messenger-style circle) */
     .thread-avatar {
       width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
       background: var(--brand-dark);
@@ -207,15 +215,6 @@
       gap: 5px; flex-shrink: 0;
     }
     .thread-date { font-size: 10px; color: var(--text-3); font-family: var(--font-h); }
-    .unread-dot {
-      width: 10px; height: 10px; border-radius: 50%;
-      background: var(--brand-mid);
-    }
-    .new-badge {
-      background: var(--danger-col); border-radius: 40px; padding: 1px 7px;
-      font-size: 9px; font-weight: 800; color: #fff; font-family: var(--font-h);
-      text-transform: uppercase;
-    }
 
     /* Empty state */
     .empty-threads {
@@ -235,11 +234,13 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Main area ─────────────────────────────────────────── */
+    /* ── Main area ── */
     .main-area {
-      display: flex; flex-direction: column;
+      display: flex;
+      flex-direction: column;
       background: var(--chat-bg);
       overflow: hidden;
+      order: 1;
     }
 
     /* Welcome pane */
@@ -271,7 +272,7 @@
     }
     .welcome-cta:hover { background: #f0c800; }
 
-    /* ── Form pane ─────────────────────────────────────────── */
+    /* ── Form pane ── */
     .form-pane {
       flex: 1; display: none; flex-direction: column; overflow: hidden;
     }
@@ -320,12 +321,11 @@
     .submit-btn:hover    { background: #f0c800; }
     .submit-btn:disabled { opacity: .6; cursor: not-allowed; }
 
-    /* ── Chat pane ─────────────────────────────────────────── */
+    /* ── Chat pane ── */
     .chat-pane {
       flex: 1; display: none; flex-direction: column; overflow: hidden;
     }
 
-    /* Chat header (messenger-style) */
     .chat-header {
       background: var(--brand-dark);
       display: flex; align-items: center; gap: 12px;
@@ -352,7 +352,6 @@
     .pill-resolved { background: rgba(39,174,96,.2);  color: #2ecc71; border: 1px solid rgba(39,174,96,.4); }
     .pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-    /* Sub-banner for the original message */
     .chat-sub-banner {
       background: #f0f2f5; border-bottom: 1px solid var(--border);
       padding: 8px 20px; flex-shrink: 0;
@@ -360,7 +359,6 @@
     .chat-sub-banner strong { font-family: var(--font-h); font-size: 11px; font-weight: 700; color: var(--brand-mid); }
     .chat-sub-banner p      { font-size: 11.5px; color: var(--text-2); font-style: italic; margin-top: 1px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
-    /* Messages scroll area */
     .chat-messages {
       flex: 1; overflow-y: auto; padding: 18px 20px 10px;
       display: flex; flex-direction: column;
@@ -369,7 +367,6 @@
     .chat-messages::-webkit-scrollbar { width: 4px; }
     .chat-messages::-webkit-scrollbar-thumb { background: #c8ccd2; border-radius: 2px; }
 
-    /* Date separator */
     .date-sep { display: flex; align-items: center; gap: 10px; margin: 16px 0 10px; }
     .date-sep hr { flex: 1; border: none; border-top: 1px solid #d8dce2; }
     .date-sep span {
@@ -377,7 +374,6 @@
       font-weight: 700; text-transform: uppercase; letter-spacing: .5px; white-space: nowrap;
     }
 
-    /* Message rows */
     .msg-row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 3px; }
     .msg-row.me { justify-content: flex-end; }
     .msg-row.grouped { margin-bottom: 2px; }
@@ -406,7 +402,6 @@
     .ts { font-size: 10px; color: var(--text-3); margin-top: 4px; font-family: var(--font-h); }
     .msg-col.me .ts { text-align: right; margin-right: 2px; }
 
-    /* Staff avatar */
     .staff-av {
       width: 30px; height: 30px; border-radius: 50%;
       background: var(--brand-dark); border: 1.5px solid var(--border);
@@ -418,7 +413,6 @@
     .staff-av img { width: 100%; height: 100%; object-fit: cover; }
     .staff-av-spacer { width: 30px; flex-shrink: 0; }
 
-    /* No messages */
     .no-msgs {
       flex: 1; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 10px;
@@ -426,7 +420,6 @@
     .no-msgs i { font-size: 44px; color: var(--text-3); opacity: .3; }
     .no-msgs p { font-family: var(--font-h); font-size: 13px; color: var(--text-3); }
 
-    /* Resolved notice */
     .resolved-bar {
       display: none;
       align-items: center; justify-content: center; gap: 8px;
@@ -436,7 +429,6 @@
       color: var(--resolve-col);
     }
 
-    /* Input area */
     .chat-input-wrap {
       display: flex; align-items: flex-end; gap: 10px;
       padding: 10px 16px; background: var(--card);
@@ -460,7 +452,7 @@
     .send-btn:hover    { background: var(--brand-mid); transform: scale(1.05); }
     .send-btn:disabled { background: var(--border); color: var(--text-3); transform: none; cursor: not-allowed; }
 
-    /* ── Success modal ──────────────────────────────────────── */
+    /* ── Success modal ── */
     .overlay {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
@@ -496,163 +488,173 @@
     }
     .modal-ok:hover { background: #f0c800; }
 
-    /* Animations */
-    @keyframes fadeDown { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
-
     /* Responsive */
     @media (max-width: 640px) {
       .app-shell { grid-template-columns: 1fr; }
-      .sidebar   { display: none; }
-      .sidebar.mobile-show { display: flex; position: fixed; inset: 0; top: var(--nav-h); z-index: 50; }
-      body { overflow: auto; }
+      .support-panel { display: none; }
+      .support-panel.mobile-show {
+        display: flex; position: fixed; inset: 0;
+        top: var(--nav-h); z-index: 50;
+      }
     }
   </style>
 </head>
 <body>
 
-<!-- ── Top nav ─────────────────────────────────────────────── -->
-<nav class="topnav">
-  <a class="nav-brand" href="/dashboard">
-    <div class="nav-icon"><i class="bi bi-building-fill"></i></div>
-    <div>
-      <div class="nav-name">CivilAccess</div>
-      <div class="nav-sub">Barangay Portal</div>
-    </div>
-  </a>
-  
-</nav>
+<div class="layout">
 
-<!-- ── App shell ───────────────────────────────────────────── -->
-<div class="app-shell">
+  <!-- Nav sidebar from fragment -->
+<div th:replace="~{fragments/sidebar2 :: sidebar}"></div>
 
-  <!-- ── Main area ─────────────────────────────────────────── -->
-  <main class="main-area" id="mainArea">
+  <!-- Main content column -->
+  <div class="content">
 
-    <!-- Welcome -->
-    <div class="welcome-pane" id="welcomePane">
-      <div class="welcome-icon"><i class="bi bi-chat-fill"></i></div>
-      <h3>Contact Support</h3>
-      <p>Select a conversation from the list, or start a new request to reach your barangay staff.</p>
-      <button class="welcome-cta" onclick="showNewForm()">
-        <i class="bi bi-pencil-square"></i> Send a New Request
-      </button>
-    </div>
-
-    <!-- New request form -->
-    <div class="form-pane" id="formPane">
-      <div class="pane-header">
-        <div class="pane-header-left">
-          <button class="back-btn" onclick="showWelcome()"><i class="bi bi-arrow-left"></i> Back</button>
-          <span class="pane-title">New Request</span>
+    <!-- Top nav -->
+    <nav class="topnav">
+      <a class="nav-brand" href="/dashboard">
+        <div class="nav-icon"><i class="bi bi-building-fill"></i></div>
+        <div>
+          <div class="nav-name">CivilAccess</div>
+          <div class="nav-sub">Barangay Portal</div>
         </div>
-      </div>
-      <div class="form-body">
-        <label class="form-label">Type of Concern</label>
-        <select class="form-select" id="formType">
-          <option>General Inquiry</option>
-          <option>Health Services</option>
-          <option>Infrastructure</option>
-          <option>Safety Concern</option>
-          <option>Other</option>
-        </select>
+      </a>
+    </nav>
 
-        <label class="form-label" style="margin-top:20px">Describe your concern</label>
-        <textarea class="form-textarea" id="formMessage" placeholder="Write your message to barangay staff here…"></textarea>
+    <!-- App shell: chat area (left) + support panel thread list (right) -->
+    <div class="app-shell">
 
-        <button class="submit-btn" id="submitBtn" onclick="submitRequest()">
-          <i class="bi bi-send-fill"></i> Submit Request
+      <!-- ── Chat / main area ── -->
+      <main class="main-area" id="mainArea">
+
+        <!-- Welcome -->
+        <div class="welcome-pane" id="welcomePane">
+          <div class="welcome-icon"><i class="bi bi-chat-fill"></i></div>
+          <h3>Contact Support</h3>
+          <p>Select a conversation from the list, or start a new request to reach your barangay staff.</p>
+          <button class="welcome-cta" onclick="showNewForm()">
+            <i class="bi bi-pencil-square"></i> Send a New Request
+          </button>
+        </div>
+
+        <!-- New request form -->
+        <div class="form-pane" id="formPane">
+          <div class="pane-header">
+            <div class="pane-header-left">
+              <button class="back-btn" onclick="showWelcome()"><i class="bi bi-arrow-left"></i> Back</button>
+              <span class="pane-title">New Request</span>
+            </div>
+          </div>
+          <div class="form-body">
+            <label class="form-label">Type of Concern</label>
+            <select class="form-select" id="formType">
+              <option>General Inquiry</option>
+              <option>Health Services</option>
+              <option>Infrastructure</option>
+              <option>Safety Concern</option>
+              <option>Other</option>
+            </select>
+
+            <label class="form-label" style="margin-top:20px">Describe your concern</label>
+            <textarea class="form-textarea" id="formMessage" placeholder="Write your message to barangay staff here…"></textarea>
+
+            <button class="submit-btn" id="submitBtn" onclick="submitRequest()">
+              <i class="bi bi-send-fill"></i> Submit Request
+            </button>
+          </div>
+        </div>
+
+        <!-- Chat -->
+        <div class="chat-pane" id="chatPane">
+          <div class="chat-header">
+            <button class="back-btn" onclick="showWelcome()"><i class="bi bi-arrow-left"></i> Back</button>
+            <div class="chat-header-avatar"><i class="bi bi-person-badge-fill"></i></div>
+            <div class="chat-header-info">
+              <div class="chat-header-name">Barangay Staff</div>
+              <div class="chat-header-sub" id="chatHeaderSub">Support</div>
+            </div>
+            <div class="chat-status-pill pill-incoming" id="chatStatusPill">
+              <span class="pill-dot"></span>
+              <span id="chatStatusText">Incoming</span>
+            </div>
+          </div>
+
+          <div class="chat-sub-banner" id="chatSubBanner">
+            <strong id="chatSubType"></strong>
+            <p id="chatSubMsg"></p>
+          </div>
+
+          <div class="chat-messages" id="chatMessages"></div>
+
+          <div class="resolved-bar" id="resolvedBar">
+            <i class="bi bi-check-circle-fill"></i> This request has been resolved. Chat is disabled.
+          </div>
+
+          <div class="chat-input-wrap" id="chatInputWrap">
+            <textarea id="chatInput" rows="1" placeholder="Write a message…" onkeydown="handleKey(event)"></textarea>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+              <i class="bi bi-send-fill"></i>
+            </button>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- ── Support panel (thread list — RIGHT side) ── -->
+      <aside class="support-panel" id="supportPanel">
+
+        <div class="support-panel-head">
+          <h2>Support Staff</h2>
+          <p>Barangay help &amp; inquiry tickets</p>
+        </div>
+
+        <div class="warn-banner" id="warnBanner">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span>You have an ongoing request. Resolve it before submitting a new one.</span>
+        </div>
+
+        <button class="new-btn" id="newBtn" onclick="showNewForm()">
+          <i class="bi bi-pencil-square"></i> New Request
         </button>
-      </div>
-    </div>
 
-    <!-- Chat -->
-    <div class="chat-pane" id="chatPane">
-      <div class="chat-header">
-        <button class="back-btn" onclick="showWelcome()"><i class="bi bi-arrow-left"></i> Back</button>
-        <div class="chat-header-avatar"><i class="bi bi-person-badge-fill"></i></div>
-        <div class="chat-header-info">
-          <div class="chat-header-name">Barangay Staff</div>
-          <div class="chat-header-sub" id="chatHeaderSub">Support</div>
+        <div class="tab-bar">
+          <button class="tab-btn active" id="tabIn" onclick="switchTab('incoming')">
+            <i class="bi bi-chat-dots"></i> Incoming
+            <span class="tab-badge" id="badgeIn">0</span>
+          </button>
+          <button class="tab-btn" id="tabRes" onclick="switchTab('resolved')">
+            <i class="bi bi-check2-all"></i> Resolved
+            <span class="tab-badge" id="badgeRes">0</span>
+          </button>
         </div>
-        <div class="chat-status-pill pill-incoming" id="chatStatusPill">
-          <span class="pill-dot"></span>
-          <span id="chatStatusText">Incoming</span>
+
+        <div class="thread-list" id="threadList">
+          <div class="spinner"></div>
+        </div>
+
+      </aside>
+
+    </div><!-- /app-shell -->
+
+    <!-- Success modal -->
+    <div class="overlay" id="successOverlay">
+      <div class="modal-box">
+        <div class="modal-top"><h2><i class="bi bi-send-fill" style="margin-right:6px"></i>Request Sent</h2></div>
+        <div class="modal-body">
+          <div class="modal-icon-ring"><i class="bi bi-check-lg"></i></div>
+          <h3>Submitted!</h3>
+          <p>Your request has been sent to the barangay staff. They will respond as soon as possible.</p>
+          <button class="modal-ok" onclick="closeSuccess()">OK, Got It</button>
         </div>
       </div>
-
-      <div class="chat-sub-banner" id="chatSubBanner">
-        <strong id="chatSubType"></strong>
-        <p id="chatSubMsg"></p>
-      </div>
-
-      <div class="chat-messages" id="chatMessages"></div>
-
-      <div class="resolved-bar" id="resolvedBar">
-        <i class="bi bi-check-circle-fill"></i> This request has been resolved. Chat is disabled.
-      </div>
-
-      <div class="chat-input-wrap" id="chatInputWrap">
-        <textarea id="chatInput" rows="1" placeholder="Write a message…" onkeydown="handleKey(event)"></textarea>
-        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
-          <i class="bi bi-send-fill"></i>
-        </button>
-      </div>
     </div>
 
-  </main>
+  </div><!-- /content -->
+</div><!-- /layout -->
 
-
-    <!-- ── Sidebar ───────────────────────────────────────────── -->
-  <aside class="sidebar" id="sidebar">
-
-    <div class="sidebar-head">
-      <h2>Support Staff</h2>
-      <p>Barangay help &amp; inquiry tickets</p>
-    </div>
-
-    <div class="warn-banner" id="warnBanner">
-      <i class="bi bi-exclamation-triangle-fill"></i>
-      <span>You have an ongoing request. Resolve it before submitting a new one.</span>
-    </div>
-
-    <button class="new-btn" id="newBtn" onclick="showNewForm()">
-      <i class="bi bi-pencil-square"></i> New Request
-    </button>
-
-    <div class="tab-bar">
-      <button class="tab-btn active" id="tabIn" onclick="switchTab('incoming')">
-        <i class="bi bi-chat-dots"></i> Incoming
-        <span class="tab-badge" id="badgeIn">0</span>
-      </button>
-      <button class="tab-btn" id="tabRes" onclick="switchTab('resolved')">
-        <i class="bi bi-check2-all"></i> Resolved
-        <span class="tab-badge" id="badgeRes">0</span>
-      </button>
-    </div>
-
-    <div class="thread-list" id="threadList">
-      <div class="spinner"></div>
-    </div>
-  </aside>
-
-
-</div>
-
-<!-- Success modal -->
-<div class="overlay" id="successOverlay">
-  <div class="modal-box">
-    <div class="modal-top"><h2><i class="bi bi-send-fill" style="margin-right:6px"></i>Request Sent</h2></div>
-    <div class="modal-body">
-      <div class="modal-icon-ring"><i class="bi bi-check-lg"></i></div>
-      <h3>Submitted!</h3>
-      <p>Your request has been sent to the barangay staff. They will respond as soon as possible.</p>
-      <button class="modal-ok" onclick="closeSuccess()">OK, Got It</button>
-    </div>
-  </div>
-</div>
+<script src="/js/sidebar2.js"></script>
 
 <script>
-  // ── State ─────────────────────────────────────────────────
+  // ── State ──────────────────────────────────────────────────
   let currentTab      = 'incoming';
   let allRequests     = [];
   let activeReqId     = null;
@@ -661,6 +663,33 @@
   let adminPics       = {};
   let lastMsgCount    = -1;
   let residentName    = '';
+
+  // ── FIXED: Fetch wrapper with credentials ─────────────────────────────
+  async function fetchWithAuth(url, options = {}) {
+    // Always include credentials to send session cookie
+    options.credentials = 'include';
+    
+    // Add default headers if not present
+    if (!options.headers) {
+      options.headers = {};
+    }
+    
+    // For POST/PUT requests, set Content-Type if not already set and body is object
+    if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
+      if (!options.headers['Content-Type']) {
+        options.headers['Content-Type'] = 'application/json';
+      }
+      options.body = JSON.stringify(options.body);
+    }
+    
+    try {
+      const response = await fetch(url, options);
+      return response;
+    } catch (error) {
+      console.error(`Fetch error for ${url}:`, error);
+      throw error;
+    }
+  }
 
   // ── Format helpers ─────────────────────────────────────────
   const fmt = {
@@ -696,39 +725,69 @@
 
   // ── Boot ───────────────────────────────────────────────────
   window.addEventListener('DOMContentLoaded', async () => {
+    const isAuthenticated = await checkAuth();
+    if (!isAuthenticated) {
+      console.error('Not authenticated, redirecting to login...');
+      window.location.href = '/resident-login';
+      return;
+    }
+    
     await loadMe();
     await loadRequests();
     pollTimer = setInterval(loadRequests, 4000);
   });
+  
+  // ── FIXED: Check authentication first ───────────────────────
+  async function checkAuth() {
+    try {
+      const response = await fetchWithAuth('/api/resident/me');
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Authenticated as:', data.email);
+        return true;
+      } else {
+        console.log('Not authenticated, status:', response.status);
+        return false;
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      return false;
+    }
+  }
 
   async function loadMe() {
     try {
-      const r = await fetch('/api/resident/me');
+      const r = await fetchWithAuth('/api/resident/me');
       if (!r.ok) return;
       const d = await r.json();
       residentName = ((d.firstName||'') + ' ' + (d.lastName||'')).trim() || d.email || 'Resident';
-      document.getElementById('userDisplayName').textContent = residentName;
-      const init = residentName.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-      document.getElementById('userInitials').textContent = init || '';
-      document.getElementById('userInitials').style.fontSize = '12px';
-    } catch(e) {}
+    } catch(e) {
+      console.error('loadMe error:', e);
+    }
   }
 
   // ── Load & render thread list ──────────────────────────────
   async function loadRequests() {
     try {
-      const r = await fetch('/api/resident/contact-requests');
-      if (!r.ok) return;
+      const r = await fetchWithAuth('/api/resident/contact-requests');
+      if (!r.ok) {
+        if (r.status === 401) {
+          console.error('Session expired, redirecting to login...');
+          window.location.href = '/resident-login';
+        }
+        return;
+      }
       allRequests = await r.json();
 
-      // Sync active request status if chat is open
       if (activeReqId !== null) {
         const live = allRequests.find(x => x.id === activeReqId);
         if (live) syncChatStatus(live);
       }
 
       renderThreads();
-    } catch(e) {}
+    } catch(e) {
+      console.error('loadRequests error:', e);
+    }
   }
 
   function renderThreads() {
@@ -809,7 +868,6 @@
   }
 
   function showActiveTicketAlert() {
-    // repurpose modal
     document.getElementById('successOverlay').classList.add('open');
     document.querySelector('.modal-top h2').innerHTML =
       '<i class="bi bi-exclamation-triangle-fill" style="margin-right:6px;color:var(--gold)"></i>Active Request';
@@ -832,16 +890,24 @@
     btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Submitting…';
 
     try {
-      const r = await fetch('/api/resident/contact-requests', {
+      const r = await fetchWithAuth('/api/resident/contact-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, message })
+        body: { type, message }
       });
-      if (!r.ok) { alert('Error: ' + await r.text()); return; }
+      
+      if (!r.ok) {
+        const errorText = await r.text();
+        alert('Error: ' + errorText);
+        return;
+      }
+      
       document.getElementById('formMessage').value = '';
       resetSuccessModal();
       document.getElementById('successOverlay').classList.add('open');
+      await loadRequests(); // Refresh the list
     } catch(e) {
+      console.error('Submit error:', e);
       alert('Could not submit. Please try again.');
     } finally {
       btn.disabled = false;
@@ -872,13 +938,16 @@
     activeReqId  = reqId;
     lastMsgCount = -1;
 
-    try { await fetch(`/api/resident/contact-requests/${reqId}/mark-viewed`, { method:'POST' }); } catch(e) {}
+    try { 
+      await fetchWithAuth(`/api/resident/contact-requests/${reqId}/mark-viewed`, { method:'POST' }); 
+    } catch(e) {
+      console.error('mark-viewed error:', e);
+    }
 
     document.getElementById('welcomePane').style.display = 'none';
     document.getElementById('formPane').style.display    = 'none';
     document.getElementById('chatPane').style.display    = 'flex';
 
-    // Populate header
     document.getElementById('chatHeaderSub').textContent = req.type || 'General Inquiry';
     document.getElementById('chatSubType').textContent   = req.type || 'General Inquiry';
     document.getElementById('chatSubMsg').textContent    = '"' + (req.message || '') + '"';
@@ -905,11 +974,13 @@
     if (dispStatus === 'RESOLVED') {
       iWrap.style.display  = 'none';
       rBar.style.display   = 'flex';
-      input.disabled = true; sBtn.disabled = true;
+      input.disabled = true; 
+      sBtn.disabled = true;
     } else {
       iWrap.style.display  = 'flex';
       rBar.style.display   = 'none';
-      input.disabled = false; sBtn.disabled = false;
+      input.disabled = false; 
+      sBtn.disabled = false;
     }
   }
 
@@ -918,17 +989,17 @@
     stopMsgPoll();
     msgPollTimer = setInterval(() => fetchMessages(reqId), 2000);
   }
+  
   function stopMsgPoll() {
     if (msgPollTimer) { clearInterval(msgPollTimer); msgPollTimer = null; }
   }
 
   async function fetchMessages(reqId) {
     try {
-      const r = await fetch(`/api/resident/contact-requests/${reqId}/messages`);
+      const r = await fetchWithAuth(`/api/resident/contact-requests/${reqId}/messages`);
       if (!r.ok) return;
       const msgs = await r.json();
 
-      // Fetch admin avatars
       const names = [...new Set(msgs.filter(m => m.senderType==='ADMIN' && m.senderName).map(m => m.senderName))];
       if (names.length) await fetchAvatars(names);
 
@@ -938,8 +1009,7 @@
         scrollBottom();
       }
 
-      // Status check
-      const sr = await fetch(`/api/resident/contact-requests/${reqId}/status`);
+      const sr = await fetchWithAuth(`/api/resident/contact-requests/${reqId}/status`);
       if (sr.ok) {
         const { status } = await sr.json();
         const req = allRequests.find(x => x.id === reqId);
@@ -949,18 +1019,22 @@
           renderThreads();
         }
       }
-    } catch(e) {}
+    } catch(e) {
+      console.error('fetchMessages error:', e);
+    }
   }
 
   async function fetchAvatars(names) {
     const needed = names.filter(n => !(n in adminPics));
     if (!needed.length) return;
     try {
-      const r = await fetch('/api/resident/admin-profiles?names=' + needed.map(encodeURIComponent).join(','));
+      const r = await fetchWithAuth('/api/resident/admin-profiles?names=' + needed.map(encodeURIComponent).join(','));
       if (!r.ok) return;
       const data = await r.json();
       data.forEach(a => { adminPics[a.name] = a.profilePicture || null; });
-    } catch(e) {}
+    } catch(e) {
+      console.error('fetchAvatars error:', e);
+    }
   }
 
   function renderMessages(msgs) {
@@ -1044,31 +1118,50 @@
     document.getElementById('sendBtn').disabled = true;
 
     try {
-      const r = await fetch(`/api/resident/contact-requests/${activeReqId}/messages`, {
+      const r = await fetchWithAuth(`/api/resident/contact-requests/${activeReqId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
+        body: { message: text }
       });
-      if (!r.ok) { input.value = prev; }
-      else { lastMsgCount = -1; await fetchMessages(activeReqId); }
-    } catch(e) { input.value = prev; }
-    finally {
+      
+      if (!r.ok) { 
+        input.value = prev; 
+      } else { 
+        lastMsgCount = -1; 
+        await fetchMessages(activeReqId); 
+      }
+    } catch(e) { 
+      console.error('sendMessage error:', e);
+      input.value = prev; 
+    } finally {
       document.getElementById('sendBtn').disabled = false;
       input.focus();
     }
   }
 
   function handleKey(e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    if (e.key === 'Enter' && !e.shiftKey) { 
+      e.preventDefault(); 
+      sendMessage(); 
+    }
   }
 
-  // Auto-grow textarea
   document.addEventListener('input', e => {
     if (e.target.id === 'chatInput') {
       e.target.style.height = 'auto';
       e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
     }
   });
+  
+  // Make functions available globally for onclick handlers
+  window.showNewForm = showNewForm;
+  window.submitRequest = submitRequest;
+  window.closeSuccess = closeSuccess;
+  window.openChat = openChat;
+  window.switchTab = switchTab;
+  window.sendMessage = sendMessage;
+  window.handleKey = handleKey;
+  window.showWelcome = showWelcome;
 </script>
 </body>
 </html>

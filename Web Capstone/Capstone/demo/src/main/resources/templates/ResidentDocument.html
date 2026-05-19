@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Requests – CivilAccess</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Lato&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --brand-dark: #2d4a44;
+            --brand-mid:  #386660;
+            --gold:       #fed734;
+            --bg:         #f0f2f5;
+            --card:       #ffffff;
+            --border:     #e4e6eb;
+            --font-h:     'Sora', sans-serif;
+            --font-b:     'Lato', sans-serif;
+        }
+
+        body { font-family: var(--font-b); background: var(--bg); }
+
+        .layout {
+            display: flex;
+            height: 100vh;
+        }
+
+        .content {
+            flex: 1;          
+            min-width: 0;     
+            overflow-y: auto; 
+            overflow-x: hidden;
+        }
+
+        /* ── Top nav ── */
+        .topnav {
+            background: var(--brand-dark);
+            border-bottom: 3px solid var(--gold);
+            padding: 15px 24px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-icon {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: rgba(254,215,52,.15);
+            border: 2px solid var(--gold);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--gold);
+        }
+        .nav-name { font-family: var(--font-h); font-weight: 800; color: #fff; }
+        .nav-sub  { font-size: 10px; color: rgba(255,255,255,.5); }
+
+        /* ── Quick action row ── */
+        .action-row {
+            display: flex; gap: 12px;
+            padding: 16px 20px;
+            background: var(--brand-mid);
+        }
+        .action-btn {
+            flex: 1;
+            background: rgba(255,255,255,0.18);
+            border: none; border-radius: 12px;
+            padding: 14px 8px;
+            text-align: center; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .action-btn:hover { background: rgba(255,255,255,0.3); transform: translateY(-2px); }
+        .action-btn i    { font-size: 26px; color: white; display: block; margin-bottom: 6px; }
+        .action-btn span { color: white; font-size: 11px; font-weight: 700; font-family: var(--font-h); }
+
+        /* ── Tab bar ── */
+        .tab-bar {
+            display: flex;
+            background: white;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            gap: 8px;
+        }
+        .tab {
+            flex: 1; padding: 10px 6px;
+            text-align: center; cursor: pointer;
+            font-family: var(--font-h); font-weight: 600; font-size: 13px;
+            color: #65676b;
+            border-radius: 8px;
+            border: none; background: none;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: all 0.2s;
+        }
+        .tab.active { background: var(--brand-mid); color: white; }
+        .tab-badge {
+            background: #c62828;
+            color: white; border-radius: 10px;
+            padding: 1px 7px; font-size: 11px; font-weight: bold;
+            display: none;
+        }
+        .tab-badge.visible { display: inline-block; }
+
+        /* ── Requests list ── */
+        .requests-wrap { padding: 16px; flex: 1; }
+
+        /* ── Request card ── */
+        .request-card {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            display: flex; flex-direction: row;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.09);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .request-card:hover { transform: translateY(-2px); box-shadow: 0 5px 16px rgba(0,0,0,0.13); }
+
+        .card-accent { width: 4px; flex-shrink: 0; }
+        .card-body-wrap { flex: 1; }
+
+        .card-header {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            padding: 12px 12px 0;
+        }
+        .left-header { display: flex; gap: 10px; flex: 1; margin-right: 8px; }
+        .avatar {
+            width: 44px; height: 44px; border-radius: 22px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .avatar i { font-size: 22px; }
+        .header-info   { flex: 1; min-width: 0; }
+        .request-title {
+            font-family: var(--font-h); font-weight: 700; font-size: 15px;
+            color: #050505; margin-bottom: 3px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .post-meta    { display: flex; align-items: center; gap: 4px; font-size: 11px; }
+        .source-label { font-weight: 700; }
+        .date-text    { color: #65676b; }
+
+        .status-badge {
+            padding: 3px 9px; border-radius: 6px;
+            font-size: 9px; font-weight: 800;
+            color: white; white-space: nowrap; align-self: flex-start; flex-shrink: 0;
+        }
+
+        .detail-row {
+            display: flex; align-items: flex-start; gap: 5px;
+            padding: 5px 12px 0;
+            font-size: 12px; color: #65676b;
+        }
+        .detail-row i { font-size: 13px; margin-top: 1px; flex-shrink: 0; }
+        .price-row    { color: #6a1b9a; font-weight: 600; }
+
+        .card-footer {
+            padding: 6px 12px 10px;
+            border-top: 1px solid #f0f2f5;
+            margin-top: 8px;
+            font-size: 10px; color: #aaa; font-weight: 500;
+        }
+
+        .empty-state { text-align: center; padding: 70px 20px; color: #ccc; }
+        .empty-state i    { font-size: 60px; margin-bottom: 14px; display: block; }
+        .empty-state p    { font-size: 16px; font-weight: 500; color: #65676b; }
+        .empty-state span { font-size: 12px; color: #ccc; display: block; margin-top: 5px; }
+
+        .loading { text-align: center; padding: 60px; color: #65676b; font-size: 15px; }
+        .loading i { font-size: 32px; display: block; margin-bottom: 10px; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Modal Styles ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+        }
+        .modal-overlay.show { display: flex; }
+
+        .modal-container {
+            background: white;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            margin: 20px;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            background: var(--brand-mid);
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .modal-header h2 {
+            color: white;
+            font-family: var(--font-h);
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+        .modal-close:hover { opacity: 0.8; }
+
+        .modal-body { padding: 20px; }
+
+        .status-banner {
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .status-banner i { font-size: 24px; }
+        .status-banner span { font-weight: 800; font-size: 16px; letter-spacing: 1px; }
+
+        .detail-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .section-title {
+            font-family: var(--font-h);
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--brand-mid);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title i { font-size: 18px; }
+
+        .info-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            font-size: 13px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .info-label {
+            color: #6c757d;
+            font-weight: 600;
+            min-width: 120px;
+        }
+        .info-value {
+            color: #212529;
+            font-weight: 500;
+            text-align: right;
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .total-box {
+            background: #ebf5f3;
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .total-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a3c34;
+        }
+        .total-amount {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--brand-mid);
+        }
+
+        .payment-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        .image-preview {
+            margin-top: 12px;
+            cursor: pointer;
+        }
+        .image-preview img {
+            width: 100%;
+            max-height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .image-hint {
+            font-size: 11px;
+            color: var(--brand-mid);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .ref-id {
+            text-align: center;
+            font-size: 11px;
+            color: #adb5bd;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        @media (max-width: 768px) { .content { margin-left: 0; } }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <div th:replace="~{fragments/sidebar2 :: sidebar}"></div>
+
+    <div class="content">
+        <nav class="topnav">
+            <a class="nav-brand" href="#">
+                <div class="nav-icon"><i class="bi bi-building-fill"></i></div>
+                <div>
+                    <div class="nav-name">CivilAccess</div>
+                    <div class="nav-sub">Barangay Portal</div>
+                </div>
+            </a>
+        </nav>
+
+        <div class="action-row">
+            <button class="action-btn" onclick="window.location.href='/resident/documents/new'">
+                <i class="bi bi-file-text"></i>
+                <span>Documents</span>
+            </button>
+            <button class="action-btn" onclick="window.location.href='/resident/reservations/new'">
+                <i class="bi bi-calendar-check"></i>
+                <span>Reserve Court</span>
+            </button>
+            <button class="action-btn" onclick="window.location.href='/resident/rentals/new'">
+                <i class="bi bi-box-seam"></i>
+                <span>Rent Equipment</span>
+            </button>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab active" data-tab="active" onclick="switchTab('active')">
+                Active
+            </button>
+            <button class="tab" data-tab="ready" onclick="switchTab('ready')">
+                Ready
+                <span class="tab-badge" id="readyBadge">0</span>
+            </button>
+            <button class="tab" data-tab="history" onclick="switchTab('history')">
+                History
+            </button>
+        </div>
+
+        <div class="requests-wrap" id="requestsWrap">
+            <div class="loading">
+                <i class="bi bi-arrow-clockwise"></i>
+                Loading your requests…
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Container -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2 id="modalTitle">Request Details</h2>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <!-- Content dynamically injected -->
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = 'https://upfrofppponiqffbssqb.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_tZyxrTJrpd_OD5-TKUkT8Q__DnuY0tj';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let allRequests = [];
+    let currentTab = 'active';
+
+    function getStatusStyles(status) {
+        const s = (status || 'INCOMING').toUpperCase();
+        switch (s) {
+            case 'READY': return { color: '#4CAF50', label: 'READY FOR PICKUP', icon: 'bi-check-circle-fill' };
+            case 'APPROVED': return { color: '#4CAF50', label: 'APPROVED', icon: 'bi-check-circle-fill' };
+            case 'RESOLVED':
+            case 'COMPLETED': return { color: '#2196F3', label: 'COMPLETED', icon: 'bi-check-circle' };
+            case 'REJECTED':
+            case 'CANCELLED': return { color: '#C62828', label: s, icon: 'bi-x-circle-fill' };
+            case 'PROCESSING': return { color: '#FF9800', label: 'PROCESSING', icon: 'bi-clock-history' };
+            case 'IN_PROGRESS': return { color: '#FF9800', label: 'IN PROGRESS', icon: 'bi-clock-history' };
+            case 'RETURNED': return { color: '#2196F3', label: 'RETURNED', icon: 'bi-arrow-return-left' };
+            case 'OVERDUE': return { color: '#C62828', label: 'OVERDUE', icon: 'bi-exclamation-triangle-fill' };
+            case 'RENTED': return { color: '#9C27B0', label: 'RENTED', icon: 'bi-box-seam' };
+            case 'INCOMING':
+            case 'PENDING': return { color: '#FF9800', label: 'PENDING', icon: 'bi-clock' };
+            default: return { color: '#2bb6f7', label: s || 'PROCESSING', icon: 'bi-info-circle' };
+        }
+    }
+
+    function getItemTab(status) {
+        const s = (status || 'INCOMING').toUpperCase();
+        if (s === 'READY') return 'ready';
+        if (['RESOLVED','APPROVED','COMPLETED','REJECTED','CANCELLED','CLOSED','ARCHIVE','RETURNED'].includes(s)) return 'history';
+        return 'active';
+    }
+
+    function getSourceLabel(src) {
+        if (src === 'document_requests') return 'Document Request';
+        if (src === 'reservations') return 'Court Reservation';
+        if (src === 'rentals') return 'Equipment Rental';
+        return 'Request';
+    }
+
+    function getSourceColor(src) {
+        if (src === 'document_requests') return '#386660';
+        if (src === 'reservations') return '#1565C0';
+        if (src === 'rentals') return '#6A1B9A';
+        return '#386660';
+    }
+
+    function getSourceIcon(src) {
+        if (src === 'document_requests') return 'bi-file-text';
+        if (src === 'reservations') return 'bi-calendar-check';
+        if (src === 'rentals') return 'bi-box-seam';
+        return 'bi-file-text';
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return 'N/A';
+        return new Date(dateStr).toLocaleDateString('en-PH', {
+            year: 'numeric', month: 'long', day: 'numeric'
+        });
+    }
+
+    function formatTimeSlot(slot) {
+        if (!slot) return 'N/A';
+        try {
+            const [start, end] = slot.split('-');
+            const fmt = (t) => {
+                const [h, m] = t.split(':').map(Number);
+                const period = h >= 12 ? 'PM' : 'AM';
+                const hour = h % 12 || 12;
+                return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+            };
+            return `${fmt(start)} – ${fmt(end)}`;
+        } catch {
+            return slot;
+        }
+    }
+
+    function daysBetween(start, end) {
+        if (!start || !end) return 0;
+        const sd = new Date(start), ed = new Date(end);
+        if (isNaN(sd) || isNaN(ed) || ed < sd) return 0;
+        return Math.round((ed - sd) / (1000 * 60 * 60 * 24)) + 1;
+    }
+
+    // Document Details Modal
+    function showDocumentDetails(request) {
+        const status = getStatusStyles(request.status);
+        const showEmergency = request.document_type === 'Barangay ID';
+        const showReadiedDoc = request.status === 'READY' || request.status === 'RESOLVED';
+
+        let emergencyHtml = '';
+        if (showEmergency) {
+            emergencyHtml = `
+                <div class="detail-section">
+                    <div class="section-title">
+                        <i class="bi bi-heart-pulse"></i>
+                        <span>Emergency Contact</span>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-row">
+                            <span class="info-label">Emergency Name</span>
+                            <span class="info-value">${escapeHtml(request.emergency_name || 'Not specified')}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Emergency Address</span>
+                            <span class="info-value">${escapeHtml(request.emergency_address || 'Not specified')}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Emergency Contact</span>
+                            <span class="info-value">${escapeHtml(request.emergency_contact || 'Not specified')}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        let attachmentsHtml = '';
+        if (request.valid_id_url) {
+            attachmentsHtml += `
+                <div class="image-preview" onclick="viewImage('${request.valid_id_url}')">
+                    <span class="image-hint"><i class="bi bi-card-id"></i> Valid ID</span>
+                    <img src="${request.valid_id_url}" alt="Valid ID">
+                </div>
+            `;
+        }
+        if (request.residency_proof_url) {
+            attachmentsHtml += `
+                <div class="image-preview" onclick="viewImage('${request.residency_proof_url}')">
+                    <span class="image-hint"><i class="bi bi-house-door"></i> Proof of Residency</span>
+                    <img src="${request.residency_proof_url}" alt="Proof of Residency">
+                </div>
+            `;
+        }
+        if (request['2x2_url'] || request.twox2_url) {
+            const imgUrl = request['2x2_url'] || request.twox2_url;
+            attachmentsHtml += `
+                <div class="image-preview" onclick="viewImage('${imgUrl}')">
+                    <span class="image-hint"><i class="bi bi-person-badge"></i> 1x1 Image</span>
+                    <img src="${imgUrl}" alt="1x1 Image">
+                </div>
+            `;
+        }
+        if (showReadiedDoc && request.readied_document) {
+            attachmentsHtml += `
+                <div class="image-preview" onclick="viewImage('${request.readied_document}')">
+                    <span class="image-hint"><i class="bi bi-file-check-fill" style="color:#4CAF50;"></i> Ready Document</span>
+                    <img src="${request.readied_document}" alt="Ready Document" style="border:2px solid #4CAF50;">
+                </div>
+            `;
+        }
+
+        if (!attachmentsHtml) {
+            attachmentsHtml = '<div style="text-align:center; padding:20px; color:#999;"><i class="bi bi-image"></i><br>No attachments</div>';
+        }
+
+        const html = `
+            <div class="status-banner" style="background:${status.color}20;">
+                <i class="bi ${status.icon}" style="color:${status.color}; font-size:24px;"></i>
+                <span style="color:${status.color};">${status.label}</span>
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="bi bi-file-text"></i>
+                    <span>Request Details</span>
+                </div>
+                <div class="info-grid">
+                    <div class="info-row">
+                        <span class="info-label">Document Type</span>
+                        <span class="info-value">${escapeHtml(request.document_type)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Full Name</span>
+                        <span class="info-value">${escapeHtml(request.full_name)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Contact Number</span>
+                        <span class="info-value">${escapeHtml(request.contact_number || 'N/A')}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Address</span>
+                        <span class="info-value">${escapeHtml(request.address || 'N/A')}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Purpose</span>
+                        <span class="info-value">${escapeHtml(request.purpose || request.purpose_of_request || 'Not specified')}</span>
+                    </div>
+                </div>
+            </div>
+
+            ${emergencyHtml}
+
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="bi bi-paperclip"></i>
+                    <span>Attachments</span>
+                </div>
+                ${attachmentsHtml}
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="bi bi-chat-text"></i>
+                    <span>Admin Remarks</span>
+                </div>
+                <div class="info-value" style="font-style:italic;">${escapeHtml(request.admin_notes || 'Your request is being reviewed by the office.')}</div>
+            </div>
+
+            <div class="ref-id">
+                <i class="bi bi-hash"></i> Reference: #${String(request.id).padStart(6, '0')}<br>
+                <i class="bi bi-calendar"></i> Submitted: ${formatDate(request.date_submitted || request.created_at)}
+            </div>
+        `;
+
+        document.getElementById('modalTitle').textContent = 'Document Request Details';
+        document.getElementById('modalBody').innerHTML = html;
+        document.getElementById('detailModal').classList.add('show');
+    }
+
+    // Reservation Details Modal
+    function showReservationDetails(reservation) {
+        const status = getStatusStyles(reservation.status);
+        const days = daysBetween(reservation.date, reservation.date);
+        
+        const html = `
+            <div class="status-banner" style="background:${status.color}20;">
+                <i class="bi ${status.icon}" style="color:${status.color}; font-size:24px;"></i>
+                <span style="color:${status.color};">${status.label}</span>
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>Schedule</span>
+                </div>
+                <div class="info-grid">
+                    <div class="info-row">
+                        <span class="info-label">Court / Venue</span>
+                        <span class="info-value">${escapeHtml(reservation.court)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Date</span>
+                        <span class="info-value">${formatDate(reservation.date)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Time Slot</span>
+                        <span class="info-value">${formatTimeSlot(reservation.time_slot)}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="bi bi-person"></i>
+                    <span>Reservation Info</span>
+                </div>
+                <div class="info-grid">
+                    <div class="info-row">
+                        <span class="info-label">Reserved By</span>
+                        <span class="info-value">${escapeHtml(reservation.full_name)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Purpose</span>
+                        <span class="info-value">${escapeHtml(reservation.purpose)}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="bi bi-chat-text"></i>
+                    <span>Admin Remarks</span>
+                </div>
+                <div class="info-value" style="font-style:italic;">${escapeHtml(reservation.admin_notes || 'Your reservation is pending review.')}</div>
+            </div>
+
+            <div class="ref-id">
+                <i class="bi bi-hash"></i> Reference: #${String(reservation.id).padStart(6, '0')}<br>
+                <i class="bi bi-calendar"></i> Submitted: ${formatDate(reservation.created_at)}
+            </div>
+        `;
+
+        document.getElementById('modalTitle').textContent = 'Reservation Details';
+        document.getElementById('modalBody').innerHTML = html;
+        document.getElementById('detailModal').classList.add('show');
+    }
+
+    // Rental Details Modal
+    function showRentalDetails(rental) {
+        const status = getStatusStyles(rental.status);
+        const days = daysBetween(rental.rental_date, rental.expected_return_date);
+        const total = rental.total_price || 0;
+
+        const paymentStatusHtml = rental.payment_status ? `
+            <div class="payment-badge" style="background:${rental.payment_status === 'PAID' ? '#C8E6C9' : '#FFF9C4'}">
+                <i class="bi ${rental.payment_status === 'PAID' ? 'bi-check-circle-fill' : 'bi-clock'}"></i>
+                <span>${rental.payment_status}</span>
+            </div>
+        ` : '';
+
+        const actualReturnHtml = rental.actual_return_date ? `
+            <div class="info-row">
+                <span class="info-label">Actual Return</span>
+                <span class="info-value">${formatDate(rental.actual_return_date)}</span>
+            </div>
+        ` : '';
+
+        const html = `
+            <div class="status-banner" style="background:${status.color}20;">
+                <i class="bi ${status.icon}" style="color:${status.color}; font-size:24px;"></i>
+                <span style="color:${status.color};">${status.label}</span>
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="bi bi-box-seam"></i>
+                    <span>Equipment Details</span>
+                </div>
+                <div class="info-grid">
+                    <div class="info-row">
+                        <span class="info-label">Equipment Type</span>
+                        <span class="info-value">${escapeHtml(rental.equipment_type)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Quantity</span>
+                        <span class="info-value">${rental.quantity || 'N/A'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Unit Price</span>
+                        <span class="info-value">₱${(rental.equipment_price || 0).toLocaleString()}/day</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="bi bi-calendar-range"></i>
+                    <span>Rental Period</span>
+                </div>
+                <div class="info-grid">
+                    <div class="info-row">
+                        <span class="info-label">Rental Date</span>
+                        <span class="info-value">${formatDate(rental.rental_date)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Expected Return</span>
+                        <span class="info-value">${formatDate(rental.expected_return_date)}</span>
+                    </div>
+                    ${actualReturnHtml}
+                    <div class="info-row">
+                        <span class="info-label">Duration</span>
+                        <span class="info-value">${days} day${days !== 1 ? 's' : ''}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="bi bi-cash-stack"></i>
+                    <span>Payment Summary</span>
+                </div>
+                <div class="info-grid">
+                    <div class="info-row">
+                        <span class="info-label">Renter Name</span>
+                        <span class="info-value">${escapeHtml(rental.renter_name)}</span>
+                    </div>
+                </div>
+                <div class="total-box">
+                    <span class="total-label">Total Amount</span>
+                    <span class="total-amount">₱${total.toLocaleString()}.00</span>
+                </div>
+                ${paymentStatusHtml}
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="bi bi-chat-text"></i>
+                    <span>Admin Remarks</span>
+                </div>
+                <div class="info-value" style="font-style:italic;">${escapeHtml(rental.admin_notes || 'Your rental request is being processed.')}</div>
+            </div>
+
+            <div class="ref-id">
+                <i class="bi bi-hash"></i> Reference: #${String(rental.id).padStart(6, '0')}<br>
+                <i class="bi bi-calendar"></i> Submitted: ${formatDate(rental.created_at)}
+            </div>
+        `;
+
+        document.getElementById('modalTitle').textContent = 'Rental Details';
+        document.getElementById('modalBody').innerHTML = html;
+        document.getElementById('detailModal').classList.add('show');
+    }
+
+    function viewImage(url) {
+        window.open(url, '_blank');
+    }
+
+    function showDetails(item) {
+        if (item.table_source === 'document_requests') {
+            showDocumentDetails(item);
+        } else if (item.table_source === 'reservations') {
+            showReservationDetails(item);
+        } else if (item.table_source === 'rentals') {
+            showRentalDetails(item);
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('detailModal').classList.remove('show');
+    }
+
+    async function fetchAllRequests() {
+        try {
+            const { data: { user } } = await sb.auth.getUser();
+            if (!user) return;
+
+            const [docRes, resRes, renRes] = await Promise.all([
+                sb.from('document_requests').select('*').eq('resident_id', user.id),
+                sb.from('reservations').select('*').eq('resident_id', user.id),
+                sb.from('rentals').select('*').eq('resident_id', user.id),
+            ]);
+
+            const docs = (docRes.data || []).map(d => ({
+                ...d,
+                table_source: 'document_requests',
+                display_name: d.document_type || 'Document Request',
+                display_detail: d.purpose_of_request || d.purpose || '',
+                display_meta: d.address || '',
+                status: d.status || 'INCOMING',
+                date_submitted: d.date_submitted || d.created_at,
+            }));
+
+            const reservations = (resRes.data || []).map(r => ({
+                ...r,
+                table_source: 'reservations',
+                display_name: r.court || 'Court Reservation',
+                display_detail: r.purpose || '',
+                display_meta: r.date ? `${r.date} ${r.time_slot ? '• ' + r.time_slot : ''}` : '',
+                status: r.status || 'INCOMING',
+                date_submitted: r.created_at,
+            }));
+
+            const rentals = (renRes.data || []).map(r => ({
+                ...r,
+                table_source: 'rentals',
+                display_name: r.equipment_type || 'Equipment Rental',
+                display_detail: r.quantity ? `Qty: ${r.quantity}` : '',
+                display_meta: r.rental_date ? `Rental: ${r.rental_date}` : '',
+                status: r.status || 'INCOMING',
+                date_submitted: r.created_at,
+            }));
+
+            allRequests = [...docs, ...reservations, ...rentals]
+                .sort((a, b) => new Date(b.date_submitted) - new Date(a.date_submitted));
+
+            updateBadge();
+            render();
+        } catch (err) {
+            console.error('Fetch error:', err);
+        }
+    }
+
+    function updateBadge() {
+        const count = allRequests.filter(r => getItemTab(r.status) === 'ready').length;
+        const el = document.getElementById('readyBadge');
+        el.textContent = count;
+        el.classList.toggle('visible', count > 0);
+    }
+
+    function render() {
+        const wrap = document.getElementById('requestsWrap');
+        const filtered = allRequests.filter(r => getItemTab(r.status) === currentTab);
+
+        if (filtered.length === 0) {
+            const icon = currentTab === 'history' ? 'bi-clipboard-data'
+                       : currentTab === 'ready' ? 'bi-check-circle'
+                       : 'bi-tray';
+            const sub = currentTab === 'active' ? 'Tap a button above to submit a request'
+                       : currentTab === 'ready' ? 'Items ready for pickup will appear here'
+                       : 'Completed requests will appear here';
+            wrap.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi ${icon}"></i>
+                    <p>No ${currentTab} requests found</p>
+                    <span>${sub}</span>
+                </div>`;
+            return;
+        }
+
+        wrap.innerHTML = filtered.map(item => {
+            const status = getStatusStyles(item.status);
+            const color = getSourceColor(item.table_source);
+            const icon = getSourceIcon(item.table_source);
+            const sourceLabel = getSourceLabel(item.table_source);
+            const dateStr = item.date_submitted ? new Date(item.date_submitted).toLocaleDateString() : 'No date';
+            const ref = 'Ref: ' + (item.id?.toString().substring(0, 8).toUpperCase() || 'N/A');
+
+            const itemDataJson = JSON.stringify(item).replace(/"/g, '&quot;');
+
+            return `
+                <div class="request-card" onclick='showDetails(${itemDataJson})'>
+                    <div class="card-accent" style="background:${color};"></div>
+                    <div class="card-body-wrap">
+                        <div class="card-header">
+                            <div class="left-header">
+                                <div class="avatar" style="background:${color}18;">
+                                    <i class="bi ${icon}" style="color:${color};"></i>
+                                </div>
+                                <div class="header-info">
+                                    <div class="request-title">${escapeHtml(item.display_name)}</div>
+                                    <div class="post-meta">
+                                        <span class="source-label" style="color:${color};">${sourceLabel}</span>
+                                        <span class="date-text">&nbsp;•&nbsp;${dateStr}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="status-badge" style="background:${status.color};">${status.label}</div>
+                        </div>
+                        <div class="card-footer">${ref}</div>
+                    </div>
+                </div>`;
+        }).join('');
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.toggle('active', t.dataset.tab === tab);
+        });
+        render();
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    fetchAllRequests();
+    setInterval(fetchAllRequests, 5000);
+</script>
+
+<script src="/js/sidebar2.js"></script>
+<script>
+    function openLogoutModal() { const m = document.getElementById('logoutModal'); if (m) m.style.display = 'flex'; }
+    function closeLogoutModal() { const m = document.getElementById('logoutModal'); if (m) m.style.display = 'none'; }
+    function confirmLogout() { localStorage.clear(); window.location.href = '/resident-logout'; }
+</script>
+</body>
+</html>

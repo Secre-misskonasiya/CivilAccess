@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Document – CivilAccess</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Lato&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --brand-dark: #2d4a44;
+            --brand-mid:  #386660;
+            --gold:       #fed734;
+            --bg:         #f0f2f5;
+            --card:       #ffffff;
+            --border:     #e4e6eb;
+            --error:      #c62828;
+            --success:    #4caf50;
+            --font-h:     'Sora', sans-serif;
+            --font-b:     'Lato', sans-serif;
+        }
+        body { font-family: var(--font-b); background: var(--bg); }
+
+        .layout {
+  display: flex;
+  height: 100vh;
+ 
+}
+
+
+.content {
+  flex: 1;          
+  min-width: 0;     
+  overflow-y: auto; 
+  overflow-x: hidden;
+}
+
+        /* ── Top nav ── */
+        .topnav {
+            background: var(--brand-dark);
+            border-bottom: 3px solid var(--gold);
+            padding: 15px 24px;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .back-btn {
+            background: none; border: none; color: white;
+            font-size: 22px; cursor: pointer; display: flex; align-items: center;
+            padding: 4px; border-radius: 6px; transition: background 0.2s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.12); }
+        .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-icon {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: rgba(254,215,52,.15); border: 2px solid var(--gold);
+            display: flex; align-items: center; justify-content: center; color: var(--gold);
+        }
+        .nav-name { font-family: var(--font-h); font-weight: 800; color: #fff; }
+        .nav-sub  { font-size: 10px; color: rgba(255,255,255,.5); }
+
+        /* ── Scroll area ── */
+        .scroll-area { padding: 20px; max-width: 640px; margin: 0 auto; width: 100%; padding-bottom: 48px; }
+
+        /* ── Form card — mirrors formCard ── */
+        .form-card {
+            background: white; border-radius: 12px; padding: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.09);
+        }
+        .form-header {
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; margin-bottom: 10px;
+        }
+        .form-header i { font-size: 22px; color: var(--brand-mid); }
+        .form-title  { font-family: var(--font-h); font-size: 20px; font-weight: 800; color: #1a3c34; }
+        .title-underline { width: 100%; height: 1px; background: var(--border); margin-bottom: 20px; }
+
+        /* ── Price banner — mirrors priceHeader ── */
+        .price-banner {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #fff8e1; border-radius: 8px; padding: 12px 16px;
+            margin-bottom: 8px;
+        }
+        .price-label  { font-size: 15px; font-weight: 600; color: #1a3c34; }
+        .price-amount { font-size: 18px; font-weight: 800; color: var(--brand-mid); }
+        .price-underline { width: 100%; height: 1px; background: var(--border); margin-bottom: 20px; }
+
+        /* ── Fields ── */
+        label {
+            display: block;
+            font-family: var(--font-h); font-size: 13px; font-weight: 600; color: #1a3c34;
+            margin-top: 14px; margin-bottom: 7px;
+        }
+        input[type=text],
+        input[type=tel],
+        textarea,
+        select {
+            width: 100%;
+            background: #f8f9fa; border: 1.5px solid var(--border);
+            border-radius: 10px; padding: 12px 14px;
+            font-family: var(--font-b); font-size: 15px; color: #050505;
+            outline: none; transition: border-color 0.2s;
+            appearance: none;
+        }
+        input:focus, textarea:focus, select:focus { border-color: var(--brand-mid); }
+        input.has-error, textarea.has-error, select.has-error { border-color: var(--error) !important; }
+        textarea { resize: vertical; min-height: 90px; }
+
+        /* custom select wrapper */
+        .select-wrap { position: relative; }
+        .select-wrap i {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--brand-mid); pointer-events: none; font-size: 18px;
+        }
+
+        /* ── Error / hint text ── */
+        .error-text { color: var(--error); font-size: 12px; margin-top: 4px; display: none; }
+        .error-text.show { display: block; }
+        .hint-text  { color: var(--success); font-size: 12px; margin-top: 4px; font-weight: 600; display: none; }
+        .hint-text.show { display: block; }
+
+        /* ── Emergency section — mirrors emergencyHeader ── */
+        .emergency-header {
+            display: flex; align-items: center; gap: 8px;
+            margin-top: 20px; margin-bottom: 4px;
+        }
+        .emergency-header i { font-size: 20px; color: #e8560a; }
+        .emergency-title    { font-family: var(--font-h); font-size: 15px; font-weight: 700; color: #e8560a; }
+        .emergency-sub      { font-size: 12px; color: #888; margin-bottom: 10px; margin-left: 28px; }
+
+        /* ── Upload buttons — mirrors uploadBtn ── */
+        .upload-btn {
+            display: flex; align-items: center; gap: 10px;
+            background: #f8f9fa;
+            border: 1.5px dashed var(--brand-mid);
+            border-radius: 10px; padding: 13px 14px;
+            cursor: pointer; transition: all 0.2s;
+            font-family: var(--font-b); font-size: 14px; font-weight: 500;
+            color: var(--brand-mid); width: 100%;
+            margin-top: 0;
+        }
+        .upload-btn:hover { background: #ebf5f3; }
+        .upload-btn.selected {
+            border-style: solid; border-color: var(--success);
+            background: #f1f8e9; color: var(--success);
+        }
+        .upload-btn.has-error { border-color: var(--error); }
+        .upload-btn i { font-size: 20px; }
+
+        /* hidden file inputs */
+        input[type=file] { display: none; }
+
+        /* ── Submit button — mirrors submitBtn ── */
+        .submit-btn {
+            width: 100%; height: 50px;
+            background: var(--brand-mid); color: white;
+            border: none; border-radius: 10px;
+            font-family: var(--font-h); font-size: 15px; font-weight: 700;
+            cursor: pointer; margin-top: 24px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: opacity 0.2s;
+        }
+        .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .submit-btn .spinner {
+            width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.4);
+            border-top-color: white; border-radius: 50%;
+            animation: spin 0.8s linear infinite; display: none;
+        }
+        .submit-btn.loading .spinner { display: block; }
+        .submit-btn.loading .btn-label { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Success modal — mirrors Modal ── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: white; border-radius: 20px; padding: 28px;
+            text-align: center; width: 100%; max-width: 360px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .modal-icon  { font-size: 70px; color: var(--success); display: block; margin-bottom: 12px; }
+        .modal-title { font-family: var(--font-h); font-size: 24px; font-weight: 800; color: #1a3c34; margin-bottom: 10px; }
+        .modal-msg   { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 22px; }
+        .modal-btn {
+            background: var(--brand-mid); color: white;
+            border: none; border-radius: 10px;
+            padding: 12px 32px; font-family: var(--font-h); font-weight: 700;
+            font-size: 15px; cursor: pointer; min-width: 120px;
+        }
+
+        @media (max-width: 768px) { .content { margin-left: 0; } }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <div th:replace="~{fragments/sidebar2 :: sidebar}"></div>
+
+    <div class="content">
+        <nav class="topnav">
+            <button class="back-btn" onclick="history.back()"><i class="bi bi-arrow-left"></i></button>
+            <a class="nav-brand" href="#">
+                <div class="nav-icon"><i class="bi bi-building-fill"></i></div>
+                <div>
+                    <div class="nav-name">CivilAccess</div>
+                    <div class="nav-sub">Barangay Portal</div>
+                </div>
+            </a>
+        </nav>
+
+        <div class="scroll-area">
+            <div class="form-card">
+
+                <div class="form-header">
+                    <i class="bi bi-file-text"></i>
+                    <span class="form-title">Request Document</span>
+                </div>
+                <div class="title-underline"></div>
+
+                <!-- Price banner — shown only for Barangay Clearance -->
+                <div class="price-banner" id="priceBanner" style="display:none;">
+                    <span class="price-label">Document Fee:</span>
+                    <span class="price-amount">₱30.00</span>
+                </div>
+                <div class="price-underline" id="priceUnderline" style="display:none;"></div>
+
+                <!-- Document Type -->
+                <label for="documentType">Document Type *</label>
+                <div class="select-wrap">
+                    <select id="documentType" onchange="onDocTypeChange(this.value)">
+                        <option value="">Select Document</option>
+                        <option th:each="dt : ${documentTypes}" th:value="${dt}" th:text="${dt}"></option>
+                    </select>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <span class="error-text" id="err-documentType">Document type is required</span>
+
+                <!-- Purpose -->
+                <label for="purpose">Purpose of Request *</label>
+                <textarea id="purpose" placeholder="e.g. Scholarship, Employment, Travel"
+                          oninput="validatePurpose(this.value)"></textarea>
+                <span class="error-text" id="err-purpose">Purpose of request is required</span>
+
+                <!-- Emergency Contact Section — only for Barangay ID -->
+                <div id="emergencySection" style="display:none;">
+                    <div class="emergency-header">
+                        <i class="bi bi-heart-pulse"></i>
+                        <span class="emergency-title">Emergency Contact Information</span>
+                    </div>
+                    <p class="emergency-sub">Please provide someone to contact in case of emergency</p>
+
+                    <label for="emergencyName">Emergency Contact Name *</label>
+                    <input type="text" id="emergencyName" placeholder="Full name of emergency contact"
+                           oninput="validateEmergency('emergencyName', this.value)">
+                    <span class="error-text" id="err-emergencyName">Emergency contact name is required</span>
+
+                    <label for="emergencyAddress">Emergency Contact Address *</label>
+                    <textarea id="emergencyAddress" placeholder="Address of emergency contact"
+                              oninput="validateEmergency('emergencyAddress', this.value)"></textarea>
+                    <span class="error-text" id="err-emergencyAddress">Emergency contact address is required</span>
+
+                    <label for="emergencyContact">Emergency Contact Number *</label>
+                    <input type="tel" id="emergencyContact" placeholder="e.g. 09123456789"
+                           oninput="validateEmergency('emergencyContact', this.value)">
+                    <span class="error-text" id="err-emergencyContact">Emergency contact number is required</span>
+                </div>
+
+                <!-- Upload Valid ID -->
+                <label>Upload Valid ID *</label>
+                <button type="button" class="upload-btn" id="uploadIdBtn" onclick="document.getElementById('fileId').click()">
+                    <i class="bi bi-cloud-upload" id="uploadIdIcon"></i>
+                    <span id="uploadIdLabel">Select File</span>
+                </button>
+                <input type="file" id="fileId" accept="image/*" onchange="onFileSelect('id', this)">
+                <span class="error-text" id="err-validID">Valid ID is required</span>
+
+                <!-- Upload Proof of Residency -->
+                <label>Upload Proof of Residency *</label>
+                <button type="button" class="upload-btn" id="uploadProofBtn" onclick="document.getElementById('fileProof').click()">
+                    <i class="bi bi-cloud-upload" id="uploadProofIcon"></i>
+                    <span id="uploadProofLabel">Select File</span>
+                </button>
+                <input type="file" id="fileProof" accept="image/*" onchange="onFileSelect('proof', this)">
+                <span class="error-text" id="err-proofResidency">Proof of residency is required</span>
+
+                <!-- Upload 1x1 Image -->
+                <label>Upload 1x1 Image *</label>
+                <button type="button" class="upload-btn" id="upload1x1Btn" onclick="document.getElementById('file1x1').click()">
+                    <i class="bi bi-cloud-upload" id="upload1x1Icon"></i>
+                    <span id="upload1x1Label">Select File</span>
+                </button>
+                <input type="file" id="file1x1" accept="image/*" onchange="onFileSelect('1x1', this)">
+                <span class="error-text" id="err-twox2Image">1x1 image is required</span>
+
+                <!-- Submit -->
+                <button class="submit-btn" id="submitBtn" onclick="handleSubmit()">
+                    <div class="spinner"></div>
+                    <span class="btn-label" id="submitLabel">SUBMIT REQUEST</span>
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal — mirrors Modal animationType="fade" -->
+<div class="modal-overlay" id="successModal">
+    <div class="modal-box">
+        <i class="bi bi-check-circle-fill modal-icon"></i>
+        <div class="modal-title">Success!</div>
+        <p class="modal-msg" id="modalMsg">Your document request has been submitted successfully.</p>
+        <button class="modal-btn" onclick="closeModal()">OK</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    /* ── Supabase ── */
+    const SUPABASE_URL      = 'https://upfrofppponiqffbssqb.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_tZyxrTJrpd_OD5-TKUkT8Q__DnuY0tj';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    /* ── State — mirrors component state ── */
+    let profileData  = { fullName: '', contactNumber: '', address: '', birthdate: '' };
+    let selectedDoc  = '';
+    let fileIdFile       = null;
+    let fileProofFile    = null;
+    let file1x1File      = null;
+
+    /* ── Fetch profile on load — mirrors fetchUserProfile() ── */
+    (async () => {
+        const { data: { user } } = await sb.auth.getUser();
+        if (!user) return;
+        const { data } = await sb
+            .from('residents')
+            .select('first_name, last_name, mobile_number, address, birth_date')
+            .eq('id', user.id)
+            .single();
+        if (data) {
+            profileData = {
+                fullName:      `${data.first_name} ${data.last_name}`,
+                contactNumber: data.mobile_number,
+                address:       data.address || 'No Address on File',
+                birthdate:     data.birth_date || ''
+            };
+        }
+    })();
+
+    /* ── Document type change — mirrors showPrice / showEmergencySection ── */
+    function onDocTypeChange(val) {
+        selectedDoc = val;
+        // clear error
+        showErr('documentType', false);
+
+        // price banner (Barangay Clearance)
+        const showPrice = val === 'Barangay Clearance';
+        document.getElementById('priceBanner').style.display    = showPrice ? 'flex'  : 'none';
+        document.getElementById('priceUnderline').style.display = showPrice ? 'block' : 'none';
+
+        // emergency section (Barangay ID)
+        const showEmergency = val === 'Barangay ID';
+        document.getElementById('emergencySection').style.display = showEmergency ? 'block' : 'none';
+
+        // update submit label
+        document.getElementById('submitLabel').textContent =
+            showPrice ? 'SUBMIT REQUEST (₱30.00)' : 'SUBMIT REQUEST';
+    }
+
+    /* ── File select — mirrors pickImage() ── */
+    function onFileSelect(type, input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        if (type === 'id') {
+            fileIdFile = file;
+            setUploadSelected('uploadIdBtn', 'uploadIdIcon', 'uploadIdLabel', 'ID Selected', 'err-validID');
+        } else if (type === 'proof') {
+            fileProofFile = file;
+            setUploadSelected('uploadProofBtn', 'uploadProofIcon', 'uploadProofLabel', 'Proof Selected', 'err-proofResidency');
+        } else if (type === '1x1') {
+            file1x1File = file;
+            setUploadSelected('upload1x1Btn', 'upload1x1Icon', 'upload1x1Label', '1x1 Image Selected', 'err-twox2Image');
+        }
+    }
+    function setUploadSelected(btnId, iconId, labelId, text, errId) {
+        const btn   = document.getElementById(btnId);
+        const icon  = document.getElementById(iconId);
+        const label = document.getElementById(labelId);
+        btn.classList.add('selected');
+        btn.classList.remove('has-error');
+        icon.className = 'bi bi-check-circle-fill';
+        label.textContent = text;
+        showErr(errId.replace('err-',''), false);
+    }
+
+    /* ── Validation — mirrors validate functions ── */
+    function validatePurpose(val) {
+        if (!val) { showErr('purpose', true, 'Purpose of request is required'); return false; }
+        if (val.length < 5) { showErr('purpose', true, 'Purpose must be at least 5 characters'); return false; }
+        if (val.length > 500) { showErr('purpose', true, 'Purpose must be less than 500 characters'); return false; }
+        showErr('purpose', false); return true;
+    }
+    function validateEmergency(field, val) {
+        if (field === 'emergencyContact') {
+            if (!val) { showErr(field, true, 'Emergency contact number is required'); return false; }
+            if (!/^[0-9]{10,11}$/.test(val)) { showErr(field, true, 'Please enter a valid contact number (10-11 digits)'); return false; }
+        } else {
+            if (!val) { showErr(field, true, `Emergency contact ${field === 'emergencyName' ? 'name' : 'address'} is required`); return false; }
+        }
+        showErr(field, false); return true;
+    }
+
+    function validateAll() {
+        let ok = true;
+        if (!selectedDoc) { showErr('documentType', true, 'Document type is required'); ok = false; }
+        if (!validatePurpose(document.getElementById('purpose').value)) ok = false;
+        if (!fileIdFile)    { showErr('validID', true, 'Valid ID is required'); document.getElementById('uploadIdBtn').classList.add('has-error'); ok = false; }
+        if (!fileProofFile) { showErr('proofResidency', true, 'Proof of residency is required'); document.getElementById('uploadProofBtn').classList.add('has-error'); ok = false; }
+        if (!file1x1File)   { showErr('twox2Image', true, '1x1 image is required'); document.getElementById('upload1x1Btn').classList.add('has-error'); ok = false; }
+        if (selectedDoc === 'Barangay ID') {
+            if (!validateEmergency('emergencyName',    document.getElementById('emergencyName').value))    ok = false;
+            if (!validateEmergency('emergencyAddress', document.getElementById('emergencyAddress').value)) ok = false;
+            if (!validateEmergency('emergencyContact', document.getElementById('emergencyContact').value)) ok = false;
+        }
+        return ok;
+    }
+
+    /* ── uploadFile — mirrors uploadFile() ── */
+    async function uploadFile(file, path) {
+        const fileName = `${Date.now()}_${file.name}`;
+        const { data, error } = await sb.storage
+            .from('resident-documents')
+            .upload(`${path}/${fileName}`, file, { contentType: file.type, upsert: false });
+        if (error) throw error;
+        const { data: urlData } = sb.storage.from('resident-documents').getPublicUrl(data.path);
+        return urlData.publicUrl;
+    }
+
+    /* ── handleSubmit — mirrors handleSubmit() ── */
+    async function handleSubmit() {
+        if (!validateAll()) {
+            alert('Please fix the errors before submitting.');
+            return;
+        }
+
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.classList.add('loading');
+
+        try {
+            const { data: { user } } = await sb.auth.getUser();
+            if (!user) throw new Error('No user found. Please log in again.');
+
+            const idUrl    = await uploadFile(fileIdFile,    'valid_ids');
+            const proofUrl = await uploadFile(fileProofFile, 'residency_proofs');
+            const imgUrl   = await uploadFile(file1x1File,   '2x2_images');
+
+            const now = new Date().toISOString();
+
+            const insertData = {
+                resident_id:        user.id,
+                full_name:          profileData.fullName,
+                contact_number:     profileData.contactNumber,
+                address:            profileData.address,
+                purpose_of_request: document.getElementById('purpose').value,
+                valid_id_url:       idUrl,
+                residency_proof_url: proofUrl,
+                '2x2_url':          imgUrl,
+                document_type:      selectedDoc,
+                request_type:       'Document Request',
+                status:             'INCOMING',
+                date_submitted:     now,
+                created_at:         now,
+                date_processed:     now,
+            };
+
+            if (selectedDoc === 'Barangay ID') {
+                insertData.emergency_name    = document.getElementById('emergencyName').value;
+                insertData.emergency_address = document.getElementById('emergencyAddress').value;
+                insertData.emergency_contact = document.getElementById('emergencyContact').value;
+                insertData.birthdate         = profileData.birthdate;
+            }
+
+            const { error } = await sb.from('document_requests').insert([insertData]);
+            if (error) throw error;
+
+            /* ── show success modal — mirrors setShowSuccessModal(true) ── */
+            const showPrice = selectedDoc === 'Barangay Clearance';
+            document.getElementById('modalMsg').textContent = showPrice
+                ? 'Your document request has been submitted successfully. Please proceed to the barangay hall to pay ₱30.00 once your document is ready for pickup.'
+                : 'Your document request has been submitted successfully. Please proceed to the barangay hall once your document is ready for pickup.';
+            document.getElementById('successModal').classList.add('show');
+
+        } catch (err) {
+            console.error('Submission error:', err);
+            alert('Submission Failed: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+        }
+    }
+
+    /* ── closeModal — mirrors handleModalClose() ── */
+    function closeModal() {
+        document.getElementById('successModal').classList.remove('show');
+        window.location.href = '/resident/my-requests';
+    }
+
+    /* ── helpers ── */
+    function showErr(field, show, msg) {
+        const el = document.getElementById('err-' + field);
+        if (!el) return;
+        if (msg) el.textContent = msg;
+        el.classList.toggle('show', show);
+        const input = document.getElementById(field);
+        if (input) input.classList.toggle('has-error', show);
+    }
+</script>
+
+<script src="/js/sidebar2.js"></script>
+<script>
+    function openLogoutModal()  { const m = document.getElementById('logoutModal'); if (m) m.style.display = 'flex'; }
+    function closeLogoutModal() { const m = document.getElementById('logoutModal'); if (m) m.style.display = 'none'; }
+    function confirmLogout()    { localStorage.clear(); window.location.href = '/resident-logout'; }
+</script>
+</body>
+</html>
