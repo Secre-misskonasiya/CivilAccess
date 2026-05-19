@@ -52,7 +52,6 @@ public interface CensusRecordRepository extends JpaRepository<CensusRecord, Long
     @Query("""
           SELECT c FROM CensusRecord c
           WHERE c.censusStatus != 'ARCHIVED'
-            AND c.accountStatus = 'verified'
             AND (c.isSeniorCitizen = true OR c.isPwd = true)
             AND c.latitude IS NOT NULL
             AND c.longitude IS NOT NULL

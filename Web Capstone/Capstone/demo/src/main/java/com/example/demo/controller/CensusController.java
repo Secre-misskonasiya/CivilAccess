@@ -260,7 +260,10 @@ public class CensusController {
             m.put("longitude",       r.getLongitude());
             m.put("isSeniorCitizen", r.isSeniorCitizen());
             m.put("isPwd",           r.isPwd());
-            m.put("verificationStatus", r.getAccountStatus()); // "verified"
+            m.put("verificationStatus",        r.getAccountStatus());
+            m.put("emergencyContactName",      r.getEmergencyContactName());
+            m.put("emergencyContactNumber",    r.getEmergencyContactNumber());
+            m.put("emergencyContactRelation",  r.getEmergencyContactRelation());
             return m;
         }).collect(java.util.stream.Collectors.toList());
         return ResponseEntity.ok(result);

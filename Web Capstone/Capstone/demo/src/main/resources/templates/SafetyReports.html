@@ -683,6 +683,78 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
+
+    /* ============================================
+       INCIDENT MAP TAB
+       ============================================ */
+    #tab-incidentmap {
+        display: flex;
+        flex-direction: column;
+        /* Fill whatever height the .panel gives after header + toolbar */
+        height: calc(100vh - 220px);
+        min-height: 500px;
+    }
+    #tab-incidentmap.d-none {
+        display: none !important;
+    }
+    #incidentMap {
+        flex: 1;
+        width: 100%;
+        border-radius: 0 0 8px 8px;
+        /* Leaflet needs an explicit height on the element itself */
+        min-height: 0;
+    }
+    .incident-map-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e0e0e0;
+        flex-wrap: wrap;
+        flex-shrink: 0;
+    }
+    .incident-map-toolbar .map-stat {
+        font-size: 13px;
+        color: #555;
+        margin-left: auto;
+    }
+    .incident-map-toolbar .map-stat span {
+        font-weight: bold;
+        color: #2d4a44;
+    }
+    .map-legend {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+    .map-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        color: #555;
+    }
+    .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        border: 1.5px solid rgba(0,0,0,0.15);
+    }
+    /* Make the panel itself a flex column so the map tab can stretch */
+    .panel {
+        display: flex;
+        flex-direction: column;
+    }
+    .panel .panel-inner {
+        flex: 1;
+    }
+    /* But only the incidentmap tab should stretch — others scroll */
+    .panel .panel-inner:not(#tab-incidentmap) {
+        flex: unset;
+    }
 </style>
 
 <meta charset="UTF-8">
@@ -782,6 +854,7 @@
         <div class="tab" th:classappend="${currentTab == 'inprogress' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=inprogress'">In Progress <span class="tab-badge" id="badge-inprogress" th:text="${inProgressCount}">0</span></div>
         <div class="tab" th:classappend="${currentTab == 'resolved' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=resolved'">Resolved <span class="tab-badge" id="badge-resolved" th:text="${resolvedCount}">0</span></div>
         <div class="tab" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=archive'">Archive <span class="tab-badge" id="badge-archive" th:text="${archivedCount}">0</span></div>
+        <div class="tab" th:classappend="${currentTab == 'incidentmap' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=incidentmap'"><i class="bi bi-map"></i> Incident Map</div>
     </div>
 
     <!-- Panel -->
@@ -913,6 +986,59 @@
             </div>
         </div>
 
+        <!-- ============================================================
+             INCIDENT MAP TAB
+             ============================================================ -->
+        <div id="tab-incidentmap" class="panel-inner" th:classappend="${currentTab != 'incidentmap' ? 'd-none' : ''}">
+            <div class="panel-header"><i class="bi bi-map me-2"></i>Incident Map — All Reports</div>
+            <div class="incident-map-toolbar">
+                <div class="map-legend">
+                    <span style="font-size:12px;font-weight:600;color:#555;margin-right:4px;">Priority:</span>
+                    <div class="map-legend-item"><span class="legend-dot" style="background:#e74c3c;"></span> High</div>
+                    <div class="map-legend-item"><span class="legend-dot" style="background:#e67e22;"></span> Medium</div>
+                    <div class="map-legend-item"><span class="legend-dot" style="background:#27ae60;"></span> Low</div>
+                    <span style="font-size:12px;font-weight:600;color:#555;margin-left:10px;margin-right:4px;">Cluster:</span>
+                    <div class="map-legend-item">
+                        <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#e74c3c;color:white;font-size:10px;font-weight:bold;">3</span>
+                        Multiple incidents
+                    </div>
+                    <span style="font-size:12px;font-weight:600;color:#555;margin-left:10px;margin-right:4px;">Boundary:</span>
+                    <div class="map-legend-item">
+                        <span style="display:inline-block;width:22px;height:3px;background:#2d4a44;border-radius:2px;opacity:0.7;"></span>
+                        Brgy. San Sebastian
+                    </div>
+                </div>
+                                <!-- Resident layer legend + toggles -->
+                <span style="font-size:12px;font-weight:600;color:#555;margin-left:10px;margin-right:4px;">Residents:</span>
+                <div class="map-legend-item">
+                    <span class="legend-dot" style="background:#FED734;border-color:#c0a000;border-radius:3px;transform:rotate(45deg);display:inline-block;width:11px;height:11px;"></span>
+                    Senior
+                </div>
+                <div class="map-legend-item">
+                    <span class="legend-dot" style="background:#27ae60;border-color:#1a7a3a;border-radius:3px;transform:rotate(45deg);display:inline-block;width:11px;height:11px;"></span>
+                    PWD
+                </div>
+                <div class="map-legend-item">
+                    <span class="legend-dot" style="background:#e67e22;border-color:#c0560a;border-radius:3px;transform:rotate(45deg);display:inline-block;width:11px;height:11px;"></span>
+                    Both
+                </div>
+                <button id="toggle-senior-btn"
+                    onclick="toggleResidentLayer('senior')"
+                    style="padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;
+                        border:1.5px solid #c0a000;background:#fffde7;color:#8a6800;cursor:pointer">
+                    👴 Toggle Seniors
+                </button>
+                <button id="toggle-pwd-btn"
+                    onclick="toggleResidentLayer('pwd')"
+                    style="padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;
+                        border:1.5px solid #1a7a3a;background:#f1f8e9;color:#2e7d32;cursor:pointer">
+                    ♿ Toggle PWD
+                </button>
+                <div class="map-stat">Showing <span id="map-visible-count">0</span> of <span id="map-total-count">0</span> reports</div>
+            </div>
+            <div id="incidentMap"></div>
+        </div>
+
     </div>
 
 </div>
@@ -992,11 +1118,27 @@
     let pollingInterval = null;
     let lastSeenId = 0;
 
+    // ============================================
+    // INCIDENT MAP VARIABLES
+    // ============================================
+    let incidentMapInstance = null;
+    let incidentMapMarkers = [];      // { marker, data, circleMarker } objects
+    let incidentMapInitialized = false;
+    let allReportsData = []; 
+    let allResidentData      = [];
+    let residentMarkers      = [];
+    let showSeniorLayer      = true;
+    let showPwdLayer         = true;         // all fetched reports for the map
+    let mapSearchValue = '';
 
-        window.onload = function() {
-                const status = document.getElementById("accountStatus").value;
-                if (status === "New" || status === 'Newly Updated') { document.getElementById("forcePasswordModal").style.display = "block"; document.body.style.overflow = "hidden"; }
-            };
+    window.onload = function() {
+        const status = document.getElementById("accountStatus") ? document.getElementById("accountStatus").value : null;
+        if (status === "New" || status === 'Newly Updated') {
+            document.getElementById("forcePasswordModal").style.display = "block";
+            document.body.style.overflow = "hidden";
+        }
+    };
+
     // ============================================
     // SUCCESS MODAL WITH RELOAD ON OK
     // ============================================
@@ -1044,6 +1186,13 @@
     function applyTypeFilter() {
         const activePanel = document.querySelector('.panel-inner:not(.d-none)');
         if (!activePanel) return;
+
+        // If incident map tab is active, re-render map markers
+        if (activePanel.id === 'tab-incidentmap') {
+            renderIncidentMapMarkers();
+            return;
+        }
+
         const rows = activePanel.querySelectorAll('tbody tr');
         rows.forEach(row => {
             const typeCell = row.querySelector('.type-cell');
@@ -1068,8 +1217,17 @@
     
     document.getElementById('report-search').addEventListener('keyup', function() {
         const searchValue = this.value.toLowerCase();
+        mapSearchValue = searchValue;
+
         const activePanel = document.querySelector('.panel-inner:not(.d-none)');
         if (!activePanel) return;
+
+        // If incident map tab is active, re-render map markers
+        if (activePanel.id === 'tab-incidentmap') {
+            renderIncidentMapMarkers();
+            return;
+        }
+
         const rows = activePanel.querySelectorAll('tbody tr');
         rows.forEach(row => {
             const text = row.textContent.toLowerCase();
@@ -1137,7 +1295,6 @@
                 const priorityClass = data.priority === 'HIGH' ? 'priority-high' : data.priority === 'MEDIUM' ? 'priority-medium' : 'priority-low';
                 const statusColor = getStatusColor(data.status);
 
-                // Build resolution block if resolved
                 let resolutionBlock = '';
                 if (data.resolutionActions || data.resolutionResponseTime || data.resolutionNotes) {
                     resolutionBlock = `
@@ -1148,47 +1305,28 @@
                         </div>`;
                 }
 
-                // -----------------------------------------------
-                // Two-column layout
-                // Left  → 3 stacked cards (Reporter, Incident, Description)
-                // Right → Leaflet map (or no-map placeholder)
-                // -----------------------------------------------
                 document.getElementById('viewModalBody').innerHTML = `
                     <div class="vr-layout">
-
-                        <!-- LEFT: stacked info cards -->
                         <div class="vr-left">
-
-                            <!-- Card 1: Reporter -->
                             <div class="vr-card">
-                                <div class="vr-card-icon">
-                                    <i class="bi bi-person-fill"></i>
-                                </div>
+                                <div class="vr-card-icon"><i class="bi bi-person-fill"></i></div>
                                 <div class="vr-card-body">
                                     <div class="vr-card-label">Submitted By</div>
                                     <div class="vr-card-value">${escapeHtml(data.reporterName) || 'Anonymous'}</div>
                                     <div class="vr-card-sub">${escapeHtml(data.reporterContact) || 'No contact info'}</div>
                                 </div>
                             </div>
-
-                            <!-- Card 2: Incident type + location -->
                             <div class="vr-card">
-                                <div class="vr-card-icon">
-                                    <i class="bi bi-exclamation-triangle-fill"></i>
-                                </div>
+                                <div class="vr-card-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
                                 <div class="vr-card-body">
                                     <div class="vr-card-label">Incident Type &amp; Location</div>
                                     <div class="vr-card-value">${escapeHtml(data.type) || 'General Incident'}</div>
                                     <div class="vr-card-sub"><i class="bi bi-geo-alt-fill" style="color:#e74c3c;font-size:12px;"></i> ${escapeHtml(data.location) || 'No address provided'}</div>
                                 </div>
                             </div>
-
-                            <!-- Card 3: Description + status/priority + resolution -->
                             <div class="vr-card" style="flex-direction: column; align-items: stretch;">
                                 <div style="display:flex; gap:16px; align-items:flex-start;">
-                                    <div class="vr-card-icon" style="flex-shrink:0;">
-                                        <i class="bi bi-file-text-fill"></i>
-                                    </div>
+                                    <div class="vr-card-icon" style="flex-shrink:0;"><i class="bi bi-file-text-fill"></i></div>
                                     <div class="vr-card-body">
                                         <div class="vr-card-label">Report Details</div>
                                         <div class="vr-card-value" style="font-size:14px;font-weight:600;margin-bottom:6px;">${escapeHtml(data.title) || 'Untitled'}</div>
@@ -1208,28 +1346,19 @@
                                 </div>
                                 ${resolutionBlock}
                             </div>
-
                         </div>
-
-                        <!-- RIGHT: map -->
                         <div class="vr-right">
                             ${hasLocation
                                 ? `<div id="viewMap"></div>`
-                                : `<div class="vr-no-map">
-                                       <i class="bi bi-map"></i>
-                                       <span>No location coordinates available</span>
-                                   </div>`
+                                : `<div class="vr-no-map"><i class="bi bi-map"></i><span>No location coordinates available</span></div>`
                             }
                         </div>
-
                     </div>
                 `;
 
-                // Show / hide Approve button
                 const approveBtn = document.getElementById('modalApproveBtn');
                 approveBtn.style.display = data.status === 'INCOMING' ? 'inline-block' : 'none';
 
-                // Destroy previous map
                 if (currentMap) { currentMap.remove(); currentMap = null; }
 
                 const modalEl = document.getElementById('viewReportModal');
@@ -1241,21 +1370,83 @@
                         const mapContainer = document.getElementById('viewMap');
                         if (!mapContainer) return;
                         const map = L.map('viewMap').setView([data.latitude, data.longitude], 16);
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                            attribution: '© OpenStreetMap contributors'
-                        }).addTo(map);
-                        const redIcon = L.icon({
-                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                            iconSize: [25, 41], iconAnchor: [12, 41],
-                            popupAnchor: [1, -34], shadowSize: [41, 41]
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                const redIcon = L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41], iconAnchor: [12, 41],
+                    popupAnchor: [1, -34], shadowSize: [41, 41]
+                });
+                L.marker([data.latitude, data.longitude], { icon: redIcon })
+                    .addTo(map)
+                    .bindPopup(`<b>${escapeHtml(data.title || 'Report Location')}</b>`)
+                    .openPopup();
+
+                // ── Priority resident pins ──
+                fetch('/Resident-census/api/priority-residents')
+                    .then(r => r.json())
+                    .then(residents => {
+                        residents.forEach(res => {
+                            const lat = parseFloat(res.latitude);
+                            const lng = parseFloat(res.longitude);
+                            if (isNaN(lat) || isNaN(lng)) return;
+
+                            const isSenior = !!res.isSeniorCitizen;
+                            const isPwd    = !!res.isPwd;
+                            const color    = (isSenior && isPwd) ? '#e67e22' : isSenior ? '#FED734' : '#27ae60';
+                            const border   = (isSenior && isPwd) ? '#c0560a' : isSenior ? '#c0a000' : '#1a7a3a';
+                            const label    = (isSenior && isPwd) ? 'Senior & PWD' : isSenior ? 'Senior Citizen' : 'PWD';
+                            const emoji    = (isSenior && isPwd) ? '★' : isSenior ? '👴' : '♿';
+                            const fullName = `${res.lastName || ''}, ${res.firstName || ''}`.replace(/^,\s*/, '');
+
+                            const icon = L.divIcon({
+                                html: `<div style="
+                                    width:22px;height:22px;
+                                    transform:rotate(45deg);
+                                    background:${color};
+                                    border:2.5px solid ${border};
+                                    border-radius:4px;
+                                    display:flex;align-items:center;justify-content:center;
+                                    box-shadow:0 2px 6px rgba(0,0,0,.3);
+                                "><span style="transform:rotate(-45deg);font-size:10px;line-height:1">${emoji}</span></div>`,
+                                className: '',
+                                iconSize: [22, 22],
+                                iconAnchor: [11, 11],
+                                popupAnchor: [0, -14]
+                            });
+
+                            L.marker([lat, lng], { icon, draggable: false })
+                                .addTo(map)
+                                .bindPopup(`
+                                    <div style="min-width:210px;font-family:Arial,sans-serif;padding:4px 0">
+                                        <div style="font-weight:700;font-size:13px;margin-bottom:6px;color:#1a1a1a">
+                                            ${escapeHtml(fullName) || '—'}
+                                        </div>
+                                        <div style="margin-bottom:8px">
+                                            <span style="background:${color};color:${(isSenior&&!isPwd)?'#5a4200':'white'};
+                                                padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700">
+                                                ${label}
+                                            </span>
+                                        </div>
+                                        <div style="font-size:12px;color:#555;line-height:1.8;border-top:1px solid #f0f0f0;padding-top:6px">
+                                            <div><strong style="color:#2d4a44">Address:</strong> ${escapeHtml(res.address) || '—'}</div>
+                                            <div><strong style="color:#2d4a44">Emergency Contact:</strong>
+                                                ${escapeHtml(res.emergencyContactName) || '—'}
+                                                ${res.emergencyContactRelation ? '(' + escapeHtml(res.emergencyContactRelation) + ')' : ''}
+                                            </div>
+                                            <div><strong style="color:#2d4a44">Contact No.:</strong>
+                                                ${escapeHtml(res.emergencyContactNumber) || '—'}
+                                            </div>
+                                        </div>
+                                    </div>`, { maxWidth: 250 });
                         });
-                        L.marker([data.latitude, data.longitude], { icon: redIcon })
-                            .addTo(map)
-                            .bindPopup(`<b>${escapeHtml(data.title || 'Report Location')}</b>`)
-                            .openPopup();
-                        map.invalidateSize();
-                        currentMap = map;
+                    })
+                    .catch(err => console.warn('Could not load priority residents:', err));
+
+                map.invalidateSize();
+                currentMap = map;
                     });
                 }
 
@@ -1413,7 +1604,444 @@
         if (pollingInterval) clearInterval(pollingInterval); 
         pollingInterval = setInterval(pollReports, 5000); 
     }
-    
+
+    // ============================================
+    // INCIDENT MAP LOGIC
+    // ============================================
+
+    // Barangay San Sebastian, Kawit boundary polygon
+    // (same coordinates as the React Native app)
+    const SAN_SEBASTIAN_POLYGON = [
+        [14.418865, 120.886515],
+        [14.418666, 120.887862], [14.418969, 120.887902],
+        [14.419010, 120.889089], [14.419495, 120.890312],
+        [14.419868, 120.891458], [14.421015, 120.892997],
+        [14.420850, 120.894121], [14.421649, 120.895839],
+        [14.422202, 120.897952], [14.423068, 120.897849],
+        [14.423119, 120.901125], [14.424041, 120.901272],
+        [14.424003, 120.901537], [14.423712, 120.901693],
+        [14.423442, 120.901698], [14.422226, 120.902297],
+        [14.421938, 120.902353], [14.421616, 120.902259],
+        [14.421310, 120.901863], [14.421144, 120.901766],
+        [14.420634, 120.901951], [14.420445, 120.901895],
+        [14.420210, 120.902035], [14.420090, 120.902842],
+        [14.419753, 120.902879], [14.419026, 120.902860],
+        [14.419009, 120.903096], [14.418809, 120.903301],
+        [14.418490, 120.902674], [14.418246, 120.902392],
+        [14.417720, 120.901458], [14.416779, 120.900345],
+        [14.415834, 120.899736], [14.414386, 120.896173],
+        [14.413767, 120.895386], [14.411402, 120.895039],
+        [14.410154, 120.894599], [14.409451, 120.893831],
+        [14.408851, 120.892746],
+        [14.409384, 120.892449], [14.409930, 120.891833],
+        [14.410030, 120.891627], [14.411015, 120.890809],
+        [14.411201, 120.890131], [14.411176, 120.889748],
+        [14.411426, 120.889479], [14.411647, 120.889479],
+        [14.414170, 120.887581], [14.415289, 120.887273],
+        [14.415541, 120.886679], [14.415663, 120.886825],
+        [14.418853, 120.886512]
+    ];
+
+    function getPriorityColor(priority) {
+        switch ((priority || '').toUpperCase()) {
+            case 'HIGH':   return '#e74c3c';
+            case 'MEDIUM': return '#e67e22';
+            case 'LOW':    return '#27ae60';
+            default:       return '#888888';
+        }
+    }
+
+    // Maps backend status values (matching the model) to readable labels
+    function getStatusLabel(status) {
+        switch ((status || '').toUpperCase()) {
+            case 'INCOMING':            return 'Incoming';
+            case 'APPROVED':            return 'Approved';
+            case 'IN_PROGRESS':         return 'In Progress';
+            case 'RESOLVED':            return 'Resolved';
+            case 'ARCHIVED_RESOLVED':   return 'Archived (Resolved)';
+            case 'ARCHIVED_UNRESOLVED': return 'Archived (Unresolved)';
+            default:                    return status || 'Unknown';
+        }
+    }
+
+    function getStatusBadgeColor(status) {
+        switch ((status || '').toUpperCase()) {
+            case 'INCOMING':            return '#FF9800';
+            case 'APPROVED':            return '#FF9800';
+            case 'IN_PROGRESS':         return '#2bb6f7';
+            case 'RESOLVED':            return '#44C375';
+            case 'ARCHIVED_RESOLVED':   return '#6c757d';
+            case 'ARCHIVED_UNRESOLVED': return '#6c757d';
+            default:                    return '#888';
+        }
+    }
+
+    function initIncidentMap() {
+        if (incidentMapInitialized) {
+            if (incidentMapInstance) {
+                setTimeout(() => incidentMapInstance.invalidateSize(), 150);
+            }
+            return;
+        }
+
+        const mapContainer = document.getElementById('incidentMap');
+        if (!mapContainer) return;
+
+        // Center on Barangay San Sebastian, Kawit
+        incidentMapInstance = L.map('incidentMap', {
+            // Markers are read-only view — disable drag on the map itself is fine,
+            // but we keep pan/zoom for navigation. Markers just won't be draggable.
+            zoomControl: true,
+            scrollWheelZoom: true
+        }).setView([14.4160, 120.8950], 14);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(incidentMapInstance);
+
+        // Draw the Barangay San Sebastian boundary polygon
+        L.polygon(SAN_SEBASTIAN_POLYGON, {
+            color: '#2d4a44',
+            weight: 2.5,
+            opacity: 0.75,
+            fillColor: '#2d4a44',
+            fillOpacity: 0.06,
+            dashArray: '6 4',
+            interactive: false   // boundary is non-clickable decoration
+        }).addTo(incidentMapInstance);
+
+        incidentMapInitialized = true;
+
+        fetchAllReportsForMap();
+        fetchResidentOverlay();
+    }
+
+    function fetchAllReportsForMap() {
+        fetch('/safety-reports/api/all')
+            .then(r => r.json())
+            .then(reports => {
+                allReportsData = reports;
+                document.getElementById('map-total-count').textContent = reports.length;
+                renderIncidentMapMarkers();
+            })
+            .catch(err => {
+                console.error('Error loading reports for map:', err);
+            });
+    }
+    function fetchResidentOverlay() {
+        fetch('/Resident-census/api/priority-residents')
+            .then(r => r.json())
+            .then(data => {
+                allResidentData = data;
+                renderResidentMarkers();
+            })
+            .catch(err => console.warn('Resident overlay unavailable:', err));
+    }
+
+    function renderResidentMarkers() {
+        if (!incidentMapInstance) return;
+        residentMarkers.forEach(m => incidentMapInstance.removeLayer(m));
+        residentMarkers = [];
+
+        allResidentData.forEach(res => {
+            const isSenior = !!res.isSeniorCitizen;
+            const isPwd    = !!res.isPwd;
+            const lat = parseFloat(res.latitude);
+            const lng = parseFloat(res.longitude);
+            if (isNaN(lat) || isNaN(lng)) return;
+
+            // Skip hidden layers
+            if (isSenior && !isPwd && !showSeniorLayer) return;
+            if (isPwd    && !isSenior && !showPwdLayer) return;
+            if (isSenior && isPwd && !showSeniorLayer && !showPwdLayer) return;
+
+            // Pin colour: yellow=senior only, green=pwd only, orange=both
+            const color  = (isSenior && isPwd) ? '#e67e22'
+                        : isSenior            ? '#FED734'
+                        :                       '#27ae60';
+            const border = (isSenior && isPwd) ? '#c0560a'
+                        : isSenior            ? '#c0a000'
+                        :                       '#1a7a3a';
+            const label  = (isSenior && isPwd) ? 'Senior & PWD'
+                        : isSenior            ? 'Senior Citizen'
+                        :                       'PWD';
+            const emoji  = (isSenior && isPwd) ? '★' : isSenior ? '👴' : '♿';
+
+            // Diamond DivIcon — matches the rounded-square style, distinct from circle incidents
+            const icon = L.divIcon({
+                html: `<div style="
+                    width:22px;height:22px;
+                    transform:rotate(45deg);
+                    background:${color};
+                    border:2.5px solid ${border};
+                    border-radius:4px;
+                    display:flex;align-items:center;justify-content:center;
+                    box-shadow:0 2px 6px rgba(0,0,0,.3);
+                "><span style="transform:rotate(-45deg);font-size:10px;line-height:1">${emoji}</span></div>`,
+                className: '',
+                iconSize:   [22, 22],
+                iconAnchor: [11, 11],
+                popupAnchor:[0, -14]
+            });
+
+            const fullName = `${res.lastName || ''}, ${res.firstName || ''}`.replace(/^,\s*/,'');
+            const marker = L.marker([lat, lng], { icon, draggable: false });
+            marker.bindPopup(`
+            <div style="min-width:210px;font-family:Arial,sans-serif;padding:4px 0">
+                <div style="font-weight:700;font-size:13px;margin-bottom:6px;color:#1a1a1a">
+                    ${escapeHtml(fullName) || '—'}
+                </div>
+                <div style="margin-bottom:8px;display:flex;flex-wrap:wrap;gap:4px">
+                    <span style="background:${color};color:${(isSenior&&!isPwd)?'#5a4200':'white'};
+                        padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700">
+                        ${label}
+                    </span>
+                    <span style="background:#d4edda;color:#155724;padding:2px 8px;
+                        border-radius:10px;font-size:11px;font-weight:600">
+                        ✓ Verified
+                    </span>
+                </div>
+                <div style="font-size:12px;color:#555;line-height:1.8;border-top:1px solid #f0f0f0;padding-top:6px">
+                    <div><i class="bi bi-house-fill" style="color:#2d4a44"></i>
+                        <strong style="color:#2d4a44"> Address:</strong>
+                        ${escapeHtml(res.address) || '—'}
+                    </div>
+                    <div><i class="bi bi-person-fill" style="color:#2d4a44"></i>
+                        <strong style="color:#2d4a44"> Emergency Contact:</strong>
+                        ${escapeHtml(res.emergencyContactName) || '—'}
+                        ${res.emergencyContactRelation ? '(' + escapeHtml(res.emergencyContactRelation) + ')' : ''}
+                    </div>
+                    <div><i class="bi bi-telephone-fill" style="color:#2d4a44"></i>
+                        <strong style="color:#2d4a44"> Contact No.:</strong>
+                        ${escapeHtml(res.emergencyContactNumber) || '—'}
+                    </div>
+                </div>
+            </div>`, { maxWidth: 250 });
+
+            marker.addTo(incidentMapInstance);
+            residentMarkers.push(marker);
+        });
+    }
+
+    function toggleResidentLayer(type) {
+        if (type === 'senior') showSeniorLayer = !showSeniorLayer;
+        else                   showPwdLayer    = !showPwdLayer;
+        const btn = document.getElementById('toggle-' + type + '-btn');
+        if (btn) btn.style.opacity = (type === 'senior' ? showSeniorLayer : showPwdLayer) ? '1' : '0.45';
+        renderResidentMarkers();
+    }
+
+    function reportMatchesFilters(report) {
+        if (currentTypeFilter !== 'all') {
+            if ((report.type || '') !== currentTypeFilter) return false;
+        }
+        if (mapSearchValue) {
+            const haystack = [report.title, report.location, report.reporterName, report.type, report.description]
+                .join(' ').toLowerCase();
+            if (!haystack.includes(mapSearchValue)) return false;
+        }
+        return true;
+    }
+
+    function renderIncidentMapMarkers() {
+        if (!incidentMapInstance) return;
+
+        // Remove all existing markers
+        incidentMapMarkers.forEach(m => {
+            if (m.marker) incidentMapInstance.removeLayer(m.marker);
+        });
+        incidentMapMarkers = [];
+
+        const filtered = allReportsData.filter(r =>
+            r.latitude && r.longitude &&
+            r.latitude !== 0 && r.longitude !== 0 &&
+            reportMatchesFilters(r)
+        );
+
+        document.getElementById('map-visible-count').textContent = filtered.length;
+
+        if (filtered.length === 0) return;
+
+        // ── Cluster nearby markers (within ~0.0015 deg ≈ 150m) ────────────
+        const CLUSTER_RADIUS = 0.0015;
+        const groups = [];
+        const assigned = new Set();
+
+        filtered.forEach((report, i) => {
+            if (assigned.has(i)) return;
+            const group = [report];
+            assigned.add(i);
+            filtered.forEach((other, j) => {
+                if (assigned.has(j)) return;
+                const dlat = Math.abs(report.latitude - other.latitude);
+                const dlng = Math.abs(report.longitude - other.longitude);
+                if (dlat < CLUSTER_RADIUS && dlng < CLUSTER_RADIUS) {
+                    group.push(other);
+                    assigned.add(j);
+                }
+            });
+            groups.push(group);
+        });
+
+        groups.forEach(group => {
+            const centerLat = group.reduce((s, r) => s + r.latitude, 0) / group.length;
+            const centerLng = group.reduce((s, r) => s + r.longitude, 0) / group.length;
+
+            if (group.length === 1) {
+                // ── Single pin — colored circle marker, NOT draggable ──────
+                const report = group[0];
+                const color = getPriorityColor(report.priority);
+                const statusColor = getStatusBadgeColor(report.status);
+                const priorityClass = (report.priority || '').toUpperCase() === 'HIGH' ? 'priority-high'
+                    : (report.priority || '').toUpperCase() === 'MEDIUM' ? 'priority-medium' : 'priority-low';
+
+                const marker = L.circleMarker([report.latitude, report.longitude], {
+                    radius: 11,
+                    fillColor: color,
+                    color: '#ffffff',
+                    weight: 2.5,
+                    opacity: 1,
+                    fillOpacity: 0.92,
+                    // draggable is not an option for circleMarker — it's inherently fixed
+                    interactive: true
+                });
+
+                marker.bindPopup(`
+                    <div style="min-width:210px;font-family:Arial,sans-serif;padding:4px 0;">
+                        <div style="font-weight:bold;font-size:14px;color:#1a1a1a;margin-bottom:6px;line-height:1.3;">
+                            ${escapeHtml(report.title) || 'Untitled'}
+                        </div>
+                        <div style="font-size:12px;color:#555;margin-bottom:5px;">
+                            <i class="bi bi-geo-alt-fill" style="color:#e74c3c;"></i>
+                            ${escapeHtml(report.location) || 'No location'}
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+                            <span class="badge-priority ${priorityClass}" style="font-size:11px;">
+                                ${report.priority || 'N/A'}
+                            </span>
+                            <span style="background:${statusColor};color:white;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">
+                                ${getStatusLabel(report.status)}
+                            </span>
+                        </div>
+                        <div style="font-size:11px;color:#888;margin-bottom:8px;">
+                            <i class="bi bi-person"></i> ${escapeHtml(report.reporterName) || 'N/A'}
+                            &nbsp;·&nbsp;
+                            <i class="bi bi-calendar3"></i> ${report.dateSubmitted || 'N/A'}
+                        </div>
+                        <button onclick="viewReport(${report.id})" class="view-btn" style="font-size:12px;padding:5px 12px;width:100%;">
+                            <i class="bi bi-eye"></i> View Report
+                        </button>
+                    </div>
+                `, { maxWidth: 260 });
+
+                marker.addTo(incidentMapInstance);
+                incidentMapMarkers.push({ marker });
+
+            } else {
+                // ── Cluster bubble — DivIcon with count, NOT draggable ─────
+                const priorities = group.map(r => (r.priority || '').toUpperCase());
+                const clusterColor = priorities.includes('HIGH') ? '#e74c3c'
+                    : priorities.includes('MEDIUM') ? '#e67e22' : '#27ae60';
+
+                // Outer ring + inner circle for a polished cluster look
+                const clusterIcon = L.divIcon({
+                    html: `<div style="
+                        position:relative;
+                        width:44px;height:44px;
+                    ">
+                        <div style="
+                            position:absolute;inset:0;
+                            background:${clusterColor};
+                            opacity:0.25;
+                            border-radius:50%;
+                        "></div>
+                        <div style="
+                            position:absolute;inset:5px;
+                            background:${clusterColor};
+                            border:2.5px solid white;
+                            border-radius:50%;
+                            display:flex;align-items:center;justify-content:center;
+                            font-size:13px;font-weight:bold;
+                            color:white;
+                            font-family:Arial,sans-serif;
+                            box-shadow:0 2px 6px rgba(0,0,0,0.3);
+                        ">${group.length}</div>
+                    </div>`,
+                    className: '',
+                    iconSize: [44, 44],
+                    iconAnchor: [22, 22],
+                    popupAnchor: [0, -24]
+                });
+
+                // List all reports in this cluster inside the popup
+                const listItems = group.map(r => {
+                    const pClass = (r.priority || '').toUpperCase() === 'HIGH' ? 'priority-high'
+                        : (r.priority || '').toUpperCase() === 'MEDIUM' ? 'priority-medium' : 'priority-low';
+                    const sColor = getStatusBadgeColor(r.status);
+                    return `
+                        <div style="border-bottom:1px solid #f0f0f0;padding:9px 0;">
+                            <div style="font-weight:bold;font-size:13px;color:#1a1a1a;margin-bottom:3px;">
+                                ${escapeHtml(r.title) || 'Untitled'}
+                            </div>
+                            <div style="font-size:11px;color:#777;margin-bottom:5px;">
+                                <i class="bi bi-geo-alt-fill" style="color:#e74c3c;"></i>
+                                ${escapeHtml(r.location) || 'No location'}
+                            </div>
+                            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+                                <span class="badge-priority ${pClass}" style="font-size:10px;padding:2px 7px;">
+                                    ${r.priority || 'N/A'}
+                                </span>
+                                <span style="background:${sColor};color:white;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;">
+                                    ${getStatusLabel(r.status)}
+                                </span>
+                                <button onclick="viewReport(${r.id})" class="view-btn" style="font-size:11px;padding:2px 8px;margin-left:auto;">
+                                    View
+                                </button>
+                            </div>
+                        </div>`;
+                }).join('');
+
+                // L.marker with draggable: false (explicit) — pins stay fixed
+                const clusterMarker = L.marker([centerLat, centerLng], {
+                    icon: clusterIcon,
+                    draggable: false,
+                    keyboard: false
+                });
+
+                clusterMarker.bindPopup(`
+                    <div style="min-width:250px;max-height:340px;overflow-y:auto;font-family:Arial,sans-serif;padding:4px 0;">
+                        <div style="font-weight:bold;font-size:13px;margin-bottom:8px;color:#2d4a44;border-bottom:2px solid #eaf2f0;padding-bottom:6px;">
+                            <i class="bi bi-geo-alt-fill"></i>
+                            ${group.length} Incidents in this area
+                        </div>
+                        ${listItems}
+                    </div>
+                `, { maxWidth: 300 });
+
+                clusterMarker.addTo(incidentMapInstance);
+                incidentMapMarkers.push({ marker: clusterMarker });
+            }
+           
+        });
+
+        // Fit map view to show all visible markers + some padding,
+        // but never zoom out past the boundary level
+        if (filtered.length > 0) {
+            const latlngs = filtered.map(r => [r.latitude, r.longitude]);
+            incidentMapInstance.fitBounds(L.latLngBounds(latlngs), {
+                padding: [50, 50],
+                maxZoom: 16
+            });
+        } else {
+            // No matches — zoom to show the full boundary
+            incidentMapInstance.fitBounds(L.latLngBounds(SAN_SEBASTIAN_POLYGON), {
+                padding: [30, 30]
+            });
+        }
+         renderResidentMarkers();
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         var status = document.getElementById('accountStatus');
         if (status && (status.value === 'New' || status.value === 'Newly Updated')) {
@@ -1424,8 +2052,14 @@
         trackAllModals();
         initLastSeenId();
         startPolling();
+
+        // If the page loaded directly on the incidentmap tab, init map right away
+        const mapTab = document.getElementById('tab-incidentmap');
+        if (mapTab && !mapTab.classList.contains('d-none')) {
+            setTimeout(initIncidentMap, 200);
+        }
     });
-    
+
     window.addEventListener('beforeunload', function() { 
         if (pollingInterval) clearInterval(pollingInterval); 
     });
