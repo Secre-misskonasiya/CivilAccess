@@ -39,8 +39,12 @@ public class ResidentSecurityConfig {
             .httpBasic(basic -> basic.disable())
             .csrf(csrf -> csrf.ignoringRequestMatchers(
                 "/resident-login",
+                "/resident/register",      // ← add this
                 "/resident-check-status",
-                "/api/resident/**"
+                "/api/resident/**",
+                "/resident/documents/submit",
+                "/resident/reservations/submit",
+                "/resident/rentals/submit"
             ));
 
         return http.build();
