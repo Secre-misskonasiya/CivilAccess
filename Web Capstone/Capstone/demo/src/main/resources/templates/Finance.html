@@ -237,7 +237,7 @@
                             <div class="col-md-3"><label class="form-label">Source / Payer Name</label><input type="text" name="sourceName" class="form-control" placeholder="Resident or renter name" required></div>
                             <div class="col-md-2"><label class="form-label">Amount (₱)</label><input type="number" name="amount" class="form-control" step="0.01" required></div>
                             <div class="col-md-12"><button type="submit" class="btn-save"><i class="bi bi-save"></i> Save Income</button></div>
-                            <button class="export-btn" id="export-pdf-btn" onclick="exportToPDF()">Export</button>
+
                         </div>
                     </form>
                 </div>
@@ -253,11 +253,12 @@
                             <option value="DONATION">Donation</option>
                             <option value="OTHER">Other Services</option>
                         </select>
+                        <button class="export-btn" id="export-pdf-btn" onclick="exportToPDF()">Export</button>
                     </div>
                     <div class="table-responsive">
                         <table class="data-table table">
                             <thead>
-                                <tr><th>Date</th><th>OR#</th><th>Source</th><th>Type</th><th>Amount</th><th>Actions</th></tr>
+                                <tr><th>Date</th><th>OR#</th><th>Source</th><th>Type</th><th>Amount</th></tr>
                             </thead>
                             <tbody id="incomeTableBody">
                                 <tr th:each="inc : ${incomeList}" th:attr="data-type=${inc.incomeType.name()}">
@@ -267,7 +268,6 @@
                                     <td><span th:classappend="${inc.incomeType.name() == 'RENTAL'} ? 'badge-rental' : 'badge-income'"
                                               class="badge-income" th:text="${inc.incomeType.getDisplayName()}">-</span></td>
                                     <td class="amount-positive" th:text="'₱' + ${inc.amount}">-</td>
-                                    <td><a th:href="@{|/finance/income/delete/${inc.id}|}" class="action-btn delete" onclick="return confirm('Delete this income record?')"><i class="bi bi-trash"></i> Delete</a></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -319,7 +319,7 @@
                     <div class="table-responsive">
                         <table class="data-table table">
                             <thead>
-                                <tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+                                <tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th>Status</th></tr>
                             </thead>
                             <tbody id="expenseTableBody">
                                 <tr th:each="exp : ${expenseList}" th:attr="data-status=${exp.status.name()}">
@@ -330,7 +330,6 @@
                                     <td><span th:classappend="${exp.status.name() == 'PENDING'} ? 'badge-pending' : 'badge-approved'" class="badge-pending" th:text="${exp.status.getDisplayName()}">-</span></td>
                                     <td>
                                         <a th:href="@{|/finance/expenses/approve/${exp.id}?approvedBy=${currentAdminNumericId}|}" th:if="${exp.status.name() == 'PENDING'}" class="action-btn approve" onclick="return confirm('Approve this expense?')">Approve</a>
-                                        <a th:href="@{|/finance/expenses/delete/${exp.id}|}" class="action-btn delete" onclick="return confirm('Delete this expense?')">Delete</a>
                                     </td>
                                 </tr>
                             </tbody>

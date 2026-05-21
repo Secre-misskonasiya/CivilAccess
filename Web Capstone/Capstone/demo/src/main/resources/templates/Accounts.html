@@ -272,6 +272,8 @@
                                                 data-picture=${admin.profilePicture}"
                                         onclick="openViewModalFromButton(this)">View</button>
                                     <button class="update-btn"
+                                        th:if="${currentrole == 'ADMIN' or
+                                                (currentrole == 'SECRETARY' and admin.role != 'ADMIN' and admin.role != 'SECRETARY')}"
                                         th:onclick="openEditModal(
                                             [[${admin.id}]],
                                             [[${admin.employeeId}]],

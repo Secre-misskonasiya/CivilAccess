@@ -755,6 +755,148 @@
     .panel .panel-inner:not(#tab-incidentmap) {
         flex: unset;
     }
+    /* ── Incident Summary Panel ─────────────────────────── */
+.map-summary-panel {
+    position: absolute;
+    top: 0; right: 0;
+    width: 300px;
+    height: 100%;
+    background: white;
+    border-left: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    overflow: hidden;
+}
+.map-summary-panel.open {
+    transform: translateX(0);
+}
+.map-summary-header {
+    background: #2d4a44;
+    color: white;
+    padding: 14px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+.map-summary-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+}
+.summary-section {
+    margin-bottom: 16px;
+}
+.summary-section-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #f8f8f8;
+    font-size: 12px;
+    color: #444;
+}
+.summary-row:last-child { border-bottom: none; }
+.summary-row-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.summary-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.summary-count {
+    font-weight: 700;
+    font-size: 13px;
+    color: #2d4a44;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+.summary-bar-wrap {
+    height: 5px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    margin-top: 3px;
+    overflow: hidden;
+}
+.summary-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+.hotspot-item {
+    background: #f8faf9;
+    border: 1px solid #e0ede8;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.hotspot-item:hover { background: #eaf2f0; }
+.hotspot-rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #2d4a44;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.hotspot-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2d4a44;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.hotspot-meta {
+    font-size: 11px;
+    color: #888;
+    margin-top: 2px;
+}
+.hotspot-pills {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+.hotspot-pill {
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+#summaryToggleBtn.active {
+    background: #2d4a44 !important;
+    color: white !important;
+}
 </style>
 
 <meta charset="UTF-8">
@@ -768,6 +910,10 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 
 <title>Safety Reports</title>
 </head>
@@ -799,11 +945,11 @@
 <!-- Custom Confirmation Modal for Archive -->
 <div id="archiveConfirmModal" class="confirm-modal-overlay">
     <div class="confirm-modal-content">
-        <h4><i class="bi bi-archive"></i> Archive Report</h4>
-        <p>Are you sure you want to archive this safety report?</p>
+        <h4><i class="bi bi-archive"></i> Cancel/Reject Report</h4>
+        <p>Are you sure you want to Cancel/Reject this safety report?</p>
         <div class="confirm-modal-buttons">
             <button class="confirm-cancel" onclick="closeArchiveConfirm()">Cancel</button>
-            <button class="confirm-ok" id="confirmArchiveBtn">Archive</button>
+            <button class="confirm-ok" id="confirmArchiveBtn">Confirm</button>
         </div>
     </div>
 </div>
@@ -853,8 +999,12 @@
         <div class="tab" th:classappend="${currentTab == 'approved' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=approved'">Approved <span class="tab-badge" id="badge-approved" th:text="${approvedCount}">0</span></div>
         <div class="tab" th:classappend="${currentTab == 'inprogress' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=inprogress'">In Progress <span class="tab-badge" id="badge-inprogress" th:text="${inProgressCount}">0</span></div>
         <div class="tab" th:classappend="${currentTab == 'resolved' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=resolved'">Resolved <span class="tab-badge" id="badge-resolved" th:text="${resolvedCount}">0</span></div>
-        <div class="tab" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=archive'">Archive <span class="tab-badge" id="badge-archive" th:text="${archivedCount}">0</span></div>
-        <div class="tab" th:classappend="${currentTab == 'incidentmap' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=incidentmap'"><i class="bi bi-map"></i> Incident Map</div>
+        <div class="tab" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=archive'">Cancelled / Rejected <span class="tab-badge" id="badge-archive" th:text="${archivedCount}">0</span></div>
+        <!-- Find this tab and replace the onclick -->
+        <div class="tab" th:classappend="${currentTab == 'incidentmap' ? 'active' : ''}"
+            onclick="switchToMapTab(event)">
+            <i class="bi bi-map"></i> Incident Map
+        </div>
     </div>
 
     <!-- Panel -->
@@ -884,8 +1034,8 @@
                             <td>
                                 <div class="d-flex gap-2">
                                     <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
-                                    <button class="approve-btn" th:onclick="'updateStatusWithSuccess(' + ${report.id} + ', \'APPROVED\')'">Approve</button>
-                                    <button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button>
+                                    <button class="approve-btn" th:onclick="'openApproveModal(' + ${report.id} + ')'">Approve</button>
+                                    <button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Reject</button>
                                 </div>
                           </tr>
                     </tbody>
@@ -909,7 +1059,7 @@
                             <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></nav>
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></nav>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></nav>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="process-btn" th:onclick="'updateStatusWithSuccess(' + ${report.id} + ', \'IN_PROGRESS\')'">Process</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></nav>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="process-btn" th:onclick="'updateStatusWithSuccess(' + ${report.id} + ', \'IN_PROGRESS\')'">Process</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Cancel</button></div></nav>
                           </td>
                     </tbody>
                 </table>
@@ -930,7 +1080,7 @@
                             <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></nav>
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></nav>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></nav>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'openResolutionModal(' + ${report.id} + ')'">Resolve</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></nav>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'openResolutionModal(' + ${report.id} + ')'">Resolve</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Cancel</button></div></nav>
                           </tr>
                     </tbody>
                 </table>
@@ -954,7 +1104,7 @@
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></nav>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></nav>
                             <td><span th:if="${report.resolvedBy != null}" class="resolved-by-badge"><i class="bi bi-person-check"></i> <span th:text="${report.resolvedBy}"></span></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></nav>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Archive</button></div></nav>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button></div></nav>
                           </tr>
                     </tbody>
                 </table>
@@ -964,7 +1114,7 @@
 
         <!-- Archive -->
         <div id="tab-archive" class="panel-inner" th:classappend="${currentTab != 'archive' ? 'd-none' : ''}">
-            <div class="panel-header">Archived Safety Reports</div>
+            <div class="panel-header">Cancelled Safety Reports</div>
             <div class="panel-content">
                     <table class="table table-bordered table-hover mb-0" id="archive-table">
                     <thead>
@@ -989,6 +1139,7 @@
         <!-- ============================================================
              INCIDENT MAP TAB
              ============================================================ -->
+        <!-- INCIDENT MAP TAB -->
         <div id="tab-incidentmap" class="panel-inner" th:classappend="${currentTab != 'incidentmap' ? 'd-none' : ''}">
             <div class="panel-header"><i class="bi bi-map me-2"></i>Incident Map — All Reports</div>
             <div class="incident-map-toolbar">
@@ -997,46 +1148,73 @@
                     <div class="map-legend-item"><span class="legend-dot" style="background:#e74c3c;"></span> High</div>
                     <div class="map-legend-item"><span class="legend-dot" style="background:#e67e22;"></span> Medium</div>
                     <div class="map-legend-item"><span class="legend-dot" style="background:#27ae60;"></span> Low</div>
-                    <span style="font-size:12px;font-weight:600;color:#555;margin-left:10px;margin-right:4px;">Cluster:</span>
-                    <div class="map-legend-item">
-                        <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#e74c3c;color:white;font-size:10px;font-weight:bold;">3</span>
-                        Multiple incidents
-                    </div>
                     <span style="font-size:12px;font-weight:600;color:#555;margin-left:10px;margin-right:4px;">Boundary:</span>
                     <div class="map-legend-item">
                         <span style="display:inline-block;width:22px;height:3px;background:#2d4a44;border-radius:2px;opacity:0.7;"></span>
                         Brgy. San Sebastian
                     </div>
                 </div>
-                                <!-- Resident layer legend + toggles -->
-                <span style="font-size:12px;font-weight:600;color:#555;margin-left:10px;margin-right:4px;">Residents:</span>
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                    <span style="font-size:12px;font-weight:600;color:#555;margin-right:2px;">Status:</span>
+                    <button class="map-status-btn active" data-status="all" onclick="setMapStatusFilter('all')"
+                        style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid #2d4a44;background:#2d4a44;color:white;cursor:pointer;">All</button>
+                    <button class="map-status-btn" data-status="INCOMING" onclick="setMapStatusFilter('INCOMING')"
+                        style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid #FF9800;background:white;color:#FF9800;cursor:pointer;">Incoming</button>
+                    <button class="map-status-btn" data-status="APPROVED" onclick="setMapStatusFilter('APPROVED')"
+                        style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid #e67e22;background:white;color:#e67e22;cursor:pointer;">Approved</button>
+                    <button class="map-status-btn" data-status="IN_PROGRESS" onclick="setMapStatusFilter('IN_PROGRESS')"
+                        style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid #2bb6f7;background:white;color:#2bb6f7;cursor:pointer;">In Progress</button>
+                    <button class="map-status-btn" data-status="RESOLVED" onclick="setMapStatusFilter('RESOLVED')"
+                        style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid #44C375;background:white;color:#44C375;cursor:pointer;">Resolved</button>
+                </div>
+                <span style="font-size:12px;font-weight:600;color:#555;margin-left:4px;margin-right:4px;">Residents:</span>
                 <div class="map-legend-item">
-                    <span class="legend-dot" style="background:#FED734;border-color:#c0a000;border-radius:3px;transform:rotate(45deg);display:inline-block;width:11px;height:11px;"></span>
-                    Senior
+                    <span class="legend-dot" style="background:#FED734;border-color:#c0a000;border-radius:3px;transform:rotate(45deg);display:inline-block;width:11px;height:11px;"></span> Senior
                 </div>
                 <div class="map-legend-item">
-                    <span class="legend-dot" style="background:#27ae60;border-color:#1a7a3a;border-radius:3px;transform:rotate(45deg);display:inline-block;width:11px;height:11px;"></span>
-                    PWD
+                    <span class="legend-dot" style="background:#27ae60;border-color:#1a7a3a;border-radius:3px;transform:rotate(45deg);display:inline-block;width:11px;height:11px;"></span> PWD
                 </div>
-                <div class="map-legend-item">
-                    <span class="legend-dot" style="background:#e67e22;border-color:#c0560a;border-radius:3px;transform:rotate(45deg);display:inline-block;width:11px;height:11px;"></span>
-                    Both
-                </div>
-                <button id="toggle-senior-btn"
-                    onclick="toggleResidentLayer('senior')"
-                    style="padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;
-                        border:1.5px solid #c0a000;background:#fffde7;color:#8a6800;cursor:pointer">
-                    👴 Toggle Seniors
+                <button id="toggle-senior-btn" onclick="toggleResidentLayer('senior')"
+                    style="padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid #c0a000;background:#fffde7;color:#8a6800;cursor:pointer">
+                    👴 Seniors
                 </button>
-                <button id="toggle-pwd-btn"
-                    onclick="toggleResidentLayer('pwd')"
-                    style="padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;
-                        border:1.5px solid #1a7a3a;background:#f1f8e9;color:#2e7d32;cursor:pointer">
-                    ♿ Toggle PWD
+                <button id="toggle-pwd-btn" onclick="toggleResidentLayer('pwd')"
+                    style="padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid #1a7a3a;background:#f1f8e9;color:#2e7d32;cursor:pointer">
+                    ♿ PWD
+                </button>
+                <button id="heatmap-btn" onclick="toggleHeatmap()"
+                    style="padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid #8e44ad;background:white;color:#8e44ad;cursor:pointer;">
+                    🌡 Crime Heatmap
+                </button>
+                <button onclick="fitToBoundary()"
+                    style="padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid #2d4a44;background:white;color:#2d4a44;cursor:pointer;">
+                    ⤢ Reset View
+                </button>
+                <button id="summaryToggleBtn" onclick="toggleSummaryPanel()"
+                    style="padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid #2d4a44;background:white;color:#2d4a44;cursor:pointer;">
+                    📊 Summary
                 </button>
                 <div class="map-stat">Showing <span id="map-visible-count">0</span> of <span id="map-total-count">0</span> reports</div>
             </div>
-            <div id="incidentMap"></div>
+
+            <!-- Map + summary panel wrapper -->
+            <div style="position:relative;flex:1;display:flex;min-height:0;">
+                <div id="incidentMap" style="flex:1;min-height:0;"></div>
+
+                <!-- Summary Side Panel -->
+                <div class="map-summary-panel" id="mapSummaryPanel">
+                    <div class="map-summary-header">
+                        <span><i class="bi bi-bar-chart-fill me-2"></i>Incident Summary</span>
+                        <button onclick="toggleSummaryPanel()"
+                            style="background:none;border:none;color:white;font-size:18px;cursor:pointer;line-height:1;">&times;</button>
+                    </div>
+                    <div class="map-summary-body" id="mapSummaryBody">
+                        <div style="text-align:center;padding:30px;color:#aaa;font-size:13px;">
+                            Loading summary...
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -1104,11 +1282,52 @@
     </div>
 </div>
 
+<!-- Approve with Priority Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-check-circle me-2"></i>Approve Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:13px;color:#555;margin-bottom:14px;">
+                    Set the priority level before approving this report.
+                </p>
+                <input type="hidden" id="approvePendingId">
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;border:1.5px solid #f5c6c6;background:#fff0f0;cursor:pointer;">
+                        <input type="radio" name="approvePriority" value="HIGH" style="accent-color:#e74c3c;">
+                        <span class="badge-priority priority-high" style="pointer-events:none;">HIGH</span>
+                        <span style="font-size:12px;color:#888;">Urgent — immediate action needed</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;border:1.5px solid #f5ddb0;background:#fff8ec;cursor:pointer;">
+                        <input type="radio" name="approvePriority" value="MEDIUM" style="accent-color:#e67e22;">
+                        <span class="badge-priority priority-medium" style="pointer-events:none;">MEDIUM</span>
+                        <span style="font-size:12px;color:#888;">Moderate — address soon</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;border:1.5px solid #b0e0c0;background:#f0fff4;cursor:pointer;">
+                        <input type="radio" name="approvePriority" value="LOW" checked style="accent-color:#27ae60;">
+                        <span class="badge-priority priority-low" style="pointer-events:none;">LOW</span>
+                        <span style="font-size:12px;color:#888;">Routine — no rush</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmApproveBtn">
+                    <i class="bi bi-check-lg me-1"></i> Approve
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Logout Modal -->
 <div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
 
 <script src="/js/sidebar.js"></script>
-<script>
+<script th:inline="none">
     let currentMap = null;
     let currentTypeFilter = 'all';
     let pendingArchiveId = null;
@@ -1130,6 +1349,320 @@
     let showSeniorLayer      = true;
     let showPwdLayer         = true;         // all fetched reports for the map
     let mapSearchValue = '';
+
+    let currentMapStatusFilter = 'all';
+let markerClusterGroup     = null;
+let heatmapLayer           = null;
+let heatmapVisible         = false;
+
+let summaryPanelOpen = false;
+
+
+function openApproveModal(id) {
+    document.getElementById('approvePendingId').value = id;
+    // Reset to LOW each time
+    document.querySelector('input[name="approvePriority"][value="LOW"]').checked = true;
+    new bootstrap.Modal(document.getElementById('approveModal')).show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('confirmApproveBtn').addEventListener('click', function() {
+        const id = document.getElementById('approvePendingId').value;
+        const priority = document.querySelector('input[name="approvePriority"]:checked').value;
+
+        fetch('/safety-reports/' + id + '/priority?priority=' + priority, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Priority update failed');
+            return fetch('/safety-reports/' + id + '/status?status=APPROVED', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' }
+            });
+        })
+        .then(res => {
+            if (res.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('approveModal')).hide();
+                showSuccessWithReload('Report approved successfully!');
+            } else {
+                alert('Error approving report');
+            }
+        })
+        .catch(err => { console.error(err); alert('Error updating priority'); });
+    });
+});
+
+function setMapStatusFilter(status) {
+    currentMapStatusFilter = status;
+    document.querySelectorAll('.map-status-btn').forEach(btn => {
+        const active = btn.dataset.status === status;
+        const colorMap = {
+            'all': '#2d4a44', 'INCOMING': '#FF9800',
+            'APPROVED': '#e67e22', 'IN_PROGRESS': '#2bb6f7', 'RESOLVED': '#44C375'
+        };
+        const c = colorMap[btn.dataset.status] || '#2d4a44';
+        btn.style.background = active ? c : 'white';
+        btn.style.color = active ? 'white' : c;
+    });
+    renderIncidentMapMarkers();
+    if (summaryPanelOpen) renderSummaryPanel();
+}
+
+function fitToBoundary() {
+    if (!incidentMapInstance) return;
+    incidentMapInstance.fitBounds(L.latLngBounds(SAN_SEBASTIAN_POLYGON), { padding: [30, 30] });
+}
+
+function toggleSummaryPanel() {
+    summaryPanelOpen = !summaryPanelOpen;
+    const panel = document.getElementById('mapSummaryPanel');
+    const btn   = document.getElementById('summaryToggleBtn');
+    panel.classList.toggle('open', summaryPanelOpen);
+    btn.classList.toggle('active', summaryPanelOpen);
+    if (summaryPanelOpen) {
+        renderSummaryPanel();
+        setTimeout(() => { if (incidentMapInstance) incidentMapInstance.invalidateSize(); }, 320);
+    } else {
+        setTimeout(() => { if (incidentMapInstance) incidentMapInstance.invalidateSize(); }, 320);
+    }
+}
+
+function renderSummaryPanel() {
+    const body = document.getElementById('mapSummaryBody');
+    const data = allReportsData;
+    if (!data || data.length === 0) {
+        body.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa;font-size:13px;">No report data available</div>';
+        return;
+    }
+
+    // ── Counts by type ──────────────────────────────────────
+    const byType = {};
+    data.forEach(r => {
+        const t = r.type || 'Unknown';
+        byType[t] = (byType[t] || 0) + 1;
+    });
+    const sortedTypes = Object.entries(byType).sort((a, b) => b[1] - a[1]);
+    const maxType = sortedTypes[0]?.[1] || 1;
+
+    // ── Counts by priority ───────────────────────────────────
+    const byPriority = { HIGH: 0, MEDIUM: 0, LOW: 0 };
+    data.forEach(r => { byPriority[(r.priority || 'LOW').toUpperCase()] = (byPriority[(r.priority || 'LOW').toUpperCase()] || 0) + 1; });
+    const priorityColors = { HIGH: '#e74c3c', MEDIUM: '#e67e22', LOW: '#27ae60' };
+
+    // ── Counts by status ─────────────────────────────────────
+    const byStatus = {};
+    data.forEach(r => { byStatus[r.status || 'UNKNOWN'] = (byStatus[r.status || 'UNKNOWN'] || 0) + 1; });
+
+    // ── Crime vs non-crime ───────────────────────────────────
+    const crimeCount = data.filter(r => 
+        (r.type || '').toLowerCase().includes('crime')
+    ).length;
+    const nonCrimeCount = data.length - crimeCount;
+
+    // ── Hotspot analysis (cluster by ~200m grid) ─────────────
+    const GRID = 0.002;
+    const gridMap = {};
+    data.forEach(r => {
+        if (!r.latitude || !r.longitude) return;
+        const gx = Math.round(r.latitude / GRID);
+        const gy = Math.round(r.longitude / GRID);
+        const key = `${gx}_${gy}`;
+        if (!gridMap[key]) gridMap[key] = { lat: gx * GRID, lng: gy * GRID, reports: [] };
+        gridMap[key].reports.push(r);
+    });
+    const hotspots = Object.values(gridMap)
+        .filter(g => g.reports.length > 0)
+        .sort((a, b) => b.reports.length - a.reports.length)
+        .slice(0, 5);
+
+    // ── Most common location names for hotspots ───────────────
+    function topLocation(reports) {
+        const locCount = {};
+        reports.forEach(r => {
+            if (r.location) locCount[r.location] = (locCount[r.location] || 0) + 1;
+        });
+        const sorted = Object.entries(locCount).sort((a, b) => b[1] - a[1]);
+        return sorted[0]?.[0] || 'Unknown area';
+    }
+
+    function dominantType(reports) {
+        const tc = {};
+        reports.forEach(r => { if (r.type) tc[r.type] = (tc[r.type] || 0) + 1; });
+        return Object.entries(tc).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+    }
+
+    function dominantPriority(reports) {
+        if (reports.some(r => r.priority === 'HIGH')) return { label: 'HIGH', color: '#e74c3c' };
+        if (reports.some(r => r.priority === 'MEDIUM')) return { label: 'MEDIUM', color: '#e67e22' };
+        return { label: 'LOW', color: '#27ae60' };
+    }
+
+    // ── Recent spike (last 30 days) ───────────────────────────
+    const now = new Date();
+    const recentCount = data.filter(r => {
+        if (!r.dateSubmitted) return false;
+        const d = new Date(r.dateSubmitted);
+        return (now - d) / 86400000 <= 30;
+    }).length;
+
+    // ── Build HTML ────────────────────────────────────────────
+    body.innerHTML = `
+
+        <!-- Totals row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+            <div style="background:#eaf2f0;border-radius:8px;padding:10px 12px;text-align:center;">
+                <div style="font-size:22px;font-weight:700;color:#2d4a44;">${data.length}</div>
+                <div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;">Total Reports</div>
+            </div>
+            <div style="background:#fff3cd;border-radius:8px;padding:10px 12px;text-align:center;">
+                <div style="font-size:22px;font-weight:700;color:#856404;">${recentCount}</div>
+                <div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;">Last 30 Days</div>
+            </div>
+            <div style="background:#fdecea;border-radius:8px;padding:10px 12px;text-align:center;">
+                <div style="font-size:22px;font-weight:700;color:#c0392b;">${crimeCount}</div>
+                <div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;">Crime Reports</div>
+            </div>
+            <div style="background:#e8f5f0;border-radius:8px;padding:10px 12px;text-align:center;">
+                <div style="font-size:22px;font-weight:700;color:#2d7a5f;">${nonCrimeCount}</div>
+                <div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;">Other Incidents</div>
+            </div>
+        </div>
+
+        <!-- Priority breakdown -->
+        <div class="summary-section">
+            <div class="summary-section-title">By Priority</div>
+            ${Object.entries(byPriority).map(([p, c]) => `
+                <div class="summary-row">
+                    <div class="summary-row-label">
+                        <span class="summary-dot" style="background:${priorityColors[p]};"></span>
+                        ${p}
+                    </div>
+                    <span class="summary-count">${c}</span>
+                </div>
+                <div class="summary-bar-wrap">
+                    <div class="summary-bar" style="width:${Math.round(c/data.length*100)}%;background:${priorityColors[p]};"></div>
+                </div>
+            `).join('')}
+        </div>
+
+        <!-- By status -->
+        <div class="summary-section">
+            <div class="summary-section-title">By Status</div>
+            ${Object.entries(byStatus).map(([s, c]) => `
+                <div class="summary-row">
+                    <div class="summary-row-label">
+                        <span class="summary-dot" style="background:${getStatusBadgeColor(s)};"></span>
+                        ${getStatusLabel(s)}
+                    </div>
+                    <span class="summary-count">${c}</span>
+                </div>
+            `).join('')}
+        </div>
+
+        <!-- By incident type -->
+        <div class="summary-section">
+            <div class="summary-section-title">By Incident Type</div>
+            ${sortedTypes.map(([t, c]) => `
+                <div class="summary-row">
+                    <div class="summary-row-label" title="${escapeHtml(t)}">${escapeHtml(t)}</div>
+                    <span class="summary-count">${c}</span>
+                </div>
+                <div class="summary-bar-wrap">
+                    <div class="summary-bar" style="width:${Math.round(c/maxType*100)}%;background:#3d6b64;"></div>
+                </div>
+            `).join('')}
+        </div>
+
+        <!-- Hotspots -->
+        <div class="summary-section">
+            <div class="summary-section-title">⚠️ Prone Areas (Hotspots)</div>
+            ${hotspots.length === 0
+                ? '<div style="color:#aaa;font-size:12px;font-style:italic;">No location data available</div>'
+                : hotspots.map((h, i) => {
+                    const loc  = topLocation(h.reports);
+                    const type = dominantType(h.reports);
+                    const prio = dominantPriority(h.reports);
+                    const crimeHere = h.reports.filter(r => 
+                        (r.type || '').toLowerCase().includes('crime')
+                    ).length;
+                    return `
+                        <div class="hotspot-item" onclick="flyToHotspot(${h.lat}, ${h.lng})"
+                             title="Click to zoom to this area">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                                <span class="hotspot-rank">${i + 1}</span>
+                                <div class="hotspot-name">${escapeHtml(loc)}</div>
+                                <span style="margin-left:auto;font-size:11px;font-weight:700;color:${prio.color};">
+                                    ${h.reports.length} reports
+                                </span>
+                            </div>
+                            <div class="hotspot-meta">
+                                ${type ? `<i class="bi bi-exclamation-triangle-fill" style="color:${prio.color};font-size:10px;"></i> ${escapeHtml(type)}` : ''}
+                                ${crimeHere > 0 ? `&nbsp;·&nbsp;<i class="bi bi-shield-exclamation" style="color:#e74c3c;font-size:10px;"></i> ${crimeHere} crime${crimeHere > 1 ? 's' : ''}` : ''}
+                            </div>
+                            <div class="hotspot-pills">
+                                <span class="hotspot-pill" style="background:${prio.color}22;color:${prio.color};border:1px solid ${prio.color}55;">
+                                    ${prio.label}
+                                </span>
+                                ${h.reports.filter(r => r.status === 'INCOMING' || r.status === 'IN_PROGRESS').length > 0
+                                    ? `<span class="hotspot-pill" style="background:#fdecea;color:#c0392b;border:1px solid #f5c6cb;">
+                                        ${h.reports.filter(r => r.status === 'INCOMING' || r.status === 'IN_PROGRESS').length} active
+                                       </span>` : ''}
+                            </div>
+                        </div>`;
+                }).join('')
+            }
+        </div>
+
+        <div style="font-size:10px;color:#bbb;text-align:center;padding-top:4px;padding-bottom:8px;">
+            Click a hotspot to zoom to that area
+        </div>
+    `;
+}
+
+function flyToHotspot(lat, lng) {
+    if (!incidentMapInstance) return;
+    incidentMapInstance.flyTo([lat, lng], 16, { duration: 1.2 });
+}
+
+
+function toggleHeatmap() {
+    if (!incidentMapInstance) return;
+    heatmapVisible = !heatmapVisible;
+    const btn = document.getElementById('heatmap-btn');
+
+    if (heatmapVisible) {
+        // Crime reports only, weighted by priority
+        const points = allReportsData
+            .filter(r => r.latitude && r.longitude &&
+                         (r.type || '').toLowerCase().includes('crime'))
+            .map(r => {
+                const intensity = r.priority === 'HIGH' ? 1.0
+                                : r.priority === 'MEDIUM' ? 0.6 : 0.3;
+                return [r.latitude, r.longitude, intensity];
+            });
+
+        if (points.length === 0) {
+            alert('No crime reports with location data to display.');
+            heatmapVisible = false;
+            return;
+        }
+
+        heatmapLayer = L.heatLayer(points, {
+            radius: 35, blur: 25, maxZoom: 17,
+            gradient: { 0.3: '#ffeb3b', 0.6: '#ff9800', 1.0: '#e74c3c' }
+        }).addTo(incidentMapInstance);
+
+        if (markerClusterGroup) incidentMapInstance.removeLayer(markerClusterGroup);
+        btn.style.background = '#8e44ad';
+        btn.style.color = 'white';
+    } else {
+        if (heatmapLayer) { incidentMapInstance.removeLayer(heatmapLayer); heatmapLayer = null; }
+        if (markerClusterGroup) incidentMapInstance.addLayer(markerClusterGroup);
+        btn.style.background = 'white';
+        btn.style.color = '#8e44ad';
+    }
+}
 
     window.onload = function() {
         const status = document.getElementById("accountStatus") ? document.getElementById("accountStatus").value : null;
@@ -1873,199 +2406,123 @@
     function renderIncidentMapMarkers() {
         if (!incidentMapInstance) return;
 
-        // Remove all existing markers
-        incidentMapMarkers.forEach(m => {
-            if (m.marker) incidentMapInstance.removeLayer(m.marker);
-        });
+        // Clear existing cluster group
+        if (markerClusterGroup) {
+            incidentMapInstance.removeLayer(markerClusterGroup);
+            markerClusterGroup = null;
+        }
         incidentMapMarkers = [];
 
-        const filtered = allReportsData.filter(r =>
-            r.latitude && r.longitude &&
-            r.latitude !== 0 && r.longitude !== 0 &&
-            reportMatchesFilters(r)
-        );
-
-        document.getElementById('map-visible-count').textContent = filtered.length;
-
-        if (filtered.length === 0) return;
-
-        // ── Cluster nearby markers (within ~0.0015 deg ≈ 150m) ────────────
-        const CLUSTER_RADIUS = 0.0015;
-        const groups = [];
-        const assigned = new Set();
-
-        filtered.forEach((report, i) => {
-            if (assigned.has(i)) return;
-            const group = [report];
-            assigned.add(i);
-            filtered.forEach((other, j) => {
-                if (assigned.has(j)) return;
-                const dlat = Math.abs(report.latitude - other.latitude);
-                const dlng = Math.abs(report.longitude - other.longitude);
-                if (dlat < CLUSTER_RADIUS && dlng < CLUSTER_RADIUS) {
-                    group.push(other);
-                    assigned.add(j);
-                }
-            });
-            groups.push(group);
+        const filtered = allReportsData.filter(r => {
+            if (!r.latitude || !r.longitude || r.latitude === 0 || r.longitude === 0) return false;
+            if (currentMapStatusFilter !== 'all' && r.status !== currentMapStatusFilter) return false;
+            return reportMatchesFilters(r);
         });
 
-        groups.forEach(group => {
-            const centerLat = group.reduce((s, r) => s + r.latitude, 0) / group.length;
-            const centerLng = group.reduce((s, r) => s + r.longitude, 0) / group.length;
+        document.getElementById('map-visible-count').textContent = filtered.length;
+        if (filtered.length === 0) {
+            fitToBoundary();
+            renderResidentMarkers();
+            return;
+        }
 
-            if (group.length === 1) {
-                // ── Single pin — colored circle marker, NOT draggable ──────
-                const report = group[0];
-                const color = getPriorityColor(report.priority);
-                const statusColor = getStatusBadgeColor(report.status);
-                const priorityClass = (report.priority || '').toUpperCase() === 'HIGH' ? 'priority-high'
-                    : (report.priority || '').toUpperCase() === 'MEDIUM' ? 'priority-medium' : 'priority-low';
-
-                const marker = L.circleMarker([report.latitude, report.longitude], {
-                    radius: 11,
-                    fillColor: color,
-                    color: '#ffffff',
-                    weight: 2.5,
-                    opacity: 1,
-                    fillOpacity: 0.92,
-                    // draggable is not an option for circleMarker — it's inherently fixed
-                    interactive: true
-                });
-
-                marker.bindPopup(`
-                    <div style="min-width:210px;font-family:Arial,sans-serif;padding:4px 0;">
-                        <div style="font-weight:bold;font-size:14px;color:#1a1a1a;margin-bottom:6px;line-height:1.3;">
-                            ${escapeHtml(report.title) || 'Untitled'}
-                        </div>
-                        <div style="font-size:12px;color:#555;margin-bottom:5px;">
-                            <i class="bi bi-geo-alt-fill" style="color:#e74c3c;"></i>
-                            ${escapeHtml(report.location) || 'No location'}
-                        </div>
-                        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
-                            <span class="badge-priority ${priorityClass}" style="font-size:11px;">
-                                ${report.priority || 'N/A'}
-                            </span>
-                            <span style="background:${statusColor};color:white;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">
-                                ${getStatusLabel(report.status)}
-                            </span>
-                        </div>
-                        <div style="font-size:11px;color:#888;margin-bottom:8px;">
-                            <i class="bi bi-person"></i> ${escapeHtml(report.reporterName) || 'N/A'}
-                            &nbsp;·&nbsp;
-                            <i class="bi bi-calendar3"></i> ${report.dateSubmitted || 'N/A'}
-                        </div>
-                        <button onclick="viewReport(${report.id})" class="view-btn" style="font-size:12px;padding:5px 12px;width:100%;">
-                            <i class="bi bi-eye"></i> View Report
-                        </button>
-                    </div>
-                `, { maxWidth: 260 });
-
-                marker.addTo(incidentMapInstance);
-                incidentMapMarkers.push({ marker });
-
-            } else {
-                // ── Cluster bubble — DivIcon with count, NOT draggable ─────
-                const priorities = group.map(r => (r.priority || '').toUpperCase());
-                const clusterColor = priorities.includes('HIGH') ? '#e74c3c'
-                    : priorities.includes('MEDIUM') ? '#e67e22' : '#27ae60';
-
-                // Outer ring + inner circle for a polished cluster look
-                const clusterIcon = L.divIcon({
+        // Create cluster group with custom icon
+        markerClusterGroup = L.markerClusterGroup({
+            maxClusterRadius: 50,
+            iconCreateFunction: function(cluster) {
+                const children = cluster.getAllChildMarkers();
+                const priorities = children.map(m => (m.options.reportPriority || '').toUpperCase());
+                const color = priorities.includes('HIGH') ? '#e74c3c'
+                            : priorities.includes('MEDIUM') ? '#e67e22' : '#27ae60';
+                const count = cluster.getChildCount();
+                return L.divIcon({
                     html: `<div style="
-                        position:relative;
-                        width:44px;height:44px;
-                    ">
-                        <div style="
-                            position:absolute;inset:0;
-                            background:${clusterColor};
-                            opacity:0.25;
-                            border-radius:50%;
-                        "></div>
-                        <div style="
-                            position:absolute;inset:5px;
-                            background:${clusterColor};
-                            border:2.5px solid white;
-                            border-radius:50%;
-                            display:flex;align-items:center;justify-content:center;
-                            font-size:13px;font-weight:bold;
-                            color:white;
-                            font-family:Arial,sans-serif;
-                            box-shadow:0 2px 6px rgba(0,0,0,0.3);
-                        ">${group.length}</div>
+                        position:relative;width:44px;height:44px;">
+                        <div style="position:absolute;inset:0;background:${color};opacity:0.22;border-radius:50%;"></div>
+                        <div style="position:absolute;inset:5px;background:${color};border:2.5px solid white;
+                            border-radius:50%;display:flex;align-items:center;justify-content:center;
+                            font-size:13px;font-weight:bold;color:white;
+                            box-shadow:0 2px 6px rgba(0,0,0,0.3);">${count}</div>
                     </div>`,
                     className: '',
                     iconSize: [44, 44],
-                    iconAnchor: [22, 22],
-                    popupAnchor: [0, -24]
+                    iconAnchor: [22, 22]
                 });
-
-                // List all reports in this cluster inside the popup
-                const listItems = group.map(r => {
-                    const pClass = (r.priority || '').toUpperCase() === 'HIGH' ? 'priority-high'
-                        : (r.priority || '').toUpperCase() === 'MEDIUM' ? 'priority-medium' : 'priority-low';
-                    const sColor = getStatusBadgeColor(r.status);
-                    return `
-                        <div style="border-bottom:1px solid #f0f0f0;padding:9px 0;">
-                            <div style="font-weight:bold;font-size:13px;color:#1a1a1a;margin-bottom:3px;">
-                                ${escapeHtml(r.title) || 'Untitled'}
-                            </div>
-                            <div style="font-size:11px;color:#777;margin-bottom:5px;">
-                                <i class="bi bi-geo-alt-fill" style="color:#e74c3c;"></i>
-                                ${escapeHtml(r.location) || 'No location'}
-                            </div>
-                            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
-                                <span class="badge-priority ${pClass}" style="font-size:10px;padding:2px 7px;">
-                                    ${r.priority || 'N/A'}
-                                </span>
-                                <span style="background:${sColor};color:white;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;">
-                                    ${getStatusLabel(r.status)}
-                                </span>
-                                <button onclick="viewReport(${r.id})" class="view-btn" style="font-size:11px;padding:2px 8px;margin-left:auto;">
-                                    View
-                                </button>
-                            </div>
-                        </div>`;
-                }).join('');
-
-                // L.marker with draggable: false (explicit) — pins stay fixed
-                const clusterMarker = L.marker([centerLat, centerLng], {
-                    icon: clusterIcon,
-                    draggable: false,
-                    keyboard: false
-                });
-
-                clusterMarker.bindPopup(`
-                    <div style="min-width:250px;max-height:340px;overflow-y:auto;font-family:Arial,sans-serif;padding:4px 0;">
-                        <div style="font-weight:bold;font-size:13px;margin-bottom:8px;color:#2d4a44;border-bottom:2px solid #eaf2f0;padding-bottom:6px;">
-                            <i class="bi bi-geo-alt-fill"></i>
-                            ${group.length} Incidents in this area
-                        </div>
-                        ${listItems}
-                    </div>
-                `, { maxWidth: 300 });
-
-                clusterMarker.addTo(incidentMapInstance);
-                incidentMapMarkers.push({ marker: clusterMarker });
             }
-           
         });
 
-        // Fit map view to show all visible markers + some padding,
-        // but never zoom out past the boundary level
-        if (filtered.length > 0) {
-            const latlngs = filtered.map(r => [r.latitude, r.longitude]);
-            incidentMapInstance.fitBounds(L.latLngBounds(latlngs), {
-                padding: [50, 50],
-                maxZoom: 16
+        filtered.forEach(report => {
+            const color = getPriorityColor(report.priority);
+            const statusColor = getStatusBadgeColor(report.status);
+            const priorityClass = (report.priority || '').toUpperCase() === 'HIGH' ? 'priority-high'
+                : (report.priority || '').toUpperCase() === 'MEDIUM' ? 'priority-medium' : 'priority-low';
+
+            // Use a DivIcon circle so we can color by priority
+            const markerIcon = L.divIcon({
+                html: `<div style="
+                    width:22px;height:22px;border-radius:50%;
+                    background:${color};border:2.5px solid white;
+                    box-shadow:0 2px 6px rgba(0,0,0,0.35);"></div>`,
+                className: '',
+                iconSize: [22, 22],
+                iconAnchor: [11, 11],
+                popupAnchor: [0, -14]
             });
-        } else {
-            // No matches — zoom to show the full boundary
-            incidentMapInstance.fitBounds(L.latLngBounds(SAN_SEBASTIAN_POLYGON), {
-                padding: [30, 30]
+
+            const imageThumb = report.imageUrl
+                ? `<a href="${report.imageUrl}" target="_blank" style="display:block;margin-bottom:8px;">
+                    <img src="${report.imageUrl}" alt="photo"
+                            style="width:100%;height:80px;object-fit:cover;border-radius:6px;border:1px solid #e0e0e0;"
+                            onerror="this.closest('a').style.display='none'">
+                </a>` : '';
+
+            const marker = L.marker([report.latitude, report.longitude], {
+                icon: markerIcon,
+                reportPriority: report.priority,
+                draggable: false
             });
+
+            marker.bindPopup(`
+                <div style="min-width:210px;font-family:Arial,sans-serif;padding:4px 0;">
+                    ${imageThumb}
+                    <div style="font-weight:bold;font-size:14px;color:#1a1a1a;margin-bottom:5px;line-height:1.3;">
+                        ${escapeHtml(report.title) || 'Untitled'}
+                    </div>
+                    <div style="font-size:12px;color:#555;margin-bottom:5px;">
+                        <i class="bi bi-geo-alt-fill" style="color:#e74c3c;"></i>
+                        ${escapeHtml(report.location) || 'No location'}
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+                        <span class="badge-priority ${priorityClass}" style="font-size:11px;">${report.priority || 'N/A'}</span>
+                        <span style="background:${statusColor};color:white;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">
+                            ${getStatusLabel(report.status)}
+                        </span>
+                    </div>
+                    <div style="font-size:11px;color:#888;margin-bottom:8px;">
+                        <i class="bi bi-person"></i> ${escapeHtml(report.reporterName) || 'N/A'}
+                        &nbsp;·&nbsp;
+                        <i class="bi bi-calendar3"></i> ${report.dateSubmitted || 'N/A'}
+                    </div>
+                    <button onclick="viewReport(${report.id})" class="view-btn"
+                            style="font-size:12px;padding:5px 12px;width:100%;">
+                        <i class="bi bi-eye"></i> View Report
+                    </button>
+                </div>
+            `, { maxWidth: 260 });
+
+            markerClusterGroup.addLayer(marker);
+            incidentMapMarkers.push({ marker });
+        });
+
+        if (!heatmapVisible) {
+            incidentMapInstance.addLayer(markerClusterGroup);
         }
-         renderResidentMarkers();
+
+        // Fit view to visible markers
+        const latlngs = filtered.map(r => [r.latitude, r.longitude]);
+        incidentMapInstance.fitBounds(L.latLngBounds(latlngs), { padding: [50, 50], maxZoom: 16 });
+
+        renderResidentMarkers();
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -2089,6 +2546,17 @@
     window.addEventListener('beforeunload', function() { 
         if (pollingInterval) clearInterval(pollingInterval); 
     });
+
+    function switchToMapTab(e) {
+    // If already on the map tab just re-init
+    const mapPanel = document.getElementById('tab-incidentmap');
+    if (!mapPanel.classList.contains('d-none')) {
+        initIncidentMap();
+        return;
+    }
+    // Navigate normally — Thymeleaf needs to set the active tab server-side
+    window.location.href = '/safety-reports?tab=incidentmap';
+}
 </script>
 
 </body>
