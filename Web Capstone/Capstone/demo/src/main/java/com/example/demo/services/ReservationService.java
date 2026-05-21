@@ -18,23 +18,23 @@ public class ReservationService {
 
     // New status-based methods for the tabs
     public List<Reservation> getIncomingReservations() {
-        return reservationRepository.findByStatusOrderByDateDescCreatedAtDesc("INCOMING");
+        return reservationRepository.findByStatusOrderByCreatedAtDesc("INCOMING");
     }
 
     public List<Reservation> getApprovedReservations() {
-        return reservationRepository.findByStatusOrderByDateDescCreatedAtDesc("APPROVED");
+        return reservationRepository.findByStatusOrderByCreatedAtDesc("APPROVED");
     }
 
     public List<Reservation> getInProgressReservations() {
-        return reservationRepository.findByStatusOrderByDateDescCreatedAtDesc("IN_PROGRESS");
+        return reservationRepository.findByStatusOrderByCreatedAtDesc("IN_PROGRESS");
     }
 
     public List<Reservation> getResolvedReservations() {
-        return reservationRepository.findByStatusOrderByDateDescCreatedAtDesc("RESOLVED");
+        return reservationRepository.findByStatusOrderByCreatedAtDesc("RESOLVED");
     }
 
     public List<Reservation> getArchivedReservations() {
-        return reservationRepository.findByStatusOrderByDateDescCreatedAtDesc("ARCHIVED");
+        return reservationRepository.findByStatusOrderByCreatedAtDesc("ARCHIVED");
     }
 
     // Legacy methods for backward compatibility
@@ -69,12 +69,14 @@ public class ReservationService {
         if (reservation.getDate().isBefore(LocalDate.now())) {
             throw new IllegalArgumentException("Cannot reserve a past date");
         }
-        if (reservation.getTimeSlot() == null || reservation.getTimeSlot().trim().isEmpty()) {
-            throw new IllegalArgumentException("Time slot is required");
+        if (reservation.getTimeFrom() == null || reservation.getTimeFrom().trim().isEmpty()) {
+            throw new IllegalArgumentException("Start time is required");
         }
-
+        if (reservation.getTimeTo() == null || reservation.getTimeTo().trim().isEmpty()) {
+            throw new IllegalArgumentException("End time is required");
+        }
         // Check for conflicts
-        if (reservationRepository.existsConflict(reservation.getCourt(), reservation.getDate(), reservation.getTimeSlot())) {
+        if (reservationRepository.existsConflict(reservation.getCourt(), reservation.getDate(), reservation.getTimeFrom(), reservation.getTimeTo())) {
             throw new IllegalStateException("This time slot is already booked for the selected court. Please choose another time.");
         }
 

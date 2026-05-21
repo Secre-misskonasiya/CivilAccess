@@ -153,7 +153,7 @@ public class SafetyReportsController {
         response.put("resolutionNotes", report.getResolutionNotes() != null ? report.getResolutionNotes() : null);
         response.put("latitude", report.getLatitude() != null ? report.getLatitude() : null);
         response.put("longitude", report.getLongitude() != null ? report.getLongitude() : null);
-
+        response.put("imageUrl", report.getImageUrl() != null ? report.getImageUrl() : null);
         return ResponseEntity.ok(response);
     }
 

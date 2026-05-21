@@ -6,8 +6,12 @@
     <title>Financial Management - CivilAccess</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
     <!-- html2pdf.js library for PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -233,6 +237,7 @@
                             <div class="col-md-3"><label class="form-label">Source / Payer Name</label><input type="text" name="sourceName" class="form-control" placeholder="Resident or renter name" required></div>
                             <div class="col-md-2"><label class="form-label">Amount (₱)</label><input type="number" name="amount" class="form-control" step="0.01" required></div>
                             <div class="col-md-12"><button type="submit" class="btn-save"><i class="bi bi-save"></i> Save Income</button></div>
+                            <button class="export-btn" id="export-pdf-btn" onclick="exportToPDF()">Export</button>
                         </div>
                     </form>
                 </div>
@@ -831,6 +836,39 @@
         buildChart('incomeChart',  'incomeChartWrap',  'bar', incomeLabels,  incomeValues,  incomeColors,  'Amount (₱)');
         buildChart('expenseChart', 'expenseChartWrap', 'bar', expenseLabels, expenseValues, expenseColors, 'Amount (₱)');
     })();
+
+    function exportToPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // 1. Find the table inside the currently visible panel
+    const activePanel = document.querySelector('.panel-inner:not(.d-none)');
+    const table = activePanel.querySelector('table');
+    const title = activePanel.querySelector('.panel-header').innerText;
+
+    // 2. Add title to the PDF
+    doc.text(title, 14, 15);
+
+    // 3. Use autoTable to parse the HTML table
+    // We exclude the "Actions" column (index 5) so the buttons don't look messy in PDF
+    doc.autoTable({
+        html: table,
+        startY: 20,
+        margin: { top: 20 },
+        columnStyles: {
+            5: { display: 'none' } // Hides the "Actions" column in the export
+        },
+        didParseCell: function(data) {
+            // Check if this is the "Actions" column header or body and hide it
+            if (data.column.index === 5) {
+                data.cell.styles.fontSize = 0; 
+            }
+        }
+    });
+
+    // 4. Save the file
+    doc.save(`${title.replace(/\s+/g, '_')}.pdf`);
+}
 </script>
 </body>
 </html>

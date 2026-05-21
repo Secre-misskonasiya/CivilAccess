@@ -618,7 +618,7 @@ select {
                                     data-middle-name=${req.middleName}
                                      ">
                             <td th:text="${req.id}"></td>
-                            <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>   
+                            <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd hh:mm a') : 'N/A'}"></td> 
                             <td th:text="${req.fullName}"></td>
                             <td th:text="${req.contactNumber}"></td>
                             <td><button type="button" class="viewfile-btn" onclick="openViewFileModal(this.closest('tr'))">View File</button></td>
@@ -676,7 +676,7 @@ select {
                                     data-middle-name=${req.middleName}
                                      ">
                             <td th:text="${req.id}"></td>
-                            <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>   
+                            <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd hh:mm a') : 'N/A'}"></td>  
                             <td th:text="${req.fullName}"></td>
                             <td th:text="${req.contactNumber}"></td>
                             <td><button type="button" class="viewfile-btn" onclick="openViewFileModal(this.closest('tr'))">View File</button></td>
@@ -744,7 +744,7 @@ select {
                                     data-doc-nb-note=${req.docNbNote},
                                     data-middle-name=${req.middleName}">
                             <td th:text="${req.id}"></td>
-                            <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>   
+                            <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd hh:mm a') : 'N/A'}"></td>  
                             <td th:text="${req.fullName}"></td>
                             <td th:text="${req.contactNumber}"></td>
                             <td><button type="button" class="viewfile-btn" onclick="openViewFileModal(this.closest('tr'))">View File</button></td>
@@ -789,7 +789,7 @@ select {
                                      data-contact=${req.contactNumber},
                                      data-middle-name=${req.middleName}">
                             <td th:text="${req.id}"></td>
-                            <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>   
+                            <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd hh:mm a') : 'N/A'}"></td> 
                             <td th:text="${req.fullName}"></td>
                             <td th:text="${req.contactNumber}"></td>
                             <td><button type="button" class="viewfile-btn" onclick="openViewFileModal(this.closest('tr'))">View File</button></td>

@@ -219,11 +219,6 @@ public String showMyRequests(@RequestParam(required = false) Long userId, HttpSe
             "Barangay Covered Court", "Multi-Purpose Hall",
             "Open Basketball Court", "Barangay Session Hall"
         });
-        model.addAttribute("timeSlots", new String[]{
-            "06:00-08:00", "08:00-10:00", "10:00-12:00",
-            "12:00-14:00", "14:00-16:00", "16:00-18:00", "18:00-20:00"
-        });
-
         return "ResidentReservationRequest";
     }
 
@@ -233,7 +228,8 @@ public String showMyRequests(@RequestParam(required = false) Long userId, HttpSe
             @RequestParam("fullName") String fullName,
             @RequestParam("court") String court,
             @RequestParam("date") String date,
-            @RequestParam("timeSlot") String timeSlot,
+            @RequestParam("timeFrom") String timeFrom,
+            @RequestParam("timeTo") String timeTo,
             @RequestParam("purpose") String purpose,
             HttpSession session) {
 
@@ -242,7 +238,8 @@ public String showMyRequests(@RequestParam(required = false) Long userId, HttpSe
             reservation.setFullName(fullName);
             reservation.setCourt(court);
             reservation.setDate(LocalDate.parse(date));
-            reservation.setTimeSlot(timeSlot);
+            reservation.setTimeFrom(timeFrom);
+            reservation.setTimeTo(timeTo);
             reservation.setPurpose(purpose);
             reservationService.createReservation(reservation);
             return "success";
