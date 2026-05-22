@@ -44,7 +44,7 @@
             <li onclick="window.location.href='/user-profile'">
                 <img src="/icons/user.svg" class="icon"> User Profile
             </li>
-            <li th:if="${currentrole == 'ADMIN'}" onclick="window.location.href='/Resident-census'">
+            <li th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY'}" onclick="window.location.href='/Resident-census'">
                 <img src="/icons/user.svg" class="icon"> Resident Census
             </li>
             <li th:if="${currentrole == 'ADMIN' || currentrole == 'TREASURER'}" onclick="window.location.href='/finance'">
