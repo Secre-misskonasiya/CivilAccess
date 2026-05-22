@@ -21,6 +21,7 @@ import com.example.demo.services.SafetyReportService;
 import com.example.demo.services.ProgramBudgetService;
 import com.example.demo.services.ProgramCalendarService;
 import com.example.demo.model.ProgramCalendar;
+import com.example.demo.services.RentalService;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -80,7 +81,7 @@ public class MainController {
     @Autowired private HttpSession session;
     @Autowired private ProgramBudgetService programBudgetService;
     @Autowired private CensusRecordRepository censusRecordRepository;
-    
+    @Autowired private RentalService rentalService;
 
 
     @Autowired(required = false)
@@ -828,6 +829,43 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 }
             } catch (Exception e) {
                 // ContactHelpService might not be available
+            }
+            // 8. Overdue Rentals
+            try {
+                rentalService.updateOverdueStatus();
+                int overdueRentals = rentalService.getOverdueRentals().size();
+                if (overdueRentals > 0) {
+                    notifications.add(createNotification(
+                        "bi-calendar-x-fill", "safety",
+                        "Overdue Rentals",
+                        overdueRentals + " rental(s) are past their return date",
+                        "/rentals?tab=overdue"
+                    ));
+                }
+            } catch (Exception e) {
+                System.err.println("Error getting overdue rentals: " + e.getMessage());
+            }
+
+            // 9. Rentals due within 2 days
+            try {
+                java.time.LocalDate today = java.time.LocalDate.now();
+                long dueSoon = rentalService.getActiveRentals().stream()
+                    .filter(r -> r.getExpectedReturnDate() != null)
+                    .filter(r -> {
+                        long days = java.time.temporal.ChronoUnit.DAYS.between(today, r.getExpectedReturnDate());
+                        return days >= 0 && days <= 2;
+                    })
+                    .count();
+                if (dueSoon > 0) {
+                    notifications.add(createNotification(
+                        "bi-calendar-check-fill", "documents",
+                        "Rentals Due Soon",
+                        dueSoon + " active rental(s) are due within 2 days",
+                        "/rentals?tab=active"
+                    ));
+                }
+            } catch (Exception e) {
+                System.err.println("Error getting due-soon rentals: " + e.getMessage());
             }
 
             // Return count only

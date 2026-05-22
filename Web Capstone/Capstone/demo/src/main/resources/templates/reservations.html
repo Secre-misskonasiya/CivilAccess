@@ -456,7 +456,7 @@
             </div>
 
             <!-- Archive Tab -->
-            <div id="tab-archive" class="panel-inner" th:classappend="${currentTab != 'archive' ? 'd-none' : ''}">
+            <!-- <div id="tab-archive" class="panel-inner" th:classappend="${currentTab != 'archive' ? 'd-none' : ''}">
                 <div class="panel-header">Archived Reservations</div>
                 <div class="panel-content">
                     <table class="table table-bordered table-hover mb-0">
@@ -469,7 +469,7 @@
                     </table>
                     <div class="table-footer"><span id="archiveCount">0 archived reservations</span></div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
 </div>
@@ -498,15 +498,11 @@
                     <label>Date:</label>
                     <input type="date" class="form-control mb-2" id="date" required>
                     
-                    <label>Time Slot:</label>
-                    <select class="form-control mb-2" id="timeSlot" required>
-                        <option value="">Select time slot</option>
-                        <option value="08:00-10:00">08:00 - 10:00 AM</option>
-                        <option value="10:00-12:00">10:00 AM - 12:00 PM</option>
-                        <option value="13:00-15:00">01:00 - 03:00 PM</option>
-                        <option value="15:00-17:00">03:00 - 05:00 PM</option>
-                        <option value="17:00-19:00">05:00 - 07:00 PM</option>
-                    </select>
+                    <label>Time From:</label>
+                    <input type="time" class="form-control mb-2" id="timeFrom" required>
+                    
+                    <label>Time To:</label>
+                    <input type="time" class="form-control mb-2" id="timeTo" required>
                     
                     <label>Purpose / Event Description:</label>
                     <textarea class="form-control mb-2" id="purpose" rows="3" placeholder="e.g., Barangay assembly, sports fest, court hearing, community event..."></textarea>
@@ -719,7 +715,7 @@
                         <td>${escapeHtml(r.fullName)}</td>
                         <td>${escapeHtml(r.court)}</td>
                         <td>${formatDate(r.date)}</td>
-                        <td>${r.timeSlot}</td>
+                        <td>${r.timeSlot || (r.timeFrom && r.timeTo ? r.timeFrom + ' - ' + r.timeTo : 'N/A')}</td>
                         <td>${escapeHtml(r.purpose || 'N/A')}</td>
                         <td>${escapeHtml(r.processedBy) || 'N/A'}</td>
                         <td>
@@ -877,13 +873,19 @@
             fullName: document.getElementById('fullName').value,
             court: document.getElementById('court').value,
             date: document.getElementById('date').value,
-            timeSlot: document.getElementById('timeSlot').value,
+            timeFrom: document.getElementById('timeFrom').value,
+            timeTo: document.getElementById('timeTo').value,
             purpose: document.getElementById('purpose').value,
             status: 'INCOMING'
         };
         
-        if (!reservation.fullName || !reservation.date || !reservation.timeSlot) {
+        if (!reservation.fullName || !reservation.date || !reservation.timeFrom || !reservation.timeTo) {
             showSuccess('Please fill in all required fields');
+            return;
+        }
+        
+        if (reservation.timeFrom >= reservation.timeTo) {
+            showSuccess('End time must be after start time');
             return;
         }
         
@@ -923,7 +925,7 @@
                     <p><strong>Resident/Organization:</strong> ${escapeHtml(data.fullName)}</p>
                     <p><strong>Court:</strong> ${escapeHtml(data.court)}</p>
                     <p><strong>Date:</strong> ${formatDate(data.date)}</p>
-                    <p><strong>Time Slot:</strong> ${data.timeSlot}</p>
+                    <p><strong>Time Slot:</strong> ${data.timeSlot || (data.timeFrom && data.timeTo ? data.timeFrom + ' - ' + data.timeTo : 'N/A')}</p>
                     <p><strong>Purpose:</strong> ${escapeHtml(data.purpose || 'N/A')}</p>
                     ${data.processedBy ? `<p><strong>Processed By:</strong> ${escapeHtml(data.processedBy)}</p>` : ''}
                     <hr>

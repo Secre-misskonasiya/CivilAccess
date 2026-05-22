@@ -29,36 +29,44 @@ public class RentalController {
     }
 
     @GetMapping
-    public String rentalsPage(@RequestParam(defaultValue = "incoming") String tab, Model model, Principal principal) {
-        // Get current authenticated user
+    public String rentalsPage(@RequestParam(defaultValue = "incoming") String tab,
+                            Model model, Principal principal) {
         if (principal != null) {
-            String username = principal.getName();
-            AdminUser admin = adminUserService.getAdminByEmail(username);
+            AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
             if (admin != null) {
-                model.addAttribute("currentUser", admin.getName());
-                model.addAttribute("currentrole", admin.getRole());
-                model.addAttribute("currentstatus", "ACTIVE");
+                model.addAttribute("currentUser",   admin.getName());
+                model.addAttribute("currentrole",   admin.getRole());
                 model.addAttribute("accountStatus", admin.getEmpstatus());
             } else {
-                model.addAttribute("currentUser", username);
+                model.addAttribute("currentUser", principal.getName());
                 model.addAttribute("currentrole", "USER");
-                model.addAttribute("currentstatus", "ACTIVE");
             }
         } else {
             model.addAttribute("currentUser", "Guest");
             model.addAttribute("currentrole", "USER");
-            model.addAttribute("currentstatus", "ACTIVE");
         }
 
         model.addAttribute("currentTab", tab);
-        
         rentalService.updateOverdueStatus();
-        
-        model.addAttribute("incomingCount", rentalService.getIncomingRentals().size());
-        model.addAttribute("activeCount", rentalService.getActiveRentals().size());
-        model.addAttribute("overdueCount", rentalService.getOverdueRentals().size());
-        model.addAttribute("returnedCount", rentalService.getReturnedRentals().size());
-        model.addAttribute("archiveCount", rentalService.getArchivedRentals().size());
+
+        // Fetch once, reuse for both lists and counts
+        List<Rental> incoming = rentalService.getIncomingRentals();
+        List<Rental> active   = rentalService.getActiveRentals();
+        List<Rental> overdue  = rentalService.getOverdueRentals();
+        List<Rental> returned = rentalService.getReturnedRentals();
+        List<Rental> archived = rentalService.getArchivedRentals();
+
+        model.addAttribute("incomingRentals", incoming);
+        model.addAttribute("activeRentals",   active);
+        model.addAttribute("overdueRentals",  overdue);
+        model.addAttribute("returnedRentals", returned);
+        model.addAttribute("archivedRentals", archived);
+
+        model.addAttribute("incomingCount", incoming.size());
+        model.addAttribute("activeCount",   active.size());
+        model.addAttribute("overdueCount",  overdue.size());
+        model.addAttribute("returnedCount", returned.size());
+        model.addAttribute("archiveCount",  archived.size());
 
         return "rentals";
     }
@@ -197,23 +205,37 @@ public class RentalController {
 
     @GetMapping("/api/poll")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> pollUpdates() {
+    public ResponseEntity<Map<String, Object>> pollUpdates(
+            @RequestParam(defaultValue = "incoming") String tab) {
         rentalService.updateOverdueStatus();
+
+        // Fetch all lists once — reuse for both tab data and counts
+        List<Rental> incoming = rentalService.getIncomingRentals();
+        List<Rental> active   = rentalService.getActiveRentals();
+        List<Rental> overdue  = rentalService.getOverdueRentals();
+        List<Rental> returned = rentalService.getReturnedRentals();
+        List<Rental> archived = rentalService.getArchivedRentals();
+
         Map<String, Object> response = new HashMap<>();
-        response.put("incoming", sortByNewest(rentalService.getIncomingRentals()));
-        response.put("active", sortByNewest(rentalService.getActiveRentals()));
-        response.put("overdue", sortByNewest(rentalService.getOverdueRentals()));
-        response.put("returned", sortByNewest(rentalService.getReturnedRentals()));
-        response.put("archive", sortByNewest(rentalService.getArchivedRentals()));
-        
+
+        // Only send the current tab's full data — saves bandwidth
+        switch (tab.toLowerCase()) {
+            case "incoming" -> response.put("incoming", sortByNewest(incoming));
+            case "active"   -> response.put("active",   sortByNewest(active));
+            case "overdue"  -> response.put("overdue",  sortByNewest(overdue));
+            case "returned" -> response.put("returned", sortByNewest(returned));
+            case "archive"  -> response.put("archive",  sortByNewest(archived));
+        }
+
+        // Always include counts so all tab badges stay fresh
         Map<String, Integer> counts = new HashMap<>();
-        counts.put("incoming", rentalService.getIncomingRentals().size());
-        counts.put("active", rentalService.getActiveRentals().size());
-        counts.put("overdue", rentalService.getOverdueRentals().size());
-        counts.put("returned", rentalService.getReturnedRentals().size());
-        counts.put("archive", rentalService.getArchivedRentals().size());
+        counts.put("incoming", incoming.size());
+        counts.put("active",   active.size());
+        counts.put("overdue",  overdue.size());
+        counts.put("returned", returned.size());
+        counts.put("archive",  archived.size());
         response.put("counts", counts);
-        
+
         return ResponseEntity.ok(response);
     }
 

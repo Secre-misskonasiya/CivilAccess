@@ -35,6 +35,10 @@ public class SafetyReports{
     @Column(columnDefinition = "TEXT")
     private String handlerRemarks;
 
+    @Column(name = "incident_image", columnDefinition = "TEXT")
+    private String imageUrl;
+
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "handled_by_id", referencedColumnName = "id")
     private AdminUser handledBy;
@@ -80,6 +84,9 @@ public class SafetyReports{
 
     public LocalDate getDateSubmitted() { return dateSubmitted; }
     public void setDateSubmitted(LocalDate dateSubmitted) { this.dateSubmitted = dateSubmitted; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

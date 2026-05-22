@@ -69,9 +69,16 @@ public class DocumentRequestController {
         ready = sortByDateDescending(ready);
         archived = sortByDateDescending(archived);
 
+        java.util.Collections.reverse(incoming);
         model.addAttribute("incomingRequests", incoming);
+
+        java.util.Collections.reverse(processing);
         model.addAttribute("processingRequests", processing);
+
+        java.util.Collections.reverse(ready);
         model.addAttribute("readyRequests", ready);
+
+        java.util.Collections.reverse(archived);
         model.addAttribute("archivedRequests", archived);
         
         model.addAttribute("incomingCount", incoming.size());

@@ -21,8 +21,11 @@ public class Reservation {
     @Column(nullable = false)
     private LocalDate date;
 
-    @Column(nullable = false)
-    private String timeSlot;
+    @Column(name = "time_from", nullable = false)
+    private String timeFrom;
+
+    @Column(name = "time_to", nullable = false)
+    private String timeTo;
 
     private String purpose;
 
@@ -53,8 +56,16 @@ public class Reservation {
     public LocalDate getDate() { return date; }
     public void setDate(LocalDate date) { this.date = date; }
 
-    public String getTimeSlot() { return timeSlot; }
-    public void setTimeSlot(String timeSlot) { this.timeSlot = timeSlot; }
+    public String getTimeFrom() { return timeFrom; }
+    public void setTimeFrom(String timeFrom) { this.timeFrom = timeFrom; }
+
+    public String getTimeTo() { return timeTo; }
+    public void setTimeTo(String timeTo) { this.timeTo = timeTo; }
+
+    // Convenience method to get the full time slot
+    public String getTimeSlot() {
+        return timeFrom + " - " + timeTo;
+    }
 
     public String getPurpose() { return purpose; }
     public void setPurpose(String purpose) { this.purpose = purpose; }

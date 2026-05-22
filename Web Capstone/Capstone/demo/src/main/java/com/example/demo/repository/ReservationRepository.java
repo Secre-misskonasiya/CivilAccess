@@ -12,14 +12,20 @@ import java.util.List;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
-    List<Reservation> findByStatusOrderByDateDescCreatedAtDesc(String status);
+    List<Reservation> findByStatusOrderByCreatedAtDesc(String status);
 
-    @Query("SELECT COUNT(r) > 0 FROM Reservation r WHERE r.court = :court AND r.date = :date AND r.timeSlot = :timeSlot AND r.status NOT IN ('ARCHIVED', 'RESOLVED') AND r.id != :excludeId")
-    boolean existsConflict(@Param("court") String court, @Param("date") LocalDate date, 
-                           @Param("timeSlot") String timeSlot, @Param("excludeId") Long excludeId);
+    @Query("SELECT COUNT(r) > 0 FROM Reservation r " +
+           "WHERE r.court = :court AND r.date = :date " +
+           "AND r.timeFrom = :timeFrom AND r.timeTo = :timeTo " +
+           "AND r.status NOT IN ('ARCHIVED', 'RESOLVED') AND r.id != :excludeId")
+    boolean existsConflict(@Param("court") String court,
+                           @Param("date") LocalDate date,
+                           @Param("timeFrom") String timeFrom,
+                           @Param("timeTo") String timeTo,
+                           @Param("excludeId") Long excludeId);
 
-    default boolean existsConflict(String court, LocalDate date, String timeSlot) {
-        return existsConflict(court, date, timeSlot, -1L);
+    default boolean existsConflict(String court, LocalDate date, String timeFrom, String timeTo) {
+        return existsConflict(court, date, timeFrom, timeTo, -1L);
     }
 
     List<Reservation> findByFullNameContainingIgnoreCaseOrCourtContainingIgnoreCase(String name, String court);
