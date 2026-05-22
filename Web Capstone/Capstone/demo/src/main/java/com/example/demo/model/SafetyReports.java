@@ -3,6 +3,7 @@ package com.example.demo.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "safety_reports")
@@ -57,6 +58,9 @@ public class SafetyReports{
 
     private Double latitude;
     private Double longitude;
+
+    @Column(name = "time_submitted")
+    private LocalTime timeSubmitted;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -126,6 +130,9 @@ public class SafetyReports{
 
     public Double getLongitude() { return longitude; }
     public void setLongitude(Double longitude) { this.longitude = longitude; }
+
+    public LocalTime getTimeSubmitted() { return timeSubmitted; }
+    public void setTimeSubmitted(LocalTime timeSubmitted) { this.timeSubmitted = timeSubmitted; }
 
     @Transient
     public void assignHandler(AdminUser admin) {

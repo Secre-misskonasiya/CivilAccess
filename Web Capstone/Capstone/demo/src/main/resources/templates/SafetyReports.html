@@ -1016,7 +1016,7 @@
             <div class="panel-content">
             <table class="table table-bordered table-hover mb-0" id="incoming-table">
                     <thead>
-                        <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date</th><th>Actions</th></tr>
+                        <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date Submitted</th><th>Time Submitted</th><th>Actions</th></tr>
                     </thead>
                     <tbody id="incoming-tbody">
                         <tr th:each="report : ${incomingReports}" th:if="${not #lists.isEmpty(incomingReports)}" th:attr="data-id=${report.id}">
@@ -1031,6 +1031,7 @@
                                       th:text="${report.priority != null ? report.priority : 'LOW'}"></span>
                             </td>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
+                            <td th:text="${report.timeSubmitted != null ? #temporals.format(report.timeSubmitted, 'h:mm a') : 'N/A'}"></td>
                             <td>
                                 <div class="d-flex gap-2">
                                     <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
@@ -1051,7 +1052,7 @@
             <div class="panel-header">Approved Safety Reports</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0" id="approved-table">
-                    <thead><tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date</th><th>Actions</th></tr></thead>
+                        <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date Submitted</th><th>Time Submitted</th><th>Actions</th></tr>
                     <tbody id="approved-tbody">
                         <tr th:each="report : ${approvedReports}" th:if="${not #lists.isEmpty(approvedReports)}" th:attr="data-id=${report.id}">
                             <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></nav>
@@ -1059,6 +1060,7 @@
                             <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></nav>
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></nav>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></nav>
+                            <td th:text="${report.timeSubmitted != null ? #temporals.format(report.timeSubmitted, 'h:mm a') : 'N/A'}"></td>
                             <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="process-btn" th:onclick="'updateStatusWithSuccess(' + ${report.id} + ', \'IN_PROGRESS\')'">Process</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Cancel</button></div></nav>
                           </td>
                     </tbody>
@@ -1072,7 +1074,7 @@
             <div class="panel-header">In Progress Safety Reports</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0" id="inprogress-table">
-                    <thead><tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date</th><th>Actions</th></tr></thead>
+                        <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date Submitted</th><th>Time Submitted</th><th>Actions</th></tr>
                     <tbody id="inprogress-tbody">
                         <tr th:each="report : ${inProgressReports}" th:if="${not #lists.isEmpty(inProgressReports)}" th:attr="data-id=${report.id}">
                             <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></nav>
@@ -1080,6 +1082,7 @@
                             <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></nav>
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></nav>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></nav>
+                            <td th:text="${report.timeSubmitted != null ? #temporals.format(report.timeSubmitted, 'h:mm a') : 'N/A'}"></td>
                             <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'openResolutionModal(' + ${report.id} + ')'">Resolve</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Cancel</button></div></nav>
                           </tr>
                     </tbody>
@@ -1094,7 +1097,7 @@
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0" id="resolved-table">
                     <thead>
-                        <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date</th><th>Resolved By</th><th>Actions</th></tr>
+                        <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date Submitted</th><th>Time Submitted</th><th>Actions</th></tr>
                     </thead>
                     <tbody id="resolved-tbody">
                         <tr th:each="report : ${resolvedReports}" th:if="${not #lists.isEmpty(resolvedReports)}" th:attr="data-id=${report.id}">
@@ -1103,6 +1106,7 @@
                             <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></nav>
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></nav>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></nav>
+                            <td th:text="${report.timeSubmitted != null ? #temporals.format(report.timeSubmitted, 'h:mm a') : 'N/A'}"></td>
                             <td><span th:if="${report.resolvedBy != null}" class="resolved-by-badge"><i class="bi bi-person-check"></i> <span th:text="${report.resolvedBy}"></span></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></nav>
                             <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button></div></nav>
                           </tr>
@@ -2014,14 +2018,15 @@ function toggleHeatmap() {
         .catch(error => { console.error(error); alert("Error loading report details"); });
 }
     
-    function modalApproveAction() {
-        if (currentModalReportId && currentModalReportStatus === 'INCOMING') {
-            updateStatusWithSuccess(currentModalReportId, 'APPROVED');
-            const modalEl = document.getElementById('viewReportModal');
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) modal.hide();
-        }
+function modalApproveAction() {
+    if (currentModalReportId && currentModalReportStatus === 'INCOMING') {
+        // Close view modal first
+        const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewReportModal'));
+        viewModal.hide();
+        // Then open priority modal
+        openApproveModal(currentModalReportId);
     }
+}
     
     function viewResolutionDetails(id) {
         fetch('/safety-reports/' + id).then(response => response.json()).then(data => {
