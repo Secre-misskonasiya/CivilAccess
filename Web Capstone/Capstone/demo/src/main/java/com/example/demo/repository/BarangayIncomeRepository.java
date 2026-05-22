@@ -78,4 +78,12 @@ public interface BarangayIncomeRepository extends JpaRepository<BarangayIncome, 
     // Get current year income
     @Query("SELECT COALESCE(SUM(bi.amount), 0) FROM BarangayIncome bi WHERE YEAR(bi.incomeDate) = YEAR(CURRENT_DATE)")
     Double getCurrentYearIncome();
+
+    // ── Archive queries ──────────────────────────────────────────────────────
+
+    // All archived income records
+    List<BarangayIncome> findByArchivedTrue();
+
+    // All active (non-archived) income records
+    List<BarangayIncome> findByArchivedFalseOrArchivedIsNull();
 }

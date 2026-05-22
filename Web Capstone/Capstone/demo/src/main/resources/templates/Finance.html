@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- html2pdf.js library for PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         /* Your existing CSS here */
         * { box-sizing: border-box; }
@@ -64,6 +64,77 @@
         .filter-select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; background: white; font-size: 12px; }
         .table-responsive { overflow-x: auto; }
 
+        /* Dashboard period filter */
+        .period-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border-radius: 12px;
+            padding: 10px 18px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            flex-wrap: wrap;
+        }
+        .period-filter-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #2d4a44;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 4px;
+        }
+        .period-btn {
+            padding: 7px 18px;
+            border: 1.5px solid #ddd;
+            background: white;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .period-btn:hover { border-color: #2d4a44; color: #2d4a44; }
+        .period-btn.active { background: #2d4a44; color: white; border-color: #2d4a44; }
+        .period-custom-range {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            margin-left: 6px;
+        }
+        .period-custom-range.visible { display: flex; }
+        .period-custom-range input {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 5px 9px;
+            font-size: 12px;
+            color: #444;
+        }
+        .period-custom-range button {
+            padding: 5px 14px;
+            background: #FED734;
+            color: #2d4a44;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .dash-period-label {
+            font-size: 11px;
+            color: #888;
+            font-style: italic;
+            margin-left: auto;
+        }
+
+        .btn-export-csv  { background: #1a7a4a; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s; }
+        .btn-export-csv:hover  { background: #155f3a; }
+        .btn-export-pdf  { background: #b91c1c; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s; }
+        .btn-export-pdf:hover  { background: #991b1b; }
+        .export-bar { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 12px; }
+        .export-bar-label { font-size: 11px; color: #999; align-self: center; margin-right: auto; font-style: italic; }
+
         @media print {
             body * { visibility: hidden; }
             #pdfReportContainer, #pdfReportContainer * { visibility: visible; }
@@ -96,39 +167,57 @@
                 <button class="tab-btn" onclick="showTab('income', this)"><i class="bi bi-cash-stack"></i> Income</button>
                 <button class="tab-btn" onclick="showTab('expenses', this)"><i class="bi bi-receipt"></i> Expenses</button>
                 <button class="tab-btn" onclick="showTab('budget', this)"><i class="bi bi-pie-chart"></i> Budget</button>
+                <button class="tab-btn" onclick="showTab('archive', this)"><i class="bi bi-archive"></i> Archive</button>
             </div>
 
             <!-- DASHBOARD TAB -->
             <div id="tab-dashboard" class="tab-content active">
 
+                <!-- Period Filter Bar -->
+                <div class="period-filter-bar">
+                    <span class="period-filter-label"><i class="bi bi-funnel"></i> View by:</span>
+                    <button class="period-btn" onclick="applyDashboardFilter('day', this)">Day</button>
+                    <button class="period-btn" onclick="applyDashboardFilter('week', this)">Week</button>
+                    <button class="period-btn active" onclick="applyDashboardFilter('month', this)">Month</button>
+                    <button class="period-btn" onclick="applyDashboardFilter('year', this)">Year</button>
+                    <button class="period-btn" onclick="applyDashboardFilter('all', this)">All Time</button>
+                    <button class="period-btn" onclick="applyDashboardFilter('custom', this)">Custom</button>
+                    <div class="period-custom-range" id="customRangeInputs">
+                        <input type="date" id="dashCustomStart" />
+                        <span style="color:#aaa;font-size:12px;">to</span>
+                        <input type="date" id="dashCustomEnd" />
+                        <button onclick="applyCustomRange()">Apply</button>
+                    </div>
+                    <span class="dash-period-label" id="dashPeriodLabel">Showing: Current Month</span>
+                </div>
+
+                <!-- Dashboard Export Bar -->
+                
+
                 <!-- Row 1: 4 primary stat cards -->
                 <div class="row g-3 mb-4">
                     <div class="col-md-3">
                         <div class="stat-card income">
-                            <div class="stat-title"><i class="bi bi-graph-up"></i> Income This Month</div>
-                            <div class="stat-amount" th:text="'₱' + ${#numbers.formatDecimal(monthIncome,1,2)}">₱0.00</div>
-                            
+                            <div class="stat-title" id="dashIncomeLabel"><i class="bi bi-graph-up"></i> Income This Month</div>
+                            <div class="stat-amount" id="dashIncomeAmt" th:text="'₱' + ${#numbers.formatDecimal(monthIncome,1,2)}">₱0.00</div>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="stat-card expense">
-                            <div class="stat-title"><i class="bi bi-graph-down"></i> Expenses This Month</div>
-                            <div class="stat-amount" th:text="'₱' + ${#numbers.formatDecimal(monthExpenses,1,2)}">₱0.00</div>
-                          
+                            <div class="stat-title" id="dashExpenseLabel"><i class="bi bi-graph-down"></i> Expenses This Month</div>
+                            <div class="stat-amount" id="dashExpenseAmt" th:text="'₱' + ${#numbers.formatDecimal(monthExpenses,1,2)}">₱0.00</div>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="stat-card savings">
-                            <div class="stat-title"><i class="bi bi-piggy-bank"></i> Net Savings (Month)</div>
-                            <div class="stat-amount" th:classappend="${netSavings >= 0} ? 'text-success' : 'text-danger'" th:text="'₱' + ${#numbers.formatDecimal(netSavings,1,2)}">₱0.00</div>
-
+                            <div class="stat-title" id="dashSavingsLabel"><i class="bi bi-piggy-bank"></i> Net Savings (Month)</div>
+                            <div class="stat-amount" id="dashSavingsAmt" th:classappend="${netSavings >= 0} ? 'text-success' : 'text-danger'" th:text="'₱' + ${#numbers.formatDecimal(netSavings,1,2)}">₱0.00</div>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="stat-card budget">
                             <div class="stat-title"><i class="bi bi-wallet2"></i> Remaining Budget</div>
                             <div class="stat-amount" th:text="'₱' + ${#numbers.formatDecimal(remainingBudget,1,2)}">₱0.00</div>
-
                         </div>
                     </div>
                 </div>
@@ -165,13 +254,13 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <div class="form-panel" style="height:320px; display:flex; flex-direction:column;">
-                            <div class="form-title"><i class="bi bi-bar-chart"></i> Income Breakdown (Month)</div>
+                            <div class="form-title" id="incomeChartTitle"><i class="bi bi-bar-chart"></i> Income Breakdown (Month)</div>
                             <div id="incomeChartWrap" style="flex:1; position:relative;"><canvas id="incomeChart" style="position:absolute;inset:0;width:100%!important;height:100%!important;"></canvas></div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-panel" style="height:320px; display:flex; flex-direction:column;">
-                            <div class="form-title"><i class="bi bi-bar-chart"></i> Expenses by Category (Month)</div>
+                            <div class="form-title" id="expenseChartTitle"><i class="bi bi-bar-chart"></i> Expenses by Category (Month)</div>
                             <div id="expenseChartWrap" style="flex:1; position:relative;"><canvas id="expenseChart" style="position:absolute;inset:0;width:100%!important;height:100%!important;"></canvas></div>
                         </div>
                     </div>
@@ -239,6 +328,13 @@
                 
                 <div class="form-panel">
                     <div class="form-title"><i class="bi bi-list-ul"></i> All Income Records</div>
+                    <div class="export-bar">
+                        <span class="export-bar-label">Exports visible (filtered) records</span>
+                    
+                        <button class="btn-export-pdf" onclick="exportTablePDF('incomeTableBody', 'Income Records', ['Date','OR#','Source','Type','Amount'])">
+                            <i class="bi bi-file-earmark-pdf"></i> Export PDF
+                        </button>
+                    </div>
                     <div class="search-filter">
                         <input type="text" id="incomeSearch" class="search-input" placeholder="Search by source or OR#...">
                         <select id="incomeTypeFilter" class="filter-select">
@@ -248,6 +344,13 @@
                             <option value="DONATION">Donation</option>
                             <option value="OTHER">Other Services</option>
                         </select>
+                        <select id="incomePeriodFilter" class="filter-select" onchange="filterIncomePeriod(this.value)">
+                            <option value="all">All Time</option>
+                            <option value="day">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month" selected>This Month</option>
+                            <option value="year">This Year</option>
+                        </select>
                     </div>
                     <div class="table-responsive">
                         <table class="data-table table">
@@ -255,14 +358,22 @@
                                 <tr><th>Date</th><th>OR#</th><th>Source</th><th>Type</th><th>Amount</th><th>Actions</th></tr>
                             </thead>
                             <tbody id="incomeTableBody">
-                                <tr th:each="inc : ${incomeList}" th:attr="data-type=${inc.incomeType.name()}">
+                                <tr th:each="inc : ${incomeList}" th:attr="data-type=${inc.incomeType.name()},data-date=${inc.incomeDate}">
                                     <td th:text="${inc.incomeDate}">-</td>
                                     <td><strong th:text="${inc.orNumber}">-</strong></td>
                                     <td th:text="${inc.sourceName}">-</td>
                                     <td><span th:classappend="${inc.incomeType.name() == 'RENTAL'} ? 'badge-rental' : 'badge-income'"
                                               class="badge-income" th:text="${inc.incomeType.getDisplayName()}">-</span></td>
                                     <td class="amount-positive" th:text="'₱' + ${inc.amount}">-</td>
-                                    <td><a th:href="@{|/finance/income/delete/${inc.id}|}" class="action-btn delete" onclick="return confirm('Delete this income record?')"><i class="bi bi-trash"></i> Delete</a></td>
+                                    <td>
+                                        <a th:if="${currentrole == 'TREASURER'}"
+                                           th:href="@{|/finance/income/archive/${inc.id}|}"
+                                           class="action-btn"
+                                           style="background:#fff3cd; color:#856404;"
+                                           onclick="return confirm('Archive this income record? It will be moved to the Archive tab and removed from active totals.')">
+                                            <i class="bi bi-archive"></i> Archive
+                                        </a>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -305,19 +416,35 @@
                 
                 <div class="form-panel">
                     <div class="form-title"><i class="bi bi-list-ul"></i> Expense Records</div>
+                    <div class="export-bar">
+                        <span class="export-bar-label">Exports visible (filtered) records</span>
+                      
+                        <button class="btn-export-pdf" onclick="exportTablePDF('expenseTableBody', 'Expense Records', ['Date','Description','Type','Amount','Status'])">
+                            <i class="bi bi-file-earmark-pdf"></i> Export PDF
+                        </button>
+                    </div>
                     <ul class="nav nav-tabs mb-3">
                         <li class="nav-item"><a class="nav-link active" data-status="all" href="#" onclick="filterExpenses('all', this); return false;">All</a></li>
                         <li class="nav-item"><a class="nav-link" data-status="PENDING" href="#" onclick="filterExpenses('PENDING', this); return false;">Pending</a></li>
                         <li class="nav-item"><a class="nav-link" data-status="APPROVED" href="#" onclick="filterExpenses('APPROVED', this); return false;">Approved</a></li>
                     </ul>
-                    <div class="search-filter"><input type="text" id="expenseSearch" class="search-input" placeholder="Search by description..."></div>
+                    <div class="search-filter">
+                        <input type="text" id="expenseSearch" class="search-input" placeholder="Search by description...">
+                        <select id="expensePeriodFilter" class="filter-select" onchange="filterExpensePeriodChange(this.value)">
+                            <option value="all">All Time</option>
+                            <option value="day">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month" selected>This Month</option>
+                            <option value="year">This Year</option>
+                        </select>
+                    </div>
                     <div class="table-responsive">
                         <table class="data-table table">
                             <thead>
                                 <tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
                             </thead>
                             <tbody id="expenseTableBody">
-                                <tr th:each="exp : ${expenseList}" th:attr="data-status=${exp.status.name()}">
+                                <tr th:each="exp : ${expenseList}" th:attr="data-status=${exp.status.name()},data-date=${exp.expenseDate}">
                                     <td th:text="${exp.expenseDate}">-</td>
                                     <td th:text="${exp.description}">-</td>
                                     <td th:text="${exp.expenseType.getDisplayName()}">-</td>
@@ -325,7 +452,14 @@
                                     <td><span th:classappend="${exp.status.name() == 'PENDING'} ? 'badge-pending' : 'badge-approved'" class="badge-pending" th:text="${exp.status.getDisplayName()}">-</span></td>
                                     <td>
                                         <a th:href="@{|/finance/expenses/approve/${exp.id}?approvedBy=${currentAdminNumericId}|}" th:if="${exp.status.name() == 'PENDING'}" class="action-btn approve" onclick="return confirm('Approve this expense?')">Approve</a>
-                                        <a th:href="@{|/finance/expenses/delete/${exp.id}|}" class="action-btn delete" onclick="return confirm('Delete this expense?')">Delete</a>
+                                        
+                                        <a th:if="${currentrole == 'TREASURER'}"
+                                           th:href="@{|/finance/expenses/archive/${exp.id}|}"
+                                           class="action-btn"
+                                           style="background:#fff3cd; color:#856404;"
+                                           onclick="return confirm('Archive this expense? It will be moved to the Archive tab.')">
+                                            <i class="bi bi-archive"></i> Archive
+                                        </a>
                                     </td>
                                 </tr>
                             </tbody>
@@ -352,7 +486,136 @@
                 </div>
             </div>
 
-            <!-- BUDGET MODAL STEP 1: Enter Amount -->
+            <!-- ARCHIVE TAB -->
+            <div id="tab-archive" class="tab-content">
+
+                <!-- Treasurer-only notice for non-treasurers -->
+                <div th:if="${currentrole != 'TREASURER'}" class="form-panel" style="border-left: 4px solid #f39c12;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <i class="bi bi-lock-fill" style="font-size:24px; color:#f39c12;"></i>
+                        <div>
+                            <div style="font-weight:700; color:#2d4a44; font-size:15px;">View-Only Access</div>
+                            <div style="font-size:13px; color:#666; margin-top:2px;">Only the <strong>Treasurer</strong> can archive or restore records. You may view archived records below.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Archived Income -->
+                <div class="form-panel">
+                    <div class="form-title"><i class="bi bi-archive"></i> Archived Income Records</div>
+                    <div class="search-filter">
+                        <input type="text" id="archivedIncomeSearch" class="search-input" placeholder="Search archived income...">
+                        <select id="archivedIncomeTypeFilter" class="filter-select">
+                            <option value="">All Types</option>
+                            <option value="DOCUMENT_FEE">Document Fee</option>
+                            <option value="RENTAL">Rental</option>
+                            <option value="DONATION">Donation</option>
+                            <option value="OTHER">Other Services</option>
+                        </select>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>OR#</th>
+                                    <th>Source</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Archived On</th>
+                                    <th th:if="${currentrole == 'TREASURER'}">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="archivedIncomeTableBody">
+                                <tr th:each="inc : ${archivedIncomeList}"
+                                    th:attr="data-type=${inc.incomeType.name()}"
+                                    style="background:#fffbea;">
+                                    <td th:text="${inc.incomeDate}">-</td>
+                                    <td><strong th:text="${inc.orNumber}">-</strong></td>
+                                    <td th:text="${inc.sourceName}">-</td>
+                                    <td><span th:classappend="${inc.incomeType.name() == 'RENTAL'} ? 'badge-rental' : 'badge-income'"
+                                              class="badge-income" th:text="${inc.incomeType.getDisplayName()}">-</span></td>
+                                    <td class="amount-positive" th:text="'₱' + ${inc.amount}">-</td>
+                                    <td style="font-size:11px; color:#888;">
+                                        <span th:text="${inc.archivedAt != null} ? ${#temporals.format(inc.archivedAt, 'MMM dd, yyyy')} : 'N/A'">-</span>
+                                    </td>
+                                    <td th:if="${currentrole == 'TREASURER'}">
+                                        <a th:href="@{|/finance/income/unarchive/${inc.id}|}"
+                                           class="action-btn approve"
+                                           onclick="return confirm('Restore this income record to active?')">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${archivedIncomeList.isEmpty()}">
+                                    <td th:colspan="${currentrole == 'TREASURER'} ? 7 : 6" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox" style="font-size:24px; display:block; margin-bottom:8px; color:#ccc;"></i>
+                                        No archived income records
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Archived Expenses -->
+                <div class="form-panel">
+                    <div class="form-title"><i class="bi bi-archive"></i> Archived Expense Records</div>
+                    <div class="search-filter">
+                        <input type="text" id="archivedExpenseSearch" class="search-input" placeholder="Search archived expenses...">
+                        <select id="archivedExpenseStatusFilter" class="filter-select">
+                            <option value="">All Statuses</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="APPROVED">Approved</option>
+                        </select>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Archived On</th>
+                                    <th th:if="${currentrole == 'ADMIN'}">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="archivedExpenseTableBody">
+                                <tr th:each="exp : ${archivedExpenseList}"
+                                    th:attr="data-status=${exp.status.name()}"
+                                    style="background:#fffbea;">
+                                    <td th:text="${exp.expenseDate}">-</td>
+                                    <td th:text="${exp.description}">-</td>
+                                    <td th:text="${exp.expenseType.getDisplayName()}">-</td>
+                                    <td class="amount-negative" th:text="'₱' + ${exp.amount}">-</td>
+                                    <td><span th:classappend="${exp.status.name() == 'PENDING'} ? 'badge-pending' : 'badge-approved'"
+                                              class="badge-pending" th:text="${exp.status.getDisplayName()}">-</span></td>
+                                    <td style="font-size:11px; color:#888;">
+                                        <span th:text="${exp.archivedAt != null} ? ${#temporals.format(exp.archivedAt, 'MMM dd, yyyy')} : 'N/A'">-</span>
+                                    </td>
+                                    <td th:if="${currentrole == 'TREASURER'}">
+                                        <a th:href="@{|/finance/expenses/unarchive/${exp.id}|}"
+                                           class="action-btn approve"
+                                           onclick="return confirm('Restore this expense record to active?')">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${archivedExpenseList.isEmpty()}">
+                                    <td th:colspan="${currentrole == 'TREASURER'} ? 7 : 6" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox" style="font-size:24px; display:block; margin-bottom:8px; color:#ccc;"></i>
+                                        No archived expense records
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
             <div id="budgetModal1" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
                 <div style="background:white; border-radius:16px; padding:32px; width:100%; max-width:400px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
                     <h5 style="font-weight:700; color:#2d4a44; margin-bottom:6px;"><i class="bi bi-pencil-fill me-2"></i>Update Budget</h5>
@@ -395,6 +658,19 @@
 <script src="/js/notif.js"></script>
 
 <script th:inline="javascript">
+    window._th_success         = /*[[${success}]]*/ null;
+    window._th_error           = /*[[${error}]]*/ null;
+    window._th_incomeList      = /*[[${incomeList}]]*/ [];
+    window._th_expenseList     = /*[[${expenseList}]]*/ [];
+    window._th_monthIncome     = /*[[${monthIncome}]]*/ 0;
+    window._th_monthExpenses   = /*[[${monthExpenses}]]*/ 0;
+    window._th_totalIncomeAll  = /*[[${totalIncomeAll}]]*/ 0;
+    window._th_totalExpensesAll= /*[[${totalExpensesAll}]]*/ 0;
+    window._th_incomeByType    = /*[[${incomeByType}]]*/ null;
+    window._th_expenseByType   = /*[[${expenseByType}]]*/ null;
+</script>
+
+<script th:inline="javascript">
     // Tab switching
     function showTab(tabName, el) {
         var tabs = document.querySelectorAll('.tab-content');
@@ -415,7 +691,7 @@
     
     if (window.location.hash) {
         var tab = window.location.hash.substring(1);
-        if (tab === 'dashboard' || tab === 'income' || tab === 'expenses' || tab === 'budget') {
+        if (tab === 'dashboard' || tab === 'income' || tab === 'expenses' || tab === 'budget' || tab === 'archive') {
             showTab(tab, null);
         }
     }
@@ -429,88 +705,386 @@
         if (rentalDiv) rentalDiv.style.display = (type.value === 'RENTAL')       ? 'block' : 'none';
     }
     
-    function filterExpenses(status, el) {
-        var rows = document.querySelectorAll('#expenseTableBody tr');
-        for (var i = 0; i < rows.length; i++) {
-            if (status === 'all') {
-                rows[i].style.display = '';
-            } else {
-                var rowStatus = rows[i].getAttribute('data-status') || '';
-                rows[i].style.display = (rowStatus === status) ? '' : 'none';
-            }
+    // Period filter helpers shared by Income/Expenses tabs
+    function getTabDateRange(period) {
+        var now = new Date();
+        var start, end;
+        end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+        if (period === 'day') {
+            start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+        } else if (period === 'week') {
+            start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay(), 0, 0, 0);
+        } else if (period === 'month') {
+            start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+            end   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        } else if (period === 'year') {
+            start = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
+            end   = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+        } else { // all
+            start = new Date('1900-01-01'); end = new Date('2999-12-31');
         }
-        var links = document.querySelectorAll('.nav-link');
-        for (var i = 0; i < links.length; i++) {
-            links[i].classList.remove('active');
-        }
-        if (el) {
-            el.classList.add('active');
-        }
+        return { start: start, end: end };
     }
-    
-    // Search filters
+    function rowInDateRange(row, range) {
+        var d = row.getAttribute('data-date');
+        if (!d) return true; // no date = always show
+        var rowDate = new Date(d + 'T00:00:00');
+        return rowDate >= range.start && rowDate <= range.end;
+    }
+
+    // Income tab filter (search + type + period)
+    var _incomePeriod = 'month';
     function filterIncomeTable() {
         var search      = (document.getElementById('incomeSearch')?.value || '').toLowerCase();
         var filterValue = document.getElementById('incomeTypeFilter')?.value || '';
+        var range       = getTabDateRange(_incomePeriod);
         var rows = document.querySelectorAll('#incomeTableBody tr');
         for (var i = 0; i < rows.length; i++) {
             if (rows[i].cells.length < 5) continue;
             var source   = rows[i].cells[2]?.textContent.toLowerCase() || '';
             var orNum    = rows[i].cells[1]?.textContent.toLowerCase() || '';
             var rowType  = rows[i].getAttribute('data-type') || '';
-            var matchesSearch = !search || source.indexOf(search) !== -1 || orNum.indexOf(search) !== -1;
-            var matchesType   = !filterValue || rowType === filterValue;
-            rows[i].style.display = (matchesSearch && matchesType) ? '' : 'none';
+            var matchesSearch  = !search || source.indexOf(search) !== -1 || orNum.indexOf(search) !== -1;
+            var matchesType    = !filterValue || rowType === filterValue;
+            var matchesPeriod  = rowInDateRange(rows[i], range);
+            rows[i].style.display = (matchesSearch && matchesType && matchesPeriod) ? '' : 'none';
         }
+    }
+    function filterIncomePeriod(period) {
+        _incomePeriod = period;
+        filterIncomeTable();
     }
     var incomeSearch = document.getElementById('incomeSearch');
     if (incomeSearch) incomeSearch.addEventListener('keyup', filterIncomeTable);
     var incomeTypeFilter = document.getElementById('incomeTypeFilter');
     if (incomeTypeFilter) incomeTypeFilter.addEventListener('change', filterIncomeTable);
-    
+    // Apply default period on load
+    filterIncomeTable();
+
+    // Expenses tab filter (search + status + period)
+    var _expensePeriod = 'month';
+    var _expenseStatus = 'all';
+    function filterExpensesTable() {
+        var search = (document.getElementById('expenseSearch')?.value || '').toLowerCase();
+        var range  = getTabDateRange(_expensePeriod);
+        var rows   = document.querySelectorAll('#expenseTableBody tr');
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i].cells.length < 5) continue;
+            var rowStatus = rows[i].getAttribute('data-status') || '';
+            var desc      = rows[i].cells[1]?.textContent.toLowerCase() || '';
+            var matchesStatus = (_expenseStatus === 'all') || rowStatus === _expenseStatus;
+            var matchesSearch = !search || desc.indexOf(search) !== -1;
+            var matchesPeriod = rowInDateRange(rows[i], range);
+            rows[i].style.display = (matchesStatus && matchesSearch && matchesPeriod) ? '' : 'none';
+        }
+    }
+    function filterExpensePeriodChange(period) {
+        _expensePeriod = period;
+        filterExpensesTable();
+    }
+
     var expenseSearch = document.getElementById('expenseSearch');
-    if (expenseSearch) {
-        expenseSearch.addEventListener('keyup', function() {
-            var search = this.value.toLowerCase();
-            var rows = document.querySelectorAll('#expenseTableBody tr');
-            for (var i = 0; i < rows.length; i++) {
-                if (rows[i].cells.length < 5) continue;
-                var desc = rows[i].cells[1]?.textContent.toLowerCase() || '';
-                rows[i].style.display = desc.indexOf(search) !== -1 ? '' : 'none';
+    if (expenseSearch) expenseSearch.addEventListener('keyup', filterExpensesTable);
+    // Apply default period on load
+    filterExpensesTable();
+    
+    function filterExpenses(status, el) {
+        _expenseStatus = status;
+        filterExpensesTable();
+        var links = document.querySelectorAll('.nav-link');
+        for (var i = 0; i < links.length; i++) links[i].classList.remove('active');
+        if (el) el.classList.add('active');
+    }
+    
+    // ── Archive Tab Filters ──────────────────────────────────────────────────
+
+    function filterArchivedIncome() {
+        var search = (document.getElementById('archivedIncomeSearch')?.value || '').toLowerCase();
+        var type   = document.getElementById('archivedIncomeTypeFilter')?.value || '';
+        var rows   = document.querySelectorAll('#archivedIncomeTableBody tr');
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i].cells.length < 5) continue;
+            var source  = rows[i].cells[2]?.textContent.toLowerCase() || '';
+            var orNum   = rows[i].cells[1]?.textContent.toLowerCase() || '';
+            var rowType = rows[i].getAttribute('data-type') || '';
+            var matchSearch = !search || source.indexOf(search) !== -1 || orNum.indexOf(search) !== -1;
+            var matchType   = !type   || rowType === type;
+            rows[i].style.display = (matchSearch && matchType) ? '' : 'none';
+        }
+    }
+    var archIncSearch = document.getElementById('archivedIncomeSearch');
+    if (archIncSearch) archIncSearch.addEventListener('keyup', filterArchivedIncome);
+    var archIncType = document.getElementById('archivedIncomeTypeFilter');
+    if (archIncType) archIncType.addEventListener('change', filterArchivedIncome);
+
+    function filterArchivedExpenses() {
+        var search = (document.getElementById('archivedExpenseSearch')?.value || '').toLowerCase();
+        var status = document.getElementById('archivedExpenseStatusFilter')?.value || '';
+        var rows   = document.querySelectorAll('#archivedExpenseTableBody tr');
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i].cells.length < 5) continue;
+            var desc      = rows[i].cells[1]?.textContent.toLowerCase() || '';
+            var rowStatus = rows[i].getAttribute('data-status') || '';
+            var matchSearch = !search || desc.indexOf(search) !== -1;
+            var matchStatus = !status || rowStatus === status;
+            rows[i].style.display = (matchSearch && matchStatus) ? '' : 'none';
+        }
+    }
+    var archExpSearch = document.getElementById('archivedExpenseSearch');
+    if (archExpSearch) archExpSearch.addEventListener('keyup', filterArchivedExpenses);
+    var archExpStatus = document.getElementById('archivedExpenseStatusFilter');
+    if (archExpStatus) archExpStatus.addEventListener('change', filterArchivedExpenses);
+
+
+
+    // ── EXPORT UTILITIES ────────────────────────────────────────────────────
+
+    // Returns {start, end} ISO strings for the current dashboard filter period
+    function getDashExportDates() {
+        var period = window._currentDashPeriod || 'month';
+        var now    = new Date();
+        var s, e;
+        e = now.toISOString().split('T')[0];
+        if (period === 'day') {
+            s = e;
+        } else if (period === 'week') {
+            var d = new Date(now); d.setDate(d.getDate() - d.getDay());
+            s = d.toISOString().split('T')[0];
+        } else if (period === 'month') {
+            s = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+            e = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+        } else if (period === 'year') {
+            s = now.getFullYear() + '-01-01';
+            e = now.getFullYear() + '-12-31';
+        } else if (period === 'all') {
+            s = '2020-01-01';
+            e = new Date(now.getFullYear() + 1, 11, 31).toISOString().split('T')[0];
+        } else if (period === 'custom') {
+            s = document.getElementById('dashCustomStart')?.value || e;
+            e = document.getElementById('dashCustomEnd')?.value   || e;
+        }
+        return { start: s || e, end: e };
+    }
+
+    // ── PDF render helper — appends visibly off-screen, captures, removes ──
+    function renderPDF(htmlContent, filename, orientation, callback) {
+        var overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:99998;';
+        var el = document.createElement('div');
+        el.style.cssText = 'position:absolute;top:0;left:0;width:794px;background:#ffffff;padding:0;margin:0;';
+        el.innerHTML = htmlContent;
+        overlay.appendChild(el);
+        document.body.appendChild(overlay);
+        // Small delay to let browser render before capture
+        setTimeout(function() {
+            html2pdf().set({
+                margin: [0.5, 0.5, 0.5, 0.5],
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false, allowTaint: true },
+                jsPDF: { unit: 'in', format: 'a4', orientation: orientation }
+            }).from(el).save().then(function() {
+                document.body.removeChild(overlay);
+                if (callback) callback();
+            });
+        }, 300);
+    }
+
+    // ── CSV: Export table rows that are currently visible ──────────────────
+    function exportTableCSV(tbodyId, headers, filePrefix) {
+        var rows  = document.querySelectorAll('#' + tbodyId + ' tr');
+        var lines = [headers.join(',')];
+        rows.forEach(function(row) {
+            if (row.style.display === 'none') return;
+            if (row.cells.length < 2) return;
+            var cols = [];
+            for (var i = 0; i < row.cells.length - 1; i++) { // skip last Actions column
+                var txt = (row.cells[i].textContent || '').trim().replace(/\s+/g, ' ');
+                cols.push('"' + txt.replace(/"/g, '""') + '"');
             }
+            lines.push(cols.join(','));
+        });
+        var csv  = lines.join('\r\n');
+        var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        var url  = URL.createObjectURL(blob);
+        var a    = document.createElement('a');
+        a.href     = url;
+        a.download = filePrefix + '_export_' + new Date().toISOString().slice(0,10) + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('CSV downloaded!', 'success');
+    }
+
+    // ── CSV: Dashboard — calls server endpoint for the active period ───────
+    function exportDashboardCSV() {
+        var dates = getDashExportDates();
+        // Build combined CSV from both lists using the server's pdf-data endpoint
+        showToast('Preparing CSV…', 'success');
+        fetch('/finance/reports/pdf-data?startDate=' + dates.start + '&endDate=' + dates.end)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) { showToast('Error: ' + (data.error || 'Unknown'), 'error'); return; }
+                var lines = [];
+                lines.push('BARANGAY FINANCIAL SUMMARY');
+                lines.push('Period,' + dates.start + ' to ' + dates.end);
+                lines.push('Generated,' + new Date().toLocaleString());
+                lines.push('');
+                lines.push('SUMMARY');
+                lines.push('Total Income,' + formatPHP(data.totalIncome));
+                lines.push('Total Expenses,' + formatPHP(data.totalExpenses));
+                lines.push('Net Savings,' + formatPHP(data.netSavings));
+                lines.push('Remaining Budget,' + formatPHP(data.remainingBudget));
+                lines.push('');
+                lines.push('INCOME RECORDS');
+                lines.push('Date,OR Number,Source,Type,Amount');
+                (data.incomeList || []).forEach(function(r) {
+                    lines.push([r.incomeDate, r.orNumber,
+                        '"' + (r.sourceName||'').replace(/"/g,'""') + '"',
+                        r.incomeType, r.amount].join(','));
+                });
+                lines.push('');
+                lines.push('EXPENSE RECORDS');
+                lines.push('Date,Description,Type,Amount,Status');
+                (data.expenseList || []).forEach(function(r) {
+                    lines.push([r.expenseDate,
+                        '"' + (r.description||'').replace(/"/g,'""') + '"',
+                        r.expenseType, r.amount, r.status].join(','));
+                });
+                var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+                var url  = URL.createObjectURL(blob);
+                var a    = document.createElement('a');
+                a.href     = url;
+                a.download = 'dashboard_' + dates.start + '_to_' + dates.end + '.csv';
+                document.body.appendChild(a); a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('CSV downloaded!', 'success');
+            })
+            .catch(function(err) { showToast('Export error: ' + err.message, 'error'); });
+    }
+
+    // ── PDF: Export a single table as a clean printable PDF ───────────────
+    function exportTablePDF(tbodyId, title, headers) {
+        var rows = document.querySelectorAll('#' + tbodyId + ' tr');
+        var tableRows = '';
+        rows.forEach(function(row) {
+            if (row.style.display === 'none') return;
+            if (row.cells.length < 2) return;
+            tableRows += '\u003Ctr\u003E';
+            for (var i = 0; i < row.cells.length - 1; i++) {
+                var txt   = (row.cells[i].textContent || '').trim();
+                var isAmt = txt.startsWith('₱');
+                tableRows += '\u003Ctd style="padding:6px 10px;border-bottom:1px solid #eee;' +
+                    (isAmt ? 'text-align:right;font-weight:600;' : '') + '"\u003E' + txt + '\u003C/td\u003E';
+            }
+            tableRows += '\u003C/tr\u003E';
+        });
+        var headerCells = headers.map(function(h) {
+            return '\u003Cth style="padding:8px 10px;background:#f1f5f3;color:#2d4a44;font-size:11px;border-bottom:2px solid #FED734;text-align:left;"\u003E' + h + '\u003C/th\u003E';
+        }).join('');
+        var html = '\u003Cdiv style="font-family:Segoe UI,Arial,sans-serif;padding:30px;max-width:900px;"\u003E' +
+            '\u003Cdiv style="border-bottom:3px solid #2d4a44;padding-bottom:12px;margin-bottom:20px;"\u003E' +
+            '\u003Ch2 style="color:#2d4a44;margin:0;"\u003E' + title + '\u003C/h2\u003E' +
+            '\u003Cp style="color:#999;font-size:12px;margin:4px 0 0;"\u003EGenerated: ' + new Date().toLocaleString() + '\u003C/p\u003E\u003C/div\u003E' +
+            '\u003Ctable style="width:100%;border-collapse:collapse;font-size:12px;"\u003E' +
+            '\u003Cthead\u003E\u003Ctr\u003E' + headerCells + '\u003C/tr\u003E\u003C/thead\u003E' +
+            '\u003Ctbody\u003E' + (tableRows || '\u003Ctr\u003E\u003Ctd colspan="' + headers.length + '" style="padding:20px;text-align:center;color:#aaa;"\u003ENo records\u003C/td\u003E\u003C/tr\u003E') + '\u003C/tbody\u003E' +
+            '\u003C/table\u003E' +
+            '\u003Cdiv style="margin-top:24px;text-align:center;font-size:10px;color:#aaa;border-top:1px solid #ddd;padding-top:10px;"\u003ECivilAccess Financial Management System\u003C/div\u003E' +
+            '\u003C/div\u003E';
+        renderPDF(html, title.replace(/\s+/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.pdf', 'landscape', function() {
+            showToast('PDF downloaded!', 'success');
         });
     }
-    
-    function formatPHP(value) {
-        return '₱' + parseFloat(value).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    // ── PDF: Dashboard summary PDF (uses server pdf-data endpoint) ─────────
+    function exportDashboardPDF() {
+        var dates = getDashExportDates();
+        showToast('Building PDF…', 'success');
+        fetch('/finance/reports/pdf-data?startDate=' + dates.start + '&endDate=' + dates.end)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) { showToast('Error: ' + (data.error || 'Unknown'), 'error'); return; }
+                var typeLabel = function(t) {
+                    var m = { DOCUMENT_FEE:'Document Fee', RENTAL:'Rental', DONATION:'Donation', OTHER:'Other' };
+                    return m[t] || t;
+                };
+                var incRows = (data.incomeList||[]).map(function(r) {
+                    return '\u003Ctr\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;"\u003E' + (r.incomeDate||'') +
+                        '\u003C/td\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;"\u003E' + (r.orNumber||'') +
+                        '\u003C/td\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;"\u003E' + (r.sourceName||'') +
+                        '\u003C/td\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;"\u003E' + typeLabel(r.incomeType) +
+                        '\u003C/td\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;text-align:right;color:#27ae60;font-weight:600;"\u003E' + formatPHP(r.amount) + '\u003C/td\u003E\u003C/tr\u003E';
+                }).join('') || '\u003Ctr\u003E\u003Ctd colspan="5" style="padding:16px;text-align:center;color:#aaa;"\u003ENo records\u003C/td\u003E\u003C/tr\u003E';
+
+                var expRows = (data.expenseList||[]).map(function(r) {
+                    var sc = r.status==='PENDING'?'#f39c12':'#3498db';
+                    return '\u003Ctr\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;"\u003E' + (r.expenseDate||'') +
+                        '\u003C/td\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;"\u003E' + (r.description||'') +
+                        '\u003C/td\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;"\u003E' + (r.expenseType||'') +
+                        '\u003C/td\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;text-align:right;color:#e74c3c;font-weight:600;"\u003E' + formatPHP(r.amount) +
+                        '\u003C/td\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;"\u003E\u003Cspan style="background:' + sc + ';color:#fff;padding:2px 7px;border-radius:10px;font-size:10px;"\u003E' + (r.status||'') + '\u003C/span\u003E\u003C/td\u003E\u003C/tr\u003E';
+                }).join('') || '\u003Ctr\u003E\u003Ctd colspan="5" style="padding:16px;text-align:center;color:#aaa;"\u003ENo records\u003C/td\u003E\u003C/tr\u003E';
+
+                var th = function(t) { return '\u003Cth style="padding:8px 10px;background:#f1f5f3;color:#2d4a44;font-size:11px;border-bottom:2px solid #FED734;text-align:left;"\u003E' + t + '\u003C/th\u003E'; };
+                var sd = function(lbl,val,col) { return '\u003Cdiv style="display:inline-block;width:23%;background:#f8f9fa;border-radius:8px;padding:14px;text-align:center;border-left:4px solid ' + col + ';margin-right:1%;vertical-align:top;"\u003E' + '\u003Cdiv style="font-size:11px;color:#666;text-transform:uppercase;"\u003E' + lbl + '\u003C/div\u003E' + '\u003Cdiv style="font-size:20px;font-weight:bold;color:' + col + ';"\u003E' + val + '\u003C/div\u003E' + '\u003C/div\u003E'; };
+
+                var html = '\u003Cdiv style="font-family:Segoe UI,Arial,sans-serif;padding:30px;max-width:1000px;background:#fff;"\u003E' +
+                    '\u003Cdiv style="text-align:center;border-bottom:3px solid #2d4a44;padding-bottom:14px;margin-bottom:22px;"\u003E' +
+                    '\u003Ch2 style="color:#2d4a44;margin:0;"\u003EBarangay Financial Report\u003C/h2\u003E' +
+                    '\u003Cp style="color:#666;font-size:13px;margin:5px 0 0;"\u003EPeriod: ' + dates.start + ' — ' + dates.end + '\u003C/p\u003E' +
+                    '\u003Cp style="color:#aaa;font-size:11px;margin:3px 0 0;"\u003EGenerated: ' + new Date().toLocaleString() + '\u003C/p\u003E\u003C/div\u003E' +
+                    '\u003Cdiv style="margin-bottom:24px;white-space:nowrap;"\u003E' +
+                    sd('Total Income',    formatPHP(data.totalIncome),   '#27ae60') +
+                    sd('Total Expenses',  formatPHP(data.totalExpenses), '#e74c3c') +
+                    sd('Net Savings',     formatPHP(data.netSavings),    data.netSavings>=0?'#27ae60':'#e74c3c') +
+                    sd('Remaining Budget',formatPHP(data.remainingBudget),'#2d4a44') +
+                    '\u003C/div\u003E' +
+                    '\u003Ch3 style="color:#2d4a44;font-size:15px;margin:0 0 10px;padding-bottom:6px;border-bottom:2px solid #eee;"\u003EIncome Transactions\u003C/h3\u003E' +
+                    '\u003Ctable style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:24px;"\u003E' +
+                    '\u003Cthead\u003E\u003Ctr\u003E' + th('Date')+th('OR #')+th('Source')+th('Type')+th('Amount') + '\u003C/tr\u003E\u003C/thead\u003E' +
+                    '\u003Ctbody\u003E' + incRows + '\u003C/tbody\u003E\u003C/table\u003E' +
+                    '\u003Ch3 style="color:#2d4a44;font-size:15px;margin:0 0 10px;padding-bottom:6px;border-bottom:2px solid #eee;"\u003EExpense Transactions\u003C/h3\u003E' +
+                    '\u003Ctable style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:24px;"\u003E' +
+                    '\u003Cthead\u003E\u003Ctr\u003E' + th('Date')+th('Description')+th('Type')+th('Amount')+th('Status') + '\u003C/tr\u003E\u003C/thead\u003E' +
+                    '\u003Ctbody\u003E' + expRows + '\u003C/tbody\u003E\u003C/table\u003E' +
+                    '\u003Cdiv style="text-align:center;font-size:10px;color:#aaa;border-top:1px solid #ddd;padding-top:10px;margin-top:10px;"\u003ECivilAccess Financial Management System — Official Barangay Report\u003C/div\u003E' +
+                    '\u003C/div\u003E';
+                renderPDF(html, 'financial_report_' + dates.start + '_to_' + dates.end + '.pdf', 'portrait', function() {
+                    showToast('PDF downloaded!', 'success');
+                });
+            })
+            .catch(function(err) { showToast('Export error: ' + err.message, 'error'); });
     }
-    
-    // PDF Report Generation Function
+
+    // ── PDF Report Generation Function (budget tab report) ────────────────
     async function downloadPDFReport() {
         var startDate = document.getElementById('reportStartDate').value;
         var endDate = document.getElementById('reportEndDate').value;
-        
+
         if (!startDate || !endDate) {
             showToast('Please select both start and end dates', 'error');
             return;
         }
-        
+
         if (new Date(startDate) > new Date(endDate)) {
             showToast('Start date cannot be after end date', 'error');
             return;
         }
-        
+
         showToast('Generating PDF report...', 'success');
-        
+
         try {
             var response = await fetch('/finance/reports/pdf-data?startDate=' + startDate + '&endDate=' + endDate);
             var data = await response.json();
-            
+
             if (!data.success) {
                 showToast('Error: ' + (data.error || 'Unknown error'), 'error');
                 return;
             }
-            
+
             // Build income table
             var incomeRows = '';
             if (data.incomeList && data.incomeList.length > 0) {
@@ -519,7 +1093,7 @@
                     if (inc.incomeType === 'RENTAL') typeDisplay = 'Rental';
                     else if (inc.incomeType === 'DONATION') typeDisplay = 'Donation';
                     else if (inc.incomeType === 'DOCUMENT_FEE') typeDisplay = 'Document Fee';
-                    
+
                     incomeRows += '<tr>' +
                         '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (inc.incomeDate || '') + '</td>' +
                         '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (inc.orNumber || 'N/A') + '</td>' +
@@ -531,7 +1105,7 @@
             } else {
                 incomeRows = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No income records found</td></tr>';
             }
-            
+
             // Build expense table
             var expenseRows = '';
             if (data.expenseList && data.expenseList.length > 0) {
@@ -540,7 +1114,7 @@
                     var statusText = exp.status || 'PENDING';
                     var expenseTypeDisplay = (exp.expenseType || 'OTHER').replace('_', ' ');
                     expenseTypeDisplay = expenseTypeDisplay.charAt(0).toUpperCase() + expenseTypeDisplay.slice(1).toLowerCase();
-                    
+
                     expenseRows += '<tr>' +
                         '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (exp.expenseDate || '') + '</td>' +
                         '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (exp.description || '') + '</td>' +
@@ -552,7 +1126,7 @@
             } else {
                 expenseRows = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No expense records found</td></tr>';
             }
-            
+
             // Build budget table
             var budgetRows = '';
             if (data.budgetList && data.budgetList.length > 0) {
@@ -568,101 +1142,75 @@
             } else {
                 budgetRows = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No budget records found</td></tr>';
             }
-            
-            var pdfHtml = `
-                <div style="background: white; padding: 30px; font-family: 'Segoe UI', Arial, sans-serif; max-width: 1000px; margin: 0 auto;">
-                    <div style="text-align: center; margin-bottom: 25px; border-bottom: 3px solid #2d4a44; padding-bottom: 15px;">
-                        <h2 style="color: #2d4a44; margin: 0 0 5px 0;">Barangay Financial Report</h2>
-                        <p style="margin: 5px 0; color: #666;">Period: ${new Date(data.startDate).toLocaleDateString()} - ${new Date(data.endDate).toLocaleDateString()}</p>
-                        <p style="margin: 5px 0; color: #999; font-size: 12px;">Generated on: ${new Date().toLocaleString()}</p>
-                    </div>
-                    
-                    <div style="display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;">
-                        <div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #27ae60;">
-                            <div style="font-size: 11px; color: #666; text-transform: uppercase;">Total Income</div>
-                            <div style="font-size: 22px; font-weight: bold; color: #27ae60;">${formatPHP(data.totalIncome)}</div>
-                        </div>
-                        <div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #e74c3c;">
-                            <div style="font-size: 11px; color: #666; text-transform: uppercase;">Total Expenses</div>
-                            <div style="font-size: 22px; font-weight: bold; color: #e74c3c;">${formatPHP(data.totalExpenses)}</div>
-                        </div>
-                        <div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #FED734;">
-                            <div style="font-size: 11px; color: #666; text-transform: uppercase;">Net Savings</div>
-                            <div style="font-size: 22px; font-weight: bold; color: ${data.netSavings >= 0 ? '#27ae60' : '#e74c3c'};">${formatPHP(data.netSavings)}</div>
-                        </div>
-                        <div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #2d4a44;">
-                            <div style="font-size: 11px; color: #666; text-transform: uppercase;">Remaining Budget</div>
-                            <div style="font-size: 22px; font-weight: bold; color: #2d4a44;">${formatPHP(data.remainingBudget)}</div>
-                        </div>
-                    </div>
-                    
-                    <h3 style="color: #2d4a44; font-size: 16px; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #ddd;">📋 Income Transactions</h3>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
-                        <thead>
-                            <tr style="background: #f1f5f3;">
-                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Date</th>
-                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">OR#</th>
-                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Source</th>
-                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Type</th>
-                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>${incomeRows}</tbody>
-                    </table>
-                    
-                    <h3 style="color: #2d4a44; font-size: 16px; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #ddd;">💰 Expense Transactions</h3>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
-                        <thead>
-                            <tr style="background: #f1f5f3;">
-                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Date</th>
-                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Description</th>
-                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Category</th>
-                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Amount</th>
-                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>${expenseRows}</tbody>
-                    </table>
-                    
-                    <h3 style="color: #2d4a44; font-size: 16px; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #ddd;">📊 Budget Allocations</h3>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
-                        <thead>
-                            <tr style="background: #f1f5f3;">
-                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Program ID</th>
-                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Budget Item</th>
-                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Allocated</th>
-                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Spent</th>
-                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Remaining</th>
-                            </tr>
-                        </thead>
-                        <tbody>${budgetRows}</tbody>
-                    </table>
-                    
-                    <div style="text-align: center; font-size: 10px; color: #999; margin-top: 25px; padding-top: 10px; border-top: 1px solid #ddd;">
-                        CivilAccess Financial Management System — Official Barangay Report
-                    </div>
-                </div>
-            `;
-            
-            var container = document.createElement('div');
-            container.style.position = 'absolute';
-            container.style.left = '-9999px';
-            container.style.top = '-9999px';
-            container.innerHTML = pdfHtml;
-            document.body.appendChild(container);
-            
-            var opt = {
-                margin: [0.5, 0.5, 0.5, 0.5],
-                filename: `Financial_Report_${data.startDate}_to_${data.endDate}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, letterRendering: true },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-            };
-            
-            await html2pdf().set(opt).from(container).save();
-            document.body.removeChild(container);
+
+            var pdfHtml =
+                '<div style="background: white; padding: 30px; font-family: \'Segoe UI\', Arial, sans-serif; max-width: 1000px; margin: 0 auto;">' +
+                    '<div style="text-align: center; margin-bottom: 25px; border-bottom: 3px solid #2d4a44; padding-bottom: 15px;">' +
+                        '<h2 style="color: #2d4a44; margin: 0 0 5px 0;">Barangay Financial Report</h2>' +
+                        '<p style="margin: 5px 0; color: #666;">Period: ' + new Date(data.startDate).toLocaleDateString() + ' - ' + new Date(data.endDate).toLocaleDateString() + '</p>' +
+                        '<p style="margin: 5px 0; color: #999; font-size: 12px;">Generated on: ' + new Date().toLocaleString() + '</p>' +
+                    '</div>' +
+                    '<div style="display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;">' +
+                        '<div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #27ae60;">' +
+                            '<div style="font-size: 11px; color: #666; text-transform: uppercase;">Total Income</div>' +
+                            '<div style="font-size: 22px; font-weight: bold; color: #27ae60;">' + formatPHP(data.totalIncome) + '</div>' +
+                        '</div>' +
+                        '<div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #e74c3c;">' +
+                            '<div style="font-size: 11px; color: #666; text-transform: uppercase;">Total Expenses</div>' +
+                            '<div style="font-size: 22px; font-weight: bold; color: #e74c3c;">' + formatPHP(data.totalExpenses) + '</div>' +
+                        '</div>' +
+                        '<div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #FED734;">' +
+                            '<div style="font-size: 11px; color: #666; text-transform: uppercase;">Net Savings</div>' +
+                            '<div style="font-size: 22px; font-weight: bold; color: ' + (data.netSavings >= 0 ? '#27ae60' : '#e74c3c') + ';">' + formatPHP(data.netSavings) + '</div>' +
+                        '</div>' +
+                        '<div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #2d4a44;">' +
+                            '<div style="font-size: 11px; color: #666; text-transform: uppercase;">Remaining Budget</div>' +
+                            '<div style="font-size: 22px; font-weight: bold; color: #2d4a44;">' + formatPHP(data.remainingBudget) + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<h3 style="color: #2d4a44; font-size: 16px; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #ddd;">Income Transactions</h3>' +
+                    '<table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">' +
+                        '<thead><tr style="background: #f1f5f3;">' +
+                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Date</th>' +
+                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">OR#</th>' +
+                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Source</th>' +
+                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Type</th>' +
+                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Amount</th>' +
+                        '</tr></thead>' +
+                        '<tbody>' + incomeRows + '</tbody>' +
+                    '</table>' +
+                    '<h3 style="color: #2d4a44; font-size: 16px; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #ddd;">Expense Transactions</h3>' +
+                    '<table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">' +
+                        '<thead><tr style="background: #f1f5f3;">' +
+                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Date</th>' +
+                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Description</th>' +
+                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Category</th>' +
+                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Amount</th>' +
+                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Status</th>' +
+                        '</tr></thead>' +
+                        '<tbody>' + expenseRows + '</tbody>' +
+                    '</table>' +
+                    '<h3 style="color: #2d4a44; font-size: 16px; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #ddd;">Budget Allocations</h3>' +
+                    '<table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">' +
+                        '<thead><tr style="background: #f1f5f3;">' +
+                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Program ID</th>' +
+                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Budget Item</th>' +
+                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Allocated</th>' +
+                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Spent</th>' +
+                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Remaining</th>' +
+                        '</tr></thead>' +
+                        '<tbody>' + budgetRows + '</tbody>' +
+                    '</table>' +
+                    '<div style="text-align: center; font-size: 10px; color: #999; margin-top: 25px; padding-top: 10px; border-top: 1px solid #ddd;">' +
+                        'CivilAccess Financial Management System — Official Barangay Report' +
+                    '</div>' +
+                '</div>';
+
+            await new Promise(function(resolve) {
+                renderPDF(pdfHtml, 'Financial_Report_' + data.startDate + '_to_' + data.endDate + '.pdf', 'portrait', resolve);
+            });
             showToast('PDF report downloaded successfully!', 'success');
-            
+
         } catch (err) {
             console.error('PDF Error:', err);
             showToast('Error generating PDF: ' + err.message, 'error');
@@ -682,8 +1230,8 @@
         
         toggleIncomeFields();
         
-        var successMsg = /*[[${success}]]*/ null;
-        var errorMsg = /*[[${error}]]*/ null;
+        var successMsg = window._th_success;
+        var errorMsg = window._th_error;
         if (successMsg) showToast(successMsg, 'success');
         if (errorMsg) showToast(errorMsg, 'error');
         
@@ -722,7 +1270,7 @@
         if (!toastWrap) return;
         var toast = document.createElement('div');
         toast.className = 'toast-msg ' + type;
-        toast.innerHTML = '<i class="bi bi-' + (type === 'success' ? 'check-circle' : 'x-circle') + ' me-2"></i>' + message;
+        toast.innerHTML = '\u003Ci class="bi bi-' + (type === 'success' ? 'check-circle' : 'x-circle') + ' me-2"\u003E\u003C/i\u003E' + message;
         toastWrap.appendChild(toast);
         setTimeout(function() { if(toast) toast.remove(); }, 4000);
     }
@@ -779,58 +1327,220 @@
         if (e.target === this) closeBudgetModal();
     });
 
-    // ── Dashboard Charts ──────────────────────────────────────────────────────
+    // ── Dashboard Period Filter ───────────────────────────────────────────────
     (function() {
-        var rawIncome  = /*[[${incomeByType}]]*/ null;
-        var rawExpense = /*[[${expenseByType}]]*/ null;
+        // Raw transaction data injected by Thymeleaf
+        var allIncomeList  = window._th_incomeList;
+        var allExpenseList = window._th_expenseList;
 
-        function buildChart(canvasId, wrapId, type, labels, values, colors, label) {
+        // Fallback stat values from server (already computed for "month")
+        var serverMonthIncome   = window._th_monthIncome;
+        var serverMonthExpenses = window._th_monthExpenses;
+        var serverTotalIncome   = window._th_totalIncomeAll;
+        var serverTotalExpenses = window._th_totalExpensesAll;
+
+        var dashIncomeChart  = null;
+        var dashExpenseChart = null;
+        var currentPeriod    = 'month';
+
+        function parseAmt(v) { return parseFloat(v) || 0; }
+
+        function formatPHP(v) {
+            return '₱' + parseAmt(v).toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2});
+        }
+
+        function getDateRange(period) {
+            var now   = new Date();
+            var start, end;
+            end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+            if (period === 'day') {
+                start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+            } else if (period === 'week') {
+                var day = now.getDay();
+                start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day, 0, 0, 0);
+            } else if (period === 'month') {
+                start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+                end   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+            } else if (period === 'year') {
+                start = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
+                end   = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+            } else if (period === 'all') {
+                start = new Date('1900-01-01');
+                end   = new Date('2999-12-31');
+            }
+            return { start: start, end: end };
+        }
+
+        function periodLabel(period, startDate, endDate) {
+            var opts = { year:'numeric', month:'short', day:'numeric' };
+            if (period === 'day')   return 'Today';
+            if (period === 'week')  return 'This Week';
+            if (period === 'month') return 'Current Month';
+            if (period === 'year')  return 'This Year';
+            if (period === 'all')   return 'All Time';
+            if (period === 'custom' && startDate && endDate)
+                return startDate.toLocaleDateString('en-PH', opts) + ' – ' + endDate.toLocaleDateString('en-PH', opts);
+            return '';
+        }
+
+        function periodTitle(period) {
+            if (period === 'day')   return 'Today';
+            if (period === 'week')  return 'This Week';
+            if (period === 'month') return 'This Month';
+            if (period === 'year')  return 'This Year';
+            if (period === 'all')   return 'All Time';
+            return 'Selected Period';
+        }
+
+        function inRange(dateStr, start, end) {
+            if (!dateStr) return false;
+            var d = new Date(dateStr + 'T00:00:00');
+            return d >= start && d <= end;
+        }
+
+        function groupByType(list, typeKey) {
+            var map = {};
+            list.forEach(function(item) {
+                var t = (item[typeKey] || 'Other').replace(/_/g,' ');
+                t = t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+                map[t] = (map[t] || 0) + parseAmt(item.amount);
+            });
+            return map;
+        }
+
+        function rebuildChart(canvasId, wrapId, labels, values, colors, label, existingChart) {
             var canvas = document.getElementById(canvasId);
             var wrap   = document.getElementById(wrapId);
-            if (!canvas || !wrap) return;
+            if (!canvas || !wrap) return null;
+            if (existingChart) existingChart.destroy();
             if (!labels || labels.length === 0) {
-                wrap.innerHTML = '<p style="color:#aaa;text-align:center;padding:50px 0;font-size:13px;">No data this month</p>';
-                return;
+                wrap.innerHTML = '\u003Cp style="color:#aaa;text-align:center;padding:50px 0;font-size:13px;"\u003ENo data for this period\u003C/p\u003E';
+                return null;
+            }
+            // Recreate canvas if it was replaced by text
+            if (!wrap.querySelector('canvas')) {
+                wrap.innerHTML = '\u003Ccanvas id="' + canvasId + '" style="position:absolute;inset:0;width:100%!important;height:100%!important;"\u003E\u003C/canvas\u003E';
+                canvas = document.getElementById(canvasId);
             }
             var ctx = canvas.getContext('2d');
-            new Chart(ctx, {
-                type: type,
+            var chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                    x: { ticks: { font: { size: 10 } } }
+                }
+            };
+            return new Chart(ctx, {
+                type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: label,
-                        data: values,
-                        backgroundColor: colors,
-                        borderRadius: type === 'bar' ? 6 : 0,
-                        borderWidth: type === 'doughnut' ? 2 : 0,
-                        borderColor: '#fff'
-                    }]
+                    datasets: [{ label: label, data: values, backgroundColor: colors, borderRadius: 6, borderWidth: 0 }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { font: { size: 10 } } },
-                        x: { ticks: { font: { size: 10 } } }
-                    }
-                }
+                options: chartOptions
             });
         }
 
-        var incomeColors  = ['#27ae60','#1abc9c','#2ecc71','#16a085','#27ae60','#0e6655'];
+        var incomeColors  = ['#27ae60','#1abc9c','#2ecc71','#16a085','#0e6655','#27ae60'];
         var expenseColors = ['#e74c3c','#c0392b','#e67e22','#d35400','#922b21','#78281f','#f1948a','#aaa'];
 
-        var incomeLabels  = rawIncome  ? Object.keys(rawIncome)  : [];
-        var incomeValues  = rawIncome  ? Object.values(rawIncome)  : [];
-        var expenseLabels = rawExpense ? Object.keys(rawExpense) : [];
-        var expenseValues = rawExpense ? Object.values(rawExpense) : [];
+        function applyFilter(period, start, end) {
+            var filteredIncome  = allIncomeList.filter(function(r)  { return inRange(r.incomeDate,  start, end); });
+            var filteredExpense = allExpenseList.filter(function(r) { return inRange(r.expenseDate, start, end); });
 
-        buildChart('incomeChart',  'incomeChartWrap',  'bar', incomeLabels,  incomeValues,  incomeColors,  'Amount (₱)');
-        buildChart('expenseChart', 'expenseChartWrap', 'bar', expenseLabels, expenseValues, expenseColors, 'Amount (₱)');
+            var totalInc = filteredIncome.reduce(function(s,r)  { return s + parseAmt(r.amount); }, 0);
+            var totalExp = filteredExpense.reduce(function(s,r) { return s + parseAmt(r.amount); }, 0);
+            var netSav   = totalInc - totalExp;
+
+            // Update stat cards
+            var title = periodTitle(period);
+            var incLabelEl = document.getElementById('dashIncomeLabel');
+            var expLabelEl = document.getElementById('dashExpenseLabel');
+            var savLabelEl = document.getElementById('dashSavingsLabel');
+            if (incLabelEl) incLabelEl.innerHTML = '\u003Ci class="bi bi-graph-up"\u003E\u003C/i\u003E Income — ' + title;
+            if (expLabelEl) expLabelEl.innerHTML = '\u003Ci class="bi bi-graph-down"\u003E\u003C/i\u003E Expenses — ' + title;
+            if (savLabelEl) savLabelEl.innerHTML = '\u003Ci class="bi bi-piggy-bank"\u003E\u003C/i\u003E Net Savings — ' + title;
+
+            var incAmtEl = document.getElementById('dashIncomeAmt');
+            var expAmtEl = document.getElementById('dashExpenseAmt');
+            var savAmtEl = document.getElementById('dashSavingsAmt');
+            if (incAmtEl) incAmtEl.textContent = formatPHP(totalInc);
+            if (expAmtEl) expAmtEl.textContent = formatPHP(totalExp);
+            if (savAmtEl) {
+                savAmtEl.textContent = formatPHP(netSav);
+                savAmtEl.className = 'stat-amount ' + (netSav >= 0 ? 'text-success' : 'text-danger');
+            }
+
+            // Update chart titles
+            var incChartTitle = document.getElementById('incomeChartTitle');
+            var expChartTitle = document.getElementById('expenseChartTitle');
+            if (incChartTitle) incChartTitle.innerHTML = '\u003Ci class="bi bi-bar-chart"\u003E\u003C/i\u003E Income Breakdown — ' + title;
+            if (expChartTitle) expChartTitle.innerHTML = '\u003Ci class="bi bi-bar-chart"\u003E\u003C/i\u003E Expenses by Category — ' + title;
+
+            // Rebuild charts
+            var incByType  = groupByType(filteredIncome,  'incomeType');
+            var expByType  = groupByType(filteredExpense, 'expenseType');
+            dashIncomeChart  = rebuildChart('incomeChart',  'incomeChartWrap',  Object.keys(incByType),  Object.values(incByType),  incomeColors,  'Amount (₱)', dashIncomeChart);
+            dashExpenseChart = rebuildChart('expenseChart', 'expenseChartWrap', Object.keys(expByType),  Object.values(expByType),  expenseColors, 'Amount (₱)', dashExpenseChart);
+
+            // Period label
+            var lbl = document.getElementById('dashPeriodLabel');
+            if (lbl) lbl.textContent = 'Showing: ' + periodLabel(period, start, end);
+        }
+
+        // Expose globally
+        window._currentDashPeriod = 'month';
+        window._currentDashCustomStart = null;
+        window._currentDashCustomEnd   = null;
+
+        window.applyDashboardFilter = function(period, btn) {
+            currentPeriod = period;
+            window._currentDashPeriod = period;
+            document.querySelectorAll('.period-btn').forEach(function(b) { b.classList.remove('active'); });
+            if (btn) btn.classList.add('active');
+
+            var customInputs = document.getElementById('customRangeInputs');
+            if (period === 'custom') {
+                if (customInputs) customInputs.classList.add('visible');
+                return; // wait for Apply click
+            } else {
+                if (customInputs) customInputs.classList.remove('visible');
+            }
+
+            var range = getDateRange(period);
+            applyFilter(period, range.start, range.end);
+        };
+
+        window.applyCustomRange = function() {
+            var s = document.getElementById('dashCustomStart').value;
+            var e = document.getElementById('dashCustomEnd').value;
+            if (!s || !e) { showToast('Please select both start and end dates.', 'error'); return; }
+            var start = new Date(s + 'T00:00:00');
+            var end   = new Date(e + 'T23:59:59');
+            if (start > end) { showToast('Start date must be before end date.', 'error'); return; }
+            applyFilter('custom', start, end);
+        };
+
+        // Run default (month) on load — wait until DOMContentLoaded is already done
+        // We hook into the existing DOMContentLoaded to re-apply after charts are built
+        window._dashFilterPending = true;
+        window._runDashFilter = function() {
+            var range = getDateRange('month');
+            applyFilter('month', range.start, range.end);
+        };
     })();
+
+    // ── Dashboard Charts ──────────────────────────────────────────────────────
+    (function() {
+        var rawIncome  = window._th_incomeByType;
+        var rawExpense = window._th_expenseByType;
+
+        // Apply default dashboard period filter (month) — this handles the initial chart render via rebuildChart
+        if (window._runDashFilter) window._runDashFilter();
+    })();
+
 </script>
 </body>
 </html>

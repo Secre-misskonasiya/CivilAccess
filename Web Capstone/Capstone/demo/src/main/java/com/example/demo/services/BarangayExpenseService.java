@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -223,5 +224,68 @@ public class BarangayExpenseService {
     // Get pending total amount
     public Double getPendingTotalAmount() {
         return barangayExpenseRepository.getTotalPendingExpenses();
+    }
+
+    // ========== ARCHIVE METHODS ==========
+
+    /**
+     * Archive an expense (soft-delete).
+     * Only the Treasurer role may call this endpoint.
+     * If the expense was APPROVED, its budget impact is reversed before archiving.
+     */
+    @Transactional
+    public BarangayExpense archiveExpense(Long id, Long archivedBy) {
+        BarangayExpense expense = getExpenseById(id);
+
+        if (Boolean.TRUE.equals(expense.getArchived())) {
+            throw new RuntimeException("Expense #" + id + " is already archived.");
+        }
+
+        // Reverse budget deduction if the expense had been approved
+        if (ExpenseStatus.APPROVED.equals(expense.getStatus())) {
+            Long programId = expense.getProgramId() != null ? expense.getProgramId() : 0L;
+            programBudgetService.reverseExpenseFromBudget(programId, expense.getAmount());
+        }
+
+        expense.setArchived(true);
+        expense.setArchivedAt(java.time.LocalDateTime.now());
+        expense.setArchivedBy(archivedBy);
+        return barangayExpenseRepository.save(expense);
+    }
+
+    /**
+     * Restore an archived expense back to its previous state.
+     * If it was APPROVED before archiving, the budget deduction is reapplied.
+     */
+    @Transactional
+    public BarangayExpense unarchiveExpense(Long id) {
+        BarangayExpense expense = getExpenseById(id);
+
+        if (!Boolean.TRUE.equals(expense.getArchived())) {
+            throw new RuntimeException("Expense #" + id + " is not archived.");
+        }
+
+        expense.setArchived(false);
+        expense.setArchivedAt(null);
+        expense.setArchivedBy(null);
+        BarangayExpense saved = barangayExpenseRepository.save(expense);
+
+        // Reapply budget deduction if restored expense is APPROVED
+        if (ExpenseStatus.APPROVED.equals(saved.getStatus())) {
+            Long programId = saved.getProgramId() != null ? saved.getProgramId() : 0L;
+            programBudgetService.applyExpenseToBudget(programId, saved.getAmount());
+        }
+
+        return saved;
+    }
+
+    // Get all archived expenses
+    public List<BarangayExpense> getArchivedExpenses() {
+        return barangayExpenseRepository.findByArchivedTrue();
+    }
+
+    // Get all active (non-archived) expenses — overrides getAllExpenses for normal views
+    public List<BarangayExpense> getActiveExpenses() {
+        return barangayExpenseRepository.findByArchivedFalseOrArchivedIsNull();
     }
 }

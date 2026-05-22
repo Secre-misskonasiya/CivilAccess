@@ -1,6 +1,7 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -32,6 +33,23 @@ public class SuggestedProgram {
     @Column(name = "program_id")
     private Long programId;
 
+    /**
+     * Lifecycle status of this suggested program.
+     * PROCESSING = saved by AI / admin, awaiting decision
+     * ADDED      = approved and added to the calendar
+     * DELETED    = removed (soft-delete; hidden from the suggestion list)
+     */
+    @Column(name = "status", nullable = false)
+    private String status = "PROCESSING";
+
+    /**
+     * Timestamp of the last status change — used to sort the activity log.
+     */
+    @Column(name = "status_updated_at")
+    private LocalDateTime statusUpdatedAt;
+
+    // ── Getters & Setters ─────────────────────────────────────────────────────
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -41,11 +59,11 @@ public class SuggestedProgram {
     public LocalTime getProgramTime() { return programTime; }
     public void setProgramTime(LocalTime programTime) { this.programTime = programTime; }
 
-    public LocalTime getProgramendTime() {return programendTime;}
-    public void setProgramendTime(LocalTime programendTime) {this.programendTime = programendTime;}
+    public LocalTime getProgramendTime() { return programendTime; }
+    public void setProgramendTime(LocalTime programendTime) { this.programendTime = programendTime; }
 
-    public String getProgramDate() {return programDate;}
-    public void setProgramDate(String programDate) {this.programDate = programDate;}
+    public String getProgramDate() { return programDate; }
+    public void setProgramDate(String programDate) { this.programDate = programDate; }
 
     public Long getProgramId() { return programId; }
     public void setProgramId(Long programId) { this.programId = programId; }
@@ -55,4 +73,10 @@ public class SuggestedProgram {
 
     public int getProgram_budget() { return program_budget; }
     public void setProgram_budget(int program_budget) { this.program_budget = program_budget; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public LocalDateTime getStatusUpdatedAt() { return statusUpdatedAt; }
+    public void setStatusUpdatedAt(LocalDateTime statusUpdatedAt) { this.statusUpdatedAt = statusUpdatedAt; }
 }
