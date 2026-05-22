@@ -38,7 +38,7 @@
     </button>
     <div class="section-body" id="sec-management">
         <ul class="menu">
-            <li th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY'}" onclick="window.location.href='/account'">
+            <li th:if="${currentrole == 'ADMIN'}" onclick="window.location.href='/account'">
                 <img src="/icons/accounts.svg" class="icon"> Accounts
             </li>
             <li onclick="window.location.href='/user-profile'">

@@ -1211,7 +1211,7 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
         const roleSelect = document.getElementById('edit-role');
         const allowedRoles = currentRole === 'ADMIN'
             ? ['ADMIN', 'BARANGAY-CAPTAIN', 'TREASURER', 'SECRETARY', 'TANOD']
-            : ['TREASURER', 'BARANGAY-CAPTAIN', 'TANOD'];
+            : ['SECRETARIAT STAFF','TREASURER', 'BARANGAY-CAPTAIN', 'TANOD'];
         Array.from(roleSelect.options).forEach(opt => {
             if (opt.value === '') return; // keep the placeholder
             opt.style.display = allowedRoles.includes(opt.value) ? '' : 'none';
@@ -1292,7 +1292,7 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
         const roleSelectEdit = document.getElementById('edit-role');
         const allowedRolesEdit = currentRoleEdit === 'ADMIN'
             ? ['ADMIN', 'BARANGAY-CAPTAIN', 'TREASURER', 'SECRETARY', 'TANOD']
-            : ['TREASURER', 'BARANGAY-CAPTAIN', 'TANOD'];
+            : ['SECRETARIAT STAFF','TREASURER', 'BARANGAY-CAPTAIN', 'TANOD'];
         Array.from(roleSelectEdit.options).forEach(opt => {
             if (opt.value === '') return;
             opt.style.display = allowedRolesEdit.includes(opt.value) ? '' : 'none';
