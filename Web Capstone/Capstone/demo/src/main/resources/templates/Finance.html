@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         /* Your existing CSS here */
@@ -868,24 +869,64 @@
 
     // ── PDF render helper — appends visibly off-screen, captures, removes ──
     function renderPDF(htmlContent, filename, orientation, callback) {
+        // Use html2canvas + jsPDF directly to avoid html2pdf's internal iframe,
+        // which causes "Unsafe attempt to load URL" security errors.
         var overlay = document.createElement('div');
-        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:99998;';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:99998;overflow:auto;';
         var el = document.createElement('div');
         el.style.cssText = 'position:absolute;top:0;left:0;width:794px;background:#ffffff;padding:0;margin:0;';
         el.innerHTML = htmlContent;
         overlay.appendChild(el);
         document.body.appendChild(overlay);
-        // Small delay to let browser render before capture
+
         setTimeout(function() {
-            html2pdf().set({
-                margin: [0.5, 0.5, 0.5, 0.5],
-                filename: filename,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false, allowTaint: true },
-                jsPDF: { unit: 'in', format: 'a4', orientation: orientation }
-            }).from(el).save().then(function() {
+            html2canvas(el, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                width: el.scrollWidth,
+                height: el.scrollHeight,
+                windowWidth: 794
+            }).then(function(canvas) {
+                var { jsPDF } = window.jspdf;
+                var isLandscape = orientation === 'landscape';
+                var pageW = isLandscape ? 297 : 210; // mm (A4)
+                var pageH = isLandscape ? 210 : 297;
+                var imgW  = pageW - 10; // 5mm margin each side
+                var ratio = canvas.width / imgW;
+                var imgH  = canvas.height / ratio;
+                var pdf   = new jsPDF({ orientation: orientation, unit: 'mm', format: 'a4' });
+                var posY  = 5;
+                var remainH = imgH;
+                var srcY  = 0;
+
+                // Slice canvas into A4 pages
+                while (remainH > 0) {
+                    var sliceH    = Math.min(pageH - 10, remainH); // 5mm top+bottom margin
+                    var slicePx   = sliceH * ratio;
+                    var sliceCanvas = document.createElement('canvas');
+                    sliceCanvas.width  = canvas.width;
+                    sliceCanvas.height = Math.ceil(slicePx);
+                    var ctx = sliceCanvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+                    ctx.drawImage(canvas, 0, srcY, canvas.width, Math.ceil(slicePx), 0, 0, canvas.width, Math.ceil(slicePx));
+                    var imgData = sliceCanvas.toDataURL('image/jpeg', 0.98);
+                    if (srcY > 0) pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 5, posY, imgW, sliceH);
+                    srcY     += Math.ceil(slicePx);
+                    remainH  -= sliceH;
+                }
+
+                pdf.save(filename);
                 document.body.removeChild(overlay);
                 if (callback) callback();
+            }).catch(function(err) {
+                document.body.removeChild(overlay);
+                console.error('PDF render error:', err);
+                showToast('PDF error: ' + err.message, 'error');
             });
         }, 300);
     }
