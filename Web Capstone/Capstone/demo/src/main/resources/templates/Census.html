@@ -734,12 +734,6 @@ td{padding:12px 14px !important;vertical-align:middle !important}
             <div class="sec-hdr">Identification details</div>
             <input type="hidden" name="accountStatus" id="f_accountStatus" value="unverified">
             <div class="field" style="margin:10px 24px 0">
-            <label>Account Status</label>
-            <div class="status-group">
-              <button type="button" class="s-btn unverified on" onclick="setStatus(this,'unverified')">Unverified</button>
-              <button type="button" class="s-btn verified"      onclick="setStatus(this,'verified')">Verified</button>
-              <button type="button" class="s-btn flagged"       onclick="setStatus(this,'flagged')">Flagged</button>
-            </div>
           </div>
           <div class="fgrid g4" style="padding-top:10px">
             <div class="field">
@@ -957,7 +951,38 @@ td{padding:12px 14px !important;vertical-align:middle !important}
 
         <!-- STEP 3 -->
         <div id="step2" style="display:none">
+                <!-- ADD THIS before the existing "Account Status" label in step2 -->
+        <div style="padding:0 24px;margin-top:16px;">
+          <label style="font-size:11px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">
+            Census Status <span style="color:#e74c3c">*</span>
+          </label>
+          <div class="status-group" style="margin-top:6px;">
+            <button type="button" class="s-btn cs-btn on" data-cs="INCOMPLETE"
+              onclick="setCensusStatus(this,'INCOMPLETE')"
+              style="background:#fff3cd;color:#856404;border-color:#ffeeba;">Incomplete</button>
+            <button type="button" class="s-btn cs-btn" data-cs="COMPLETE"
+              onclick="setCensusStatus(this,'COMPLETE')"
+              >Complete</button>
+            <button type="button" class="s-btn cs-btn" data-cs="PENDING"
+              onclick="setCensusStatus(this,'PENDING')"
+              >Pending</button>
+            <button type="button" class="s-btn cs-btn" data-cs="FLAGGED"
+              onclick="setCensusStatus(this,'FLAGGED')"
+              >Flagged</button>
+          </div>
+                    <label style="font-size:11px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Account Status</label>
+            <div class="status-group">
+              <button type="button" class="s-btn unverified on" onclick="setStatus(this,'unverified')">Unverified</button>
+              <button type="button" class="s-btn verified"      onclick="setStatus(this,'verified')">Verified</button>
+              <button type="button" class="s-btn flagged"       onclick="setStatus(this,'flagged')">Flagged</button>
+            </div>
+        </div>
+        
+        <div class="sec-divider" style="margin-top:14px"></div>
+
           <div class="sec-hdr">Health information</div>
+            
+          
           <div class="fgrid g1" style="padding-top:10px">
             <div class="field"><label>Medical history (chronic illnesses, disabilities, allergies)</label>
               <textarea name="medicalHistory" id="f_medhist" placeholder="e.g. Hypertension, Diabetes Type 2, Asthma…"></textarea>
@@ -1027,7 +1052,7 @@ td{padding:12px 14px !important;vertical-align:middle !important}
           </div>
           <div style="height:8px"></div>
         </div>
-
+        
       </div><!-- end modal-scroll -->
 
       <div class="step-nav">
@@ -1102,6 +1127,74 @@ td{padding:12px 14px !important;vertical-align:middle !important}
       <button class="btn-nav btn-prev-n" onclick="closeConfirmModal()">Cancel</button>
       <button class="btn-nav" id="conf_ok" style="background:#e05c5c;color:white">Confirm</button>
     </div>
+  </div>
+</div>
+
+<!-- DUPLICATE DETECTION MODAL -->
+<div id="duplicateModal" style="display:none;position:fixed;z-index:3000;inset:0;
+     background:rgba(0,0,0,.6);overflow-y:auto;padding:40px 16px;">
+  <div style="background:white;border-radius:12px;width:860px;max-width:100%;
+               margin:0 auto;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.25);">
+
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#c0392b,#e74c3c);color:white;
+                padding:18px 24px;display:flex;align-items:center;gap:12px;">
+      <i class="bi bi-exclamation-triangle-fill" style="font-size:22px;"></i>
+      <div style="flex:1">
+        <div style="font-size:17px;font-weight:700;">Possible Duplicate Record Detected</div>
+        <div style="font-size:12px;opacity:.75;margin-top:2px;">
+          A similar resident already exists. Review both records before proceeding.
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid #e0e0e0;">
+      <!-- Existing -->
+      <div style="padding:20px;border-right:1px solid #e0e0e0;background:#fafafa;">
+        <div style="font-size:11px;font-weight:700;color:#c0392b;text-transform:uppercase;
+                    letter-spacing:.06em;margin-bottom:12px;">
+          <i class="bi bi-database-fill me-1"></i> Existing Record
+        </div>
+        <div id="dup_existing"></div>
+      </div>
+      <!-- New entry -->
+      <div style="padding:20px;background:#fff;">
+        <div style="font-size:11px;font-weight:700;color:#2d4a44;text-transform:uppercase;
+                    letter-spacing:.06em;margin-bottom:12px;">
+          <i class="bi bi-person-plus-fill me-1"></i> New Entry (current)
+        </div>
+        <div id="dup_new"></div>
+      </div>
+    </div>
+
+    <!-- Match reason -->
+    <div style="padding:12px 24px;background:#fff8ec;border-bottom:1px solid #ffeeba;
+                font-size:12px;color:#856404;display:flex;align-items:center;gap:8px;">
+      <i class="bi bi-info-circle-fill"></i>
+      <span id="dup_reason">Match reason will appear here.</span>
+    </div>
+
+    <!-- Actions -->
+    <div style="padding:16px 24px;display:flex;gap:10px;justify-content:flex-end;
+                background:#f8f9fa;flex-wrap:wrap;">
+      <button onclick="closeDuplicateModal()"
+        style="padding:9px 18px;border-radius:6px;font-size:13px;font-weight:600;
+               border:1px solid #d0d5dd;background:white;color:#555;cursor:pointer;">
+        Cancel
+      </button>
+      <button onclick="duplicateEditExisting()"
+        style="padding:9px 18px;border-radius:6px;font-size:13px;font-weight:600;
+               border:none;background:#3498db;color:white;cursor:pointer;">
+        <i class="bi bi-pencil-square me-1"></i> Edit Existing Instead
+      </button>
+      <button onclick="duplicateProceed()"
+        style="padding:9px 18px;border-radius:6px;font-size:13px;font-weight:600;
+               border:none;background:#e67e22;color:white;cursor:pointer;">
+        <i class="bi bi-arrow-right-circle me-1"></i> Continue as New Record
+      </button>
+    </div>
+
   </div>
 </div>
 
@@ -1192,6 +1285,7 @@ function goStep(n) {
   document.getElementById('formScroll').scrollTop = 0;
 }
 
+// REPLACE the existing navStep function with this:
 function navStep(dir) {
   const next = currentStep + dir;
   if (next < 0) return;
@@ -1207,9 +1301,12 @@ function navStep(dir) {
     showToast('Please fill in all required fields in this step', 'error');
     return;
   }
-  // ★ When moving into step 2 (index 1) on a NEW record, check for household matches
   if (dir > 0 && next === 1 && document.getElementById('f_isEdit').value === 'false') {
-    checkHouseholdSuggestions();
+    checkDuplicates(() => {
+      checkHouseholdSuggestions();
+      goStep(next);
+    });
+    return; // wait for duplicate modal decision
   }
   goStep(next);
 }
@@ -1482,7 +1579,7 @@ function editRecord(btn) {
   const activeBtn = document.querySelector('.s-btn.' + acctStatus);
   if (activeBtn) activeBtn.classList.add('on');
   document.getElementById('f_accountStatus').value = acctStatus;
-
+  restoreCensusStatus(btn.getAttribute('data-censusstatus'));
   goStep(0);
   document.getElementById('censusModal').style.display = 'block';
 }
@@ -1530,6 +1627,13 @@ function clearForm() {
       opt.text = opt.text.replace(' (already assigned)', '').replace(' (age restriction: must be 18+)', '');
     });
   }
+  // Reset census status buttons
+document.querySelectorAll('.cs-btn').forEach(b => {
+  b.classList.remove('on');
+  b.style.background = b.style.color = b.style.borderColor = '';
+});
+const defaultCsBtn = document.querySelector('.cs-btn[data-cs="INCOMPLETE"]');
+if (defaultCsBtn) setCensusStatus(defaultCsBtn, 'INCOMPLETE');
   // ★ Remove suggestion banner
   const banner = document.getElementById('hh-suggest-banner');
   if (banner) banner.remove();
@@ -1893,8 +1997,10 @@ function triggerRestore(btn) {
     () => submitPost(url));          // ← was: window.location.href = url
 }
 
+// REPLACE the existing setStatus function with this:
 function setStatus(el, type) {
-  document.querySelectorAll('.s-btn').forEach(b => b.classList.remove('on'));
+  // Only clear non-census-status buttons
+  document.querySelectorAll('.s-btn:not(.cs-btn)').forEach(b => b.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('f_accountStatus').value = type;
 }
@@ -2311,6 +2417,162 @@ goStep = function(n) {
         setTimeout(() => censusPinMap.invalidateSize(), 300);
     }
 };
+
+// ── Census Status ──────────────────────────────────────────
+function setCensusStatus(el, val) {
+  document.querySelectorAll('.cs-btn').forEach(b => {
+    b.classList.remove('on');
+    b.style.background = '';
+    b.style.color = '';
+    b.style.borderColor = '';
+  });
+  el.classList.add('on');
+  // Apply colour based on value
+  const styles = {
+    INCOMPLETE: { bg:'#fff3cd', color:'#856404', border:'#ffeeba' },
+    COMPLETE:   { bg:'#d4edda', color:'#155724', border:'#c3e6cb' },
+    PENDING:    { bg:'#cce5ff', color:'#004085', border:'#b8daff' },
+    FLAGGED:    { bg:'#f8d7da', color:'#721c24', border:'#f5c6cb' },
+  };
+  const s = styles[val] || {};
+  el.style.background   = s.bg    || '';
+  el.style.color        = s.color || '';
+  el.style.borderColor  = s.border|| '';
+  document.getElementById('f_censusStatus').value = val;
+}
+
+// Restore census status buttons when editing
+function restoreCensusStatus(val) {
+  const btn = document.querySelector(`.cs-btn[data-cs="${(val||'INCOMPLETE').toUpperCase()}"]`);
+  if (btn) setCensusStatus(btn, (val||'INCOMPLETE').toUpperCase());
+}
+
+// ── Duplicate Detection ────────────────────────────────────
+let _dupProceedCallback = null;
+let _dupExistingBtn = null;
+
+function checkDuplicates(onNoDuplicate) {
+  const fname  = (document.getElementById('f_fname').value  || '').toLowerCase().trim();
+  const lname  = (document.getElementById('f_lname').value  || '').toLowerCase().trim();
+  const mname  = (document.getElementById('f_mname').value || '').toLowerCase().trim();
+  const dob    = (document.getElementById('f_dob').value    || '').trim();
+  const mobile = (document.getElementById('f_mobile').value || '').trim();
+  const editId = document.getElementById('f_id').value || '';
+
+  const rows = document.querySelectorAll('#active-table tbody tr:not(.empty-row)');
+  let bestMatch = null, bestReason = [];
+
+  rows.forEach(row => {
+    const rowName   = (row.getAttribute('data-name')    || '').toLowerCase();
+    const rowId     = row.querySelector('[data-id]')?.getAttribute('data-id') || '';
+
+    // Skip the record being edited
+    if (editId && rowId === editId) return;
+
+    const reasons = [];
+
+    // Check full name (first + last + middle if provided)
+    if (fname && lname && rowName.includes(fname) && rowName.includes(lname)) {
+        if (!mname || rowName.includes(mname)) {
+            reasons.push('same full name');
+        }
+    }
+    
+    // Check date of birth
+    if (dob) {
+      const viewBtn = row.querySelector('.view-btn');
+      if (viewBtn && viewBtn.getAttribute('data-dob') === dob)
+        reasons.push('same date of birth');
+    }
+    
+    // Check mobile number
+    if (mobile) {
+      const viewBtn = row.querySelector('.view-btn');
+      if (viewBtn && viewBtn.getAttribute('data-mobile') === mobile)
+        reasons.push('same mobile number');
+    }
+    
+    if (reasons.length > 0 && (!bestMatch || reasons.length > bestReason.length)) {
+      bestMatch  = row;
+      bestReason = reasons;
+    }
+  });
+
+  if (!bestMatch) { onNoDuplicate(); return; }
+
+  _dupProceedCallback = onNoDuplicate;
+  _dupExistingBtn = bestMatch.querySelector('.edit-btn') || bestMatch.querySelector('.view-btn');
+
+  // Build existing record card
+  const vb = bestMatch.querySelector('.view-btn');
+  document.getElementById('dup_existing').innerHTML = dupCard({
+    name:    bestMatch.getAttribute('data-name'),
+    address: bestMatch.getAttribute('data-address'),
+    status:  bestMatch.getAttribute('data-status'),
+    recordId: bestMatch.getAttribute('data-id'),
+    dob:     vb?.getAttribute('data-dob'),
+    mobile:  vb?.getAttribute('data-mobile'),
+    gender:  vb?.getAttribute('data-gender'),
+  });
+
+  // Build new entry card
+  document.getElementById('dup_new').innerHTML = dupCard({
+    name:    `${fname} ${mname ? mname + ' ' : ''}${lname}`.trim(),
+    address: document.getElementById('f_address').value,
+    status:  'INCOMPLETE',
+    recordId: '(new)',
+    dob:     dob,
+    mobile:  mobile,
+    gender:  document.getElementById('f_gender').value,
+  });
+
+  document.getElementById('dup_reason').textContent =
+    `Match found based on: ${bestReason.join(', ')}.`;
+
+  document.getElementById('duplicateModal').style.display = 'block';
+}
+
+function dupCard(d) {
+  const row = (label, val) =>
+    `<div style="display:flex;justify-content:space-between;padding:5px 0;
+                 border-bottom:1px solid #f0f0f0;font-size:12px;">
+       <span style="color:#888;font-weight:600;">${label}</span>
+       <span style="color:#333;font-weight:500;text-align:right;max-width:60%;
+                    word-break:break-word;">${val || '—'}</span>
+     </div>`;
+  return `
+    <div style="border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
+      <div style="background:#f5f5f5;padding:10px 14px;font-weight:700;font-size:13px;color:#1a2e2a;">
+        ${(d.name||'—').toUpperCase()}
+      </div>
+      <div style="padding:10px 14px;">
+        ${row('Record ID', d.recordId)}
+        ${row('Date of Birth', d.dob)}
+        ${row('Gender', d.gender)}
+        ${row('Mobile', d.mobile)}
+        ${row('Address', d.address)}
+        ${row('Status', d.status)}
+      </div>
+    </div>`;
+}
+
+function closeDuplicateModal() {
+  document.getElementById('duplicateModal').style.display = 'none';
+  _dupProceedCallback = null;
+}
+
+function duplicateProceed() {
+  document.getElementById('duplicateModal').style.display = 'none';
+  if (_dupProceedCallback) _dupProceedCallback();
+  _dupProceedCallback = null;
+}
+
+function duplicateEditExisting() {
+  document.getElementById('duplicateModal').style.display = 'none';
+  closeCensusModal();
+  if (_dupExistingBtn) _dupExistingBtn.click();
+  _dupProceedCallback = null;
+}
 // Barangay San Sebastian, Kawit boundary polygon
 const SAN_SEBASTIAN_POLYGON = [
     [14.418865, 120.886515],
