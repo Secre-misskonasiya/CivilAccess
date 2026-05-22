@@ -44,7 +44,7 @@
             <li onclick="window.location.href='/user-profile'">
                 <img src="/icons/user.svg" class="icon"> User Profile
             </li>
-            <li th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY'}" onclick="window.location.href='/Resident-census'">
+            <li th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" onclick="window.location.href='/Resident-census'">
                 <img src="/icons/user.svg" class="icon"> Resident Census
             </li>
             <li th:if="${currentrole == 'ADMIN' || currentrole == 'TREASURER'}" onclick="window.location.href='/finance'">
@@ -61,11 +61,11 @@
     </button>
     <div class="section-body" id="sec-resident">
         <ul class="menu">
-            <li th:if="${currentrole != 'BARANGAY-CAPTAIN'}" onclick="toggleSubMenu(this, 'sub-requests')">
+            <li th:if="${currentrole != 'BARANGAY-CAPTAIN' && currentrole != 'TREASURER'}" onclick="toggleSubMenu(this, 'sub-requests')">
                 <img src="/icons/requests.svg" class="icon"> Requests
                 <i class="bi bi-chevron-down dropdown-arrow"></i>
             </li>
-            <ul class="sub-menu" id="sub-requests" th:if="${currentrole != 'BARANGAY-CAPTAIN'}">
+            <ul class="sub-menu" id="sub-requests" th:if="${currentrole != 'BARANGAY-CAPTAIN' && currentrole != 'TREASURER'}">
                 <li onclick="window.location.href='/requests-blotter'">Blotter Reports</li>
                 <li onclick="window.location.href='/requests-document'">Documents</li>
                 <li onclick="window.location.href='/reservations'">Reservations</li>
@@ -81,12 +81,14 @@
     </div>
 
     <!-- COMMUNITY SAFETY -->
-    <button class="section-toggle" onclick="toggleSection(this, 'sec-safety')" th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY'}">
+    <button class="section-toggle" onclick="toggleSection(this, 'sec-safety')"
+        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
         <span class="section-notif-dot" id="dot-safety"></span>
         Community Safety
         <i class="bi bi-chevron-down section-arrow"></i>
     </button>
-    <div class="section-body" id="sec-safety" th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY'}">
+    <div class="section-body" id="sec-safety"
+        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
         <ul class="menu">
             <li onclick="window.location.href='/safety-reports'">
                 <img src="/icons/safety.svg" class="icon"> Reports &amp; Alerts
@@ -98,12 +100,14 @@
     </div>
 
     <!-- PROGRAMS -->
-    <button class="section-toggle" onclick="toggleSection(this, 'sec-programs')">
+    <button class="section-toggle" onclick="toggleSection(this, 'sec-programs')"
+        th:if="${currentrole != 'SECRETARIAT STAFF'}">
         <span class="section-notif-dot" id="dot-programs"></span>
         Programs
         <i class="bi bi-chevron-down section-arrow"></i>
     </button>
-    <div class="section-body" id="sec-programs">
+    <div class="section-body" id="sec-programs"
+        th:if="${currentrole != 'SECRETARIAT STAFF'}">
         <ul class="menu">
             <li onclick="window.location.href='/program-calendar'">
                 <img src="/icons/calendar.svg" class="icon"> Program Calendar
