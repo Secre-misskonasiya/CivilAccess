@@ -526,6 +526,137 @@
     }
     .force-modal-content button:hover { background: var(--green-900); }
 
+    /* ══════════════════════════════════════
+       VIEW TOGGLE
+    ══════════════════════════════════════ */
+    .view-toggle {
+        display: flex;
+        gap: 4px;
+        background: #f0f0f0;
+        border-radius: 8px;
+        padding: 3px;
+    }
+    .view-toggle-btn {
+        padding: 4px 14px;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        color: #888;
+        background: transparent;
+        transition: all 0.2s;
+    }
+    .view-toggle-btn.active {
+        background: white;
+        color: #2d4a44;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    }
+
+    /* ══════════════════════════════════════
+       YEAR VIEW GRID
+    ══════════════════════════════════════ */
+    .year-view {
+        flex: 1;
+        overflow-y: auto;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        padding: 4px 2px;
+    }
+    .mini-month {
+        border: 1px solid #e8e8e8;
+        border-radius: 10px;
+        overflow: hidden;
+        background: white;
+        cursor: pointer;
+        transition: box-shadow 0.2s, border-color 0.2s;
+    }
+    .mini-month:hover {
+        box-shadow: 0 3px 12px rgba(45,74,68,0.15);
+        border-color: #44C375;
+    }
+    .mini-month-header {
+        background: #2d4a44;
+        color: white;
+        text-align: center;
+        font-size: 11px;
+        font-weight: bold;
+        padding: 6px 4px;
+        letter-spacing: 0.3px;
+    }
+    .mini-month.current-month .mini-month-header {
+        background: #44C375;
+    }
+    .mini-cal {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+    .mini-cal th {
+        font-size: 8px;
+        color: #aaa;
+        text-align: center;
+        padding: 3px 0 2px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    .mini-cal td {
+        text-align: center;
+        font-size: 9px;
+        padding: 2px 1px;
+        color: #444;
+        position: relative;
+    }
+    .mini-cal td.other-m { color: #ddd; }
+    .mini-cal td.today-m {
+        font-weight: bold;
+        color: #2d4a44;
+    }
+    .mini-cal td.today-m span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        background: #FED734;
+        border-radius: 50%;
+        font-weight: bold;
+    }
+    .mini-cal td.has-ev::after {
+        content: '';
+        display: block;
+        width: 4px;
+        height: 4px;
+        background: #44C375;
+        border-radius: 50%;
+        margin: 1px auto 0;
+    }
+    .mini-cal td.past-ev::after {
+        content: '';
+        display: block;
+        width: 4px;
+        height: 4px;
+        background: #bbb;
+        border-radius: 50%;
+        margin: 1px auto 0;
+    }
+    .year-event-count {
+        text-align: center;
+        font-size: 9px;
+        color: #888;
+        padding: 3px 4px 5px;
+        border-top: 1px solid #f0f0f0;
+    }
+    .year-event-count span {
+        display: inline-block;
+        background: #e8f5f0;
+        color: #0f6e56;
+        border-radius: 20px;
+        padding: 1px 7px;
+        font-weight: bold;
+    }
+
     @media print {
         .sidebar, .top-header, .calendar-nav, .side-column, .modal, .btn, button, .export-row, .toggle-row {
             display: none !important;
@@ -860,9 +991,15 @@
       <!-- Calendar Main -->
       <div class="calendar-main">
         <div class="calendar-nav">
-          <button class="calendar-nav-btn" onclick="changeMonth(-1)"><i class="bi bi-chevron-left"></i></button>
-          <div class="calendar-month-title" id="calendar-title">March 2026</div>
-          <button class="calendar-nav-btn" onclick="changeMonth(1)"><i class="bi bi-chevron-right"></i></button>
+          <button class="calendar-nav-btn" id="nav-prev" onclick="navPrev()"><i class="bi bi-chevron-left"></i></button>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+            <div class="calendar-month-title" id="calendar-title">March 2026</div>
+            <div class="view-toggle">
+              <button class="view-toggle-btn active" id="btn-month-view" onclick="setView('month')">Month</button>
+              <button class="view-toggle-btn" id="btn-year-view" onclick="setView('year')">Year</button>
+            </div>
+          </div>
+          <button class="calendar-nav-btn" id="nav-next" onclick="navNext()"><i class="bi bi-chevron-right"></i></button>
         </div>
 
         <div class="calendar-grid" id="calendar-grid">
@@ -874,6 +1011,9 @@
           <div class="cal-day-name">Fri</div>
           <div class="cal-day-name">Sat</div>
         </div>
+
+        <!-- Year View -->
+        <div class="year-view" id="year-view" style="display:none;"></div>
       </div>
 
       <!-- Side Column -->
@@ -1094,11 +1234,11 @@
             dbEvents[key].push(e);
         });
 
-        renderCalendar();
+        if (currentView === 'year') renderYearView(); else renderCalendar();
         renderUpcomingEvents(allEvents);
     } catch (error) {
         console.error('Failed to load events:', error);
-        renderCalendar();
+        if (currentView === 'year') renderYearView(); else renderCalendar();
     }
   }
 
@@ -1431,9 +1571,114 @@
     }
   }
 
+  // ─── View mode ───────────────────────────────
+  let currentView = 'month'; // 'month' | 'year'
+
+  function setView(view) {
+    currentView = view;
+    document.getElementById('btn-month-view').classList.toggle('active', view === 'month');
+    document.getElementById('btn-year-view').classList.toggle('active', view === 'year');
+    document.getElementById('calendar-grid').style.display = view === 'month' ? 'grid' : 'none';
+    document.getElementById('year-view').style.display = view === 'year' ? 'grid' : 'none';
+    if (view === 'month') renderCalendar();
+    else renderYearView();
+  }
+
+  function navPrev() {
+    if (currentView === 'month') changeMonth(-1);
+    else changeYear(-1);
+  }
+  function navNext() {
+    if (currentView === 'month') changeMonth(1);
+    else changeYear(1);
+  }
+
   function changeMonth(dir) {
     currentDate.setMonth(currentDate.getMonth() + dir);
     renderCalendar();
+  }
+
+  function changeYear(dir) {
+    currentDate.setFullYear(currentDate.getFullYear() + dir);
+    renderYearView();
+  }
+
+  function renderYearView() {
+    const year = currentDate.getFullYear();
+    document.getElementById('calendar-title').textContent = `${year}`;
+    const container = document.getElementById('year-view');
+    container.innerHTML = '';
+
+    const today = new Date();
+    const todayY = today.getFullYear(), todayM = today.getMonth(), todayD = today.getDate();
+    const monthNames = ['January','February','March','April','May','June',
+                        'July','August','September','October','November','December'];
+    const dayLetters = ['S','M','T','W','T','F','S'];
+
+    for (let m = 0; m < 12; m++) {
+      const isCurrentMonth = year === todayY && m === todayM;
+      const firstDay = new Date(year, m, 1).getDay();
+      const daysInMonth = new Date(year, m + 1, 0).getDate();
+      const daysInPrev = new Date(year, m, 0).getDate();
+
+      // Count events this month
+      let eventCount = 0;
+      for (let d = 1; d <= daysInMonth; d++) {
+        const key = `${year}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        if (dbEvents[key] && dbEvents[key].length > 0) eventCount += dbEvents[key].length;
+      }
+
+      // Build cells
+      let cells = [];
+      for (let i = firstDay - 1; i >= 0; i--) cells.push({ day: daysInPrev - i, other: true });
+      for (let d = 1; d <= daysInMonth; d++) {
+        const key = `${year}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const hasEv = dbEvents[key] && dbEvents[key].length > 0;
+        const cellDate = new Date(year, m, d);
+        const todayMid = new Date(todayY, todayM, todayD);
+        const isPast = cellDate < todayMid;
+        const isTodayCell = d === todayD && m === todayM && year === todayY;
+        cells.push({ day: d, other: false, hasEv, isPast, isToday: isTodayCell, dateKey: key });
+      }
+      const rem = cells.length % 7 === 0 ? 0 : 7 - (cells.length % 7);
+      for (let i = 1; i <= rem; i++) cells.push({ day: i, other: true });
+
+      let rows = '';
+      for (let r = 0; r < cells.length / 7; r++) {
+        rows += '<tr>';
+        for (let c = 0; c < 7; c++) {
+          const cell = cells[r * 7 + c];
+          let cls = '';
+          if (cell.other) cls = 'other-m';
+          else if (cell.isToday) cls = 'today-m';
+          else if (cell.hasEv && cell.isPast) cls = 'past-ev';
+          else if (cell.hasEv) cls = 'has-ev';
+          const inner = cell.isToday ? `<span>${cell.day}</span>` : cell.day;
+          const onClick = (!cell.other && cell.dateKey) ? `onclick="showEventsForDay('${cell.dateKey}')"` : '';
+          rows += `<td class="${cls}" style="${!cell.other && cell.dateKey ? 'cursor:pointer;' : ''}" ${onClick}>${inner}</td>`;
+        }
+        rows += '</tr>';
+      }
+
+      const headerRow = dayLetters.map(l => `<th>${l}</th>`).join('');
+      const miniDiv = document.createElement('div');
+      miniDiv.className = `mini-month${isCurrentMonth ? ' current-month' : ''}`;
+      miniDiv.innerHTML = `
+        <div class="mini-month-header">${monthNames[m]}</div>
+        <table class="mini-cal">
+          <thead><tr>${headerRow}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        ${eventCount > 0 ? `<div class="year-event-count"><span>${eventCount} event${eventCount !== 1 ? 's' : ''}</span></div>` : '<div class="year-event-count" style="color:#ddd;">No events</div>'}
+      `;
+      // Click on month header to switch to that month
+      miniDiv.querySelector('.mini-month-header').addEventListener('click', function(e) {
+        e.stopPropagation();
+        currentDate.setMonth(m);
+        setView('month');
+      });
+      container.appendChild(miniDiv);
+    }
   }
 
   async function exportToPDF() {

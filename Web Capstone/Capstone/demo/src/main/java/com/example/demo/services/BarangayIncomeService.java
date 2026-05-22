@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -180,6 +181,64 @@ public class BarangayIncomeService {
             breakdown.put(type.getDisplayName(), amount != null ? amount : 0.0);
         }
         return breakdown;
+    }
+
+    // ========== ARCHIVE METHODS ==========
+
+    /**
+     * Archive an income record (soft-delete).
+     * Only the Treasurer role may call this endpoint.
+     * The income amount is reversed from the budget pool so available funds
+     * reflect only active (non-archived) income.
+     */
+    @Transactional
+    public BarangayIncome archiveIncome(Long id, Long archivedBy) {
+        BarangayIncome income = getIncomeById(id);
+
+        if (Boolean.TRUE.equals(income.getArchived())) {
+            throw new RuntimeException("Income #" + id + " is already archived.");
+        }
+
+        // Remove this income from the live budget pool
+        programBudgetService.reverseIncomeFromBudget(income.getAmount());
+
+        income.setArchived(true);
+        income.setArchivedAt(LocalDateTime.now());
+        income.setArchivedBy(archivedBy);
+        return barangayIncomeRepository.save(income);
+    }
+
+    /**
+     * Restore an archived income record back to active.
+     * Re-adds the amount to the live budget pool.
+     */
+    @Transactional
+    public BarangayIncome unarchiveIncome(Long id) {
+        BarangayIncome income = getIncomeById(id);
+
+        if (!Boolean.TRUE.equals(income.getArchived())) {
+            throw new RuntimeException("Income #" + id + " is not archived.");
+        }
+
+        income.setArchived(false);
+        income.setArchivedAt(null);
+        income.setArchivedBy(null);
+        BarangayIncome saved = barangayIncomeRepository.save(income);
+
+        // Restore the income to the live budget pool
+        programBudgetService.applyIncomeToBudget(saved.getAmount());
+
+        return saved;
+    }
+
+    // Get all archived income records
+    public List<BarangayIncome> getArchivedIncome() {
+        return barangayIncomeRepository.findByArchivedTrue();
+    }
+
+    // Get all active (non-archived) income records
+    public List<BarangayIncome> getActiveIncome() {
+        return barangayIncomeRepository.findByArchivedFalseOrArchivedIsNull();
     }
 
     // Generate OR number (e.g., OR-2026-00001)

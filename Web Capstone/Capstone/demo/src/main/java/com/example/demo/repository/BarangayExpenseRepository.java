@@ -35,8 +35,12 @@ public interface BarangayExpenseRepository extends JpaRepository<BarangayExpense
     // Find by created by
     List<BarangayExpense> findByCreatedBy(Long createdBy);
 
-    // Find pending expenses that need approval (ordered by date)
+    // Find pending expenses that need approval (ordered by date) — excludes archived
     List<BarangayExpense> findByStatusOrderByExpenseDateDesc(ExpenseStatus status);
+
+    // Find pending expenses excluding archived ones (used for the approval queue)
+    @Query("SELECT be FROM BarangayExpense be WHERE be.status = :status AND (be.archived = false OR be.archived IS NULL) ORDER BY be.expenseDate DESC")
+    List<BarangayExpense> findActiveByStatusOrderByExpenseDateDesc(@Param("status") ExpenseStatus status);
 
     // Get total expenses by date range (APPROVED only)
     @Query("SELECT COALESCE(SUM(be.amount), 0) FROM BarangayExpense be " +
@@ -91,4 +95,12 @@ public interface BarangayExpenseRepository extends JpaRepository<BarangayExpense
     // Get expenses pending approval for more than 7 days
     @Query("SELECT be FROM BarangayExpense be WHERE be.status = 'PENDING' AND be.createdAt <= :date")
     List<BarangayExpense> findPendingExpensesOlderThan(@Param("date") LocalDate date);
+
+    // ── Archive queries ──────────────────────────────────────────────────────
+
+    // All archived expense records
+    List<BarangayExpense> findByArchivedTrue();
+
+    // All active (non-archived) expense records
+    List<BarangayExpense> findByArchivedFalseOrArchivedIsNull();
 }

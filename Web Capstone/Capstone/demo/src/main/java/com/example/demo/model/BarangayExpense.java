@@ -122,6 +122,15 @@ public class BarangayExpense {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "archived", nullable = false)
+    private Boolean archived = false;
+
+    @Column(name = "archived_at")
+    private LocalDateTime archivedAt;
+
+    @Column(name = "archived_by")
+    private Long archivedBy;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -204,4 +213,13 @@ public class BarangayExpense {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Boolean getArchived() { return archived; }
+    public void setArchived(Boolean archived) { this.archived = archived != null ? archived : false; }
+
+    public LocalDateTime getArchivedAt() { return archivedAt; }
+    public void setArchivedAt(LocalDateTime archivedAt) { this.archivedAt = archivedAt; }
+
+    public Long getArchivedBy() { return archivedBy; }
+    public void setArchivedBy(Long archivedBy) { this.archivedBy = archivedBy; }
 }

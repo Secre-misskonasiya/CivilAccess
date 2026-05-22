@@ -129,6 +129,9 @@ public class FinancialController {
         model.addAttribute("pendingExpensesList", getPendingExpensesList());
         model.addAttribute("budgetList",          getBudgetList());
 
+        model.addAttribute("archivedIncomeList",   getArchivedIncomeList());
+        model.addAttribute("archivedExpenseList",  getArchivedExpenseList());
+
         model.addAttribute("totalIncomeAll",   getTotalIncomeAll(allTimeStart, allTimeEnd));
         model.addAttribute("totalExpensesAll", getTotalExpensesAll(allTimeStart, allTimeEnd));
 
@@ -173,10 +176,12 @@ public class FinancialController {
             return r != null ? r : Collections.emptyMap();
         } catch (Exception e) { return Collections.emptyMap(); }
     }
-    private List<BarangayIncome>  getIncomeList()         { try { return incomeService.getAllIncome(); }         catch (Exception e) { return Collections.emptyList(); } }
-    private List<BarangayExpense> getExpenseList()        { try { return expenseService.getAllExpenses(); }       catch (Exception e) { return Collections.emptyList(); } }
+    private List<BarangayIncome>  getIncomeList()         { try { return incomeService.getActiveIncome(); }         catch (Exception e) { return Collections.emptyList(); } }
+    private List<BarangayExpense> getExpenseList()        { try { return expenseService.getActiveExpenses(); }       catch (Exception e) { return Collections.emptyList(); } }
     private List<BarangayExpense> getPendingExpensesList(){ try { return expenseService.getPendingExpenses(); }  catch (Exception e) { return Collections.emptyList(); } }
     private List<ProgramBudget>   getBudgetList()         { try { return budgetService.getAllBudgets(); }         catch (Exception e) { return Collections.emptyList(); } }
+    private List<BarangayIncome>  getArchivedIncomeList()   { try { return incomeService.getArchivedIncome(); }   catch (Exception e) { return Collections.emptyList(); } }
+    private List<BarangayExpense> getArchivedExpenseList()  { try { return expenseService.getArchivedExpenses(); } catch (Exception e) { return Collections.emptyList(); } }
     private Double getTotalIncomeAll(LocalDate s, LocalDate e)   { try { return incomeService.getTotalIncome(s, e); }   catch (Exception ex) { return 0.0; } }
     private Double getTotalExpensesAll(LocalDate s, LocalDate e) { try { return expenseService.getTotalExpenses(s, e); } catch (Exception ex) { return 0.0; } }
 
@@ -313,6 +318,84 @@ public class FinancialController {
         return "redirect:/finance#expenses";
     }
 
+    // ========== ARCHIVE / UNARCHIVE — TREASURER ONLY ==========
+
+    private boolean isTreasurer(Principal principal) {
+        if (principal == null) return false;
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+        return admin != null && "TREASURER".equalsIgnoreCase(admin.getRole());
+    }
+
+    @GetMapping("/income/archive/{id}")
+    public String archiveIncome(@PathVariable Long id,
+                                Principal principal,
+                                RedirectAttributes redirectAttributes) {
+        if (!isTreasurer(principal)) {
+            redirectAttributes.addFlashAttribute("error", "Only the Treasurer can archive records.");
+            return "redirect:/finance#income";
+        }
+        try {
+            AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+            incomeService.archiveIncome(id, admin.getId());
+            redirectAttributes.addFlashAttribute("success", "Income record archived successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error archiving income: " + e.getMessage());
+        }
+        return "redirect:/finance#income";
+    }
+
+    @GetMapping("/income/unarchive/{id}")
+    public String unarchiveIncome(@PathVariable Long id,
+                                  Principal principal,
+                                  RedirectAttributes redirectAttributes) {
+        if (!isTreasurer(principal)) {
+            redirectAttributes.addFlashAttribute("error", "Only the Treasurer can restore archived records.");
+            return "redirect:/finance#archive";
+        }
+        try {
+            incomeService.unarchiveIncome(id);
+            redirectAttributes.addFlashAttribute("success", "Income record restored successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error restoring income: " + e.getMessage());
+        }
+        return "redirect:/finance#archive";
+    }
+
+    @GetMapping("/expenses/archive/{id}")
+    public String archiveExpense(@PathVariable Long id,
+                                 Principal principal,
+                                 RedirectAttributes redirectAttributes) {
+        if (!isTreasurer(principal)) {
+            redirectAttributes.addFlashAttribute("error", "Only the Treasurer can archive records.");
+            return "redirect:/finance#expenses";
+        }
+        try {
+            AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+            expenseService.archiveExpense(id, admin.getId());
+            redirectAttributes.addFlashAttribute("success", "Expense record archived successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error archiving expense: " + e.getMessage());
+        }
+        return "redirect:/finance#expenses";
+    }
+
+    @GetMapping("/expenses/unarchive/{id}")
+    public String unarchiveExpense(@PathVariable Long id,
+                                   Principal principal,
+                                   RedirectAttributes redirectAttributes) {
+        if (!isTreasurer(principal)) {
+            redirectAttributes.addFlashAttribute("error", "Only the Treasurer can restore archived records.");
+            return "redirect:/finance#archive";
+        }
+        try {
+            expenseService.unarchiveExpense(id);
+            redirectAttributes.addFlashAttribute("success", "Expense record restored successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error restoring expense: " + e.getMessage());
+        }
+        return "redirect:/finance#archive";
+    }
+
     // ========== BUDGET MANAGEMENT ==========
 
     @PostMapping("/budget/save")
@@ -393,6 +476,75 @@ public class FinancialController {
             redirectAttributes.addFlashAttribute("error", "Error updating budget: " + e.getMessage());
         }
         return "redirect:/finance#budget";
+    }
+
+    // ========== CSV EXPORT ENDPOINTS ==========
+
+    @GetMapping("/export/income")
+    public void exportIncomeCsv(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+
+        startDate = validateDate(startDate);
+        endDate   = validateDate(endDate);
+
+        response.setContentType("text/csv;charset=UTF-8");
+        response.setHeader("Content-Disposition",
+            "attachment; filename=\"income_" + startDate + "_to_" + endDate + ".csv\"");
+
+        java.io.PrintWriter writer = response.getWriter();
+        writer.println("Date,OR Number,Source / Payer,Type,Amount");
+
+        try {
+            List<BarangayIncome> list = incomeService.getIncomeByDateRange(startDate, endDate);
+            for (BarangayIncome inc : list) {
+                String date   = inc.getIncomeDate()  != null ? inc.getIncomeDate().toString()         : "";
+                String or     = inc.getOrNumber()    != null ? inc.getOrNumber()                      : "";
+                String source = inc.getSourceName()  != null ? "\"" + inc.getSourceName().replace("\"","\"\"") + "\"" : "";
+                String type   = inc.getIncomeType()  != null ? inc.getIncomeType().toString()         : "";
+                String amount = inc.getAmount()      != null ? String.format("%.2f", inc.getAmount()) : "0.00";
+                writer.println(date + "," + or + "," + source + "," + type + "," + amount);
+            }
+        } catch (Exception e) {
+            writer.println("Error generating report: " + e.getMessage());
+        }
+        writer.flush();
+    }
+
+    @GetMapping("/export/expenses")
+    public void exportExpensesCsv(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+
+        startDate = validateDate(startDate);
+        endDate   = validateDate(endDate);
+
+        response.setContentType("text/csv;charset=UTF-8");
+        response.setHeader("Content-Disposition",
+            "attachment; filename=\"expenses_" + startDate + "_to_" + endDate + ".csv\"");
+
+        java.io.PrintWriter writer = response.getWriter();
+        writer.println("Date,Description,Type,Fund Source,Payee,Receipt #,Amount,Status");
+
+        try {
+            List<BarangayExpense> list = expenseService.getExpensesByDateRange(startDate, endDate);
+            for (BarangayExpense exp : list) {
+                String date    = exp.getExpenseDate()   != null ? exp.getExpenseDate().toString()           : "";
+                String desc    = exp.getDescription()   != null ? "\"" + exp.getDescription().replace("\"","\"\"") + "\"" : "";
+                String type    = exp.getExpenseType()   != null ? exp.getExpenseType().toString()           : "";
+                String fund    = exp.getFundSource()    != null ? exp.getFundSource().toString()            : "";
+                String payee   = exp.getPayee()         != null ? "\"" + exp.getPayee().replace("\"","\"\"") + "\"" : "";
+                String receipt = exp.getReceiptNumber() != null ? exp.getReceiptNumber()                    : "";
+                String amount  = exp.getAmount()        != null ? String.format("%.2f", exp.getAmount())    : "0.00";
+                String status  = exp.getStatus()        != null ? exp.getStatus().toString()                : "";
+                writer.println(date + "," + desc + "," + type + "," + fund + "," + payee + "," + receipt + "," + amount + "," + status);
+            }
+        } catch (Exception e) {
+            writer.println("Error generating report: " + e.getMessage());
+        }
+        writer.flush();
     }
 
     // ========== PDF DATA API ENDPOINT ==========
