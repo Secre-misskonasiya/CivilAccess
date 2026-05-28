@@ -36,7 +36,6 @@ public class BlotterController {
                 model.addAttribute("currentUser", admin.getName());
                 model.addAttribute("currentrole", admin.getRole());
                 model.addAttribute("currentstatus", "ACTIVE");
-                model.addAttribute("accountStatus", admin.getEmpstatus());
             } else {
                 model.addAttribute("currentUser", username);
                 model.addAttribute("currentrole", "USER");
@@ -48,46 +47,13 @@ public class BlotterController {
             model.addAttribute("currentstatus", "ACTIVE");
         }
 
-        // For tab-based status view
-        model.addAttribute("incomingBlotters",   service.getByStatus("INCOMING"));
-        model.addAttribute("processingBlotters", service.getByStatus("PROCESSING"));
-        model.addAttribute("readyBlotters",      service.getByStatus("READY"));
-        model.addAttribute("archivedBlotters",   service.getByStatus("ARCHIVE"));
-
-        // For full table view (optional - can be used by different template)
+        // Get ALL blotters for the main table
         model.addAttribute("allBlotters", service.getAllBlotters());
         model.addAttribute("totalCount", service.countAll());
-
-        // Tab badge counts
-        model.addAttribute("processingCount", service.getByStatus("PROCESSING").size());
-        model.addAttribute("readyCount",      service.getByStatus("READY").size());
-        model.addAttribute("archivedCount",   service.getByStatus("ARCHIVE").size());
-
-        
 
         return "Requests-Blotter";
     }
 
-    // Status management endpoints
-    @PostMapping("/{id}/process")
-    public String processBlotter(@PathVariable Long id, Principal principal) {
-        service.updateStatus(id, "PROCESSING", getCurrentUserName(principal));
-        return "redirect:/requests-blotter";
-    }
-
-    @PostMapping("/{id}/ready")
-    public String markReady(@PathVariable Long id, Principal principal) {
-        service.updateStatus(id, "READY", getCurrentUserName(principal));
-        return "redirect:/requests-blotter";
-    }
-
-    @PostMapping("/{id}/archive")
-    public String archiveBlotter(@PathVariable Long id, Principal principal) {
-        service.archiveBlotter(id, getCurrentUserName(principal));
-        return "redirect:/requests-blotter";
-    }
-
-    // Full update endpoint (for edit functionality)
     @PostMapping("/{id}/update")
     public String updateBlotter(@PathVariable Long id, 
                                @ModelAttribute Blotter updatedBlotter,
@@ -110,14 +76,12 @@ public class BlotterController {
         return "redirect:/requests-blotter";
     }
 
-    // Search endpoint
     @GetMapping("/search")
     @ResponseBody
     public List<Blotter> search(@RequestParam String query) {
         return service.searchBlotters(query);
     }
 
-    // Submit new blotter
     @PostMapping("/submit")
     public String submitBlotter(@ModelAttribute("newBlotter") Blotter blotter, Principal principal) {
         blotter.setStatus("INCOMING");
@@ -131,15 +95,11 @@ public class BlotterController {
         return "redirect:/requests-blotter";
     }
 
-    // Polling endpoint - returns both tab counts and total
     @GetMapping("/api/poll")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> pollBlotters() {
         Map<String, Object> counts = new HashMap<>();
-        counts.put("processing", service.getByStatus("PROCESSING").size());
-        counts.put("ready",      service.getByStatus("READY").size());
-        counts.put("archive",    service.getByStatus("ARCHIVE").size());
-        counts.put("total",      service.countAll());
+        counts.put("total", service.countAll());
 
         Map<String, Object> response = new HashMap<>();
         response.put("counts", counts);

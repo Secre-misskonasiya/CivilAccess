@@ -1,6 +1,7 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -15,7 +16,7 @@ public class Blotter {
     private String complainantName;
     
     @Column(name = "contact_info")
-    private String contactInfo;          // KEPT from first file
+    private String contactInfo;
     
     @Column(name = "respondent_name")
     private String respondentName;
@@ -24,7 +25,7 @@ public class Blotter {
     private String incidentType;
     
     @Column(name = "incident_date")
-    private LocalDateTime incidentDate;   // Changed from LocalDate to LocalDateTime
+    private LocalDate incidentDate;
     
     @Column(name = "incident_location")
     private String incidentLocation;
@@ -33,7 +34,7 @@ public class Blotter {
     private String narrative;
     
     @Column(columnDefinition = "TEXT")
-    private String remarks;               // KEPT from first file
+    private String remarks;
     
     private String status;  // INCOMING, PROCESSING, READY, ARCHIVE
     
@@ -53,7 +54,7 @@ public class Blotter {
     public Blotter() {}
     
     public Blotter(String complainantName, String respondentName, String incidentType, 
-                   LocalDateTime incidentDate, String incidentLocation, String narrative) {
+                   LocalDate incidentDate, String incidentLocation, String narrative) {
         this.complainantName = complainantName;
         this.respondentName = respondentName;
         this.incidentType = incidentType;
@@ -72,8 +73,8 @@ public class Blotter {
     public String getComplainantName() { return complainantName; }
     public void setComplainantName(String complainantName) { this.complainantName = complainantName; }
     
-    public String getContactInfo() { return contactInfo; }               // ADDED
-    public void setContactInfo(String contactInfo) { this.contactInfo = contactInfo; }  // ADDED
+    public String getContactInfo() { return contactInfo; }
+    public void setContactInfo(String contactInfo) { this.contactInfo = contactInfo; }
     
     public String getRespondentName() { return respondentName; }
     public void setRespondentName(String respondentName) { this.respondentName = respondentName; }
@@ -81,8 +82,8 @@ public class Blotter {
     public String getIncidentType() { return incidentType; }
     public void setIncidentType(String incidentType) { this.incidentType = incidentType; }
     
-    public LocalDateTime getIncidentDate() { return incidentDate; }
-    public void setIncidentDate(LocalDateTime incidentDate) { this.incidentDate = incidentDate; }
+    public LocalDate getIncidentDate() { return incidentDate; }
+    public void setIncidentDate(LocalDate incidentDate) { this.incidentDate = incidentDate; }
     
     public String getIncidentLocation() { return incidentLocation; }
     public void setIncidentLocation(String incidentLocation) { this.incidentLocation = incidentLocation; }
@@ -90,8 +91,8 @@ public class Blotter {
     public String getNarrative() { return narrative; }
     public void setNarrative(String narrative) { this.narrative = narrative; }
     
-    public String getRemarks() { return remarks; }                       // ADDED
-    public void setRemarks(String remarks) { this.remarks = remarks; }   // ADDED
+    public String getRemarks() { return remarks; }
+    public void setRemarks(String remarks) { this.remarks = remarks; }
     
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
