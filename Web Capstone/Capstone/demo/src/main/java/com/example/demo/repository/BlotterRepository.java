@@ -11,6 +11,8 @@ import java.util.List;
 public interface BlotterRepository extends JpaRepository<Blotter, Long> {
     
     List<Blotter> findByStatus(String status);
+
+    long countByStatus(String status);
     
     @Query("SELECT b FROM Blotter b WHERE " +
            "LOWER(b.complainantName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +

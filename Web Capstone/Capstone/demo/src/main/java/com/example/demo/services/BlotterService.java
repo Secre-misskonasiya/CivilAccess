@@ -66,4 +66,8 @@ public class BlotterService {
     public long countAll() {
         return blotterRepository.count();
     }
+
+    public long countByStatus(String status) {
+    return blotterRepository.countByStatus(status);
+}
 }
