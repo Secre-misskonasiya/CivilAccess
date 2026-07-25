@@ -84,7 +84,12 @@ public class ResidentSecurityConfig {
 
         // ── Paths that require a resident session ──
         registration.addUrlPatterns(
-            "/resident/*",
+            "/resident/announcements/*",
+            "/resident/documents/*",
+            "/resident/reservations/*",
+            "/resident/rentals/*",
+            "/resident/profile/*",
+            "/resident/settings/*",
             "/resident-home/*",
             "/resident-profile/*"
         );
