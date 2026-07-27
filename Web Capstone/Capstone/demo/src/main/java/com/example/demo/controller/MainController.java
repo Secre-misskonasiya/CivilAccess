@@ -13,6 +13,7 @@ import com.example.demo.services.ResidentUserService;
 import com.example.demo.services.EmailService;
 import com.example.demo.services.ActivityLogService;
 import com.example.demo.services.BlotterService;
+import com.example.demo.services.CensusRecordService;
 import com.example.demo.services.ContactHelpService;
 import com.example.demo.services.DocumentRequestService;
 import com.example.demo.services.SosReportsService;
@@ -22,6 +23,7 @@ import com.example.demo.services.ProgramBudgetService;
 import com.example.demo.services.ProgramCalendarService;
 import com.example.demo.model.ProgramCalendar;
 import com.example.demo.services.RentalService;
+
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -82,6 +84,7 @@ public class MainController {
     @Autowired private ProgramBudgetService programBudgetService;
     @Autowired private CensusRecordRepository censusRecordRepository;
     @Autowired private RentalService rentalService;
+    @Autowired private CensusRecordService censusRecordService;
 
 
     @Autowired(required = false)
@@ -645,65 +648,98 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
     // DASHBOARD / HOME
     // =========================================================
 
-    @GetMapping("/home")
-    public String HomePage(Principal principal, Model model) {
-        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+        @GetMapping("/home")
+        public String HomePage(Principal principal, Model model) {
+            AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
 
-        if (admin != null) {
-            String role = admin.getRole();
-            long processing = blotterService.countByStatus("PROCESSING");
-            long ready = blotterService.countByStatus("READY");
-            long pendingBlotters = processing + ready;
-            System.out.println("current total of processing blotters: "+ pendingBlotters);
-            model.addAttribute("currentUser",   admin.getName());
-            model.addAttribute("currentrole",   role);
-            model.addAttribute("currentstatus", admin.getEmpstatus());
-            model.addAttribute("residents", residentUserService.countResidents());
-            model.addAttribute("blotterCount",        blotterService.countAll());
-            model.addAttribute("blotterPending", pendingBlotters);
-            model.addAttribute("latestAnnouncement", announcementsService.getLatest());
-            model.addAttribute("pendingDocuments",   documentService.countPending());
-            model.addAttribute("budget", programBudgetService.getTotalBudget());
-            model.addAttribute("seniorPwdCount",      censusRecordRepository.countSeniorAndPwd());
-            model.addAttribute("newRequestsThisMonth", documentService.countThisMonth());
-            model.addAttribute("currentAdminProfilePicture", admin.getProfilePicture());
-            
-            if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
-                return "redirect:/logout";
+            if (admin != null) {
+                String role = admin.getRole();
+                long processing = blotterService.countByStatus("PROCESSING");
+                long ready = blotterService.countByStatus("READY");
+                long pendingBlotters = processing + ready;
+                
+                model.addAttribute("currentUser", admin.getName());
+                model.addAttribute("currentrole", role);
+                model.addAttribute("currentstatus", admin.getEmpstatus());
+                model.addAttribute("currentAdminProfilePicture", admin.getProfilePicture());
+                
+                // Load detailed census demographics
+                try {
+                    Map<String, Object> demoData = censusRecordService.getDetailedDemographics();
+                    
+                    model.addAttribute("householdCount", demoData.getOrDefault("householdCount", 0));
+                    model.addAttribute("childrenCount", demoData.getOrDefault("childrenCount", 0));
+                    model.addAttribute("adultMalesCount", demoData.getOrDefault("adultMalesCount", 0));
+                    model.addAttribute("adultFemalesCount", demoData.getOrDefault("adultFemalesCount", 0));
+                    model.addAttribute("seniorsCount", demoData.getOrDefault("seniorsCount", 0));
+                    model.addAttribute("totalResidents", demoData.getOrDefault("totalResidents", 0));
+                    model.addAttribute("pwdCount", demoData.getOrDefault("pwdCount", 0));
+                    model.addAttribute("pwdChildren", demoData.getOrDefault("pwdChildren", 0));
+                    model.addAttribute("pwdAdultMales", demoData.getOrDefault("pwdAdultMales", 0));
+                    model.addAttribute("pwdAdultFemales", demoData.getOrDefault("pwdAdultFemales", 0));
+                    model.addAttribute("pwdSeniors", demoData.getOrDefault("pwdSeniors", 0));
+                    model.addAttribute("seniorMaleCount", demoData.getOrDefault("seniorMaleCount", 0));
+                    model.addAttribute("seniorFemaleCount", demoData.getOrDefault("seniorFemaleCount", 0));
+                    
+                } catch (Exception e) {
+                    model.addAttribute("householdCount", 0);
+                    model.addAttribute("childrenCount", 0);
+                    model.addAttribute("adultMalesCount", 0);
+                    model.addAttribute("adultFemalesCount", 0);
+                    model.addAttribute("seniorsCount", 0);
+                    model.addAttribute("totalResidents", 0);
+                    model.addAttribute("pwdCount", 0);
+                    model.addAttribute("pwdChildren", 0);
+                    model.addAttribute("pwdAdultMales", 0);
+                    model.addAttribute("pwdAdultFemales", 0);
+                    model.addAttribute("pwdSeniors", 0);
+                    model.addAttribute("seniorMaleCount", 0);
+                    model.addAttribute("seniorFemaleCount", 0);
+                    System.err.println("Error loading census demographics: " + e.getMessage());
+                }
+                
+                model.addAttribute("residents", residentUserService.countResidents());
+                model.addAttribute("blotterCount", blotterService.countAll());
+                model.addAttribute("blotterPending", pendingBlotters);
+                model.addAttribute("latestAnnouncement", announcementsService.getLatest());
+                model.addAttribute("pendingDocuments", documentService.countPending());
+                model.addAttribute("budget", programBudgetService.getTotalBudget());
+                model.addAttribute("newRequestsThisMonth", documentService.countThisMonth());
+                
+                if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+                    return "redirect:/logout";
+                }
+                
+                boolean isPrivileged = "ADMIN".equals(role) || "BARANGAY-CAPTAIN".equals(role) || "SECRETARY".equals(role);
+
+                if (isPrivileged) {
+                    model.addAttribute("recentLogs", activityLogService.getRecentLogs(5));
+                    model.addAttribute("sosAlertsThisMonth", sosService.countThisMonth());
+
+                    Map<String, Long> safetyStats = safetyReportService.getStatusCounts();
+
+                    long resolved = safetyStats.getOrDefault("resolved", 0L) + safetyStats.getOrDefault("arch-resolved", 0L);
+                    long arch = safetyStats.getOrDefault("archived", 0L);
+                    long inProgress = safetyStats.getOrDefault("in progress", 0L);
+                    long unverified = safetyStats.getOrDefault("unverified", 0L);
+                    long approved = safetyStats.getOrDefault("approved", 0L);
+
+                    long allUnresolved = arch + inProgress + unverified + approved;
+                    long allReports = resolved + allUnresolved;
+
+                    model.addAttribute("resolvedIncidents", resolved);
+                    model.addAttribute("unresolvedIncidents", allUnresolved);
+                    model.addAttribute("allreports", allReports);
+                }
+
+            } else {
+                model.addAttribute("currentUser", "Admin");
+                model.addAttribute("currentrole", "USER");
             }
-            boolean isPrivileged = "ADMIN".equals(role)
-                                || "BARANGAY-CAPTAIN".equals(role)
-                                || "SECRETARY".equals(role);
 
-            if (isPrivileged) {
-                model.addAttribute("recentLogs",         activityLogService.getRecentLogs(5));
-                model.addAttribute("sosAlertsThisMonth",  sosService.countThisMonth());
-
-                Map<String, Long> safetyStats = safetyReportService.getStatusCounts();
-
-                long resolved    = safetyStats.getOrDefault("resolved",      0L)
-                                + safetyStats.getOrDefault("arch-resolved", 0L);
-                long arch        = safetyStats.getOrDefault("archived",      0L);
-                long inProgress  = safetyStats.getOrDefault("in progress",   0L);
-                long unverified  = safetyStats.getOrDefault("unverified",    0L);
-                long approved    = safetyStats.getOrDefault("approved",      0L);
-
-                long allUnresolved = arch + inProgress + unverified + approved;
-                long allReports    = resolved + allUnresolved;
-
-                model.addAttribute("resolvedIncidents",   resolved);
-                model.addAttribute("unresolvedIncidents", allUnresolved);
-                model.addAttribute("allreports",          allReports);
-            }
-
-        } else {
-            model.addAttribute("currentUser", "Admin");
-            model.addAttribute("currentrole", "USER");
+            model.addAttribute("newAdmin", new AdminUser());
+            return "Dashboard";
         }
-
-        model.addAttribute("newAdmin", new AdminUser());
-        return "Dashboard";
-    }
 
         @GetMapping("/api/dashboard/notifications")
         @ResponseBody
@@ -830,6 +866,7 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
             } catch (Exception e) {
                 // ContactHelpService might not be available
             }
+
             // 8. Overdue Rentals
             try {
                 rentalService.updateOverdueStatus();
@@ -1150,5 +1187,18 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
             }
 
             return ResponseEntity.ok(Map.of("message", "Temporary password sent successfully. Please check your email."));
+        }
+
+        @GetMapping("/api/census/demographics")
+        @ResponseBody
+        public ResponseEntity<Map<String, Object>> getCensusDemographics() {
+            try {
+                Map<String, Object> demographics = censusRecordService.getDetailedDemographics();
+                return ResponseEntity.ok(demographics);
+            } catch (Exception e) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("error", e.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+            }
         }
 }

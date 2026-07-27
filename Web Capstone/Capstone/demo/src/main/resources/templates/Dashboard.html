@@ -763,6 +763,13 @@
 <input type="hidden" id="dataBlotterPending"     th:value="${blotterPending != null ? blotterPending : 0}">
 <input type="hidden" id="dataAllReports"  th:value="${allreports != null ? allreports : 0}">
 
+<!-- Hidden inputs for demographic chart data -->
+<input type="hidden" id="dataSeniorMale" th:value="${seniorMaleCount != null ? seniorMaleCount : 0}">
+<input type="hidden" id="dataSeniorFemale" th:value="${seniorFemaleCount != null ? seniorFemaleCount : 0}">
+<input type="hidden" id="dataPwdChildren" th:value="${pwdChildren != null ? pwdChildren : 0}">
+<input type="hidden" id="dataPwdAdultMales" th:value="${pwdAdultMales != null ? pwdAdultMales : 0}">
+<input type="hidden" id="dataPwdAdultFemales" th:value="${pwdAdultFemales != null ? pwdAdultFemales : 0}">
+<input type="hidden" id="dataPwdSeniors" th:value="${pwdSeniors != null ? pwdSeniors : 0}">
 
 <!-- Sidebar -->
 <div th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -868,13 +875,9 @@
                         <div class="stat-card" id="statBudget">
                             <div class="stat-icon-wrap ic-g"><i class="bi bi-cash-stack"></i></div>
                             <div class="stat-label">Program Budget This Month</div>
-                            <div class="stat-number stat-green budget" id="numBudget" th:text="'₱'+${budget}">₱0</div>
-                        </div>
-
-                        <div class="stat-card" id="statSenior">
-                            <div class="stat-icon-wrap ic-p"><i class="bi bi-person-wheelchair"></i></div>
-                            <div class="stat-label">Senior &amp; PWD Residents</div>
-                            <div class="stat-number" id="numSenior" th:text="${seniorPwdCount != null ? seniorPwdCount : 0}">0</div>
+                            <div class="stat-number stat-green budget" id="numBudget">
+                                ₱<span th:text="${#numbers.formatInteger(budget != null ? budget : 0, 0, 'COMMA')}">0</span>
+                            </div>
                         </div>
 
                         <div class="stat-card" id="statNewRequests">
@@ -902,6 +905,51 @@
                         <div class="stat-label">Blotter Reports<br>Total</div>
                         <div class="stat-number" th:text="${blotterCount}">0</div>
                         </div>
+
+                        <!-- Total Residents (sum of first 4 cards) -->
+                        <div class="stat-card" id="statTotal">
+                            <div class="stat-icon-wrap ic-b"><i class="bi bi-people-fill"></i></div>
+                            <div class="stat-label">Total Barangay Residents included in Census</div>
+                            <div class="stat-number" id="numTotal" th:text="${totalResidents != null ? totalResidents : 0}">0</div>
+                        </div>
+
+                            <div class="stat-card" id="statHouseholds">
+                            <div class="stat-icon-wrap ic-b"><i class="bi bi-house-door-fill"></i></div>
+                            <div class="stat-label">Households</div>
+                            <div class="stat-number" id="numHouseholds" th:text="${householdCount != null ? householdCount : 0}">0</div>
+                        </div>
+
+                        <div class="stat-card" id="statChildren">
+                            <div class="stat-icon-wrap ic-b"><i class="bi bi-person-child-fill"></i></div>
+                            <div class="stat-label">Children (0-17)</div>
+                            <div class="stat-number" id="numChildren" th:text="${childrenCount != null ? childrenCount : 0}">0</div>
+                        </div>
+
+                        <div class="stat-card" id="statAdultMales">
+                            <div class="stat-icon-wrap ic-g"><i class="bi bi-gender-male"></i></div>
+                            <div class="stat-label">Adult Males (18-59)</div>
+                            <div class="stat-number" id="numAdultMales" th:text="${adultMalesCount != null ? adultMalesCount : 0}">0</div>
+                        </div>
+
+                        <div class="stat-card" id="statAdultFemales">
+                            <div class="stat-icon-wrap ic-p"><i class="bi bi-gender-female"></i></div>
+                            <div class="stat-label">Adult Females (18-59)</div>
+                            <div class="stat-number" id="numAdultFemales" th:text="${adultFemalesCount != null ? adultFemalesCount : 0}">0</div>
+                        </div>
+
+                        <div class="stat-card" id="statSeniors">
+                            <div class="stat-icon-wrap ic-a"><i class="bi bi-person-arms-up"></i></div>
+                            <div class="stat-label">Senior Citizens (60+)</div>
+                            <div class="stat-number" id="numSeniors" th:text="${seniorsCount != null ? seniorsCount : 0}">0</div>
+                        </div>
+
+                        <div class="stat-card" id="statPWD">
+                            <div class="stat-icon-wrap ic-r"><i class="bi bi-person-wheelchair"></i></div>
+                            <div class="stat-label">PWDs (All Ages)</div>
+                            <div class="stat-number stat-red" id="numPWD" th:text="${pwdCount != null ? pwdCount : 0}">0</div>
+                        </div>
+
+                        
 
                     </div>
                 </div>
@@ -943,7 +991,35 @@
                                 <canvas id="workloadChart" role="img" aria-label="Horizontal bar chart of pending workload items"></canvas>
                             </div>
                         </div>
+                        <!-- Senior Gender Breakdown Chart -->
+                        <div class="chart-card" id="seniorGenderChart" style="margin-top:20px;">
+                            <div class="chart-title">Senior Citizen Gender Breakdown</div>
+                            <div class="chart-sub">Male vs. Female seniors (60+)</div>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; align-items:center;">
+                                <div style="position:relative; height:140px;">
+                                    <canvas id="seniorGenderDonut"></canvas>
+                                </div>
+                                <div>
+                                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                                        <div style="width:12px; height:12px; background:#3498db; border-radius:3px;"></div>
+                                        <span style="font-size:14px; color:var(--gray-700);">Male Seniors: <strong id="seniorMaleDisplay" th:text="${seniorMaleCount != null ? seniorMaleCount : 0}">0</strong></span>
+                                    </div>
+                                    <div style="display:flex; align-items:center; gap:12px;">
+                                        <div style="width:12px; height:12px; background:#e74c3c; border-radius:3px;"></div>
+                                        <span style="font-size:14px; color:var(--gray-700);">Female Seniors: <strong id="seniorFemaleDisplay" th:text="${seniorFemaleCount != null ? seniorFemaleCount : 0}">0</strong></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
+                        <!-- PWD Breakdown by Category -->
+                        <div class="chart-card" style="margin-top:20px;">
+                            <div class="chart-title">PWD Distribution by Category</div>
+                            <div class="chart-sub">How PWDs are spread across age groups</div>
+                            <div style="position:relative; height:180px;">
+                                <canvas id="pwdBreakdownChart"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1378,6 +1454,78 @@
     // ============================================
     // CHARTS
     // ============================================
+
+    function initDemographicCharts() {
+    const seniorMale = parseInt(document.getElementById('dataSeniorMale')?.value) || 0;
+    const seniorFemale = parseInt(document.getElementById('dataSeniorFemale')?.value) || 0;
+    
+    if (document.getElementById('seniorGenderDonut') && (seniorMale > 0 || seniorFemale > 0)) {
+        new Chart(document.getElementById('seniorGenderDonut'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Male Seniors', 'Female Seniors'],
+                datasets: [{
+                    data: [seniorMale, seniorFemale],
+                    backgroundColor: ['#3498db', '#e74c3c'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: { legend: { display: false } },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            let total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            let pct = total > 0 ? Math.round(ctx.parsed * 100 / total) : 0;
+                            return ctx.label + ': ' + ctx.parsed + ' (' + pct + '%)';
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    const pwdChildren = parseInt(document.getElementById('dataPwdChildren')?.value) || 0;
+    const pwdAdultMales = parseInt(document.getElementById('dataPwdAdultMales')?.value) || 0;
+    const pwdAdultFemales = parseInt(document.getElementById('dataPwdAdultFemales')?.value) || 0;
+    const pwdSeniors = parseInt(document.getElementById('dataPwdSeniors')?.value) || 0;
+
+    if (document.getElementById('pwdBreakdownChart')) {
+        const totalPWD = pwdChildren + pwdAdultMales + pwdAdultFemales + pwdSeniors;
+        
+        if (totalPWD > 0) {
+            new Chart(document.getElementById('pwdBreakdownChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Children', 'Adult Males', 'Adult Females', 'Seniors'],
+                    datasets: [{
+                        data: [pwdChildren, pwdAdultMales, pwdAdultFemales, pwdSeniors],
+                        backgroundColor: ['#3498db', '#27ae60', '#8e44ad', '#f39c12'],
+                        borderRadius: 4,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1, color: '#9aa4a2' }, grid: { color: '#f0f0f0' } },
+                        x: { grid: { display: false }, ticks: { color: '#6b7675' } }
+                    }
+                }
+            });
+        } else {
+            const parent = document.getElementById('pwdBreakdownChart').parentElement;
+            parent.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:180px; color:#9aa4a2; font-style:italic;">No PWDs registered in the barangay</div>';
+        }
+    }
+}
+
     function initCharts() {
         const resolved   = parseInt(document.getElementById('dataResolved').value)   || 0;
         const unresolved = parseInt(document.getElementById('dataUnresolved').value) || 0;
@@ -1575,7 +1723,10 @@
         setInterval(fetchWeather, 30 * 60 * 1000);
         trackModalState();
         const role = document.getElementById('dataCurrentRole').value;
-        if (role === 'ADMIN' || role === 'BARANGAY-CAPTAIN' || role === 'SECRETARY') initCharts();
+        if (role === 'ADMIN' || role === 'BARANGAY-CAPTAIN' || role === 'SECRETARY') {
+            initCharts();
+            initDemographicCharts();
+        }
         startPolling();
     };
 

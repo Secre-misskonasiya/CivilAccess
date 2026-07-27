@@ -12,10 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -235,6 +237,117 @@ public class CensusRecordService {
             stats.put("unemployed", all.stream().filter(r -> "Unemployed".equalsIgnoreCase(r.getEmploymentStatus())).count());
             stats.put("fourPs", all.stream().filter(CensusRecord::is4psBeneficiary).count());
             stats.put("withMedicalHistory", all.stream().filter(r -> r.getMedicalHistory() != null && !r.getMedicalHistory().isEmpty()).count());
+            
+            return stats;
+        }
+
+        /**
+         * Returns detailed demographic breakdown with mutually exclusive categories
+         * and overlay attributes (PWD breakdown, senior gender, etc.)
+         */
+        public Map<String, Object> getDetailedDemographics() {
+            Map<String, Object> stats = new LinkedHashMap<>();
+            
+            // Get all active census records (not archived)
+            List<CensusRecord> allRecords = censusRepo.findAll().stream()
+                .filter(r -> !"ARCHIVED".equalsIgnoreCase(r.getCensusStatus()))
+                .collect(Collectors.toList());
+            
+            // Count unique households
+            Set<String> uniqueHouseholds = allRecords.stream()
+                .map(CensusRecord::getHouseholdId)
+                .filter(hhId -> hhId != null && !hhId.isBlank())
+                .collect(Collectors.toSet());
+            long householdCount = uniqueHouseholds.size();
+            
+            // Count by classification (mutually exclusive)
+            long childrenCount = 0;        // Age 0-17
+            long adultMalesCount = 0;      // Age 18-59, Male
+            long adultFemalesCount = 0;    // Age 18-59, Female
+            long seniorsCount = 0;         // Age 60+, regardless of gender
+            
+            // PWD breakdown by category
+            long pwdChildren = 0;
+            long pwdAdultMales = 0;
+            long pwdAdultFemales = 0;
+            long pwdSeniors = 0;
+            
+            // Senior gender breakdown
+            long seniorMaleCount = 0;
+            long seniorFemaleCount = 0;
+            
+            // Total PWDs (any age)
+            long totalPWDs = 0;
+            
+            // Get current date for age calculation
+            java.time.LocalDate today = java.time.LocalDate.now();
+            
+            for (CensusRecord record : allRecords) {
+                LocalDate birthDate = record.getDateOfBirth();
+                if (birthDate == null) continue;
+                
+                // Calculate age
+                int age = java.time.Period.between(birthDate, today).getYears();
+                String gender = record.getGender();
+                boolean isPWD = record.isPwd() != null && record.isPwd();
+                boolean isSenior = record.isSeniorCitizen() != null && record.isSeniorCitizen();
+                
+                // Count by primary classification (mutually exclusive)
+                if (age < 18) {
+                    childrenCount++;
+                } else if (isSenior || age >= 60) {
+                    seniorsCount++;
+                    // Track senior gender for breakdown
+                    if ("Male".equalsIgnoreCase(gender)) {
+                        seniorMaleCount++;
+                    } else if ("Female".equalsIgnoreCase(gender)) {
+                        seniorFemaleCount++;
+                    }
+                } else {
+                    // Adult (18-59)
+                    if ("Male".equalsIgnoreCase(gender)) {
+                        adultMalesCount++;
+                    } else if ("Female".equalsIgnoreCase(gender)) {
+                        adultFemalesCount++;
+                    }
+                }
+                
+                // Count PWDs (overlay - can be any age/gender)
+                if (isPWD) {
+                    totalPWDs++;
+                    
+                    // Track which category this PWD belongs to
+                    if (age < 18) {
+                        pwdChildren++;
+                    } else if (isSenior || age >= 60) {
+                        pwdSeniors++;
+                    } else {
+                        // Adult (18-59)
+                        if ("Male".equalsIgnoreCase(gender)) {
+                            pwdAdultMales++;
+                        } else if ("Female".equalsIgnoreCase(gender)) {
+                            pwdAdultFemales++;
+                        }
+                    }
+                }
+            }
+            
+            // Calculate total residents (sum of first 4 categories)
+            long totalResidents = childrenCount + adultMalesCount + adultFemalesCount + seniorsCount;
+            
+            stats.put("householdCount", householdCount);
+            stats.put("childrenCount", childrenCount);
+            stats.put("adultMalesCount", adultMalesCount);
+            stats.put("adultFemalesCount", adultFemalesCount);
+            stats.put("seniorsCount", seniorsCount);
+            stats.put("totalResidents", totalResidents);
+            stats.put("pwdCount", totalPWDs);
+            stats.put("pwdChildren", pwdChildren);
+            stats.put("pwdAdultMales", pwdAdultMales);
+            stats.put("pwdAdultFemales", pwdAdultFemales);
+            stats.put("pwdSeniors", pwdSeniors);
+            stats.put("seniorMaleCount", seniorMaleCount);
+            stats.put("seniorFemaleCount", seniorFemaleCount);
             
             return stats;
         }
