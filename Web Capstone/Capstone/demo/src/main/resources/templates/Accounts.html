@@ -227,8 +227,9 @@
                     <div class="filter-option" onclick="applyFilter('employee','SECRETARIAT STAFF','Secretariat Staff','employee-filter-label',3)">Secretariat Staff <i class="bi bi-check filter-check"></i></div>
                 </div>
             </div>
+            <!-- Only ADMIN can create new account -->
             <button class="new-account-btn" onclick="openModal()"
-                th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY'}">
+                th:if="${currentrole == 'ADMIN'}">
                 <i class="bi bi-person-plus"></i> Create New Account
             </button>
             <button class="export-btn" onclick="exportToPDF('employee-panel')">Export</button>
@@ -272,9 +273,9 @@
                                                 data-status=${admin.empstatus},
                                                 data-picture=${admin.profilePicture}"
                                         onclick="openViewModalFromButton(this)">View</button>
+                                    <!-- Update button: ADMIN only -->
                                     <button class="update-btn"
-                                        th:if="${currentrole == 'ADMIN' or
-                                                (currentrole == 'SECRETARY' and admin.role != 'ADMIN' and admin.role != 'SECRETARY')}"
+                                        th:if="${currentrole == 'ADMIN'}"
                                         th:onclick="openEditModal(
                                             [[${admin.id}]],
                                             [[${admin.employeeId}]],
@@ -287,7 +288,9 @@
                                             [[${#temporals.format(admin.birthDate, 'yyyy-MM-dd')}]],
                                             [[${admin.phoneNumber}]],
                                             [[${admin.address}]])">Update</button>
+                                    <!-- Archive button: ADMIN only -->
                                     <button type="button" class="delete-btn"
+                                        th:if="${currentrole == 'ADMIN'}"
                                         th:data-url="'/delete-admin/' + ${admin.id}"
                                         th:data-email="${admin.email}"
                                         onclick="triggerAdminDelete(this)">Archive</button>
@@ -392,7 +395,9 @@
     </td>
     <td>
         <div class="action-buttons">
+            <!-- Edit button: ADMIN only -->
             <button class="update-btn"
+                th:if="${currentrole == 'ADMIN'}"
                 th:onclick="openEditResidentModal(
                     [[${res.id}]],
                     [[${res.residentId}]],
@@ -403,7 +408,9 @@
                     [[${res.mobileNumber}]],
                     [[${res.email}]],
                     [[${res.address}]])">Edit</button>
+            <!-- Archive button: ADMIN only -->
             <button type="button" class="delete-btn"
+                th:if="${currentrole == 'ADMIN'}"
                 th:data-url="'/residents/delete/' + ${res.id}"
                 th:data-email="${res.email}"
                 th:data-fullname="${res.firstName + ' ' + res.lastName}"

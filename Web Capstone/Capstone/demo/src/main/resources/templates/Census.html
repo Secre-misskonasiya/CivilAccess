@@ -1202,7 +1202,42 @@ td{padding:12px 14px !important;vertical-align:middle !important}
 <script src="/js/sidebar.js"></script>
 
 <script>
+
+  // ------------------------------------------------------------
+//  Validate all fields required for a COMPLETE record
+// ------------------------------------------------------------
+function validateCompleteFields() {
+  clearAllErrors();
+  let valid = true;
   
+  const fields = [
+    { id: 'fname',   selector: '#f_fname' },
+    { id: 'lname',   selector: '#f_lname' },
+    { id: 'dob',     selector: '#f_dob' },
+    { id: 'nat',     selector: '#f_nat' },
+    { id: 'pob',     selector: '#f_pob' },
+    { id: 'mobile',  selector: '#f_mobile' },
+    { id: 'address', selector: '#f_address' },
+    { id: 'idtype',  selector: '#f_idtype' },
+    { id: 'relation',selector: '#f_relation' },
+    { id: 'ecname',  selector: '#f_ecname' },
+    { id: 'ecnum',   selector: '#f_ecnum' },
+    // Additional fields that are also required but maybe not marked with * in UI:
+    { id: 'gender',  selector: '#f_gender' },
+    { id: 'civil',   selector: '#f_civil' }
+  ];
+  
+  fields.forEach(field => {
+    const el = document.querySelector(field.selector);
+    if (!el || !el.value.trim()) {
+      showFieldError(field.id, true);
+      valid = false;
+    }
+  });
+  
+  return valid;
+}
+
 function switchTab(tab) {
   const activeDiv = document.getElementById('tab-active');
   const archivedDiv = document.getElementById('tab-archived');
@@ -1773,7 +1808,9 @@ function validateCurrentStep() {
 function validateAllRequired() {
   clearAllErrors();
   let valid = true;
-  const requiredFields = [
+  
+  // Base required fields (always needed for any save)
+  const baseFields = [
     { id: 'fname',   selector: '#f_fname' },
     { id: 'lname',   selector: '#f_lname' },
     { id: 'dob',     selector: '#f_dob' },
@@ -1784,12 +1821,28 @@ function validateAllRequired() {
     { id: 'idtype',  selector: '#f_idtype' },
     { id: 'relation',selector: '#f_relation' },
     { id: 'ecname',  selector: '#f_ecname' },
-    { id: 'ecnum',   selector: '#f_ecnum' },
+    { id: 'ecnum',   selector: '#f_ecnum' }
   ];
-  requiredFields.forEach(field => {
+  
+  // If status is COMPLETE, also require additional fields
+  const status = document.getElementById('f_censusStatus').value;
+  let extraFields = [];
+  if (status === 'COMPLETE') {
+    extraFields = [
+      { id: 'gender', selector: '#f_gender' },
+      { id: 'civil',  selector: '#f_civil' }
+    ];
+  }
+  
+  const allFields = baseFields.concat(extraFields);
+  allFields.forEach(field => {
     const el = document.querySelector(field.selector);
-    if (!el || !el.value.trim()) { showFieldError(field.id, true); valid = false; }
+    if (!el || !el.value.trim()) {
+      showFieldError(field.id, true);
+      valid = false;
+    }
   });
+  
   return valid;
 }
 
@@ -2418,33 +2471,50 @@ goStep = function(n) {
     }
 };
 
-// ── Census Status ──────────────────────────────────────────
-function setCensusStatus(el, val) {
-  document.querySelectorAll('.cs-btn').forEach(b => {
-    b.classList.remove('on');
-    b.style.background = '';
-    b.style.color = '';
-    b.style.borderColor = '';
-  });
-  el.classList.add('on');
-  // Apply colour based on value
-  const styles = {
-    INCOMPLETE: { bg:'#fff3cd', color:'#856404', border:'#ffeeba' },
-    COMPLETE:   { bg:'#d4edda', color:'#155724', border:'#c3e6cb' },
-    PENDING:    { bg:'#cce5ff', color:'#004085', border:'#b8daff' },
-    FLAGGED:    { bg:'#f8d7da', color:'#721c24', border:'#f5c6cb' },
-  };
-  const s = styles[val] || {};
-  el.style.background   = s.bg    || '';
-  el.style.color        = s.color || '';
-  el.style.borderColor  = s.border|| '';
-  document.getElementById('f_censusStatus').value = val;
-}
+  // ── Census Status ──────────────────────────────────────────
+  function setCensusStatus(el, val) {
+    // If trying to set to COMPLETE, validate first
+    if (val === 'COMPLETE') {
+      if (!validateCompleteFields()) {
+        showToast('Cannot set to Complete – please fill in all required fields.', 'error');
+        // Keep the button visually unchanged by returning early
+        return;
+      }
+    }
+
+    // Clear previous selection styling
+    document.querySelectorAll('.cs-btn').forEach(b => {
+      b.classList.remove('on');
+      b.style.background = '';
+      b.style.color = '';
+      b.style.borderColor = '';
+    });
+
+    el.classList.add('on');
+    const styles = {
+      INCOMPLETE: { bg:'#fff3cd', color:'#856404', border:'#ffeeba' },
+      COMPLETE:   { bg:'#d4edda', color:'#155724', border:'#c3e6cb' },
+      PENDING:    { bg:'#cce5ff', color:'#004085', border:'#b8daff' },
+      FLAGGED:    { bg:'#f8d7da', color:'#721c24', border:'#f5c6cb' },
+    };
+    const s = styles[val] || {};
+    el.style.background   = s.bg    || '';
+    el.style.color        = s.color || '';
+    el.style.borderColor  = s.border|| '';
+    
+    document.getElementById('f_censusStatus').value = val;
+  }
 
 // Restore census status buttons when editing
 function restoreCensusStatus(val) {
   const btn = document.querySelector(`.cs-btn[data-cs="${(val||'INCOMPLETE').toUpperCase()}"]`);
   if (btn) setCensusStatus(btn, (val||'INCOMPLETE').toUpperCase());
+}
+
+if (document.getElementById('f_censusStatus').value === 'COMPLETE') {
+  if (!validateCompleteFields()) {
+    showToast('Note: This record is marked Complete but some fields are missing – you may want to update it.', '');
+  }
 }
 
 // ── Duplicate Detection ────────────────────────────────────

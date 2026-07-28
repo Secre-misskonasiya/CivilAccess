@@ -592,6 +592,9 @@
     </div>
 </div>
 
+<!-- ========== LOGOUT MODAL (reuse dashboard fragment) ========== -->
+<div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
+
 <script src="/js/sidebar.js"></script>
 <script>
     // ============================================
@@ -651,7 +654,76 @@
                 filterReservations(document.getElementById('reservation-search').value);
             });
         });
+
+        // ============================================
+        // LOGOUT HANDLER - precise targeting
+        // ============================================
+        attachLogoutHandler();
+        // Also run after a short delay to ensure sidebar is fully rendered
+        setTimeout(attachLogoutHandler, 300);
+        setTimeout(attachLogoutHandler, 1000);
     });
+
+    // ------------------------------------------------------------
+    //  Attach click handler to the logout link/button in the sidebar
+    // ------------------------------------------------------------
+    function attachLogoutHandler() {
+        // Find the logout element – use multiple selectors to be safe
+        const logoutLink = document.querySelector(
+            '.sidebar a[href*="logout"], ' +
+            '.sidebar .nav-link:has(i.bi-box-arrow-right), ' +
+            '.logout-btn, ' +
+            '.sidebar .nav-item:last-child a' // fallback if you know it's the last item
+        );
+        if (logoutLink) {
+            // Remove any previous listener to avoid duplicates
+            logoutLink.removeEventListener('click', handleLogoutClick);
+            logoutLink.addEventListener('click', handleLogoutClick);
+        } else {
+            // If not found, try a broader search using text content
+            const allLinks = document.querySelectorAll('.sidebar a, .sidebar .nav-link, .sidebar button');
+            for (let el of allLinks) {
+                if (el.textContent && el.textContent.toLowerCase().includes('logout')) {
+                    el.removeEventListener('click', handleLogoutClick);
+                    el.addEventListener('click', handleLogoutClick);
+                    break;
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    //  Handle logout click: prevent default, show modal
+    // ------------------------------------------------------------
+    function handleLogoutClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const modalElement = document.getElementById('logoutModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        } else {
+            // Fallback: direct logout with confirm
+            if (confirm('Are you sure you want to logout?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/logout';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    //  (Optional) expose logout function for manual use
+    // ------------------------------------------------------------
+    function logout() {
+        handleLogoutClick(new Event('click'));
+    }
+
+    // ============================================
+    // EXISTING RESERVATIONS FUNCTIONS (unchanged)
+    // ============================================
 
     function initializeTabs() {
         const tabs = document.querySelectorAll('.tab');
