@@ -1,552 +1,563 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register – Brgy. San Sebastian</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; font-family: "DM Sans", "Segoe UI", Arial, sans-serif; }
-        :root { --teal-dark: #14504a; --teal-mid: #1e5a50; --teal-light: #3ca08c; --gold: #f4c542; --gold-hover: #f5d06a; --text-dark: #1a3a30; }
-        body { min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 28px; background: var(--teal-dark); position: relative; overflow: auto; font-size: 17px; }
-        body::before { content: ""; position: fixed; top: -120px; right: -120px; width: 560px; height: 560px; background: rgba(60, 160, 140, 0.16); border-radius: 50%; pointer-events: none; }
-        body::after { content: ""; position: fixed; bottom: -140px; left: -90px; width: 480px; height: 480px; background: rgba(244, 197, 66, 0.08); border-radius: 50%; pointer-events: none; }
-        .bg-blob-mid { position: fixed; top: 50%; left: 40%; transform: translate(-50%, -50%); width: 720px; height: 720px; background: rgba(30, 90, 80, 0.25); border-radius: 50%; pointer-events: none; z-index: 0; }
-        
-        .register-container { position: relative; z-index: 1; display: flex; background: rgba(255,255,255,0.04); border-radius: 28px; overflow: hidden; box-shadow: 0 32px 80px rgba(0,0,0,0.45); max-width: 1060px; width: 100%; backdrop-filter: blur(4px); }
-        .left-panel { background-image: url('/images/kawit.jpg'); background-size: cover; background-position: center; padding: 48px 32px; width: 300px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative; }
-        .left-panel::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom,rgba(20,80,70,0.42) 0%,rgba(30,90,80,0.32) 50%,rgba(20,70,60,0.42) 100%); z-index: 0; }
-        .left-panel::after { content: ""; position: absolute; inset: 0; background: rgba(60,160,140,0.2); z-index: 0; }
-        .left-panel > * { position: relative; z-index: 1; }
-        .backbutton { text-decoration: none; color: rgba(255,255,255,0.85); font-size: 0.88rem; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 7px 14px; border-radius: 40px; backdrop-filter: blur(4px); margin-bottom: 22px; transition: all 0.2s; }
-        .backbutton:hover { color: var(--gold); background: rgba(0,0,0,0.5); }
-        .brgy-title { color: #fff; font-size: 0.78rem; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 20px; }
-        .logo { width: 100px; height: 100px; margin-bottom: 20px; filter: drop-shadow(0 8px 24px rgba(0,0,0,0.3)); }
-        .welcome-title { color: #fff; font-size: 1.6rem; font-weight: 700; margin-bottom: 10px; }
-        .left-accent { width: 36px; height: 4px; background: var(--gold); border-radius: 3px; margin: 14px auto; }
-        .welcome-subtitle { color: rgba(255,255,255,0.75); font-size: 0.88rem; line-height: 1.6; }
-        .step-pills { display: flex; flex-direction: column; gap: 9px; margin-top: 26px; width: 100%; }
-        .step-pill { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 12px; background: rgba(255,255,255,0.08); transition: background 0.2s; }
-        .step-pill.active { background: rgba(244,197,66,0.18); }
-        .pill-num { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.13); color: rgba(255,255,255,0.55); font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .step-pill.active .pill-num { background: var(--gold); color: var(--text-dark); }
-        .pill-label { color: rgba(255,255,255,0.5); font-size: 0.82rem; font-weight: 500; text-align: left; }
-        .step-pill.active .pill-label { color: rgba(255,255,255,0.95); }
-        .right-panel { background: rgba(255,255,255,0.06); padding: 38px 48px; flex: 1; display: flex; flex-direction: column; overflow-y: auto; max-height: 92vh; }
-        .reg-header { margin-bottom: 22px; }
-        .reg-title { color: #fff; font-size: 2rem; font-weight: 700; margin-bottom: 5px; line-height: 1.2; }
-        .reg-subtitle { color: rgba(255,255,255,0.42); font-size: 0.92rem; }
-        .form-step { display: none; }
-        .form-step.active { display: block; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; color: rgba(255,255,255,0.72); font-size: 0.86rem; font-weight: 600; letter-spacing: 0.3px; margin-bottom: 7px; }
-        input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="date"] { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.13); border-radius: 12px; color: #fff; font-size: 0.92rem; font-family: inherit; transition: border 0.2s, background 0.2s; }
-        input:focus { outline: none; border-color: var(--teal-light); background: rgba(255,255,255,0.11); }
-        .gender-row { display: flex; gap: 10px; }
-        .gender-btn { flex: 1; padding: 12px; border: 1.5px solid rgba(255,255,255,0.13); border-radius: 12px; background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.55); font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; }
-        .gender-btn.active { background: var(--teal-light); border-color: var(--teal-light); color: #fff; }
-        .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.09); border-radius: 12px; margin-bottom: 10px; }
-        .toggle-label { color: rgba(255,255,255,0.75); font-size: 0.9rem; font-weight: 600; }
-        .toggle-switch { display: flex; border-radius: 8px; overflow: hidden; border: 1.5px solid rgba(255,255,255,0.13); }
-        .toggle-opt { padding: 5px 16px; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.45); font-size: 0.78rem; font-weight: 700; cursor: pointer; border: none; }
-        .toggle-opt.yes.active { background: var(--teal-light); color: #fff; }
-        .toggle-opt.no.active { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.75); }
-        .extra-field { display: none; margin-bottom: 14px; }
-        .extra-field.show { display: block; }
-        .password-wrapper { position: relative; }
-        .password-wrapper input { padding-right: 46px; }
-        .toggle-pw { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); background: none; border: none; color: rgba(255,255,255,0.32); cursor: pointer; padding: 0; display: flex; align-items: center; transition: color 0.2s; font-size: 1rem; }
-        .field-error { color: #ff8a8a; font-size: 0.78rem; margin-top: 4px; display: none; }
-        .field-error.show { display: block; }
-        .error-banner { background: rgba(255,100,100,0.1); border: 1px solid rgba(255,100,100,0.28); color: #ff8a8a; border-radius: 10px; padding: 10px 15px; font-size: 0.86rem; margin-bottom: 15px; display: none; }
-        .error-banner.show { display: block; }
-        .section-divider { display: flex; align-items: center; gap: 10px; margin: 6px 0 16px; }
-        .section-divider span { color: rgba(255,255,255,0.3); font-size: 0.76rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap; }
-        .section-divider::before, .section-divider::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.09); }
-        .btn-row { display: flex; gap: 10px; margin-top: 18px; }
-        .btn-back { flex: 0 0 auto; padding: 13px 22px; background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.13); border-radius: 12px; color: rgba(255,255,255,0.65); font-size: 0.92rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 7px; }
-        .btn-next, .btn-submit { flex: 1; padding: 14px; background: var(--gold); color: var(--text-dark); font-size: 0.98rem; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .login-link { text-align: center; margin-top: 16px; color: rgba(255,255,255,0.38); font-size: 0.86rem; }
-        .login-link a { color: var(--gold); text-decoration: none; font-weight: 600; }
-        .success-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 1000; justify-content: center; align-items: center; }
-        .success-overlay.show { display: flex; }
-        .success-card { background: #fff; border-radius: 24px; padding: 52px 44px; max-width: 430px; width: 90%; text-align: center; box-shadow: 0 28px 72px rgba(0,0,0,0.35); }
-        .success-icon { width: 78px; height: 78px; background: linear-gradient(135deg, #3ca08c, #14504a); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 36px; color: #fff; }
-        .success-card h2 { color: #1a3a30; font-size: 1.65rem; font-weight: 700; margin-bottom: 10px; }
-        .success-card p { color: #5a7872; font-size: 0.92rem; line-height: 1.65; margin-bottom: 26px; }
-        .btn-done { display: inline-block; padding: 13px 34px; background: var(--teal-light); color: #fff; font-size: 0.98rem; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; text-decoration: none; }
-        
-        /* OTP Modal */
-        .otp-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
-        .otp-overlay.show { display: flex; }
-        .otp-modal { background: #fff; border-radius: 24px; padding: 40px; max-width: 460px; width: 90%; text-align: center; }
-        .otp-modal h2 { color: #2d5049; margin-bottom: 10px; }
-        .otp-modal p { color: #7a9d94; margin-bottom: 25px; }
-        .otp-inputs { display: flex; gap: 12px; justify-content: center; margin-bottom: 25px; }
-        .otp-input { width: 50px; height: 60px; border: 2px solid #e0e0e0; border-radius: 12px; text-align: center; font-size: 24px; font-weight: 700; color: #2d5049; background: #f5f5f5; }
-        .otp-input:focus { outline: none; border-color: #5ab5a0; }
-        .otp-resend { margin-top: 15px; color: #7a9d94; font-size: 0.88rem; }
-        .otp-resend a { color: #3D6D66; font-weight: 600; cursor: pointer; text-decoration: none; }
-        .otp-resend a.disabled { color: #b8d4cd; cursor: not-allowed; }
-        .otp-error { color: #e74c3c; font-size: 0.85rem; margin-bottom: 15px; display: none; }
-        .otp-error.show { display: block; }
-        
-        @media (max-width: 768px) {
-            .register-container { flex-direction: column; }
-            .left-panel { width: 100%; padding: 32px; }
-            .right-panel { padding: 32px 24px; }
-            .reg-title { font-size: 1.6rem; }
-            .form-row { grid-template-columns: 1fr; gap: 0; }
-        }
-    </style>
-</head>
-<body>
-    <div class="bg-blob-mid"></div>
-    
-    <!-- Success Overlay -->
-    <div class="success-overlay" id="successOverlay">
-        <div class="success-card">
-            <div class="success-icon"><i class="bi bi-check-lg"></i></div>
-            <h2>Registration Submitted!</h2>
-            <p>Your account is pending verification. You will be notified once your registration has been approved by the barangay office.</p>
-            <a href="/resident-login" class="btn-done">Go to Login</a>
-        </div>
-    </div>
-    
-    <!-- OTP Modal -->
-    <div class="otp-overlay" id="otpOverlay">
-        <div class="otp-modal">
-            <h2><i class="bi bi-envelope-paper"></i> Verify Your Email</h2>
-            <p>We've sent a 6-digit verification code to <strong id="otpEmailDisplay"></strong></p>
-            <div class="otp-inputs" id="otpInputs">
-                <input type="text" class="otp-input" maxlength="1" data-index="0">
-                <input type="text" class="otp-input" maxlength="1" data-index="1">
-                <input type="text" class="otp-input" maxlength="1" data-index="2">
-                <input type="text" class="otp-input" maxlength="1" data-index="3">
-                <input type="text" class="otp-input" maxlength="1" data-index="4">
-                <input type="text" class="otp-input" maxlength="1" data-index="5">
-            </div>
-            <div class="otp-error" id="otpError"></div>
-            <button class="btn-submit" id="verifyOtpBtn" style="background: #3D6D66; color: #fff; width: 100%;">Verify Code</button>
-            <div class="otp-resend">
-                Didn't receive code? <a id="resendOtpLink">Resend</a>
-                <span id="resendTimer" style="display:none;"> (<span id="countdown">60</span>s)</span>
-            </div>
-        </div>
-    </div>
-    
-    <div class="register-container">
-        <div class="left-panel">
-            <a href="/landing-page" class="backbutton"><i class="bi bi-arrow-left"></i> Back</a>
-            <div class="brgy-title">Brgy. San Sebastian</div>
-            <img src="/images/seal.png" alt="Barangay Seal" class="logo">
-            <div class="welcome-title">Create Account</div>
-            <div class="left-accent"></div>
-            <div class="welcome-subtitle">Register as a verified<br>barangay resident</div>
-            <div class="step-pills">
-                <div class="step-pill active" id="pill-1"><div class="pill-num" id="pill-num-1">1</div><div class="pill-label">Personal Info</div></div>
-                <div class="step-pill" id="pill-2"><div class="pill-num" id="pill-num-2">2</div><div class="pill-label">Account Details</div></div>
-            </div>
-        </div>
-        <div class="right-panel" id="rightPanel">
-            <div class="reg-header">
-                <h1 class="reg-title" id="stepTitle">Personal Information</h1>
-                <p class="reg-subtitle" id="stepSubtitle">Step 1 of 2 — Fill in your basic details</p>
-            </div>
-            <div class="error-banner" id="errorBanner"></div>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Register – Brgy. San Sebastian</title>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script src="/js/supabase-client.js"></script>
+        <style>
+            *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; font-family: "DM Sans", "Segoe UI", Arial, sans-serif; }
+            :root { --teal-dark: #14504a; --teal-mid: #1e5a50; --teal-light: #3ca08c; --gold: #f4c542; --gold-hover: #f5d06a; --text-dark: #1a3a30; }
+            body { min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 28px; background: var(--teal-dark); position: relative; overflow: auto; font-size: 17px; }
+            body::before { content: ""; position: fixed; top: -120px; right: -120px; width: 560px; height: 560px; background: rgba(60, 160, 140, 0.16); border-radius: 50%; pointer-events: none; }
+            body::after { content: ""; position: fixed; bottom: -140px; left: -90px; width: 480px; height: 480px; background: rgba(244, 197, 66, 0.08); border-radius: 50%; pointer-events: none; }
+            .bg-blob-mid { position: fixed; top: 50%; left: 40%; transform: translate(-50%, -50%); width: 720px; height: 720px; background: rgba(30, 90, 80, 0.25); border-radius: 50%; pointer-events: none; z-index: 0; }
             
-            <div class="form-step active" id="formStep1">
-                <div class="form-row">
-                    <div class="form-group"><label>First Name <span style="color:#ff8a8a">*</span></label><input type="text" name="firstName" id="firstName" placeholder="Juan"><div class="field-error" id="err-firstName">First name is required.</div></div>
-                    <div class="form-group"><label>Last Name <span style="color:#ff8a8a">*</span></label><input type="text" name="lastName" id="lastName" placeholder="dela Cruz"><div class="field-error" id="err-lastName">Last name is required.</div></div>
-                </div>
-                <div class="form-group"><label>Gender <span style="color:#ff8a8a">*</span></label>
-                    <div class="gender-row">
-                        <button type="button" class="gender-btn" id="genderMale" onclick="selectGender('Male')"><i class="bi bi-gender-male"></i> Male</button>
-                        <button type="button" class="gender-btn" id="genderFemale" onclick="selectGender('Female')"><i class="bi bi-gender-female"></i> Female</button>
-                    </div>
-                    <input type="hidden" name="gender" id="gender">
-                    <div class="field-error" id="err-gender">Please select a gender.</div>
-                </div>
-                <div class="form-group"><label>Birth Date <span style="color:#ff8a8a">*</span></label><input type="date" name="birthDate" id="birthDate"><div class="field-error" id="err-birthDate">Please enter your birth date. You must be at least 16 years old.</div></div>
-                <div class="form-group"><label>Address <span style="color:#ff8a8a">*</span></label><input type="text" name="address" id="address" placeholder="House No., Street, Barangay"><div class="field-error" id="err-address">Address is required.</div></div>
-                <div class="section-divider"><span>Special Classifications</span></div>
-                <div class="toggle-row"><span class="toggle-label"><i class="bi bi-person-wheelchair"></i>Are you a PWD?</span>
-                    <div class="toggle-switch"><button type="button" class="toggle-opt yes" id="pwdYes" onclick="setToggle('pwd', true)">YES</button><button type="button" class="toggle-opt no active" id="pwdNo" onclick="setToggle('pwd', false)">NO</button></div>
-                </div>
-                <input type="hidden" name="isPwd" id="isPwd" value="false">
-                <div class="extra-field" id="pwdField"><label>PWD ID Number <span style="color:#ff8a8a">*</span></label><input type="text" name="pwdIdUri" id="pwdIdUri" placeholder="Enter your PWD ID number"><div class="field-error" id="err-pwdIdUri">PWD ID number is required and must be numeric.</div></div>
-                <div class="toggle-row"><span class="toggle-label"><i class="bi bi-person-fill"></i>Are you a Senior Citizen?</span>
-                    <div class="toggle-switch"><button type="button" class="toggle-opt yes" id="seniorYes" onclick="setToggle('senior', true)">YES</button><button type="button" class="toggle-opt no active" id="seniorNo" onclick="setToggle('senior', false)">NO</button></div>
-                </div>
-                <input type="hidden" name="isSenior" id="isSenior" value="false">
-                <div class="extra-field" id="seniorField"><label>Senior Citizen ID Number <span style="color:#ff8a8a">*</span></label><input type="text" name="seniorIdUri" id="seniorIdUri" placeholder="Enter your Senior Citizen ID number"><div class="field-error" id="err-seniorIdUri">Senior Citizen ID number is required and must be numeric.</div></div>
-                <div class="btn-row"><button type="button" class="btn-next" onclick="goToStep2()">Next <i class="bi bi-arrow-right"></i></button></div>
-                <div class="login-link">Already have an account? <a href="/resident-login">Sign In</a></div>
-            </div>
+            .register-container { position: relative; z-index: 1; display: flex; background: rgba(255,255,255,0.04); border-radius: 28px; overflow: hidden; box-shadow: 0 32px 80px rgba(0,0,0,0.45); max-width: 1060px; width: 100%; backdrop-filter: blur(4px); }
+            .left-panel { background-image: url('/images/kawit.jpg'); background-size: cover; background-position: center; padding: 48px 32px; width: 300px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative; }
+            .left-panel::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom,rgba(20,80,70,0.42) 0%,rgba(30,90,80,0.32) 50%,rgba(20,70,60,0.42) 100%); z-index: 0; }
+            .left-panel::after { content: ""; position: absolute; inset: 0; background: rgba(60,160,140,0.2); z-index: 0; }
+            .left-panel > * { position: relative; z-index: 1; }
+            .backbutton { text-decoration: none; color: rgba(255,255,255,0.85); font-size: 0.88rem; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 7px 14px; border-radius: 40px; backdrop-filter: blur(4px); margin-bottom: 22px; transition: all 0.2s; }
+            .backbutton:hover { color: var(--gold); background: rgba(0,0,0,0.5); }
+            .brgy-title { color: #fff; font-size: 0.78rem; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 20px; }
+            .logo { width: 100px; height: 100px; margin-bottom: 20px; filter: drop-shadow(0 8px 24px rgba(0,0,0,0.3)); }
+            .welcome-title { color: #fff; font-size: 1.6rem; font-weight: 700; margin-bottom: 10px; }
+            .left-accent { width: 36px; height: 4px; background: var(--gold); border-radius: 3px; margin: 14px auto; }
+            .welcome-subtitle { color: rgba(255,255,255,0.75); font-size: 0.88rem; line-height: 1.6; }
+            .step-pills { display: flex; flex-direction: column; gap: 9px; margin-top: 26px; width: 100%; }
+            .step-pill { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 12px; background: rgba(255,255,255,0.08); transition: background 0.2s; }
+            .step-pill.active { background: rgba(244,197,66,0.18); }
+            .pill-num { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.13); color: rgba(255,255,255,0.55); font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+            .step-pill.active .pill-num { background: var(--gold); color: var(--text-dark); }
+            .pill-label { color: rgba(255,255,255,0.5); font-size: 0.82rem; font-weight: 500; text-align: left; }
+            .step-pill.active .pill-label { color: rgba(255,255,255,0.95); }
+            .right-panel { background: rgba(255,255,255,0.06); padding: 38px 48px; flex: 1; display: flex; flex-direction: column; overflow-y: auto; max-height: 92vh; }
+            .reg-header { margin-bottom: 22px; }
+            .reg-title { color: #fff; font-size: 2rem; font-weight: 700; margin-bottom: 5px; line-height: 1.2; }
+            .reg-subtitle { color: rgba(255,255,255,0.42); font-size: 0.92rem; }
+            .form-step { display: none; }
+            .form-step.active { display: block; }
+            .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+            .form-group { margin-bottom: 15px; }
+            label { display: block; color: rgba(255,255,255,0.72); font-size: 0.86rem; font-weight: 600; letter-spacing: 0.3px; margin-bottom: 7px; }
+            input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="date"] { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.13); border-radius: 12px; color: #fff; font-size: 0.92rem; font-family: inherit; transition: border 0.2s, background 0.2s; }
+            input:focus { outline: none; border-color: var(--teal-light); background: rgba(255,255,255,0.11); }
+            .gender-row { display: flex; gap: 10px; }
+            .gender-btn { flex: 1; padding: 12px; border: 1.5px solid rgba(255,255,255,0.13); border-radius: 12px; background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.55); font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; }
+            .gender-btn.active { background: var(--teal-light); border-color: var(--teal-light); color: #fff; }
+            .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.09); border-radius: 12px; margin-bottom: 10px; }
+            .toggle-label { color: rgba(255,255,255,0.75); font-size: 0.9rem; font-weight: 600; }
+            .toggle-switch { display: flex; border-radius: 8px; overflow: hidden; border: 1.5px solid rgba(255,255,255,0.13); }
+            .toggle-opt { padding: 5px 16px; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.45); font-size: 0.78rem; font-weight: 700; cursor: pointer; border: none; }
+            .toggle-opt.yes.active { background: var(--teal-light); color: #fff; }
+            .toggle-opt.no.active { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.75); }
+            .extra-field { display: none; margin-bottom: 14px; }
+            .extra-field.show { display: block; }
+            .password-wrapper { position: relative; }
+            .password-wrapper input { padding-right: 46px; }
+            .toggle-pw { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); background: none; border: none; color: rgba(255,255,255,0.32); cursor: pointer; padding: 0; display: flex; align-items: center; transition: color 0.2s; font-size: 1rem; }
+            .field-error { color: #ff8a8a; font-size: 0.78rem; margin-top: 4px; display: none; }
+            .field-error.show { display: block; }
+            .error-banner { background: rgba(255,100,100,0.1); border: 1px solid rgba(255,100,100,0.28); color: #ff8a8a; border-radius: 10px; padding: 10px 15px; font-size: 0.86rem; margin-bottom: 15px; display: none; }
+            .error-banner.show { display: block; }
+            .section-divider { display: flex; align-items: center; gap: 10px; margin: 6px 0 16px; }
+            .section-divider span { color: rgba(255,255,255,0.3); font-size: 0.76rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap; }
+            .section-divider::before, .section-divider::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.09); }
+            .btn-row { display: flex; gap: 10px; margin-top: 18px; }
+            .btn-back { flex: 0 0 auto; padding: 13px 22px; background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.13); border-radius: 12px; color: rgba(255,255,255,0.65); font-size: 0.92rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 7px; }
+            .btn-next, .btn-submit { flex: 1; padding: 14px; background: var(--gold); color: var(--text-dark); font-size: 0.98rem; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+            .login-link { text-align: center; margin-top: 16px; color: rgba(255,255,255,0.38); font-size: 0.86rem; }
+            .login-link a { color: var(--gold); text-decoration: none; font-weight: 600; }
+            .success-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 1000; justify-content: center; align-items: center; }
+            .success-overlay.show { display: flex; }
+            .success-card { background: #fff; border-radius: 24px; padding: 52px 44px; max-width: 430px; width: 90%; text-align: center; box-shadow: 0 28px 72px rgba(0,0,0,0.35); }
+            .success-icon { width: 78px; height: 78px; background: linear-gradient(135deg, #3ca08c, #14504a); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 36px; color: #fff; }
+            .success-card h2 { color: #1a3a30; font-size: 1.65rem; font-weight: 700; margin-bottom: 10px; }
+            .success-card p { color: #5a7872; font-size: 0.92rem; line-height: 1.65; margin-bottom: 26px; }
+            .btn-done { display: inline-block; padding: 13px 34px; background: var(--teal-light); color: #fff; font-size: 0.98rem; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; text-decoration: none; }
             
-            <div class="form-step" id="formStep2">
-                <div class="form-group"><label>Email Address <span style="color:#ff8a8a">*</span></label><input type="email" name="email" id="email" placeholder="juandelacruz@email.com"><div class="field-error" id="err-email">Please enter a valid email address.</div></div>
-                <div class="form-group"><label>Mobile Number <span style="color:#ff8a8a">*</span></label><input type="tel" name="mobileNumber" id="mobileNumber" placeholder="09XXXXXXXXX" maxlength="11"><div class="field-error" id="err-mobileNumber">Please enter a valid 11-digit PH mobile number (starts with 09).</div></div>
-                <div class="form-group"><label>Password <span style="color:#ff8a8a">*</span></label>
-                    <div class="password-wrapper"><input type="password" name="password" id="password" placeholder="At least 6 characters"><button type="button" class="toggle-pw" onclick="togglePw('password', this)"><i class="bi bi-eye"></i></button></div>
-                    <div class="field-error" id="err-password">Password must be at least 6 characters.</div>
-                </div>
-                <div class="form-group"><label>Confirm Password <span style="color:#ff8a8a">*</span></label>
-                    <div class="password-wrapper"><input type="password" id="confirmPassword" placeholder="Re-enter your password"><button type="button" class="toggle-pw" onclick="togglePw('confirmPassword', this)"><i class="bi bi-eye"></i></button></div>
-                    <div class="field-error" id="err-confirmPassword">Passwords do not match.</div>
-                </div>
-                <div class="btn-row"><button type="button" class="btn-back" onclick="goToStep1()"><i class="bi bi-arrow-left"></i> Back</button><button type="button" class="btn-submit" id="submitBtn" onclick="sendOtp()"><i class="bi bi-envelope-paper"></i> Send OTP</button></div>
-                <div class="login-link">Already have an account? <a href="/resident-login">Sign In</a></div>
-            </div>
-        </div>
-    </div>
-    
-    <script>
-        // Supabase configuration
-        const SUPABASE_URL = 'https://upfrofppponiqffbssqb.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_tZyxrTJrpd_OD5-TKUkT8Q__DnuY0tj';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
-        const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const mobileRx = /^09\d{9}$/;
-        
-        let pendingFormData = null;
-        let resendTimerInterval = null;
-        let otpTimeout = 60;
-        
-        function selectGender(g) { 
-            document.getElementById('gender').value = g; 
-            document.getElementById('genderMale').classList.toggle('active', g === 'Male'); 
-            document.getElementById('genderFemale').classList.toggle('active', g === 'Female'); 
-            hide('err-gender'); 
-        }
-        
-        function setToggle(type, val) { 
-            const yesId = type === 'pwd' ? 'pwdYes' : 'seniorYes'; 
-            const noId = type === 'pwd' ? 'pwdNo' : 'seniorNo'; 
-            const hiddenId = type === 'pwd' ? 'isPwd' : 'isSenior'; 
-            const fieldId = type === 'pwd' ? 'pwdField' : 'seniorField'; 
-            document.getElementById(yesId).classList.toggle('active', val); 
-            document.getElementById(noId).classList.toggle('active', !val); 
-            document.getElementById(hiddenId).value = val; 
-            document.getElementById(fieldId).classList.toggle('show', val); 
-            if (!val) { 
-                const inp = document.getElementById(fieldId).querySelector('input[type="text"]'); 
-                if (inp) inp.value = ''; 
-            } 
-        }
-        
-        function togglePw(fieldId, btn) { 
-            const inp = document.getElementById(fieldId); 
-            const pass = inp.type === 'password'; 
-            inp.type = pass ? 'text' : 'password'; 
-            btn.querySelector('i').className = pass ? 'bi bi-eye-slash' : 'bi bi-eye'; 
-        }
-        
-        function show(id) { document.getElementById(id).classList.add('show'); }
-        function hide(id) { document.getElementById(id).classList.remove('show'); }
-        function val(id) { return document.getElementById(id).value.trim(); }
-        
-        function showError(msg) { 
-            const b = document.getElementById('errorBanner'); 
-            b.textContent = msg; 
-            b.classList.add('show'); 
-            b.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); 
-        }
-        
-        function clearErrors() { 
-            document.getElementById('errorBanner').classList.remove('show'); 
-            document.querySelectorAll('.field-error').forEach(e => e.classList.remove('show')); 
-        }
-        
-        function getAge(dateStr) { 
-            if (!dateStr) return null; 
-            const birth = new Date(dateStr); 
-            const today = new Date(); 
-            let age = today.getFullYear() - birth.getFullYear(); 
-            const m = today.getMonth() - birth.getMonth(); 
-            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--; 
-            return age; 
-        }
-        
-        function updatePills(step) { 
-            for (let i = 1; i <= 2; i++) { 
-                const pill = document.getElementById('pill-' + i); 
-                const num = document.getElementById('pill-num-' + i); 
-                pill.classList.remove('active', 'done'); 
-                if (i < step) { 
-                    pill.classList.add('done'); 
-                    num.innerHTML = '<i class="bi bi-check" style="font-size:13px"></i>'; 
-                } 
-                if (i === step) { 
-                    pill.classList.add('active'); 
-                    num.textContent = i; 
-                } 
-                if (i > step) { 
-                    num.textContent = i; 
-                } 
-            } 
-        }
-        
-        function validateStep1() { 
-            clearErrors(); 
-            let ok = true; 
-            if (!val('firstName')) { show('err-firstName'); ok = false; }
-            if (!val('lastName')) { show('err-lastName'); ok = false; }
-            if (!val('gender')) { show('err-gender'); ok = false; }
-            const age = getAge(val('birthDate'));
-            if (age === null || age < 16) { show('err-birthDate'); ok = false; }
-            if (!val('address')) { show('err-address'); ok = false; }
-            if (document.getElementById('isPwd').value === 'true') { 
-                const v = val('pwdIdUri'); 
-                if (!v || !/^\d+$/.test(v)) { show('err-pwdIdUri'); ok = false; } 
+            /* OTP Modal */
+            .otp-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
+            .otp-overlay.show { display: flex; }
+            .otp-modal { background: #fff; border-radius: 24px; padding: 40px; max-width: 460px; width: 90%; text-align: center; }
+            .otp-modal h2 { color: #2d5049; margin-bottom: 10px; }
+            .otp-modal p { color: #7a9d94; margin-bottom: 25px; }
+            .otp-inputs { display: flex; gap: 12px; justify-content: center; margin-bottom: 25px; }
+            .otp-input { width: 50px; height: 60px; border: 2px solid #e0e0e0; border-radius: 12px; text-align: center; font-size: 24px; font-weight: 700; color: #2d5049; background: #f5f5f5; }
+            .otp-input:focus { outline: none; border-color: #5ab5a0; }
+            .otp-resend { margin-top: 15px; color: #7a9d94; font-size: 0.88rem; }
+            .otp-resend a { color: #3D6D66; font-weight: 600; cursor: pointer; text-decoration: none; }
+            .otp-resend a.disabled { color: #b8d4cd; cursor: not-allowed; }
+            .otp-error { color: #e74c3c; font-size: 0.85rem; margin-bottom: 15px; display: none; }
+            .otp-error.show { display: block; }
+            
+            @media (max-width: 768px) {
+                .register-container { flex-direction: column; }
+                .left-panel { width: 100%; padding: 32px; }
+                .right-panel { padding: 32px 24px; }
+                .reg-title { font-size: 1.6rem; }
+                .form-row { grid-template-columns: 1fr; gap: 0; }
             }
-            if (document.getElementById('isSenior').value === 'true') { 
-                const v = val('seniorIdUri'); 
-                if (!v || !/^\d+$/.test(v)) { show('err-seniorIdUri'); ok = false; } 
-            }
-            if (!ok) showError('Please fix the highlighted fields before continuing.'); 
-            return ok; 
-        }
-        
-        function validateStep2() { 
-            let ok = true; 
-            if (!emailRx.test(val('email'))) { show('err-email'); ok = false; }
-            if (!mobileRx.test(val('mobileNumber'))) { show('err-mobileNumber'); ok = false; }
-            const pw = document.getElementById('password').value;
-            const cpw = document.getElementById('confirmPassword').value;
-            if (pw.length < 6) { show('err-password'); ok = false; }
-            if (pw !== cpw) { show('err-confirmPassword'); ok = false; }
-            return ok; 
-        }
-        
-        function goToStep2() { 
-            if (!validateStep1()) return; 
-            document.getElementById('formStep1').classList.remove('active'); 
-            document.getElementById('formStep2').classList.add('active'); 
-            document.getElementById('stepTitle').textContent = 'Account Details'; 
-            document.getElementById('stepSubtitle').textContent = 'Step 2 of 2 — Set up your login credentials'; 
-            updatePills(2); 
-            document.getElementById('rightPanel').scrollTop = 0; 
-        }
-        
-        function goToStep1() { 
-            document.getElementById('formStep2').classList.remove('active'); 
-            document.getElementById('formStep1').classList.add('active'); 
-            document.getElementById('stepTitle').textContent = 'Personal Information'; 
-            document.getElementById('stepSubtitle').textContent = 'Step 1 of 2 — Fill in your basic details'; 
-            updatePills(1); 
-            clearErrors(); 
-            document.getElementById('rightPanel').scrollTop = 0; 
-        }
-        
-        // Send OTP using Supabase signInWithOtp (same as mobile)
-        async function sendOtp() {
-            clearErrors();
-            if (!validateStep2()) return;
-            
-            const email = val('email');
-            const password = document.getElementById('password').value;
-            
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Sending...';
-            
-            try {
-                // Build form data for later use
-                pendingFormData = {
-                    firstName: val('firstName'),
-                    lastName: val('lastName'),
-                    gender: val('gender'),
-                    birthDate: val('birthDate'),
-                    address: val('address'),
-                    email: email,
-                    mobileNumber: val('mobileNumber'),
-                    password: password,
-                    isPwd: document.getElementById('isPwd').value === 'true',
-                    pwdIdUri: val('pwdIdUri'),
-                    isSenior: document.getElementById('isSenior').value === 'true',
-                    seniorIdUri: val('seniorIdUri')
-                };
-                
-                // Send OTP via Supabase (same as mobile app)
-                const { data, error } = await supabase.auth.signInWithOtp({
-                    email: email,
-                    options: {
-                        shouldCreateUser: true,
-                        data: {
-                            first_name: pendingFormData.firstName,
-                            last_name: pendingFormData.lastName,
-                            full_name: `${pendingFormData.firstName} ${pendingFormData.lastName}`,
-                            mobile_number: pendingFormData.mobileNumber
-                        }
-                    }
-                });
-                
-                if (error) throw error;
-                
-                // Show OTP modal
-                document.getElementById('otpEmailDisplay').textContent = email;
-                document.getElementById('otpOverlay').classList.add('show');
-                startResendTimer();
-                
-                // Setup OTP inputs
-                const otpInputs = document.querySelectorAll('.otp-input');
-                otpInputs.forEach((input, index) => {
-                    input.value = '';
-                    input.oninput = (e) => {
-                        if (e.target.value.length === 1 && index < 5) {
-                            otpInputs[index + 1].focus();
-                        }
-                    };
-                    input.onkeydown = (e) => {
-                        if (e.key === 'Backspace' && !input.value && index > 0) {
-                            otpInputs[index - 1].focus();
-                        }
-                    };
-                });
-                otpInputs[0].focus();
-                
-            } catch (err) {
-                console.error('Send OTP error:', err);
-                showError(err.message || 'Failed to send OTP. Please try again.');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-envelope-paper"></i> Send OTP';
-            }
-        }
-        
-        function startResendTimer() {
-            otpTimeout = 60;
-            const resendLink = document.getElementById('resendOtpLink');
-            const timerSpan = document.getElementById('resendTimer');
-            const countdownSpan = document.getElementById('countdown');
-            
-            resendLink.classList.add('disabled');
-            timerSpan.style.display = 'inline';
-            
-            if (resendTimerInterval) clearInterval(resendTimerInterval);
-            resendTimerInterval = setInterval(() => {
-                otpTimeout--;
-                countdownSpan.textContent = otpTimeout;
-                if (otpTimeout <= 0) {
-                    clearInterval(resendTimerInterval);
-                    resendLink.classList.remove('disabled');
-                    timerSpan.style.display = 'none';
+
+            .spin-icon {
+                    animation: spin 1s linear infinite;
                 }
-            }, 1000);
-        }
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+        </style>
+    </head>
+    <body>
+        <div class="bg-blob-mid"></div>
         
-        // Resend OTP
-        document.getElementById('resendOtpLink').addEventListener('click', async () => {
-            if (document.getElementById('resendOtpLink').classList.contains('disabled')) return;
+        <!-- Success Overlay -->
+        <div class="success-overlay" id="successOverlay">
+            <div class="success-card">
+                <div class="success-icon"><i class="bi bi-check-lg"></i></div>
+                <h2>Registration Submitted!</h2>
+                <p>Your account is pending verification. You will be notified once your registration has been approved by the barangay office.</p>
+                <a href="/resident-login" class="btn-done">Go to Login</a>
+            </div>
+        </div>
+        
+        <!-- OTP Modal -->
+        <div class="otp-overlay" id="otpOverlay">
+            <div class="otp-modal">
+                <h2><i class="bi bi-envelope-paper"></i> Verify Your Email</h2>
+                <p>We've sent a 6-digit verification code to <strong id="otpEmailDisplay"></strong></p>
+                <div class="otp-inputs" id="otpInputs">
+                    <input type="text" class="otp-input" maxlength="1" data-index="0">
+                    <input type="text" class="otp-input" maxlength="1" data-index="1">
+                    <input type="text" class="otp-input" maxlength="1" data-index="2">
+                    <input type="text" class="otp-input" maxlength="1" data-index="3">
+                    <input type="text" class="otp-input" maxlength="1" data-index="4">
+                    <input type="text" class="otp-input" maxlength="1" data-index="5">
+                </div>
+                <div class="otp-error" id="otpError"></div>
+                <button class="btn-submit" id="verifyOtpBtn" style="background: #3D6D66; color: #fff; width: 100%;">Verify Code</button>
+                <div class="otp-resend">
+                    Didn't receive code? <a id="resendOtpLink">Resend</a>
+                    <span id="resendTimer" style="display:none;"> (<span id="countdown">60</span>s)</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="register-container">
+            <div class="left-panel">
+                <a href="/landing-page" class="backbutton"><i class="bi bi-arrow-left"></i> Back</a>
+                <div class="brgy-title">Brgy. San Sebastian</div>
+                <img src="/images/seal.png" alt="Barangay Seal" class="logo">
+                <div class="welcome-title">Create Account</div>
+                <div class="left-accent"></div>
+                <div class="welcome-subtitle">Register as a verified<br>barangay resident</div>
+                <div class="step-pills">
+                    <div class="step-pill active" id="pill-1"><div class="pill-num" id="pill-num-1">1</div><div class="pill-label">Personal Info</div></div>
+                    <div class="step-pill" id="pill-2"><div class="pill-num" id="pill-num-2">2</div><div class="pill-label">Account Details</div></div>
+                </div>
+            </div>
+            <div class="right-panel" id="rightPanel">
+                <div class="reg-header">
+                    <h1 class="reg-title" id="stepTitle">Personal Information</h1>
+                    <p class="reg-subtitle" id="stepSubtitle">Step 1 of 2 — Fill in your basic details</p>
+                </div>
+                <div class="error-banner" id="errorBanner"></div>
+                
+                <div class="form-step active" id="formStep1">
+                    <div class="form-row">
+                        <div class="form-group"><label>First Name <span style="color:#ff8a8a">*</span></label><input type="text" name="firstName" id="firstName" placeholder="Juan"><div class="field-error" id="err-firstName">First name is required.</div></div>
+                        <div class="form-group"><label>Last Name <span style="color:#ff8a8a">*</span></label><input type="text" name="lastName" id="lastName" placeholder="dela Cruz"><div class="field-error" id="err-lastName">Last name is required.</div></div>
+                    </div>
+                    <div class="form-group"><label>Gender <span style="color:#ff8a8a">*</span></label>
+                        <div class="gender-row">
+                            <button type="button" class="gender-btn" id="genderMale" onclick="selectGender('Male')"><i class="bi bi-gender-male"></i> Male</button>
+                            <button type="button" class="gender-btn" id="genderFemale" onclick="selectGender('Female')"><i class="bi bi-gender-female"></i> Female</button>
+                        </div>
+                        <input type="hidden" name="gender" id="gender">
+                        <div class="field-error" id="err-gender">Please select a gender.</div>
+                    </div>
+                    <div class="form-group"><label>Birth Date <span style="color:#ff8a8a">*</span></label><input type="date" name="birthDate" id="birthDate"><div class="field-error" id="err-birthDate">Please enter your birth date. You must be at least 16 years old.</div></div>
+                    <div class="form-group"><label>Address <span style="color:#ff8a8a">*</span></label><input type="text" name="address" id="address" placeholder="House No., Street, Barangay"><div class="field-error" id="err-address">Address is required.</div></div>
+                    <div class="section-divider"><span>Special Classifications</span></div>
+                    <div class="toggle-row"><span class="toggle-label"><i class="bi bi-person-wheelchair"></i>Are you a PWD?</span>
+                        <div class="toggle-switch"><button type="button" class="toggle-opt yes" id="pwdYes" onclick="setToggle('pwd', true)">YES</button><button type="button" class="toggle-opt no active" id="pwdNo" onclick="setToggle('pwd', false)">NO</button></div>
+                    </div>
+                    <input type="hidden" name="isPwd" id="isPwd" value="false">
+                    <div class="extra-field" id="pwdField"><label>PWD ID Number <span style="color:#ff8a8a">*</span></label><input type="text" name="pwdIdUri" id="pwdIdUri" placeholder="Enter your PWD ID number"><div class="field-error" id="err-pwdIdUri">PWD ID number is required and must be numeric.</div></div>
+                    <div class="toggle-row"><span class="toggle-label"><i class="bi bi-person-fill"></i>Are you a Senior Citizen?</span>
+                        <div class="toggle-switch"><button type="button" class="toggle-opt yes" id="seniorYes" onclick="setToggle('senior', true)">YES</button><button type="button" class="toggle-opt no active" id="seniorNo" onclick="setToggle('senior', false)">NO</button></div>
+                    </div>
+                    <input type="hidden" name="isSenior" id="isSenior" value="false">
+                    <div class="extra-field" id="seniorField"><label>Senior Citizen ID Number <span style="color:#ff8a8a">*</span></label><input type="text" name="seniorIdUri" id="seniorIdUri" placeholder="Enter your Senior Citizen ID number"><div class="field-error" id="err-seniorIdUri">Senior Citizen ID number is required and must be numeric.</div></div>
+                    <div class="btn-row"><button type="button" class="btn-next" onclick="goToStep2()">Next <i class="bi bi-arrow-right"></i></button></div>
+                    <div class="login-link">Already have an account? <a href="/resident-login">Sign In</a></div>
+                </div>
+                
+                <div class="form-step" id="formStep2">
+                    <div class="form-group"><label>Email Address <span style="color:#ff8a8a">*</span></label><input type="email" name="email" id="email" placeholder="juandelacruz@email.com"><div class="field-error" id="err-email">Please enter a valid email address.</div></div>
+                    <div class="form-group"><label>Mobile Number <span style="color:#ff8a8a">*</span></label><input type="tel" name="mobileNumber" id="mobileNumber" placeholder="09XXXXXXXXX" maxlength="11"><div class="field-error" id="err-mobileNumber">Please enter a valid 11-digit PH mobile number (starts with 09).</div></div>
+                    <div class="form-group"><label>Password <span style="color:#ff8a8a">*</span></label>
+                        <div class="password-wrapper"><input type="password" name="password" id="password" placeholder="At least 6 characters"><button type="button" class="toggle-pw" onclick="togglePw('password', this)"><i class="bi bi-eye"></i></button></div>
+                        <div class="field-error" id="err-password">Password must be at least 6 characters.</div>
+                    </div>
+                    <div class="form-group"><label>Confirm Password <span style="color:#ff8a8a">*</span></label>
+                        <div class="password-wrapper"><input type="password" id="confirmPassword" placeholder="Re-enter your password"><button type="button" class="toggle-pw" onclick="togglePw('confirmPassword', this)"><i class="bi bi-eye"></i></button></div>
+                        <div class="field-error" id="err-confirmPassword">Passwords do not match.</div>
+                    </div>
+                    <div class="btn-row"><button type="button" class="btn-back" onclick="goToStep1()"><i class="bi bi-arrow-left"></i> Back</button><button type="button" class="btn-submit" id="submitBtn" onclick="sendOtp()"><i class="bi bi-envelope-paper"></i> Send OTP</button></div>
+                    <div class="login-link">Already have an account? <a href="/resident-login">Sign In</a></div>
+                </div>
+            </div>
+        </div>
+        
+        <script>
             
-            try {
-                const { error } = await supabase.auth.signInWithOtp({
-                    email: pendingFormData.email,
-                    options: {
-                        shouldCreateUser: true,
-                        data: {
-                            first_name: pendingFormData.firstName,
-                            last_name: pendingFormData.lastName,
-                            full_name: `${pendingFormData.firstName} ${pendingFormData.lastName}`,
-                            mobile_number: pendingFormData.mobileNumber
+            
+            const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const mobileRx = /^09\d{9}$/;
+            
+            let pendingFormData = null;
+            let resendTimerInterval = null;
+            let otpTimeout = 60;
+            
+            function selectGender(g) { 
+                document.getElementById('gender').value = g; 
+                document.getElementById('genderMale').classList.toggle('active', g === 'Male'); 
+                document.getElementById('genderFemale').classList.toggle('active', g === 'Female'); 
+                hide('err-gender'); 
+            }
+            
+            function setToggle(type, val) { 
+                const yesId = type === 'pwd' ? 'pwdYes' : 'seniorYes'; 
+                const noId = type === 'pwd' ? 'pwdNo' : 'seniorNo'; 
+                const hiddenId = type === 'pwd' ? 'isPwd' : 'isSenior'; 
+                const fieldId = type === 'pwd' ? 'pwdField' : 'seniorField'; 
+                document.getElementById(yesId).classList.toggle('active', val); 
+                document.getElementById(noId).classList.toggle('active', !val); 
+                document.getElementById(hiddenId).value = val; 
+                document.getElementById(fieldId).classList.toggle('show', val); 
+                if (!val) { 
+                    const inp = document.getElementById(fieldId).querySelector('input[type="text"]'); 
+                    if (inp) inp.value = ''; 
+                } 
+            }
+            
+            function togglePw(fieldId, btn) { 
+                const inp = document.getElementById(fieldId); 
+                const pass = inp.type === 'password'; 
+                inp.type = pass ? 'text' : 'password'; 
+                btn.querySelector('i').className = pass ? 'bi bi-eye-slash' : 'bi bi-eye'; 
+            }
+            
+            function show(id) { document.getElementById(id).classList.add('show'); }
+            function hide(id) { document.getElementById(id).classList.remove('show'); }
+            function val(id) { return document.getElementById(id).value.trim(); }
+            
+            function showError(msg) { 
+                const b = document.getElementById('errorBanner'); 
+                b.textContent = msg; 
+                b.classList.add('show'); 
+                b.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); 
+            }
+            
+            function clearErrors() { 
+                document.getElementById('errorBanner').classList.remove('show'); 
+                document.querySelectorAll('.field-error').forEach(e => e.classList.remove('show')); 
+            }
+            
+            function getAge(dateStr) { 
+                if (!dateStr) return null; 
+                const birth = new Date(dateStr); 
+                const today = new Date(); 
+                let age = today.getFullYear() - birth.getFullYear(); 
+                const m = today.getMonth() - birth.getMonth(); 
+                if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--; 
+                return age; 
+            }
+            
+            function updatePills(step) { 
+                for (let i = 1; i <= 2; i++) { 
+                    const pill = document.getElementById('pill-' + i); 
+                    const num = document.getElementById('pill-num-' + i); 
+                    pill.classList.remove('active', 'done'); 
+                    if (i < step) { 
+                        pill.classList.add('done'); 
+                        num.innerHTML = '<i class="bi bi-check" style="font-size:13px"></i>'; 
+                    } 
+                    if (i === step) { 
+                        pill.classList.add('active'); 
+                        num.textContent = i; 
+                    } 
+                    if (i > step) { 
+                        num.textContent = i; 
+                    } 
+                } 
+            }
+            
+            function validateStep1() { 
+                clearErrors(); 
+                let ok = true; 
+                if (!val('firstName')) { show('err-firstName'); ok = false; }
+                if (!val('lastName')) { show('err-lastName'); ok = false; }
+                if (!val('gender')) { show('err-gender'); ok = false; }
+                const age = getAge(val('birthDate'));
+                if (age === null || age < 16) { show('err-birthDate'); ok = false; }
+                if (!val('address')) { show('err-address'); ok = false; }
+                if (document.getElementById('isPwd').value === 'true') { 
+                    const v = val('pwdIdUri'); 
+                    if (!v || !/^\d+$/.test(v)) { show('err-pwdIdUri'); ok = false; } 
+                }
+                if (document.getElementById('isSenior').value === 'true') { 
+                    const v = val('seniorIdUri'); 
+                    if (!v || !/^\d+$/.test(v)) { show('err-seniorIdUri'); ok = false; } 
+                }
+                if (!ok) showError('Please fix the highlighted fields before continuing.'); 
+                return ok; 
+            }
+            
+            function validateStep2() { 
+                let ok = true; 
+                if (!emailRx.test(val('email'))) { show('err-email'); ok = false; }
+                if (!mobileRx.test(val('mobileNumber'))) { show('err-mobileNumber'); ok = false; }
+                const pw = document.getElementById('password').value;
+                const cpw = document.getElementById('confirmPassword').value;
+                if (pw.length < 6) { show('err-password'); ok = false; }
+                if (pw !== cpw) { show('err-confirmPassword'); ok = false; }
+                return ok; 
+            }
+            
+            function goToStep2() { 
+                if (!validateStep1()) return; 
+                document.getElementById('formStep1').classList.remove('active'); 
+                document.getElementById('formStep2').classList.add('active'); 
+                document.getElementById('stepTitle').textContent = 'Account Details'; 
+                document.getElementById('stepSubtitle').textContent = 'Step 2 of 2 — Set up your login credentials'; 
+                updatePills(2); 
+                document.getElementById('rightPanel').scrollTop = 0; 
+            }
+            
+            function goToStep1() { 
+                document.getElementById('formStep2').classList.remove('active'); 
+                document.getElementById('formStep1').classList.add('active'); 
+                document.getElementById('stepTitle').textContent = 'Personal Information'; 
+                document.getElementById('stepSubtitle').textContent = 'Step 1 of 2 — Fill in your basic details'; 
+                updatePills(1); 
+                clearErrors(); 
+                document.getElementById('rightPanel').scrollTop = 0; 
+            }
+            
+            // Send OTP using Supabase signInWithOtp (same as mobile)
+            async function sendOtp() {
+                clearErrors();
+                if (!validateStep2()) return;
+                
+                const email = val('email');
+                const password = document.getElementById('password').value;
+                
+                const btn = document.getElementById('submitBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat spin-icon"></i> Sending...';
+                
+                try {
+                    // Build form data for later use
+                    pendingFormData = {
+                        firstName: val('firstName'),
+                        lastName: val('lastName'),
+                        gender: val('gender'),
+                        birthDate: val('birthDate'),
+                        address: val('address'),
+                        email: email,
+                        mobileNumber: val('mobileNumber'),
+                        password: password,
+                        isPwd: document.getElementById('isPwd').value === 'true',
+                        pwdIdUri: val('pwdIdUri'),
+                        isSenior: document.getElementById('isSenior').value === 'true',
+                        seniorIdUri: val('seniorIdUri')
+                    };
+                    
+                    // Send OTP via Supabase (same as mobile app)
+                    const { data, error } = await window.supabaseClient.auth.signInWithOtp({
+                        email: email,
+                        options: {
+                            shouldCreateUser: true,
+                            data: {
+                                first_name: pendingFormData.firstName,
+                                last_name: pendingFormData.lastName,
+                                full_name: `${pendingFormData.firstName} ${pendingFormData.lastName}`,
+                                mobile_number: pendingFormData.mobileNumber
+                            }
                         }
+                    });
+                    
+                    if (error) throw error;
+                    
+                    // Show OTP modal
+                    document.getElementById('otpEmailDisplay').textContent = email;
+                    document.getElementById('otpOverlay').classList.add('show');
+                    startResendTimer();
+                    
+                    // Setup OTP inputs
+                    const otpInputs = document.querySelectorAll('.otp-input');
+                    otpInputs.forEach((input, index) => {
+                        input.value = '';
+                        input.oninput = (e) => {
+                            if (e.target.value.length === 1 && index < 5) {
+                                otpInputs[index + 1].focus();
+                            }
+                        };
+                        input.onkeydown = (e) => {
+                            if (e.key === 'Backspace' && !input.value && index > 0) {
+                                otpInputs[index - 1].focus();
+                            }
+                        };
+                    });
+                    otpInputs[0].focus();
+                    
+                } catch (err) {
+                    console.error('Send OTP error:', err);
+                    showError(err.message || 'Failed to send OTP. Please try again.');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-envelope-paper"></i> Send OTP';
+                }
+            }
+            
+            function startResendTimer() {
+                otpTimeout = 60;
+                const resendLink = document.getElementById('resendOtpLink');
+                const timerSpan = document.getElementById('resendTimer');
+                const countdownSpan = document.getElementById('countdown');
+                
+                resendLink.classList.add('disabled');
+                timerSpan.style.display = 'inline';
+                
+                if (resendTimerInterval) clearInterval(resendTimerInterval);
+                resendTimerInterval = setInterval(() => {
+                    otpTimeout--;
+                    countdownSpan.textContent = otpTimeout;
+                    if (otpTimeout <= 0) {
+                        clearInterval(resendTimerInterval);
+                        resendLink.classList.remove('disabled');
+                        timerSpan.style.display = 'none';
                     }
-                });
-                if (error) throw error;
-                
-                // Clear OTP inputs
-                document.querySelectorAll('.otp-input').forEach(input => input.value = '');
-                document.querySelectorAll('.otp-input')[0].focus();
-                startResendTimer();
-                document.getElementById('otpError').classList.remove('show');
-                
-            } catch (err) {
-                document.getElementById('otpError').textContent = err.message;
-                document.getElementById('otpError').classList.add('show');
-            }
-        });
-        
-        // Verify OTP and save to database
-        document.getElementById('verifyOtpBtn').addEventListener('click', async () => {
-            const otpInputs = document.querySelectorAll('.otp-input');
-            const otp = Array.from(otpInputs).map(input => input.value).join('');
-            
-            if (otp.length !== 6) {
-                document.getElementById('otpError').textContent = 'Please enter the complete 6-digit code.';
-                document.getElementById('otpError').classList.add('show');
-                return;
+                }, 1000);
             }
             
-            const btn = document.getElementById('verifyOtpBtn');
-            btn.disabled = true;
-            btn.textContent = 'Verifying...';
-            
-            try {
-                // Verify OTP with Supabase
-                const { error } = await supabase.auth.verifyOtp({
-                    email: pendingFormData.email,
-                    token: otp,
-                    type: 'email'
-                });
+            // Resend OTP
+            document.getElementById('resendOtpLink').addEventListener('click', async () => {
+                if (document.getElementById('resendOtpLink').classList.contains('disabled')) return;
                 
-                if (error) throw error;
-                
-                // OTP verified, now save to residents table via backend
-                const formData = new URLSearchParams();
-                formData.append('firstName', pendingFormData.firstName);
-                formData.append('lastName', pendingFormData.lastName);
-                formData.append('gender', pendingFormData.gender);
-                formData.append('birthDate', pendingFormData.birthDate);
-                formData.append('address', pendingFormData.address);
-                formData.append('email', pendingFormData.email);
-                formData.append('mobileNumber', pendingFormData.mobileNumber);
-                formData.append('password', pendingFormData.password);
-                formData.append('isPwd', pendingFormData.isPwd);
-                formData.append('pwdIdUri', pendingFormData.pwdIdUri);
-                formData.append('isSenior', pendingFormData.isSenior);
-                formData.append('seniorIdUri', pendingFormData.seniorIdUri);
-                
-                const res = await fetch('/resident/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: formData
-                });
-                
-                const text = await res.text();
-                
-                if (res.ok && text === 'success') {
-                    document.getElementById('otpOverlay').classList.remove('show');
-                    document.getElementById('successOverlay').classList.add('show');
-                } else {
-                    let msg = 'Registration failed. Please try again.';
-                    if (text === 'email already registered') msg = 'This email address is already registered.';
-                    else if (text === 'mobile number already in use') msg = 'This mobile number is already in use.';
-                    document.getElementById('otpError').textContent = msg;
+                try {
+                    const { error } = await window.supabaseClient.auth.signInWithOtp({
+                        email: pendingFormData.email,
+                        options: {
+                            shouldCreateUser: true,
+                            data: {
+                                first_name: pendingFormData.firstName,
+                                last_name: pendingFormData.lastName,
+                                full_name: `${pendingFormData.firstName} ${pendingFormData.lastName}`,
+                                mobile_number: pendingFormData.mobileNumber
+                            }
+                        }
+                    });
+                    if (error) throw error;
+                    
+                    // Clear OTP inputs
+                    document.querySelectorAll('.otp-input').forEach(input => input.value = '');
+                    document.querySelectorAll('.otp-input')[0].focus();
+                    startResendTimer();
+                    document.getElementById('otpError').classList.remove('show');
+                    
+                } catch (err) {
+                    document.getElementById('otpError').textContent = err.message;
                     document.getElementById('otpError').classList.add('show');
                 }
-                
-            } catch (err) {
-                console.error('Verification error:', err);
-                document.getElementById('otpError').textContent = err.message || 'Invalid or expired code. Please try again.';
-                document.getElementById('otpError').classList.add('show');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Verify Code';
-            }
-        });
-        
-        // Close OTP modal if clicking outside (optional)
-        document.getElementById('otpOverlay').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('otpOverlay')) {
-                // Don't close automatically, user needs to verify
-            }
-        });
-    </script>
-</body>
-</html>
+            });
+            
+            // Verify OTP and save to database
+            document.getElementById('verifyOtpBtn').addEventListener('click', async () => {
+                const otpInputs = document.querySelectorAll('.otp-input');
+                const otp = Array.from(otpInputs).map(input => input.value).join('');
+
+                if (otp.length !== 6) {
+                    document.getElementById('otpError').textContent = 'Please enter the complete 6-digit code.';
+                    document.getElementById('otpError').classList.add('show');
+                    return;
+                }
+
+                const btn = document.getElementById('verifyOtpBtn');
+                btn.disabled = true;
+                btn.textContent = 'Verifying...';
+
+                try {
+                    // Verify OTP
+                    const { error } = await window.supabaseClient.auth.verifyOtp({
+                        email: pendingFormData.email,
+                        token: otp,
+                        type: 'email'
+                    });
+                    if (error) throw error;
+
+                    // ✅ Get the authenticated user’s UID
+                    const { data: { user }, error: userError } = await window.supabaseClient.auth.getUser();
+                    if (userError) throw userError;
+
+                    // Build form data including the Supabase UID
+                    const formData = new URLSearchParams();
+                    formData.append('supabaseUid', user.id);          // ← important!
+                    formData.append('firstName', pendingFormData.firstName);
+                    formData.append('lastName', pendingFormData.lastName);
+                    formData.append('gender', pendingFormData.gender);
+                    formData.append('birthDate', pendingFormData.birthDate);
+                    formData.append('address', pendingFormData.address);
+                    formData.append('email', pendingFormData.email);
+                    formData.append('mobileNumber', pendingFormData.mobileNumber);
+                    formData.append('password', pendingFormData.password);
+                    formData.append('isPwd', pendingFormData.isPwd);
+                    formData.append('pwdIdUri', pendingFormData.pwdIdUri);
+                    formData.append('isSenior', pendingFormData.isSenior);
+                    formData.append('seniorIdUri', pendingFormData.seniorIdUri);
+
+                    const res = await fetch('/resident/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: formData
+                    });
+
+                    const text = await res.text();
+
+                    if (res.ok && text === 'success') {
+                        document.getElementById('otpOverlay').classList.remove('show');
+                        document.getElementById('successOverlay').classList.add('show');
+                    } else {
+                        let msg = 'Registration failed. Please try again.';
+                        if (text === 'email already registered') msg = 'This email address is already registered.';
+                        else if (text === 'mobile number already in use') msg = 'This mobile number is already in use.';
+                        document.getElementById('otpError').textContent = msg;
+                        document.getElementById('otpError').classList.add('show');
+                    }
+
+                } catch (err) {
+                    console.error('Verification error:', err);
+                    document.getElementById('otpError').textContent = err.message || 'Invalid or expired code. Please try again.';
+                    document.getElementById('otpError').classList.add('show');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Verify Code';
+                }
+            });
+            
+            // Close OTP modal if clicking outside (optional)
+            document.getElementById('otpOverlay').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('otpOverlay')) {
+                    // Don't close automatically, user needs to verify
+                }
+            });
+        </script>
+    </body>
+    </html>

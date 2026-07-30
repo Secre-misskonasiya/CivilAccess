@@ -356,7 +356,6 @@
             <span class="search-icon"><i class="bi bi-search"></i></span>
             <input type="text" id="facility-search" placeholder="Search facilities by name, location, or status...">
         </div>
-        <button class="filter-btn" id="sortStatusBtn"><i class="bi bi-sort-up"></i> Sort: Open First</button>
         <button class="add-btn" data-bs-toggle="modal" data-bs-target="#addFacilityModal"><i class="bi bi-plus-circle"></i> Add New Facility</button>
     </div>
 
@@ -735,14 +734,14 @@ function deleteFacilityWithConfirm(id, facilityName) {
 }
 
 // Save with confirmation - RELOADS when user clicks OK
-function saveFacilityWithConfirm() {
-    const facility = {
+    function saveFacilityWithConfirm() {
+        const facility = {
         facilityName: document.getElementById('facilityName').value,
         facilityType: document.getElementById('facilityType').value,
         contactNumber: document.getElementById('contactNumber').value,
         email: document.getElementById('email').value,
         address: document.getElementById('address').value,
-        status: document.getElementById('status').value
+        status: 'OPEN'   // ← hardcoded instead of reading a missing element
     };
     
     if (!facility.facilityName) {
@@ -773,15 +772,15 @@ function saveFacilityWithConfirm() {
 // Update with confirmation - RELOADS when user clicks OK
 function updateFacilityWithConfirm() {
     const id = document.getElementById('editFacilityId').value;
-    const facility = {
+        const facility = {
         facilityName: document.getElementById('editFacilityName').value,
         facilityType: document.getElementById('editFacilityType').value,
         contactNumber: document.getElementById('editContactNumber').value,
         email: document.getElementById('editEmail').value,
         address: document.getElementById('editAddress').value,
-        status: document.getElementById('editStatus').value
+        status: 'OPEN'   // ← same here
     };
-    
+        
     if (!facility.facilityName) {
         alert('Please enter facility name');
         return;
@@ -932,7 +931,6 @@ function editFacility(id) {
             document.getElementById('editContactNumber').value = data.contactNumber || '';
             document.getElementById('editEmail').value = data.email || '';
             document.getElementById('editAddress').value = data.address || '';
-            document.getElementById('editStatus').value = data.status || 'OPEN';
             new bootstrap.Modal(document.getElementById('editFacilityModal')).show();
         });
 }
