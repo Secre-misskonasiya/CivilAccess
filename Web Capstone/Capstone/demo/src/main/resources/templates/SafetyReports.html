@@ -95,6 +95,7 @@
         border-bottom: 1px solid #e0e0e0;
         padding: 0 20px;
         gap: 4px;
+        flex-wrap: wrap;
     }
     .tab {
         padding: 12px 18px;
@@ -189,6 +190,51 @@
         border: 1px solid #b0e0c0; 
     }
     
+    /* Status badges - simplified, no icons */
+    .badge-status {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid;
+    }
+    .status-resolved {
+        background-color: #d4edda;
+        color: #155724;
+        border-color: #c3e6cb;
+    }
+    .status-rejected {
+        background-color: #f8d7da;
+        color: #721c24;
+        border-color: #f5c6cb;
+    }
+    .status-cancelled {
+        background-color: #fff3cd;
+        color: #856404;
+        border-color: #ffc107;
+    }
+    .status-incoming {
+        background-color: #cce5ff;
+        color: #004085;
+        border-color: #b8daff;
+    }
+    .status-approved {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border-color: #bee5eb;
+    }
+    .status-inprogress {
+        background-color: #d6d8db;
+        color: #383d41;
+        border-color: #c6c8ca;
+    }
+    .status-archived {
+        background-color: #e2e3e5;
+        color: #383d41;
+        border-color: #d6d8db;
+    }
+
     .resolved-by-badge {
         background-color: #6c757d;
         color: white;
@@ -238,6 +284,34 @@
         font-weight: bold;
     }
     .archive-btn:hover {
+        background-color: #fff0f0;
+        color: #e74c3c;
+    }
+    .cancel-btn {
+        background-color: white;
+        color: #e67e22;
+        padding: 6px 14px;
+        border: 1.5px solid #e67e22;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .cancel-btn:hover {
+        background-color: #fff8ec;
+        color: #e67e22;
+    }
+    .reject-btn {
+        background-color: white;
+        color: #e74c3c;
+        padding: 6px 14px;
+        border: 1.5px solid #e74c3c;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .reject-btn:hover {
         background-color: #fff0f0;
         color: #e74c3c;
     }
@@ -325,9 +399,7 @@
     .modal-header .btn-close {
         filter: brightness(0) invert(1);
     }
-    /* ══════════════════════════════════════
-       FORCE MODAL
-    ══════════════════════════════════════ */
+    
     .force-modal {
         display: none;
         position: fixed; z-index: 9999;
@@ -464,7 +536,7 @@
         white-space: pre-wrap;
     }
     
-    /* Custom Confirmation Modal */
+    /* Custom Confirmation Modal - FIXED with Yes/No buttons */
     .confirm-modal-overlay {
         display: none;
         position: fixed;
@@ -488,10 +560,12 @@
     .confirm-modal-content h4 {
         margin-bottom: 12px;
         color: #2d4a44;
+        font-size: 18px;
     }
     .confirm-modal-content p {
         margin-bottom: 24px;
         color: #666;
+        font-size: 14px;
     }
     .confirm-modal-buttons {
         display: flex;
@@ -504,19 +578,39 @@
         border: none;
         cursor: pointer;
         font-weight: bold;
+        min-width: 80px;
+        font-size: 14px;
+        transition: background-color 0.2s;
     }
-    .confirm-cancel {
+    .confirm-no {
         background-color: #e0e0e0;
         color: #333;
     }
-    .confirm-ok {
+    .confirm-no:hover {
+        background-color: #d0d0d0;
+    }
+    .confirm-yes {
         background-color: #e74c3c;
         color: white;
     }
+    .confirm-yes:hover {
+        background-color: #c0392b;
+    }
+    .confirm-yes.cancel {
+        background-color: #e67e22;
+    }
+    .confirm-yes.cancel:hover {
+        background-color: #d35400;
+    }
+    .confirm-yes.reject {
+        background-color: #e74c3c;
+    }
+    .confirm-yes.reject:hover {
+        background-color: #c0392b;
+    }
 
     /* ============================================
-       VIEW REPORT MODAL — Two-column layout
-       Left: stacked info cards | Right: map
+       VIEW REPORT MODAL
        ============================================ */
     #viewReportModal .modal-dialog {
         max-width: 1020px;
@@ -534,7 +628,6 @@
         border: 1px solid #e0e0e0;
     }
 
-    /* Left column — stacked info cards */
     .vr-left {
         width: 380px;
         min-width: 380px;
@@ -545,7 +638,6 @@
         overflow-y: auto;
     }
 
-    /* Right column — map fills full height */
     .vr-right {
         flex: 1;
         position: relative;
@@ -575,7 +667,6 @@
         color: #ccc;
     }
 
-    /* Info card shared styles */
     .vr-card {
         border-bottom: 1px solid #e8e8e8;
         padding: 20px 22px;
@@ -628,7 +719,6 @@
         text-overflow: ellipsis;
     }
 
-    /* Description card — no fixed ellipsis, allow wrapping */
     .vr-card-value.wrap {
         white-space: normal;
         overflow: visible;
@@ -639,7 +729,6 @@
         line-height: 1.6;
     }
 
-    /* Status + priority pill row */
     .vr-pill-row {
         display: flex;
         flex-wrap: wrap;
@@ -657,7 +746,6 @@
         color: white;
     }
 
-    /* Resolution details inside card */
     .vr-resolution-block {
         background-color: #f8faf9;
         border: 1px solid #d8ede5;
@@ -690,7 +778,6 @@
     #tab-incidentmap {
         display: flex;
         flex-direction: column;
-        /* Fill whatever height the .panel gives after header + toolbar */
         height: calc(100vh - 220px);
         min-height: 500px;
     }
@@ -701,7 +788,6 @@
         flex: 1;
         width: 100%;
         border-radius: 0 0 8px 8px;
-        /* Leaflet needs an explicit height on the element itself */
         min-height: 0;
     }
     .incident-map-toolbar {
@@ -743,7 +829,6 @@
         display: inline-block;
         border: 1.5px solid rgba(0,0,0,0.15);
     }
-    /* Make the panel itself a flex column so the map tab can stretch */
     .panel {
         display: flex;
         flex-direction: column;
@@ -751,152 +836,151 @@
     .panel .panel-inner {
         flex: 1;
     }
-    /* But only the incidentmap tab should stretch — others scroll */
     .panel .panel-inner:not(#tab-incidentmap) {
         flex: unset;
     }
-    /* ── Incident Summary Panel ─────────────────────────── */
-.map-summary-panel {
-    position: absolute;
-    top: 0; right: 0;
-    width: 300px;
-    height: 100%;
-    background: white;
-    border-left: 1px solid #e0e0e0;
-    display: flex;
-    flex-direction: column;
-    z-index: 1000;
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-    overflow: hidden;
-}
-.map-summary-panel.open {
-    transform: translateX(0);
-}
-.map-summary-header {
-    background: #2d4a44;
-    color: white;
-    padding: 14px 16px;
-    font-size: 13px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-}
-.map-summary-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 14px;
-}
-.summary-section {
-    margin-bottom: 16px;
-}
-.summary-section-title {
-    font-size: 10px;
-    font-weight: 700;
-    color: #999;
-    text-transform: uppercase;
-    letter-spacing: 0.7px;
-    margin-bottom: 8px;
-    padding-bottom: 4px;
-    border-bottom: 1px solid #f0f0f0;
-}
-.summary-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 0;
-    border-bottom: 1px solid #f8f8f8;
-    font-size: 12px;
-    color: #444;
-}
-.summary-row:last-child { border-bottom: none; }
-.summary-row-label {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    flex: 1;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.summary-dot {
-    width: 9px; height: 9px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-.summary-count {
-    font-weight: 700;
-    font-size: 13px;
-    color: #2d4a44;
-    flex-shrink: 0;
-    margin-left: 8px;
-}
-.summary-bar-wrap {
-    height: 5px;
-    background: #f0f0f0;
-    border-radius: 3px;
-    margin-top: 3px;
-    overflow: hidden;
-}
-.summary-bar {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.5s ease;
-}
-.hotspot-item {
-    background: #f8faf9;
-    border: 1px solid #e0ede8;
-    border-radius: 8px;
-    padding: 10px 12px;
-    margin-bottom: 8px;
-    cursor: pointer;
-    transition: background 0.15s;
-}
-.hotspot-item:hover { background: #eaf2f0; }
-.hotspot-rank {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    background: #2d4a44;
-    color: white;
-    font-size: 10px;
-    font-weight: 700;
-    flex-shrink: 0;
-}
-.hotspot-name {
-    font-size: 12px;
-    font-weight: 600;
-    color: #2d4a44;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.hotspot-meta {
-    font-size: 11px;
-    color: #888;
-    margin-top: 2px;
-}
-.hotspot-pills {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-    margin-top: 6px;
-}
-.hotspot-pill {
-    font-size: 10px;
-    padding: 1px 7px;
-    border-radius: 8px;
-    font-weight: 600;
-}
-#summaryToggleBtn.active {
-    background: #2d4a44 !important;
-    color: white !important;
-}
+    
+    .map-summary-panel {
+        position: absolute;
+        top: 0; right: 0;
+        width: 300px;
+        height: 100%;
+        background: white;
+        border-left: 1px solid #e0e0e0;
+        display: flex;
+        flex-direction: column;
+        z-index: 1000;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        overflow: hidden;
+    }
+    .map-summary-panel.open {
+        transform: translateX(0);
+    }
+    .map-summary-header {
+        background: #2d4a44;
+        color: white;
+        padding: 14px 16px;
+        font-size: 13px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+    }
+    .map-summary-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px;
+    }
+    .summary-section {
+        margin-bottom: 16px;
+    }
+    .summary-section-title {
+        font-size: 10px;
+        font-weight: 700;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        margin-bottom: 8px;
+        padding-bottom: 4px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .summary-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid #f8f8f8;
+        font-size: 12px;
+        color: #444;
+    }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-row-label {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .summary-dot {
+        width: 9px; height: 9px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .summary-count {
+        font-weight: 700;
+        font-size: 13px;
+        color: #2d4a44;
+        flex-shrink: 0;
+        margin-left: 8px;
+    }
+    .summary-bar-wrap {
+        height: 5px;
+        background: #f0f0f0;
+        border-radius: 3px;
+        margin-top: 3px;
+        overflow: hidden;
+    }
+    .summary-bar {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.5s ease;
+    }
+    .hotspot-item {
+        background: #f8faf9;
+        border: 1px solid #e0ede8;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .hotspot-item:hover { background: #eaf2f0; }
+    .hotspot-rank {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px; height: 20px;
+        border-radius: 50%;
+        background: #2d4a44;
+        color: white;
+        font-size: 10px;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    .hotspot-name {
+        font-size: 12px;
+        font-weight: 600;
+        color: #2d4a44;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .hotspot-meta {
+        font-size: 11px;
+        color: #888;
+        margin-top: 2px;
+    }
+    .hotspot-pills {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+    }
+    .hotspot-pill {
+        font-size: 10px;
+        padding: 1px 7px;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    #summaryToggleBtn.active {
+        background: #2d4a44 !important;
+        color: white !important;
+    }
 </style>
 
 <meta charset="UTF-8">
@@ -922,14 +1006,11 @@
 <div class="toast-container" id="toastContainer"></div>
 <div class="layout">
 
-
-
 <!-- Success Modal -->
 <div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
             <div class="modal-header border-0 pb-0">
-               
             </div>
             <div class="modal-body">
                 <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
@@ -942,14 +1023,14 @@
     </div>
 </div>
 
-<!-- Custom Confirmation Modal for Archive -->
+<!-- Custom Confirmation Modal - FIXED with Yes/No buttons -->
 <div id="archiveConfirmModal" class="confirm-modal-overlay">
     <div class="confirm-modal-content">
-        <h4><i class="bi bi-archive"></i> Cancel/Reject Report</h4>
-        <p>Are you sure you want to Cancel/Reject this safety report?</p>
+        <h4 id="confirmModalTitle"><i class="bi bi-archive"></i> Confirm Action</h4>
+        <p id="confirmModalMessage">Are you sure you want to perform this action?</p>
         <div class="confirm-modal-buttons">
-            <button class="confirm-cancel" onclick="closeArchiveConfirm()">Cancel</button>
-            <button class="confirm-ok" id="confirmArchiveBtn">Confirm</button>
+            <button class="confirm-no" onclick="closeActionConfirm()">No</button>
+            <button class="confirm-yes" id="confirmArchiveBtn">Yes</button>
         </div>
     </div>
 </div>
@@ -999,10 +1080,8 @@
         <div class="tab" th:classappend="${currentTab == 'approved' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=approved'">Approved <span class="tab-badge" id="badge-approved" th:text="${approvedCount}">0</span></div>
         <div class="tab" th:classappend="${currentTab == 'inprogress' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=inprogress'">In Progress <span class="tab-badge" id="badge-inprogress" th:text="${inProgressCount}">0</span></div>
         <div class="tab" th:classappend="${currentTab == 'resolved' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=resolved'">Resolved <span class="tab-badge" id="badge-resolved" th:text="${resolvedCount}">0</span></div>
-        <div class="tab" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=archive'">Cancelled / Rejected <span class="tab-badge" id="badge-archive" th:text="${archivedCount}">0</span></div>
-        <!-- Find this tab and replace the onclick -->
-        <div class="tab" th:classappend="${currentTab == 'incidentmap' ? 'active' : ''}"
-            onclick="switchToMapTab(event)">
+        <div class="tab" th:classappend="${currentTab == 'cancelled_rejected' ? 'active' : ''}" onclick="window.location.href='/safety-reports?tab=cancelled_rejected'">Cancelled / Rejected <span class="tab-badge" id="badge-cancelled_rejected" th:text="${cancelledRejectedCount}">0</span></div>
+        <div class="tab" th:classappend="${currentTab == 'incidentmap' ? 'active' : ''}" onclick="switchToMapTab(event)">
             <i class="bi bi-map"></i> Incident Map
         </div>
     </div>
@@ -1010,11 +1089,11 @@
     <!-- Panel -->
     <div class="panel">
 
-        <!-- Incoming -->
+        <!-- Incoming Tab -->
         <div id="tab-incoming" class="panel-inner" th:classappend="${currentTab != 'incoming' ? 'd-none' : ''}">
             <div class="panel-header">Incoming Safety Reports</div>
             <div class="panel-content">
-            <table class="table table-bordered table-hover mb-0" id="incoming-table">
+                <table class="table table-bordered table-hover mb-0" id="incoming-table">
                     <thead>
                         <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date Submitted</th><th>Time Submitted</th><th>Actions</th></tr>
                     </thead>
@@ -1036,9 +1115,10 @@
                                 <div class="d-flex gap-2">
                                     <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
                                     <button class="approve-btn" th:onclick="'openApproveModal(' + ${report.id} + ')'">Approve</button>
-                                    <button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Reject</button>
+                                    <button class="reject-btn" th:onclick="'confirmAction(' + ${report.id} + ', \'reject\')'">Reject</button>
                                 </div>
-                          </tr>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
                 <div class="text-center p-4" th:if="${#lists.isEmpty(incomingReports)}">
@@ -1047,103 +1127,108 @@
             </div>
         </div>
 
-        <!-- Approved -->
+        <!-- Approved Tab -->
         <div id="tab-approved" class="panel-inner" th:classappend="${currentTab != 'approved' ? 'd-none' : ''}">
             <div class="panel-header">Approved Safety Reports</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0" id="approved-table">
+                    <thead>
                         <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date Submitted</th><th>Time Submitted</th><th>Actions</th></tr>
+                    </thead>
                     <tbody id="approved-tbody">
                         <tr th:each="report : ${approvedReports}" th:if="${not #lists.isEmpty(approvedReports)}" th:attr="data-id=${report.id}">
-                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></nav>
-                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></nav>
-                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></nav>
-                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></nav>
-                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></nav>
+                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></td>
+                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
+                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
+                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
+                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
                             <td th:text="${report.timeSubmitted != null ? #temporals.format(report.timeSubmitted, 'h:mm a') : 'N/A'}"></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="process-btn" th:onclick="'updateStatusWithSuccess(' + ${report.id} + ', \'IN_PROGRESS\')'">Process</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Cancel</button></div></nav>
-                          </td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="process-btn" th:onclick="'updateStatusWithSuccess(' + ${report.id} + ', \'IN_PROGRESS\')'">Process</button><button class="cancel-btn" th:onclick="'confirmAction(' + ${report.id} + ', \'cancel\')'">Cancel</button></div></td>
+                        </tr>
                     </tbody>
                 </table>
                 <div class="text-center p-4" th:if="${#lists.isEmpty(approvedReports)}"><p class="text-muted">No approved reports</p></div>
             </div>
         </div>
 
-        <!-- In Progress -->
+        <!-- In Progress Tab -->
         <div id="tab-inprogress" class="panel-inner" th:classappend="${currentTab != 'inprogress' ? 'd-none' : ''}">
             <div class="panel-header">In Progress Safety Reports</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0" id="inprogress-table">
+                    <thead>
                         <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date Submitted</th><th>Time Submitted</th><th>Actions</th></tr>
+                    </thead>
                     <tbody id="inprogress-tbody">
                         <tr th:each="report : ${inProgressReports}" th:if="${not #lists.isEmpty(inProgressReports)}" th:attr="data-id=${report.id}">
-                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></nav>
-                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></nav>
-                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></nav>
-                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></nav>
-                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></nav>
+                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></td>
+                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
+                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
+                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
+                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
                             <td th:text="${report.timeSubmitted != null ? #temporals.format(report.timeSubmitted, 'h:mm a') : 'N/A'}"></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'openResolutionModal(' + ${report.id} + ')'">Resolve</button><button class="archive-btn" th:onclick="'confirmArchive(' + ${report.id} + ')'">Cancel</button></div></nav>
-                          </tr>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'openResolutionModal(' + ${report.id} + ')'">Resolve</button><button class="cancel-btn" th:onclick="'confirmAction(' + ${report.id} + ', \'cancel\')'">Cancel</button></div></td>
+                        </tr>
                     </tbody>
                 </table>
                 <div class="text-center p-4" th:if="${#lists.isEmpty(inProgressReports)}"><p class="text-muted">No in progress reports</p></div>
             </div>
         </div>
 
-        <!-- Resolved -->
+        <!-- Resolved Tab -->
         <div id="tab-resolved" class="panel-inner" th:classappend="${currentTab != 'resolved' ? 'd-none' : ''}">
             <div class="panel-header">Resolved Safety Reports</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0" id="resolved-table">
                     <thead>
-                        <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date Submitted</th><th>Time Submitted</th><th>Actions</th></tr>
+                        <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date Submitted</th><th>Time Submitted</th><th>Resolved By</th><th>Actions</th></tr>
                     </thead>
                     <tbody id="resolved-tbody">
                         <tr th:each="report : ${resolvedReports}" th:if="${not #lists.isEmpty(resolvedReports)}" th:attr="data-id=${report.id}">
-                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></nav>
-                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></nav>
-                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></nav>
-                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></nav>
-                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></nav>
+                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></td>
+                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
+                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
+                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
+                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
                             <td th:text="${report.timeSubmitted != null ? #temporals.format(report.timeSubmitted, 'h:mm a') : 'N/A'}"></td>
-                            <td><span th:if="${report.resolvedBy != null}" class="resolved-by-badge"><i class="bi bi-person-check"></i> <span th:text="${report.resolvedBy}"></span></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></nav>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button></div></nav>
-                          </tr>
+                            <td><span th:if="${report.resolvedBy != null}" class="badge-status status-resolved" th:text="${report.resolvedBy}"></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button></div></td>
+                        </tr>
                     </tbody>
                 </table>
                 <div class="text-center p-4" th:if="${#lists.isEmpty(resolvedReports)}"><p class="text-muted">No resolved reports</p></div>
             </div>
         </div>
 
-        <!-- Archive -->
-        <div id="tab-archive" class="panel-inner" th:classappend="${currentTab != 'archive' ? 'd-none' : ''}">
-            <div class="panel-header">Cancelled Safety Reports</div>
+        <!-- Cancelled / Rejected Tab (Combined) -->
+        <div id="tab-cancelled_rejected" class="panel-inner" th:classappend="${currentTab != 'cancelled_rejected' ? 'd-none' : ''}">
+            <div class="panel-header"><i class="bi bi-archive me-2"></i>Cancelled / Rejected Safety Reports</div>
             <div class="panel-content">
-                    <table class="table table-bordered table-hover mb-0" id="archive-table">
+                <table class="table table-bordered table-hover mb-0" id="cancelled_rejected-table">
                     <thead>
-                        <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date</th><th>Resolved By</th><th>Actions</th></tr>
+                        <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date Submitted</th><th>Status</th><th>Handled By</th><th>Actions</th></tr>
                     </thead>
-                    <tbody id="archive-tbody">
-                        <tr th:each="report : ${archivedReports}" th:if="${not #lists.isEmpty(archivedReports)}" th:attr="data-id=${report.id}">
-                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></nav>
-                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></nav>
-                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></nav>
-                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></nav>
-                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></nav>
-                            <td><span th:if="${report.resolvedBy != null}" class="resolved-by-badge"><i class="bi bi-person-check"></i> <span th:text="${report.resolvedBy}"></span></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></nav>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button></div></nav>
-                          </tr>
+                    <tbody id="cancelled_rejected-tbody">
+                        <tr th:each="report : ${cancelledRejectedReports}" th:if="${not #lists.isEmpty(cancelledRejectedReports)}" th:attr="data-id=${report.id}">
+                            <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></td>
+                            <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
+                            <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
+                            <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
+                            <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
+                            <td>
+                                <span th:if="${report.status == 'REJECTED'}" class="badge-status status-rejected">Rejected</span>
+                                <span th:if="${report.status == 'CANCELLED'}" class="badge-status status-cancelled">Cancelled</span>
+                            </td>
+                            <td><span th:if="${report.handledByName != null}" class="badge-status status-archived" th:text="${report.handledByName}"></span><span th:if="${report.handledByName == null}" class="text-muted">—</span></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button></div></td>
+                        </tr>
                     </tbody>
                 </table>
-                <div class="text-center p-4" th:if="${#lists.isEmpty(archivedReports)}"><p class="text-muted">No archived reports</p></div>
+                <div class="text-center p-4" th:if="${#lists.isEmpty(cancelledRejectedReports)}"><p class="text-muted">No cancelled or rejected reports</p></div>
             </div>
         </div>
 
-        <!-- ============================================================
-             INCIDENT MAP TAB
-             ============================================================ -->
-        <!-- INCIDENT MAP TAB -->
+        <!-- Incident Map Tab -->
         <div id="tab-incidentmap" class="panel-inner" th:classappend="${currentTab != 'incidentmap' ? 'd-none' : ''}">
             <div class="panel-header"><i class="bi bi-map me-2"></i>Incident Map — All Reports</div>
             <div class="incident-map-toolbar">
@@ -1170,6 +1255,10 @@
                         style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid #2bb6f7;background:white;color:#2bb6f7;cursor:pointer;">In Progress</button>
                     <button class="map-status-btn" data-status="RESOLVED" onclick="setMapStatusFilter('RESOLVED')"
                         style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid #44C375;background:white;color:#44C375;cursor:pointer;">Resolved</button>
+                    <button class="map-status-btn" data-status="REJECTED" onclick="setMapStatusFilter('REJECTED')"
+                        style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid #e74c3c;background:white;color:#e74c3c;cursor:pointer;">Rejected</button>
+                    <button class="map-status-btn" data-status="CANCELLED" onclick="setMapStatusFilter('CANCELLED')"
+                        style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid #e67e22;background:white;color:#e67e22;cursor:pointer;">Cancelled</button>
                 </div>
                 <span style="font-size:12px;font-weight:600;color:#555;margin-left:4px;margin-right:4px;">Residents:</span>
                 <div class="map-legend-item">
@@ -1228,7 +1317,7 @@
 </div>
 
 <!-- ============================================================
-     View Report Modal — Two-column layout (cards left, map right)
+     View Report Modal
      ============================================================ -->
 <div class="modal fade" id="viewReportModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -1248,7 +1337,7 @@
     </div>
 </div>
 
-<!-- Resolution Modal (for creating resolution) -->
+<!-- Resolution Modal -->
 <div class="modal fade" id="resolutionModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1275,7 +1364,7 @@
     </div>
 </div>
 
-<!-- View Resolution Modal (Read-only) -->
+<!-- View Resolution Modal -->
 <div class="modal fade" id="viewResolutionModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1334,7 +1423,8 @@
 <script th:inline="none">
     let currentMap = null;
     let currentTypeFilter = 'all';
-    let pendingArchiveId = null;
+    let pendingActionId = null;
+    let pendingActionType = null;
     let currentModalReportId = null;
     let currentModalReportStatus = null;
     let isAnyModalOpen = false;
@@ -1345,339 +1435,139 @@
     // INCIDENT MAP VARIABLES
     // ============================================
     let incidentMapInstance = null;
-    let incidentMapMarkers = [];      // { marker, data, circleMarker } objects
+    let incidentMapMarkers = [];
     let incidentMapInitialized = false;
     let allReportsData = []; 
     let allResidentData      = [];
     let residentMarkers      = [];
     let showSeniorLayer      = true;
-    let showPwdLayer         = true;         // all fetched reports for the map
+    let showPwdLayer         = true;
     let mapSearchValue = '';
-
     let currentMapStatusFilter = 'all';
-let markerClusterGroup     = null;
-let heatmapLayer           = null;
-let heatmapVisible         = false;
-
-let summaryPanelOpen = false;
-
-
-function openApproveModal(id) {
-    document.getElementById('approvePendingId').value = id;
-    // Reset to LOW each time
-    document.querySelector('input[name="approvePriority"][value="LOW"]').checked = true;
-    new bootstrap.Modal(document.getElementById('approveModal')).show();
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('confirmApproveBtn').addEventListener('click', function() {
-        const id = document.getElementById('approvePendingId').value;
-        const priority = document.querySelector('input[name="approvePriority"]:checked').value;
-
-        fetch('/safety-reports/' + id + '/priority?priority=' + priority, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' }
-        })
-        .then(res => {
-            if (!res.ok) throw new Error('Priority update failed');
-            return fetch('/safety-reports/' + id + '/status?status=APPROVED', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' }
-            });
-        })
-        .then(res => {
-            if (res.ok) {
-                bootstrap.Modal.getInstance(document.getElementById('approveModal')).hide();
-                showSuccessWithReload('Report approved successfully!');
-            } else {
-                alert('Error approving report');
-            }
-        })
-        .catch(err => { console.error(err); alert('Error updating priority'); });
-    });
-});
-
-function setMapStatusFilter(status) {
-    currentMapStatusFilter = status;
-    document.querySelectorAll('.map-status-btn').forEach(btn => {
-        const active = btn.dataset.status === status;
-        const colorMap = {
-            'all': '#2d4a44', 'INCOMING': '#FF9800',
-            'APPROVED': '#e67e22', 'IN_PROGRESS': '#2bb6f7', 'RESOLVED': '#44C375'
-        };
-        const c = colorMap[btn.dataset.status] || '#2d4a44';
-        btn.style.background = active ? c : 'white';
-        btn.style.color = active ? 'white' : c;
-    });
-    renderIncidentMapMarkers();
-    if (summaryPanelOpen) renderSummaryPanel();
-}
-
-function fitToBoundary() {
-    if (!incidentMapInstance) return;
-    incidentMapInstance.fitBounds(L.latLngBounds(SAN_SEBASTIAN_POLYGON), { padding: [30, 30] });
-}
-
-function toggleSummaryPanel() {
-    summaryPanelOpen = !summaryPanelOpen;
-    const panel = document.getElementById('mapSummaryPanel');
-    const btn   = document.getElementById('summaryToggleBtn');
-    panel.classList.toggle('open', summaryPanelOpen);
-    btn.classList.toggle('active', summaryPanelOpen);
-    if (summaryPanelOpen) {
-        renderSummaryPanel();
-        setTimeout(() => { if (incidentMapInstance) incidentMapInstance.invalidateSize(); }, 320);
-    } else {
-        setTimeout(() => { if (incidentMapInstance) incidentMapInstance.invalidateSize(); }, 320);
-    }
-}
-
-function renderSummaryPanel() {
-    const body = document.getElementById('mapSummaryBody');
-    const data = allReportsData;
-    if (!data || data.length === 0) {
-        body.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa;font-size:13px;">No report data available</div>';
-        return;
-    }
-
-    // ── Counts by type ──────────────────────────────────────
-    const byType = {};
-    data.forEach(r => {
-        const t = r.type || 'Unknown';
-        byType[t] = (byType[t] || 0) + 1;
-    });
-    const sortedTypes = Object.entries(byType).sort((a, b) => b[1] - a[1]);
-    const maxType = sortedTypes[0]?.[1] || 1;
-
-    // ── Counts by priority ───────────────────────────────────
-    const byPriority = { HIGH: 0, MEDIUM: 0, LOW: 0 };
-    data.forEach(r => { byPriority[(r.priority || 'LOW').toUpperCase()] = (byPriority[(r.priority || 'LOW').toUpperCase()] || 0) + 1; });
-    const priorityColors = { HIGH: '#e74c3c', MEDIUM: '#e67e22', LOW: '#27ae60' };
-
-    // ── Counts by status ─────────────────────────────────────
-    const byStatus = {};
-    data.forEach(r => { byStatus[r.status || 'UNKNOWN'] = (byStatus[r.status || 'UNKNOWN'] || 0) + 1; });
-
-    // ── Crime vs non-crime ───────────────────────────────────
-    const crimeCount = data.filter(r => 
-        (r.type || '').toLowerCase().includes('crime')
-    ).length;
-    const nonCrimeCount = data.length - crimeCount;
-
-    // ── Hotspot analysis (cluster by ~200m grid) ─────────────
-    const GRID = 0.002;
-    const gridMap = {};
-    data.forEach(r => {
-        if (!r.latitude || !r.longitude) return;
-        const gx = Math.round(r.latitude / GRID);
-        const gy = Math.round(r.longitude / GRID);
-        const key = `${gx}_${gy}`;
-        if (!gridMap[key]) gridMap[key] = { lat: gx * GRID, lng: gy * GRID, reports: [] };
-        gridMap[key].reports.push(r);
-    });
-    const hotspots = Object.values(gridMap)
-        .filter(g => g.reports.length > 0)
-        .sort((a, b) => b.reports.length - a.reports.length)
-        .slice(0, 5);
-
-    // ── Most common location names for hotspots ───────────────
-    function topLocation(reports) {
-        const locCount = {};
-        reports.forEach(r => {
-            if (r.location) locCount[r.location] = (locCount[r.location] || 0) + 1;
-        });
-        const sorted = Object.entries(locCount).sort((a, b) => b[1] - a[1]);
-        return sorted[0]?.[0] || 'Unknown area';
-    }
-
-    function dominantType(reports) {
-        const tc = {};
-        reports.forEach(r => { if (r.type) tc[r.type] = (tc[r.type] || 0) + 1; });
-        return Object.entries(tc).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
-    }
-
-    function dominantPriority(reports) {
-        if (reports.some(r => r.priority === 'HIGH')) return { label: 'HIGH', color: '#e74c3c' };
-        if (reports.some(r => r.priority === 'MEDIUM')) return { label: 'MEDIUM', color: '#e67e22' };
-        return { label: 'LOW', color: '#27ae60' };
-    }
-
-    // ── Recent spike (last 30 days) ───────────────────────────
-    const now = new Date();
-    const recentCount = data.filter(r => {
-        if (!r.dateSubmitted) return false;
-        const d = new Date(r.dateSubmitted);
-        return (now - d) / 86400000 <= 30;
-    }).length;
-
-    // ── Build HTML ────────────────────────────────────────────
-    body.innerHTML = `
-
-        <!-- Totals row -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
-            <div style="background:#eaf2f0;border-radius:8px;padding:10px 12px;text-align:center;">
-                <div style="font-size:22px;font-weight:700;color:#2d4a44;">${data.length}</div>
-                <div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;">Total Reports</div>
-            </div>
-            <div style="background:#fff3cd;border-radius:8px;padding:10px 12px;text-align:center;">
-                <div style="font-size:22px;font-weight:700;color:#856404;">${recentCount}</div>
-                <div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;">Last 30 Days</div>
-            </div>
-            <div style="background:#fdecea;border-radius:8px;padding:10px 12px;text-align:center;">
-                <div style="font-size:22px;font-weight:700;color:#c0392b;">${crimeCount}</div>
-                <div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;">Crime Reports</div>
-            </div>
-            <div style="background:#e8f5f0;border-radius:8px;padding:10px 12px;text-align:center;">
-                <div style="font-size:22px;font-weight:700;color:#2d7a5f;">${nonCrimeCount}</div>
-                <div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;">Other Incidents</div>
-            </div>
-        </div>
-
-        <!-- Priority breakdown -->
-        <div class="summary-section">
-            <div class="summary-section-title">By Priority</div>
-            ${Object.entries(byPriority).map(([p, c]) => `
-                <div class="summary-row">
-                    <div class="summary-row-label">
-                        <span class="summary-dot" style="background:${priorityColors[p]};"></span>
-                        ${p}
-                    </div>
-                    <span class="summary-count">${c}</span>
-                </div>
-                <div class="summary-bar-wrap">
-                    <div class="summary-bar" style="width:${Math.round(c/data.length*100)}%;background:${priorityColors[p]};"></div>
-                </div>
-            `).join('')}
-        </div>
-
-        <!-- By status -->
-        <div class="summary-section">
-            <div class="summary-section-title">By Status</div>
-            ${Object.entries(byStatus).map(([s, c]) => `
-                <div class="summary-row">
-                    <div class="summary-row-label">
-                        <span class="summary-dot" style="background:${getStatusBadgeColor(s)};"></span>
-                        ${getStatusLabel(s)}
-                    </div>
-                    <span class="summary-count">${c}</span>
-                </div>
-            `).join('')}
-        </div>
-
-        <!-- By incident type -->
-        <div class="summary-section">
-            <div class="summary-section-title">By Incident Type</div>
-            ${sortedTypes.map(([t, c]) => `
-                <div class="summary-row">
-                    <div class="summary-row-label" title="${escapeHtml(t)}">${escapeHtml(t)}</div>
-                    <span class="summary-count">${c}</span>
-                </div>
-                <div class="summary-bar-wrap">
-                    <div class="summary-bar" style="width:${Math.round(c/maxType*100)}%;background:#3d6b64;"></div>
-                </div>
-            `).join('')}
-        </div>
-
-        <!-- Hotspots -->
-        <div class="summary-section">
-            <div class="summary-section-title">⚠️ Prone Areas (Hotspots)</div>
-            ${hotspots.length === 0
-                ? '<div style="color:#aaa;font-size:12px;font-style:italic;">No location data available</div>'
-                : hotspots.map((h, i) => {
-                    const loc  = topLocation(h.reports);
-                    const type = dominantType(h.reports);
-                    const prio = dominantPriority(h.reports);
-                    const crimeHere = h.reports.filter(r => 
-                        (r.type || '').toLowerCase().includes('crime')
-                    ).length;
-                    return `
-                        <div class="hotspot-item" onclick="flyToHotspot(${h.lat}, ${h.lng})"
-                             title="Click to zoom to this area">
-                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                                <span class="hotspot-rank">${i + 1}</span>
-                                <div class="hotspot-name">${escapeHtml(loc)}</div>
-                                <span style="margin-left:auto;font-size:11px;font-weight:700;color:${prio.color};">
-                                    ${h.reports.length} reports
-                                </span>
-                            </div>
-                            <div class="hotspot-meta">
-                                ${type ? `<i class="bi bi-exclamation-triangle-fill" style="color:${prio.color};font-size:10px;"></i> ${escapeHtml(type)}` : ''}
-                                ${crimeHere > 0 ? `&nbsp;·&nbsp;<i class="bi bi-shield-exclamation" style="color:#e74c3c;font-size:10px;"></i> ${crimeHere} crime${crimeHere > 1 ? 's' : ''}` : ''}
-                            </div>
-                            <div class="hotspot-pills">
-                                <span class="hotspot-pill" style="background:${prio.color}22;color:${prio.color};border:1px solid ${prio.color}55;">
-                                    ${prio.label}
-                                </span>
-                                ${h.reports.filter(r => r.status === 'INCOMING' || r.status === 'IN_PROGRESS').length > 0
-                                    ? `<span class="hotspot-pill" style="background:#fdecea;color:#c0392b;border:1px solid #f5c6cb;">
-                                        ${h.reports.filter(r => r.status === 'INCOMING' || r.status === 'IN_PROGRESS').length} active
-                                       </span>` : ''}
-                            </div>
-                        </div>`;
-                }).join('')
-            }
-        </div>
-
-        <div style="font-size:10px;color:#bbb;text-align:center;padding-top:4px;padding-bottom:8px;">
-            Click a hotspot to zoom to that area
-        </div>
-    `;
-}
-
-function flyToHotspot(lat, lng) {
-    if (!incidentMapInstance) return;
-    incidentMapInstance.flyTo([lat, lng], 16, { duration: 1.2 });
-}
-
-
-function toggleHeatmap() {
-    if (!incidentMapInstance) return;
-    heatmapVisible = !heatmapVisible;
-    const btn = document.getElementById('heatmap-btn');
-
-    if (heatmapVisible) {
-        // Crime reports only, weighted by priority
-        const points = allReportsData
-            .filter(r => r.latitude && r.longitude &&
-                         (r.type || '').toLowerCase().includes('crime'))
-            .map(r => {
-                const intensity = r.priority === 'HIGH' ? 1.0
-                                : r.priority === 'MEDIUM' ? 0.6 : 0.3;
-                return [r.latitude, r.longitude, intensity];
-            });
-
-        if (points.length === 0) {
-            alert('No crime reports with location data to display.');
-            heatmapVisible = false;
-            return;
-        }
-
-        heatmapLayer = L.heatLayer(points, {
-            radius: 35, blur: 25, maxZoom: 17,
-            gradient: { 0.3: '#ffeb3b', 0.6: '#ff9800', 1.0: '#e74c3c' }
-        }).addTo(incidentMapInstance);
-
-        if (markerClusterGroup) incidentMapInstance.removeLayer(markerClusterGroup);
-        btn.style.background = '#8e44ad';
-        btn.style.color = 'white';
-    } else {
-        if (heatmapLayer) { incidentMapInstance.removeLayer(heatmapLayer); heatmapLayer = null; }
-        if (markerClusterGroup) incidentMapInstance.addLayer(markerClusterGroup);
-        btn.style.background = 'white';
-        btn.style.color = '#8e44ad';
-    }
-}
-
-    window.onload = function() {
-        const status = document.getElementById("accountStatus") ? document.getElementById("accountStatus").value : null;
-        if (status === "New" || status === 'Newly Updated') {
-            document.getElementById("forcePasswordModal").style.display = "block";
-            document.body.style.overflow = "hidden";
-        }
-    };
+    let markerClusterGroup     = null;
+    let heatmapLayer           = null;
+    let heatmapVisible         = false;
+    let summaryPanelOpen = false;
 
     // ============================================
-    // SUCCESS MODAL WITH RELOAD ON OK
+    // APPROVE MODAL
+    // ============================================
+    function openApproveModal(id) {
+        document.getElementById('approvePendingId').value = id;
+        document.querySelector('input[name="approvePriority"][value="LOW"]').checked = true;
+        new bootstrap.Modal(document.getElementById('approveModal')).show();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('confirmApproveBtn').addEventListener('click', function() {
+            const id = document.getElementById('approvePendingId').value;
+            const priority = document.querySelector('input[name="approvePriority"]:checked').value;
+
+            fetch('/safety-reports/' + id + '/priority?priority=' + priority, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Priority update failed');
+                return fetch('/safety-reports/' + id + '/status?status=APPROVED', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            })
+            .then(res => {
+                if (res.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('approveModal')).hide();
+                    showSuccessWithReload('Report approved successfully!');
+                } else {
+                    alert('Error approving report');
+                }
+            })
+            .catch(err => { console.error(err); alert('Error updating priority'); });
+        });
+    });
+
+    // ============================================
+    // CONFIRM ACTION - Handles both Reject and Cancel with Yes/No buttons
+    // ============================================
+    function confirmAction(id, actionType) {
+        pendingActionId = id;
+        pendingActionType = actionType;
+        
+        const title = document.getElementById('confirmModalTitle');
+        const message = document.getElementById('confirmModalMessage');
+        const confirmBtn = document.getElementById('confirmArchiveBtn');
+        
+        if (actionType === 'reject') {
+            title.innerHTML = `<i class="bi bi-x-circle me-2" style="color:#e74c3c;"></i> Reject Report`;
+            message.textContent = 'Are you sure you want to reject this incoming safety report?';
+            confirmBtn.className = 'confirm-yes reject';
+            confirmBtn.textContent = 'Yes';
+            confirmBtn.style.backgroundColor = '#e74c3c';
+        } else if (actionType === 'cancel') {
+            title.innerHTML = `<i class="bi bi-archive me-2" style="color:#e67e22;"></i> Cancel Report`;
+            message.textContent = 'Are you sure you want to cancel this safety report?';
+            confirmBtn.className = 'confirm-yes cancel';
+            confirmBtn.textContent = 'Yes';
+            confirmBtn.style.backgroundColor = '#e67e22';
+        }
+        
+        document.getElementById('archiveConfirmModal').style.display = 'flex';
+        updateModalState(true);
+    }
+
+    function closeActionConfirm() {
+        pendingActionId = null;
+        pendingActionType = null;
+        document.getElementById('archiveConfirmModal').style.display = 'none';
+        updateModalState(false);
+    }
+
+    // Confirm button click handler
+    document.getElementById('confirmArchiveBtn').addEventListener('click', function() {
+        if (pendingActionId && pendingActionType) {
+            let status = pendingActionType === 'reject' ? 'REJECTED' : 'CANCELLED';
+            updateStatusWithSuccess(pendingActionId, status);
+            closeActionConfirm();
+        }
+    });
+
+    // Close modal when clicking outside
+    document.getElementById('archiveConfirmModal').addEventListener('click', function(e) {
+        if (e.target === this) closeActionConfirm();
+    });
+
+    // ============================================
+    // UPDATE STATUS WITH SUCCESS
+    // ============================================
+    function updateStatusWithSuccess(id, status) {
+        let statusText = '';
+        switch(status) {
+            case 'APPROVED': statusText = 'approved'; break;
+            case 'IN_PROGRESS': statusText = 'moved to In Progress'; break;
+            case 'RESOLVED': statusText = 'resolved'; break;
+            case 'REJECTED': statusText = 'rejected'; break;
+            case 'CANCELLED': statusText = 'cancelled'; break;
+            default: statusText = 'updated';
+        }
+        fetch('/safety-reports/' + id + '/status?status=' + status, { 
+            method: 'PUT', 
+            headers: { 'Content-Type': 'application/json' } 
+        })
+        .then(response => { 
+            if (response.ok) {
+                showSuccessWithReload(`Report ${statusText} successfully!`);
+            } else {
+                alert('Error updating status');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating status');
+        });
+    }
+
+    // ============================================
+    // SUCCESS MODAL
     // ============================================
     function showSuccessWithReload(message) {
         document.getElementById('successMessage').innerHTML = message;
@@ -1696,35 +1586,13 @@ function toggleHeatmap() {
         successModal.show();
     }
 
-    // Archive Confirmation Functions
-    function confirmArchive(id) {
-        pendingArchiveId = id;
-        document.getElementById('archiveConfirmModal').style.display = 'flex';
-        updateModalState(true);
-    }
-    
-    function closeArchiveConfirm() {
-        pendingArchiveId = null;
-        document.getElementById('archiveConfirmModal').style.display = 'none';
-        updateModalState(false);
-    }
-    
-    document.getElementById('confirmArchiveBtn').addEventListener('click', function() {
-        if (pendingArchiveId) {
-            updateStatusWithSuccess(pendingArchiveId, 'ARCHIVED');
-            closeArchiveConfirm();
-        }
-    });
-    
-    document.getElementById('archiveConfirmModal').addEventListener('click', function(e) {
-        if (e.target === this) closeArchiveConfirm();
-    });
-
+    // ============================================
+    // FILTER AND SEARCH
+    // ============================================
     function applyTypeFilter() {
         const activePanel = document.querySelector('.panel-inner:not(.d-none)');
         if (!activePanel) return;
 
-        // If incident map tab is active, re-render map markers
         if (activePanel.id === 'tab-incidentmap') {
             renderIncidentMapMarkers();
             return;
@@ -1759,7 +1627,6 @@ function toggleHeatmap() {
         const activePanel = document.querySelector('.panel-inner:not(.d-none)');
         if (!activePanel) return;
 
-        // If incident map tab is active, re-render map markers
         if (activePanel.id === 'tab-incidentmap') {
             renderIncidentMapMarkers();
             return;
@@ -1778,32 +1645,49 @@ function toggleHeatmap() {
             row.style.display = (matchesSearch && matchesType) ? '' : 'none';
         });
     });
-    
-    function updateStatusWithSuccess(id, status) {
-        let statusText = '';
-        switch(status) {
-            case 'APPROVED': statusText = 'approved'; break;
-            case 'IN_PROGRESS': statusText = 'moved to In Progress'; break;
-            case 'ARCHIVED': statusText = 'archived'; break;
-            default: statusText = 'updated';
+
+    // ============================================
+    // GET STATUS COLORS
+    // ============================================
+    function getStatusColor(status) {
+        switch (status?.toUpperCase()) {
+            case 'INCOMING':   return '#FF9800';
+            case 'APPROVED':   return '#FF9800';
+            case 'IN_PROGRESS': return '#2bb6f7';
+            case 'RESOLVED':   return '#44C375';
+            case 'REJECTED':   return '#e74c3c';
+            case 'CANCELLED':  return '#e67e22';
+            default:           return '#888';
         }
-        fetch('/safety-reports/' + id + '/status?status=' + status, { 
-            method: 'PUT', 
-            headers: { 'Content-Type': 'application/json' } 
-        })
-        .then(response => { 
-            if (response.ok) {
-                showSuccessWithReload(`Report ${statusText} successfully!`);
-            } else {
-                alert('Error updating status');
-            }
-        });
     }
-    
-    function updateStatus(id, status) {
-        updateStatusWithSuccess(id, status);
+
+    function getStatusBadgeColor(status) {
+        switch ((status || '').toUpperCase()) {
+            case 'INCOMING':            return '#cce5ff';
+            case 'APPROVED':            return '#d1ecf1';
+            case 'IN_PROGRESS':         return '#d6d8db';
+            case 'RESOLVED':            return '#d4edda';
+            case 'REJECTED':            return '#f8d7da';
+            case 'CANCELLED':           return '#fff3cd';
+            default:                    return '#e2e3e5';
+        }
     }
-    
+
+    function getStatusLabel(status) {
+        switch ((status || '').toUpperCase()) {
+            case 'INCOMING':            return 'Incoming';
+            case 'APPROVED':            return 'Approved';
+            case 'IN_PROGRESS':         return 'In Progress';
+            case 'RESOLVED':            return 'Resolved';
+            case 'REJECTED':            return 'Rejected';
+            case 'CANCELLED':           return 'Cancelled';
+            default:                    return status || 'Unknown';
+        }
+    }
+
+    // ============================================
+    // VIEW REPORT
+    // ============================================
     function escapeHtml(text) {
         if (!text) return text;
         const div = document.createElement('div');
@@ -1811,223 +1695,214 @@ function toggleHeatmap() {
         return div.innerHTML;
     }
 
-    function getStatusColor(status) {
-        switch (status?.toUpperCase()) {
-            case 'INCOMING':   return '#FF9800';
-            case 'APPROVED':   return '#FF9800';
-            case 'IN_PROGRESS': return '#2bb6f7';
-            case 'RESOLVED':   return '#44C375';
-            default:           return '#888';
+    function viewReport(id) {
+        currentModalReportId = id;
+        fetch('/safety-reports/' + id)
+            .then(response => response.json())
+            .then(data => {
+                currentModalReportStatus = data.status;
+
+                const hasLocation = data.latitude && data.longitude && data.latitude !== 0 && data.longitude !== 0;
+                const priorityClass = data.priority === 'HIGH' ? 'priority-high' : data.priority === 'MEDIUM' ? 'priority-medium' : 'priority-low';
+                const statusColor = getStatusColor(data.status);
+
+                let resolutionBlock = '';
+                if (data.resolutionActions || data.resolutionResponseTime || data.resolutionNotes) {
+                    resolutionBlock = `
+                        <div class="vr-resolution-block">
+                            ${data.resolutionResponseTime ? `<div class="vr-res-row"><span class="vr-res-label">Response Time</span>${escapeHtml(data.resolutionResponseTime)}</div>` : ''}
+                            ${data.resolutionActions     ? `<div class="vr-res-row"><span class="vr-res-label">Actions Taken</span>${escapeHtml(data.resolutionActions)}</div>` : ''}
+                            ${data.resolutionNotes       ? `<div class="vr-res-row"><span class="vr-res-label">Additional Notes</span>${escapeHtml(data.resolutionNotes)}</div>` : ''}
+                        </div>`;
+                }
+
+                const imageStrip = data.imageUrl ? `
+                    <div style="border-top:2px solid #eaf2f0;background:white;">
+                        <div style="display:flex;align-items:center;gap:10px;padding:12px 20px 10px;background:#f8faf9;border-bottom:1px solid #e8e8e8;">
+                            <div style="width:32px;height:32px;border-radius:8px;background:#eaf2f0;display:flex;align-items:center;justify-content:center;color:#2d4a44;font-size:16px;flex-shrink:0;">
+                                <i class="bi bi-image"></i>
+                            </div>
+                            <span style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.7px;">Photo Evidence</span>
+                            <a href="${data.imageUrl}" target="_blank"
+                               style="margin-left:auto;font-size:11px;color:#3498db;text-decoration:none;display:flex;align-items:center;gap:4px;">
+                                <i class="bi bi-arrows-fullscreen"></i> Open full size
+                            </a>
+                        </div>
+                        <div style="padding:16px 20px;background:white;">
+                            <a href="${data.imageUrl}" target="_blank" style="display:block;">
+                                <img src="${data.imageUrl}"
+                                     alt="Report photo"
+                                     style="width:100%;max-height:300px;object-fit:contain;border-radius:8px;border:1px solid #e0e0e0;cursor:zoom-in;background:#f5f5f5;transition:opacity 0.2s;"
+                                     onerror="this.closest('div').parentElement.parentElement.style.display='none'"
+                                     onmouseover="this.style.opacity='0.88'"
+                                     onmouseout="this.style.opacity='1'">
+                            </a>
+                        </div>
+                    </div>` : '';
+
+                document.getElementById('viewModalBody').innerHTML = `
+                    <div style="border-radius:8px;overflow:hidden;border:1px solid #e0e0e0;">
+                        <div class="vr-layout" style="border:none;border-radius:0;">
+                            <div class="vr-left">
+                                <div class="vr-card">
+                                    <div class="vr-card-icon"><i class="bi bi-person-fill"></i></div>
+                                    <div class="vr-card-body">
+                                        <div class="vr-card-label">Submitted By</div>
+                                        <div class="vr-card-value">${escapeHtml(data.reporterName) || 'Anonymous'}</div>
+                                        <div class="vr-card-sub">${escapeHtml(data.reporterContact) || 'No contact info'}</div>
+                                    </div>
+                                </div>
+                                <div class="vr-card">
+                                    <div class="vr-card-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                                    <div class="vr-card-body">
+                                        <div class="vr-card-label">Incident Type &amp; Location</div>
+                                        <div class="vr-card-value">${escapeHtml(data.type) || 'General Incident'}</div>
+                                        <div class="vr-card-sub"><i class="bi bi-geo-alt-fill" style="color:#e74c3c;font-size:12px;"></i> ${escapeHtml(data.location) || 'No address provided'}</div>
+                                    </div>
+                                </div>
+                                <div class="vr-card" style="flex-direction:column;align-items:stretch;">
+                                    <div style="display:flex;gap:16px;align-items:flex-start;">
+                                        <div class="vr-card-icon" style="flex-shrink:0;"><i class="bi bi-file-text-fill"></i></div>
+                                        <div class="vr-card-body">
+                                            <div class="vr-card-label">Report Details</div>
+                                            <div class="vr-card-value" style="font-size:14px;font-weight:600;margin-bottom:6px;">${escapeHtml(data.title) || 'Untitled'}</div>
+                                            <div class="vr-pill-row">
+                                                <span class="badge-priority ${priorityClass}">${data.priority || 'N/A'}</span>
+                                                <span class="vr-status-pill" style="background-color:${statusColor};">
+                                                    <i class="bi bi-circle-fill" style="font-size:7px;"></i>
+                                                    ${getStatusLabel(data.status)}
+                                                </span>
+                                            </div>
+                                            <div class="vr-card-value wrap" style="margin-top:10px;">${escapeHtml(data.description) || 'No description provided.'}</div>
+                                            <div style="font-size:12px;color:#aaa;margin-top:10px;line-height:1.6;">
+                                                <i class="bi bi-calendar3"></i> ${data.dateSubmitted || 'N/A'}
+                                                ${data.resolvedBy ? `&nbsp;&nbsp;<i class="bi bi-person-check-fill"></i> Resolved by: ${escapeHtml(data.resolvedBy)}` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    ${resolutionBlock}
+                                </div>
+                            </div>
+                            <div class="vr-right">
+                                ${hasLocation
+                                    ? `<div id="viewMap" style="width:100%;height:100%;"></div>`
+                                    : `<div class="vr-no-map"><i class="bi bi-map"></i><span>No location coordinates available</span></div>`
+                                }
+                            </div>
+                        </div>
+                        ${imageStrip}
+                    </div>
+                `;
+
+                const approveBtn = document.getElementById('modalApproveBtn');
+                approveBtn.style.display = data.status === 'INCOMING' ? 'inline-block' : 'none';
+
+                if (currentMap) { currentMap.remove(); currentMap = null; }
+
+                const modalEl = document.getElementById('viewReportModal');
+                const modal = new bootstrap.Modal(modalEl);
+
+                if (hasLocation) {
+                    modalEl.addEventListener('shown.bs.modal', function handler() {
+                        modalEl.removeEventListener('shown.bs.modal', handler);
+                        const mapContainer = document.getElementById('viewMap');
+                        if (!mapContainer) return;
+                        const map = L.map('viewMap').setView([data.latitude, data.longitude], 16);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors'
+                        }).addTo(map);
+                        const redIcon = L.icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                            iconSize: [25, 41], iconAnchor: [12, 41],
+                            popupAnchor: [1, -34], shadowSize: [41, 41]
+                        });
+                        L.marker([data.latitude, data.longitude], { icon: redIcon })
+                            .addTo(map)
+                            .bindPopup(`<b>${escapeHtml(data.title || 'Report Location')}</b>`)
+                            .openPopup();
+
+                        fetch('/Resident-census/api/priority-residents')
+                            .then(r => r.json())
+                            .then(residents => {
+                                residents.forEach(res => {
+                                    const lat = parseFloat(res.latitude);
+                                    const lng = parseFloat(res.longitude);
+                                    if (isNaN(lat) || isNaN(lng)) return;
+
+                                    const isSenior = !!res.isSeniorCitizen;
+                                    const isPwd    = !!res.isPwd;
+                                    const color    = (isSenior && isPwd) ? '#e67e22' : isSenior ? '#FED734' : '#27ae60';
+                                    const border   = (isSenior && isPwd) ? '#c0560a' : isSenior ? '#c0a000' : '#1a7a3a';
+                                    const label    = (isSenior && isPwd) ? 'Senior & PWD' : isSenior ? 'Senior Citizen' : 'PWD';
+                                    const emoji    = (isSenior && isPwd) ? '★' : isSenior ? '👴' : '♿';
+                                    const fullName = `${res.lastName || ''}, ${res.firstName || ''}`.replace(/^,\s*/, '');
+
+                                    const icon = L.divIcon({
+                                        html: `<div style="
+                                            width:22px;height:22px;
+                                            transform:rotate(45deg);
+                                            background:${color};
+                                            border:2.5px solid ${border};
+                                            border-radius:4px;
+                                            display:flex;align-items:center;justify-content:center;
+                                            box-shadow:0 2px 6px rgba(0,0,0,.3);
+                                        "><span style="transform:rotate(-45deg);font-size:10px;line-height:1">${emoji}</span></div>`,
+                                        className: '',
+                                        iconSize: [22, 22],
+                                        iconAnchor: [11, 11],
+                                        popupAnchor: [0, -14]
+                                    });
+
+                                    L.marker([lat, lng], { icon, draggable: false })
+                                        .addTo(map)
+                                        .bindPopup(`
+                                            <div style="min-width:210px;font-family:Arial,sans-serif;padding:4px 0">
+                                                <div style="font-weight:700;font-size:13px;margin-bottom:6px;color:#1a1a1a">
+                                                    ${escapeHtml(fullName) || '—'}
+                                                </div>
+                                                <div style="margin-bottom:8px">
+                                                    <span style="background:${color};color:${(isSenior&&!isPwd)?'#5a4200':'white'};
+                                                        padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700">
+                                                        ${label}
+                                                    </span>
+                                                </div>
+                                                <div style="font-size:12px;color:#555;line-height:1.8;border-top:1px solid #f0f0f0;padding-top:6px">
+                                                    <div><strong style="color:#2d4a44">Address:</strong> ${escapeHtml(res.address) || '—'}</div>
+                                                    <div><strong style="color:#2d4a44">Emergency Contact:</strong>
+                                                        ${escapeHtml(res.emergencyContactName) || '—'}
+                                                        ${res.emergencyContactRelation ? '(' + escapeHtml(res.emergencyContactRelation) + ')' : ''}
+                                                    </div>
+                                                    <div><strong style="color:#2d4a44">Contact No.:</strong>
+                                                        ${escapeHtml(res.emergencyContactNumber) || '—'}
+                                                    </div>
+                                                </div>
+                                            </div>`, { maxWidth: 250 });
+                                });
+                            })
+                            .catch(err => console.warn('Could not load priority residents:', err));
+
+                        map.invalidateSize();
+                        currentMap = map;
+                    });
+                }
+
+                modal.show();
+            })
+            .catch(error => { console.error(error); alert("Error loading report details"); });
+    }
+
+    function modalApproveAction() {
+        if (currentModalReportId && currentModalReportStatus === 'INCOMING') {
+            const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewReportModal'));
+            viewModal.hide();
+            openApproveModal(currentModalReportId);
         }
     }
 
-    function viewReport(id) {
-    currentModalReportId = id;
-    fetch('/safety-reports/' + id)
-        .then(response => response.json())
-        .then(data => {
-            currentModalReportStatus = data.status;
-
-            const hasLocation = data.latitude && data.longitude && data.latitude !== 0 && data.longitude !== 0;
-            const priorityClass = data.priority === 'HIGH' ? 'priority-high' : data.priority === 'MEDIUM' ? 'priority-medium' : 'priority-low';
-            const statusColor = getStatusColor(data.status);
-
-            let resolutionBlock = '';
-            if (data.resolutionActions || data.resolutionResponseTime || data.resolutionNotes) {
-                resolutionBlock = `
-                    <div class="vr-resolution-block">
-                        ${data.resolutionResponseTime ? `<div class="vr-res-row"><span class="vr-res-label">Response Time</span>${escapeHtml(data.resolutionResponseTime)}</div>` : ''}
-                        ${data.resolutionActions     ? `<div class="vr-res-row"><span class="vr-res-label">Actions Taken</span>${escapeHtml(data.resolutionActions)}</div>` : ''}
-                        ${data.resolutionNotes       ? `<div class="vr-res-row"><span class="vr-res-label">Additional Notes</span>${escapeHtml(data.resolutionNotes)}</div>` : ''}
-                    </div>`;
-            }
-
-            const imageStrip = data.imageUrl ? `
-                <div style="border-top:2px solid #eaf2f0;background:white;">
-                    <div style="display:flex;align-items:center;gap:10px;padding:12px 20px 10px;background:#f8faf9;border-bottom:1px solid #e8e8e8;">
-                        <div style="width:32px;height:32px;border-radius:8px;background:#eaf2f0;display:flex;align-items:center;justify-content:center;color:#2d4a44;font-size:16px;flex-shrink:0;">
-                            <i class="bi bi-image"></i>
-                        </div>
-                        <span style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.7px;">Photo Evidence</span>
-                        <a href="${data.imageUrl}" target="_blank"
-                           style="margin-left:auto;font-size:11px;color:#3498db;text-decoration:none;display:flex;align-items:center;gap:4px;">
-                            <i class="bi bi-arrows-fullscreen"></i> Open full size
-                        </a>
-                    </div>
-                    <div style="padding:16px 20px;background:white;">
-                        <a href="${data.imageUrl}" target="_blank" style="display:block;">
-                            <img src="${data.imageUrl}"
-                                 alt="Report photo"
-                                 style="width:100%;max-height:300px;object-fit:contain;border-radius:8px;border:1px solid #e0e0e0;cursor:zoom-in;background:#f5f5f5;transition:opacity 0.2s;"
-                                 onerror="this.closest('div').parentElement.parentElement.style.display='none'"
-                                 onmouseover="this.style.opacity='0.88'"
-                                 onmouseout="this.style.opacity='1'">
-                        </a>
-                    </div>
-                </div>` : '';
-
-            document.getElementById('viewModalBody').innerHTML = `
-                <div style="border-radius:8px;overflow:hidden;border:1px solid #e0e0e0;">
-                    <div class="vr-layout" style="border:none;border-radius:0;">
-                        <div class="vr-left">
-                            <div class="vr-card">
-                                <div class="vr-card-icon"><i class="bi bi-person-fill"></i></div>
-                                <div class="vr-card-body">
-                                    <div class="vr-card-label">Submitted By</div>
-                                    <div class="vr-card-value">${escapeHtml(data.reporterName) || 'Anonymous'}</div>
-                                    <div class="vr-card-sub">${escapeHtml(data.reporterContact) || 'No contact info'}</div>
-                                </div>
-                            </div>
-                            <div class="vr-card">
-                                <div class="vr-card-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
-                                <div class="vr-card-body">
-                                    <div class="vr-card-label">Incident Type &amp; Location</div>
-                                    <div class="vr-card-value">${escapeHtml(data.type) || 'General Incident'}</div>
-                                    <div class="vr-card-sub"><i class="bi bi-geo-alt-fill" style="color:#e74c3c;font-size:12px;"></i> ${escapeHtml(data.location) || 'No address provided'}</div>
-                                </div>
-                            </div>
-                            <div class="vr-card" style="flex-direction:column;align-items:stretch;">
-                                <div style="display:flex;gap:16px;align-items:flex-start;">
-                                    <div class="vr-card-icon" style="flex-shrink:0;"><i class="bi bi-file-text-fill"></i></div>
-                                    <div class="vr-card-body">
-                                        <div class="vr-card-label">Report Details</div>
-                                        <div class="vr-card-value" style="font-size:14px;font-weight:600;margin-bottom:6px;">${escapeHtml(data.title) || 'Untitled'}</div>
-                                        <div class="vr-pill-row">
-                                            <span class="badge-priority ${priorityClass}">${data.priority || 'N/A'}</span>
-                                            <span class="vr-status-pill" style="background-color:${statusColor};">
-                                                <i class="bi bi-circle-fill" style="font-size:7px;"></i>
-                                                ${data.status || 'Pending'}
-                                            </span>
-                                        </div>
-                                        <div class="vr-card-value wrap" style="margin-top:10px;">${escapeHtml(data.description) || 'No description provided.'}</div>
-                                        <div style="font-size:12px;color:#aaa;margin-top:10px;line-height:1.6;">
-                                            <i class="bi bi-calendar3"></i> ${data.dateSubmitted || 'N/A'}
-                                            ${data.resolvedBy ? `&nbsp;&nbsp;<i class="bi bi-person-check-fill"></i> Resolved by: ${escapeHtml(data.resolvedBy)}` : ''}
-                                        </div>
-                                    </div>
-                                </div>
-                                ${resolutionBlock}
-                            </div>
-                        </div>
-                        <div class="vr-right">
-                            ${hasLocation
-                                ? `<div id="viewMap" style="width:100%;height:100%;"></div>`
-                                : `<div class="vr-no-map"><i class="bi bi-map"></i><span>No location coordinates available</span></div>`
-                            }
-                        </div>
-                    </div>
-                    ${imageStrip}
-                </div>
-            `;
-
-            const approveBtn = document.getElementById('modalApproveBtn');
-            approveBtn.style.display = data.status === 'INCOMING' ? 'inline-block' : 'none';
-
-            if (currentMap) { currentMap.remove(); currentMap = null; }
-
-            const modalEl = document.getElementById('viewReportModal');
-            const modal = new bootstrap.Modal(modalEl);
-
-            if (hasLocation) {
-                modalEl.addEventListener('shown.bs.modal', function handler() {
-                    modalEl.removeEventListener('shown.bs.modal', handler);
-                    const mapContainer = document.getElementById('viewMap');
-                    if (!mapContainer) return;
-                    const map = L.map('viewMap').setView([data.latitude, data.longitude], 16);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap contributors'
-                    }).addTo(map);
-                    const redIcon = L.icon({
-                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                        iconSize: [25, 41], iconAnchor: [12, 41],
-                        popupAnchor: [1, -34], shadowSize: [41, 41]
-                    });
-                    L.marker([data.latitude, data.longitude], { icon: redIcon })
-                        .addTo(map)
-                        .bindPopup(`<b>${escapeHtml(data.title || 'Report Location')}</b>`)
-                        .openPopup();
-
-                    fetch('/Resident-census/api/priority-residents')
-                        .then(r => r.json())
-                        .then(residents => {
-                            residents.forEach(res => {
-                                const lat = parseFloat(res.latitude);
-                                const lng = parseFloat(res.longitude);
-                                if (isNaN(lat) || isNaN(lng)) return;
-
-                                const isSenior = !!res.isSeniorCitizen;
-                                const isPwd    = !!res.isPwd;
-                                const color    = (isSenior && isPwd) ? '#e67e22' : isSenior ? '#FED734' : '#27ae60';
-                                const border   = (isSenior && isPwd) ? '#c0560a' : isSenior ? '#c0a000' : '#1a7a3a';
-                                const label    = (isSenior && isPwd) ? 'Senior & PWD' : isSenior ? 'Senior Citizen' : 'PWD';
-                                const emoji    = (isSenior && isPwd) ? '★' : isSenior ? '👴' : '♿';
-                                const fullName = `${res.lastName || ''}, ${res.firstName || ''}`.replace(/^,\s*/, '');
-
-                                const icon = L.divIcon({
-                                    html: `<div style="
-                                        width:22px;height:22px;
-                                        transform:rotate(45deg);
-                                        background:${color};
-                                        border:2.5px solid ${border};
-                                        border-radius:4px;
-                                        display:flex;align-items:center;justify-content:center;
-                                        box-shadow:0 2px 6px rgba(0,0,0,.3);
-                                    "><span style="transform:rotate(-45deg);font-size:10px;line-height:1">${emoji}</span></div>`,
-                                    className: '',
-                                    iconSize: [22, 22],
-                                    iconAnchor: [11, 11],
-                                    popupAnchor: [0, -14]
-                                });
-
-                                L.marker([lat, lng], { icon, draggable: false })
-                                    .addTo(map)
-                                    .bindPopup(`
-                                        <div style="min-width:210px;font-family:Arial,sans-serif;padding:4px 0">
-                                            <div style="font-weight:700;font-size:13px;margin-bottom:6px;color:#1a1a1a">
-                                                ${escapeHtml(fullName) || '—'}
-                                            </div>
-                                            <div style="margin-bottom:8px">
-                                                <span style="background:${color};color:${(isSenior&&!isPwd)?'#5a4200':'white'};
-                                                    padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700">
-                                                    ${label}
-                                                </span>
-                                            </div>
-                                            <div style="font-size:12px;color:#555;line-height:1.8;border-top:1px solid #f0f0f0;padding-top:6px">
-                                                <div><strong style="color:#2d4a44">Address:</strong> ${escapeHtml(res.address) || '—'}</div>
-                                                <div><strong style="color:#2d4a44">Emergency Contact:</strong>
-                                                    ${escapeHtml(res.emergencyContactName) || '—'}
-                                                    ${res.emergencyContactRelation ? '(' + escapeHtml(res.emergencyContactRelation) + ')' : ''}
-                                                </div>
-                                                <div><strong style="color:#2d4a44">Contact No.:</strong>
-                                                    ${escapeHtml(res.emergencyContactNumber) || '—'}
-                                                </div>
-                                            </div>
-                                        </div>`, { maxWidth: 250 });
-                            });
-                        })
-                        .catch(err => console.warn('Could not load priority residents:', err));
-
-                    map.invalidateSize();
-                    currentMap = map;
-                });
-            }
-
-            modal.show();
-        })
-        .catch(error => { console.error(error); alert("Error loading report details"); });
-}
-    
-function modalApproveAction() {
-    if (currentModalReportId && currentModalReportStatus === 'INCOMING') {
-        // Close view modal first
-        const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewReportModal'));
-        viewModal.hide();
-        // Then open priority modal
-        openApproveModal(currentModalReportId);
-    }
-}
-    
+    // ============================================
+    // RESOLUTION MODAL
+    // ============================================
     function viewResolutionDetails(id) {
         fetch('/safety-reports/' + id).then(response => response.json()).then(data => {
             document.getElementById('viewInfoTitle').textContent = data.title || 'Untitled';
@@ -2077,14 +1952,19 @@ function modalApproveAction() {
             .then(response => { if (response.ok) showSuccessWithReload('Report resolved successfully!'); else alert('Error updating status'); })
             .catch(error => { console.error(error); alert('Error saving resolution'); });
     });
-    
+
+    // ============================================
+    // EXPORT TO PDF
+    // ============================================
     function exportToPDF() { const { jsPDF } = window.jspdf; const doc = new jsPDF(); const activePanel = document.querySelector('.panel-inner:not(.d-none)'); const title = activePanel.querySelector('.panel-header').innerText; doc.text(title, 14, 15); doc.autoTable({ html: activePanel.querySelector('table'), startY: 20, margin: { top: 20 } }); doc.save(title.replace(/\s+/g, '_') + '.pdf'); }
-    function redirectToPassword() { window.location.href = '/user-profile'; }
-    
+
+    // ============================================
+    // MODAL STATE MANAGEMENT
+    // ============================================
     function updateModalState(isOpen) {
         isAnyModalOpen = isOpen;
     }
-    
+
     function initLastSeenId() { 
         let maxId = 0; 
         document.querySelectorAll('.panel-inner tbody tr').forEach(row => { 
@@ -2118,26 +1998,11 @@ function modalApproveAction() {
             });
             observer.observe(archiveModal, { attributes: true, attributeFilter: ['style'] });
         }
-        
-        const forceModal = document.getElementById('forcePasswordModal');
-        if (forceModal) {
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                        updateModalState(forceModal.style.display === 'block');
-                    }
-                });
-            });
-            observer.observe(forceModal, { attributes: true, attributeFilter: ['style'] });
-        }
-        
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.modal') && !isAnyModalOpen) {
-                updateModalState(true);
-            }
-        });
     }
 
+    // ============================================
+    // POLLING
+    // ============================================
     async function pollReports() { 
         if (isAnyModalOpen) return;
         try { 
@@ -2148,7 +2013,7 @@ function modalApproveAction() {
             const oldIncoming = document.getElementById('badge-incoming')?.textContent || '0';
             
             if (data.counts) { 
-                ['incoming', 'approved', 'inprogress', 'resolved', 'archive'].forEach(function(badge) { 
+                ['incoming', 'approved', 'inprogress', 'resolved', 'cancelled_rejected'].forEach(function(badge) { 
                     var el = document.getElementById('badge-' + badge); 
                     if (el) el.textContent = data.counts[badge] || 0; 
                 }); 
@@ -2170,11 +2035,8 @@ function modalApproveAction() {
     }
 
     // ============================================
-    // INCIDENT MAP LOGIC
+    // INCIDENT MAP (full implementation)
     // ============================================
-
-    // Barangay San Sebastian, Kawit boundary polygon
-    // (same coordinates as the React Native app)
     const SAN_SEBASTIAN_POLYGON = [
         [14.418865, 120.886515],
         [14.418666, 120.887862], [14.418969, 120.887902],
@@ -2215,28 +2077,263 @@ function modalApproveAction() {
         }
     }
 
-    // Maps backend status values (matching the model) to readable labels
-    function getStatusLabel(status) {
-        switch ((status || '').toUpperCase()) {
-            case 'INCOMING':            return 'Incoming';
-            case 'APPROVED':            return 'Approved';
-            case 'IN_PROGRESS':         return 'In Progress';
-            case 'RESOLVED':            return 'Resolved';
-            case 'ARCHIVED_RESOLVED':   return 'Archived (Resolved)';
-            case 'ARCHIVED_UNRESOLVED': return 'Archived (Unresolved)';
-            default:                    return status || 'Unknown';
+    function setMapStatusFilter(status) {
+        currentMapStatusFilter = status;
+        document.querySelectorAll('.map-status-btn').forEach(btn => {
+            const active = btn.dataset.status === status;
+            const colorMap = {
+                'all': '#2d4a44', 
+                'INCOMING': '#FF9800',
+                'APPROVED': '#e67e22', 
+                'IN_PROGRESS': '#2bb6f7', 
+                'RESOLVED': '#44C375',
+                'REJECTED': '#e74c3c',
+                'CANCELLED': '#e67e22'
+            };
+            const c = colorMap[btn.dataset.status] || '#2d4a44';
+            btn.style.background = active ? c : 'white';
+            btn.style.color = active ? 'white' : c;
+        });
+        renderIncidentMapMarkers();
+        if (summaryPanelOpen) renderSummaryPanel();
+    }
+
+    function fitToBoundary() {
+        if (!incidentMapInstance) return;
+        incidentMapInstance.fitBounds(L.latLngBounds(SAN_SEBASTIAN_POLYGON), { padding: [30, 30] });
+    }
+
+    function toggleSummaryPanel() {
+        summaryPanelOpen = !summaryPanelOpen;
+        const panel = document.getElementById('mapSummaryPanel');
+        const btn   = document.getElementById('summaryToggleBtn');
+        panel.classList.toggle('open', summaryPanelOpen);
+        btn.classList.toggle('active', summaryPanelOpen);
+        if (summaryPanelOpen) {
+            renderSummaryPanel();
+            setTimeout(() => { if (incidentMapInstance) incidentMapInstance.invalidateSize(); }, 320);
+        } else {
+            setTimeout(() => { if (incidentMapInstance) incidentMapInstance.invalidateSize(); }, 320);
         }
     }
 
-    function getStatusBadgeColor(status) {
-        switch ((status || '').toUpperCase()) {
-            case 'INCOMING':            return '#FF9800';
-            case 'APPROVED':            return '#FF9800';
-            case 'IN_PROGRESS':         return '#2bb6f7';
-            case 'RESOLVED':            return '#44C375';
-            case 'ARCHIVED_RESOLVED':   return '#6c757d';
-            case 'ARCHIVED_UNRESOLVED': return '#6c757d';
-            default:                    return '#888';
+    function renderSummaryPanel() {
+        const body = document.getElementById('mapSummaryBody');
+        const data = allReportsData;
+        if (!data || data.length === 0) {
+            body.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa;font-size:13px;">No report data available</div>';
+            return;
+        }
+
+        const byType = {};
+        data.forEach(r => {
+            const t = r.type || 'Unknown';
+            byType[t] = (byType[t] || 0) + 1;
+        });
+        const sortedTypes = Object.entries(byType).sort((a, b) => b[1] - a[1]);
+        const maxType = sortedTypes[0]?.[1] || 1;
+
+        const byPriority = { HIGH: 0, MEDIUM: 0, LOW: 0 };
+        data.forEach(r => { byPriority[(r.priority || 'LOW').toUpperCase()] = (byPriority[(r.priority || 'LOW').toUpperCase()] || 0) + 1; });
+        const priorityColors = { HIGH: '#e74c3c', MEDIUM: '#e67e22', LOW: '#27ae60' };
+
+        const byStatus = {};
+        data.forEach(r => { byStatus[r.status || 'UNKNOWN'] = (byStatus[r.status || 'UNKNOWN'] || 0) + 1; });
+
+        const crimeCount = data.filter(r => 
+            (r.type || '').toLowerCase().includes('crime')
+        ).length;
+        const nonCrimeCount = data.length - crimeCount;
+
+        const GRID = 0.002;
+        const gridMap = {};
+        data.forEach(r => {
+            if (!r.latitude || !r.longitude) return;
+            const gx = Math.round(r.latitude / GRID);
+            const gy = Math.round(r.longitude / GRID);
+            const key = `${gx}_${gy}`;
+            if (!gridMap[key]) gridMap[key] = { lat: gx * GRID, lng: gy * GRID, reports: [] };
+            gridMap[key].reports.push(r);
+        });
+        const hotspots = Object.values(gridMap)
+            .filter(g => g.reports.length > 0)
+            .sort((a, b) => b.reports.length - a.reports.length)
+            .slice(0, 5);
+
+        function topLocation(reports) {
+            const locCount = {};
+            reports.forEach(r => {
+                if (r.location) locCount[r.location] = (locCount[r.location] || 0) + 1;
+            });
+            const sorted = Object.entries(locCount).sort((a, b) => b[1] - a[1]);
+            return sorted[0]?.[0] || 'Unknown area';
+        }
+
+        function dominantType(reports) {
+            const tc = {};
+            reports.forEach(r => { if (r.type) tc[r.type] = (tc[r.type] || 0) + 1; });
+            return Object.entries(tc).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+        }
+
+        function dominantPriority(reports) {
+            if (reports.some(r => r.priority === 'HIGH')) return { label: 'HIGH', color: '#e74c3c' };
+            if (reports.some(r => r.priority === 'MEDIUM')) return { label: 'MEDIUM', color: '#e67e22' };
+            return { label: 'LOW', color: '#27ae60' };
+        }
+
+        const now = new Date();
+        const recentCount = data.filter(r => {
+            if (!r.dateSubmitted) return false;
+            const d = new Date(r.dateSubmitted);
+            return (now - d) / 86400000 <= 30;
+        }).length;
+
+        body.innerHTML = `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+                <div style="background:#eaf2f0;border-radius:8px;padding:10px 12px;text-align:center;">
+                    <div style="font-size:22px;font-weight:700;color:#2d4a44;">${data.length}</div>
+                    <div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;">Total Reports</div>
+                </div>
+                <div style="background:#fff3cd;border-radius:8px;padding:10px 12px;text-align:center;">
+                    <div style="font-size:22px;font-weight:700;color:#856404;">${recentCount}</div>
+                    <div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;">Last 30 Days</div>
+                </div>
+                <div style="background:#fdecea;border-radius:8px;padding:10px 12px;text-align:center;">
+                    <div style="font-size:22px;font-weight:700;color:#c0392b;">${crimeCount}</div>
+                    <div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;">Crime Reports</div>
+                </div>
+                <div style="background:#e8f5f0;border-radius:8px;padding:10px 12px;text-align:center;">
+                    <div style="font-size:22px;font-weight:700;color:#2d7a5f;">${nonCrimeCount}</div>
+                    <div style="font-size:10px;color:#888;font-weight:600;text-transform:uppercase;">Other Incidents</div>
+                </div>
+            </div>
+
+            <div class="summary-section">
+                <div class="summary-section-title">By Priority</div>
+                ${Object.entries(byPriority).map(([p, c]) => `
+                    <div class="summary-row">
+                        <div class="summary-row-label">
+                            <span class="summary-dot" style="background:${priorityColors[p]};"></span>
+                            ${p}
+                        </div>
+                        <span class="summary-count">${c}</span>
+                    </div>
+                    <div class="summary-bar-wrap">
+                        <div class="summary-bar" style="width:${Math.round(c/data.length*100)}%;background:${priorityColors[p]};"></div>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="summary-section">
+                <div class="summary-section-title">By Status</div>
+                ${Object.entries(byStatus).map(([s, c]) => `
+                    <div class="summary-row">
+                        <div class="summary-row-label">
+                            <span class="summary-dot" style="background:${getStatusBadgeColor(s)};"></span>
+                            ${getStatusLabel(s)}
+                        </div>
+                        <span class="summary-count">${c}</span>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="summary-section">
+                <div class="summary-section-title">By Incident Type</div>
+                ${sortedTypes.map(([t, c]) => `
+                    <div class="summary-row">
+                        <div class="summary-row-label" title="${escapeHtml(t)}">${escapeHtml(t)}</div>
+                        <span class="summary-count">${c}</span>
+                    </div>
+                    <div class="summary-bar-wrap">
+                        <div class="summary-bar" style="width:${Math.round(c/maxType*100)}%;background:#3d6b64;"></div>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="summary-section">
+                <div class="summary-section-title">⚠️ Prone Areas (Hotspots)</div>
+                ${hotspots.length === 0
+                    ? '<div style="color:#aaa;font-size:12px;font-style:italic;">No location data available</div>'
+                    : hotspots.map((h, i) => {
+                        const loc  = topLocation(h.reports);
+                        const type = dominantType(h.reports);
+                        const prio = dominantPriority(h.reports);
+                        const crimeHere = h.reports.filter(r => 
+                            (r.type || '').toLowerCase().includes('crime')
+                        ).length;
+                        return `
+                            <div class="hotspot-item" onclick="flyToHotspot(${h.lat}, ${h.lng})"
+                                 title="Click to zoom to this area">
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                                    <span class="hotspot-rank">${i + 1}</span>
+                                    <div class="hotspot-name">${escapeHtml(loc)}</div>
+                                    <span style="margin-left:auto;font-size:11px;font-weight:700;color:${prio.color};">
+                                        ${h.reports.length} reports
+                                    </span>
+                                </div>
+                                <div class="hotspot-meta">
+                                    ${type ? `<i class="bi bi-exclamation-triangle-fill" style="color:${prio.color};font-size:10px;"></i> ${escapeHtml(type)}` : ''}
+                                    ${crimeHere > 0 ? `&nbsp;·&nbsp;<i class="bi bi-shield-exclamation" style="color:#e74c3c;font-size:10px;"></i> ${crimeHere} crime${crimeHere > 1 ? 's' : ''}` : ''}
+                                </div>
+                                <div class="hotspot-pills">
+                                    <span class="hotspot-pill" style="background:${prio.color}22;color:${prio.color};border:1px solid ${prio.color}55;">
+                                        ${prio.label}
+                                    </span>
+                                    ${h.reports.filter(r => r.status === 'INCOMING' || r.status === 'IN_PROGRESS').length > 0
+                                        ? `<span class="hotspot-pill" style="background:#fdecea;color:#c0392b;border:1px solid #f5c6cb;">
+                                            ${h.reports.filter(r => r.status === 'INCOMING' || r.status === 'IN_PROGRESS').length} active
+                                           </span>` : ''}
+                                </div>
+                            </div>`;
+                    }).join('')
+                }
+            </div>
+
+            <div style="font-size:10px;color:#bbb;text-align:center;padding-top:4px;padding-bottom:8px;">
+                Click a hotspot to zoom to that area
+            </div>
+        `;
+    }
+
+    function flyToHotspot(lat, lng) {
+        if (!incidentMapInstance) return;
+        incidentMapInstance.flyTo([lat, lng], 16, { duration: 1.2 });
+    }
+
+    function toggleHeatmap() {
+        if (!incidentMapInstance) return;
+        heatmapVisible = !heatmapVisible;
+        const btn = document.getElementById('heatmap-btn');
+
+        if (heatmapVisible) {
+            const points = allReportsData
+                .filter(r => r.latitude && r.longitude &&
+                             (r.type || '').toLowerCase().includes('crime'))
+                .map(r => {
+                    const intensity = r.priority === 'HIGH' ? 1.0
+                                    : r.priority === 'MEDIUM' ? 0.6 : 0.3;
+                    return [r.latitude, r.longitude, intensity];
+                });
+
+            if (points.length === 0) {
+                alert('No crime reports with location data to display.');
+                heatmapVisible = false;
+                return;
+            }
+
+            heatmapLayer = L.heatLayer(points, {
+                radius: 35, blur: 25, maxZoom: 17,
+                gradient: { 0.3: '#ffeb3b', 0.6: '#ff9800', 1.0: '#e74c3c' }
+            }).addTo(incidentMapInstance);
+
+            if (markerClusterGroup) incidentMapInstance.removeLayer(markerClusterGroup);
+            btn.style.background = '#8e44ad';
+            btn.style.color = 'white';
+        } else {
+            if (heatmapLayer) { incidentMapInstance.removeLayer(heatmapLayer); heatmapLayer = null; }
+            if (markerClusterGroup) incidentMapInstance.addLayer(markerClusterGroup);
+            btn.style.background = 'white';
+            btn.style.color = '#8e44ad';
         }
     }
 
@@ -2251,10 +2348,7 @@ function modalApproveAction() {
         const mapContainer = document.getElementById('incidentMap');
         if (!mapContainer) return;
 
-        // Center on Barangay San Sebastian, Kawit
         incidentMapInstance = L.map('incidentMap', {
-            // Markers are read-only view — disable drag on the map itself is fine,
-            // but we keep pan/zoom for navigation. Markers just won't be draggable.
             zoomControl: true,
             scrollWheelZoom: true
         }).setView([14.4160, 120.8950], 14);
@@ -2264,7 +2358,6 @@ function modalApproveAction() {
             maxZoom: 19
         }).addTo(incidentMapInstance);
 
-        // Draw the Barangay San Sebastian boundary polygon
         L.polygon(SAN_SEBASTIAN_POLYGON, {
             color: '#2d4a44',
             weight: 2.5,
@@ -2272,7 +2365,7 @@ function modalApproveAction() {
             fillColor: '#2d4a44',
             fillOpacity: 0.06,
             dashArray: '6 4',
-            interactive: false   // boundary is non-clickable decoration
+            interactive: false
         }).addTo(incidentMapInstance);
 
         incidentMapInitialized = true;
@@ -2293,6 +2386,7 @@ function modalApproveAction() {
                 console.error('Error loading reports for map:', err);
             });
     }
+
     function fetchResidentOverlay() {
         fetch('/Resident-census/api/priority-residents')
             .then(r => r.json())
@@ -2315,12 +2409,10 @@ function modalApproveAction() {
             const lng = parseFloat(res.longitude);
             if (isNaN(lat) || isNaN(lng)) return;
 
-            // Skip hidden layers
             if (isSenior && !isPwd && !showSeniorLayer) return;
             if (isPwd    && !isSenior && !showPwdLayer) return;
             if (isSenior && isPwd && !showSeniorLayer && !showPwdLayer) return;
 
-            // Pin colour: yellow=senior only, green=pwd only, orange=both
             const color  = (isSenior && isPwd) ? '#e67e22'
                         : isSenior            ? '#FED734'
                         :                       '#27ae60';
@@ -2332,7 +2424,6 @@ function modalApproveAction() {
                         :                       'PWD';
             const emoji  = (isSenior && isPwd) ? '★' : isSenior ? '👴' : '♿';
 
-            // Diamond DivIcon — matches the rounded-square style, distinct from circle incidents
             const icon = L.divIcon({
                 html: `<div style="
                     width:22px;height:22px;
@@ -2411,7 +2502,6 @@ function modalApproveAction() {
     function renderIncidentMapMarkers() {
         if (!incidentMapInstance) return;
 
-        // Clear existing cluster group
         if (markerClusterGroup) {
             incidentMapInstance.removeLayer(markerClusterGroup);
             markerClusterGroup = null;
@@ -2431,7 +2521,6 @@ function modalApproveAction() {
             return;
         }
 
-        // Create cluster group with custom icon
         markerClusterGroup = L.markerClusterGroup({
             maxClusterRadius: 50,
             iconCreateFunction: function(cluster) {
@@ -2462,7 +2551,6 @@ function modalApproveAction() {
             const priorityClass = (report.priority || '').toUpperCase() === 'HIGH' ? 'priority-high'
                 : (report.priority || '').toUpperCase() === 'MEDIUM' ? 'priority-medium' : 'priority-low';
 
-            // Use a DivIcon circle so we can color by priority
             const markerIcon = L.divIcon({
                 html: `<div style="
                     width:22px;height:22px;border-radius:50%;
@@ -2523,13 +2611,24 @@ function modalApproveAction() {
             incidentMapInstance.addLayer(markerClusterGroup);
         }
 
-        // Fit view to visible markers
         const latlngs = filtered.map(r => [r.latitude, r.longitude]);
         incidentMapInstance.fitBounds(L.latLngBounds(latlngs), { padding: [50, 50], maxZoom: 16 });
 
         renderResidentMarkers();
     }
 
+    function switchToMapTab(e) {
+        const mapPanel = document.getElementById('tab-incidentmap');
+        if (!mapPanel.classList.contains('d-none')) {
+            initIncidentMap();
+            return;
+        }
+        window.location.href = '/safety-reports?tab=incidentmap';
+    }
+
+    // ============================================
+    // DOCUMENT READY
+    // ============================================
     document.addEventListener('DOMContentLoaded', function() {
         var status = document.getElementById('accountStatus');
         if (status && (status.value === 'New' || status.value === 'Newly Updated')) {
@@ -2541,7 +2640,6 @@ function modalApproveAction() {
         initLastSeenId();
         startPolling();
 
-        // If the page loaded directly on the incidentmap tab, init map right away
         const mapTab = document.getElementById('tab-incidentmap');
         if (mapTab && !mapTab.classList.contains('d-none')) {
             setTimeout(initIncidentMap, 200);
@@ -2551,17 +2649,6 @@ function modalApproveAction() {
     window.addEventListener('beforeunload', function() { 
         if (pollingInterval) clearInterval(pollingInterval); 
     });
-
-    function switchToMapTab(e) {
-    // If already on the map tab just re-init
-    const mapPanel = document.getElementById('tab-incidentmap');
-    if (!mapPanel.classList.contains('d-none')) {
-        initIncidentMap();
-        return;
-    }
-    // Navigate normally — Thymeleaf needs to set the active tab server-side
-    window.location.href = '/safety-reports?tab=incidentmap';
-}
 </script>
 
 </body>

@@ -15,11 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.time.Duration;
-import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Controller
@@ -46,16 +42,16 @@ public class SafetyReportsController {
 
         String name = admin.getName();
         String role = admin.getRole();
-            if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
-                return "redirect:/logout";
-            }
+        if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+            return "redirect:/logout";
+        }
         model.addAttribute("newAdmin", new AdminUser());
         model.addAttribute("currentUser", name);
         model.addAttribute("currentrole", role);
 
         List<SafetyReports> allReports = safetyReportService.getAllReports();
 
-        // INCOMING: sort by dateSubmitted DESC (newest first)
+        // INCOMING
         List<SafetyReports> incomingReports = allReports.stream()
                 .filter(r -> "INCOMING".equalsIgnoreCase(r.getStatus()))
                 .sorted(Comparator
@@ -63,7 +59,7 @@ public class SafetyReportsController {
                         .thenComparing(Comparator.comparing(SafetyReports::getId, Comparator.reverseOrder())))
                 .collect(Collectors.toList());
 
-        // APPROVED: sort by dateSubmitted DESC (newest first)
+        // APPROVED
         List<SafetyReports> approvedReports = allReports.stream()
                 .filter(r -> "APPROVED".equalsIgnoreCase(r.getStatus()))
                 .sorted(Comparator
@@ -71,7 +67,7 @@ public class SafetyReportsController {
                         .thenComparing(Comparator.comparing(SafetyReports::getId, Comparator.reverseOrder())))
                 .collect(Collectors.toList());
 
-        // IN PROGRESS: sort by dateSubmitted DESC (newest first)
+        // IN PROGRESS
         List<SafetyReports> inProgressReports = allReports.stream()
                 .filter(r -> "IN_PROGRESS".equalsIgnoreCase(r.getStatus()) || "INPROGRESS".equalsIgnoreCase(r.getStatus()))
                 .sorted(Comparator
@@ -79,7 +75,7 @@ public class SafetyReportsController {
                         .thenComparing(Comparator.comparing(SafetyReports::getId, Comparator.reverseOrder())))
                 .collect(Collectors.toList());
 
-        // RESOLVED: sort by dateHandled DESC (most recently resolved first)
+        // RESOLVED
         List<SafetyReports> resolvedReports = allReports.stream()
                 .filter(r -> "RESOLVED".equalsIgnoreCase(r.getStatus()))
                 .sorted((a, b) -> {
@@ -92,10 +88,10 @@ public class SafetyReportsController {
                 })
                 .collect(Collectors.toList());
 
-        // ARCHIVE: sort by dateHandled DESC (most recently archived first)
-        List<SafetyReports> archivedReports = allReports.stream()
-                .filter(r -> "ARCHIVED_RESOLVED".equalsIgnoreCase(r.getStatus())
-                          || "ARCHIVED_UNRESOLVED".equalsIgnoreCase(r.getStatus()))
+        // CANCELLED & REJECTED (combined in one tab)
+        List<SafetyReports> cancelledRejectedReports = allReports.stream()
+                .filter(r -> "REJECTED".equalsIgnoreCase(r.getStatus()) 
+                          || "CANCELLED".equalsIgnoreCase(r.getStatus()))
                 .sorted((a, b) -> {
                     LocalDateTime aDate = a.getDateHandled();
                     LocalDateTime bDate = b.getDateHandled();
@@ -110,13 +106,13 @@ public class SafetyReportsController {
         model.addAttribute("approvedReports", approvedReports);
         model.addAttribute("inProgressReports", inProgressReports);
         model.addAttribute("resolvedReports", resolvedReports);
-        model.addAttribute("archivedReports", archivedReports);
+        model.addAttribute("cancelledRejectedReports", cancelledRejectedReports);
 
         model.addAttribute("incomingCount", incomingReports.size());
         model.addAttribute("approvedCount", approvedReports.size());
         model.addAttribute("inProgressCount", inProgressReports.size());
         model.addAttribute("resolvedCount", resolvedReports.size());
-        model.addAttribute("archivedCount", archivedReports.size());
+        model.addAttribute("cancelledRejectedCount", cancelledRejectedReports.size());
 
         model.addAttribute("currentTab", tab);
 
@@ -126,7 +122,6 @@ public class SafetyReportsController {
     @GetMapping("/{id}")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getReport(@PathVariable Long id) {
-
         SafetyReports report = safetyReportService.getReportById(id);
         if (report == null) {
             return ResponseEntity.notFound().build();
@@ -205,8 +200,9 @@ public class SafetyReportsController {
                 .filter(r -> "IN_PROGRESS".equalsIgnoreCase(r.getStatus()) || "INPROGRESS".equalsIgnoreCase(r.getStatus())).count());
         counts.put("resolved", allReports.stream()
                 .filter(r -> "RESOLVED".equalsIgnoreCase(r.getStatus())).count());
-        counts.put("archive", allReports.stream()
-                .filter(r -> "ARCHIVED_RESOLVED".equalsIgnoreCase(r.getStatus()) || "ARCHIVED_UNRESOLVED".equalsIgnoreCase(r.getStatus())).count());
+        counts.put("cancelled_rejected", allReports.stream()
+                .filter(r -> "REJECTED".equalsIgnoreCase(r.getStatus()) 
+                          || "CANCELLED".equalsIgnoreCase(r.getStatus())).count());
 
         List<Map<String, Object>> reportList = newReports.stream().map(r -> {
             Map<String, Object> m = new HashMap<>();
@@ -238,10 +234,8 @@ public class SafetyReportsController {
         String username = principal.getName();
         AdminUser admin = adminUserService.getAdminByEmail(username);
         
-        // Calculate response time from APPROVED to RESOLVED
         String responseTime = calculateResponseTime(report);
         
-        // Save resolution details to new columns
         report.setResolutionActions(resolutionData.getOrDefault("actions", ""));
         report.setResolutionResponseTime(responseTime);
         report.setResolutionNotes(resolutionData.getOrDefault("notes", ""));
@@ -280,13 +274,14 @@ public class SafetyReportsController {
         String username = principal.getName();
         AdminUser admin = adminUserService.getAdminByEmail(username);
 
-        // Set the new status and timestamp
         report.setStatus(status);
         report.setDateHandled(LocalDateTime.now());
-
-        // Set handler info
         report.setHandledByName(admin.getName());
         report.setHandledByRole(admin.getRole());
+
+        if ("REJECTED".equals(status) || "CANCELLED".equals(status)) {
+            report.setResolvedBy(admin.getName());
+        }
 
         safetyReportService.saveReport(report);
 
@@ -294,8 +289,8 @@ public class SafetyReportsController {
             case "APPROVED"             -> "Approved the report and assigned a handler";
             case "IN_PROGRESS"          -> "Moved the report to In Progress";
             case "RESOLVED"             -> "Marked the report as resolved";
-            case "ARCHIVED_RESOLVED"    -> "Archived the resolved report";
-            case "ARCHIVED_UNRESOLVED"  -> "Archived the unresolved report";
+            case "REJECTED"             -> "Rejected the incoming report";
+            case "CANCELLED"            -> "Cancelled the report";
             default                     -> "Updated the report status to " + status;
         };
 
@@ -307,6 +302,33 @@ public class SafetyReportsController {
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "Status updated successfully");
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/priority")
+    @ResponseBody
+    public ResponseEntity<?> updatePriority(
+            @PathVariable Long id,
+            @RequestParam String priority,
+            Principal principal,
+            HttpServletRequest request) {
+
+        SafetyReports report = safetyReportService.getReportById(id);
+        if (report == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        report.setPriority(priority);
+        safetyReportService.saveReport(report);
+
+        activityLogService.log(
+            principal.getName(), "ADMIN", "UPDATED", "Safety Reports",
+            "Updated priority to " + priority + " for report: \"" + report.getTitle() + "\"",
+            request.getRemoteAddr(), "Success"
+        );
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Priority updated successfully");
         return ResponseEntity.ok(response);
     }
 
