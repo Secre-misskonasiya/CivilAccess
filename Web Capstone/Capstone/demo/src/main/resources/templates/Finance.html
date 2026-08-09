@@ -12,7 +12,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        /* Your existing CSS here */
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f1; }
         .layout { display: flex; height: 100vh; overflow: hidden; }
@@ -65,69 +64,16 @@
         .filter-select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; background: white; font-size: 12px; }
         .table-responsive { overflow-x: auto; }
 
-        /* Dashboard period filter */
-        .period-filter-bar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: white;
-            border-radius: 12px;
-            padding: 10px 18px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            flex-wrap: wrap;
-        }
-        .period-filter-label {
-            font-size: 12px;
-            font-weight: 700;
-            color: #2d4a44;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-right: 4px;
-        }
-        .period-btn {
-            padding: 7px 18px;
-            border: 1.5px solid #ddd;
-            background: white;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #666;
-            cursor: pointer;
-            transition: all 0.18s;
-        }
+        .period-filter-bar { display: flex; align-items: center; gap: 8px; background: white; border-radius: 12px; padding: 10px 18px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); flex-wrap: wrap; }
+        .period-filter-label { font-size: 12px; font-weight: 700; color: #2d4a44; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px; }
+        .period-btn { padding: 7px 18px; border: 1.5px solid #ddd; background: white; border-radius: 20px; font-size: 12px; font-weight: 600; color: #666; cursor: pointer; transition: all 0.18s; }
         .period-btn:hover { border-color: #2d4a44; color: #2d4a44; }
         .period-btn.active { background: #2d4a44; color: white; border-color: #2d4a44; }
-        .period-custom-range {
-            display: none;
-            align-items: center;
-            gap: 6px;
-            margin-left: 6px;
-        }
+        .period-custom-range { display: none; align-items: center; gap: 6px; margin-left: 6px; }
         .period-custom-range.visible { display: flex; }
-        .period-custom-range input {
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 5px 9px;
-            font-size: 12px;
-            color: #444;
-        }
-        .period-custom-range button {
-            padding: 5px 14px;
-            background: #FED734;
-            color: #2d4a44;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-        .dash-period-label {
-            font-size: 11px;
-            color: #888;
-            font-style: italic;
-            margin-left: auto;
-        }
+        .period-custom-range input { border: 1px solid #ddd; border-radius: 6px; padding: 5px 9px; font-size: 12px; color: #444; }
+        .period-custom-range button { padding: 5px 14px; background: #FED734; color: #2d4a44; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .dash-period-label { font-size: 11px; color: #888; font-style: italic; margin-left: auto; }
 
         .btn-export-csv  { background: #1a7a4a; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s; }
         .btn-export-csv:hover  { background: #155f3a; }
@@ -139,13 +85,7 @@
         @media print {
             body * { visibility: hidden; }
             #pdfReportContainer, #pdfReportContainer * { visibility: visible; }
-            #pdfReportContainer {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                padding: 20px;
-            }
+            #pdfReportContainer { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; }
             .no-print, .no-print * { display: none !important; }
         }
     </style>
@@ -191,9 +131,6 @@
                     </div>
                     <span class="dash-period-label" id="dashPeriodLabel">Showing: Current Month</span>
                 </div>
-
-                <!-- Dashboard Export Bar -->
-                
 
                 <!-- Row 1: 4 primary stat cards -->
                 <div class="row g-3 mb-4">
@@ -326,12 +263,11 @@
                         </div>
                     </form>
                 </div>
-                
+
                 <div class="form-panel">
                     <div class="form-title"><i class="bi bi-list-ul"></i> All Income Records</div>
                     <div class="export-bar">
                         <span class="export-bar-label">Exports visible (filtered) records</span>
-                    
                         <button class="btn-export-pdf" onclick="exportTablePDF('incomeTableBody', 'Income Records', ['Date','OR#','Source','Type','Amount'])">
                             <i class="bi bi-file-earmark-pdf"></i> Export PDF
                         </button>
@@ -414,12 +350,11 @@
                         </div>
                     </form>
                 </div>
-                
+
                 <div class="form-panel">
                     <div class="form-title"><i class="bi bi-list-ul"></i> Expense Records</div>
                     <div class="export-bar">
                         <span class="export-bar-label">Exports visible (filtered) records</span>
-                      
                         <button class="btn-export-pdf" onclick="exportTablePDF('expenseTableBody', 'Expense Records', ['Date','Description','Type','Amount','Status'])">
                             <i class="bi bi-file-earmark-pdf"></i> Export PDF
                         </button>
@@ -453,7 +388,6 @@
                                     <td><span th:classappend="${exp.status.name() == 'PENDING'} ? 'badge-pending' : 'badge-approved'" class="badge-pending" th:text="${exp.status.getDisplayName()}">-</span></td>
                                     <td>
                                         <a th:href="@{|/finance/expenses/approve/${exp.id}?approvedBy=${currentAdminNumericId}|}" th:if="${exp.status.name() == 'PENDING'}" class="action-btn approve" onclick="return confirm('Approve this expense?')">Approve</a>
-                                        
                                         <a th:if="${currentrole == 'TREASURER'}"
                                            th:href="@{|/finance/expenses/archive/${exp.id}|}"
                                            class="action-btn"
@@ -469,11 +403,11 @@
                 </div>
             </div>
 
-                        <!-- BUDGET TAB -->
+            <!-- BUDGET TAB -->
             <div id="tab-budget" class="tab-content">
                 <div class="row g-3 mb-4" style="max-width: 900px; margin-left:auto; margin-right:auto;">
 
-                    <!-- Current Budget -->
+                    <!-- Current Budget Summary (income / expense / remaining) -->
                     <div class="col-md-6">
                         <div class="form-panel" style="height:100%;">
                             <div class="form-title"><i class="bi bi-wallet2"></i> Current Budget</div>
@@ -485,18 +419,13 @@
                                     <span><i class="bi bi-dash-circle me-1 text-danger"></i>Total Spent<br><strong style="color:#e74c3c;" th:text="'₱' + ${#numbers.formatDecimal(totalBudget - remainingBudget, 1, 2)}">&#8369;0.00</strong></span>
                                 </div>
                             </div>
-                            <div style="display:flex; gap:10px;">
-                                <button type="button" onclick="openBudgetModal('increase')" style="flex:1; background: #27ae60; color: white; border: none; padding: 13px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                    <i class="bi bi-plus-circle-fill"></i> Increase
-                                </button>
-                                <button type="button" onclick="openBudgetModal('decrease')" style="flex:1; background: #e74c3c; color: white; border: none; padding: 13px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                    <i class="bi bi-dash-circle-fill"></i> Decrease
-                                </button>
-                            </div>
+                            <button type="button" onclick="openBudgetModal()" style="width: 100%; background: #FED734; color: #2d4a44; border: none; padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <i class="bi bi-pencil-fill"></i> Change Budget
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Recent Budget Activity -->
+                    <!-- Recent Budget Activity (audit log) -->
                     <div class="col-md-6">
                         <div class="form-panel" style="height:100%; display:flex; flex-direction:column;">
                             <div class="form-title"><i class="bi bi-activity"></i> Recent Budget Activity</div>
@@ -536,6 +465,79 @@
                     </div>
 
                 </div>
+            </div>
+
+            <!-- ARCHIVE TAB -->
+            <div id="tab-archive" class="tab-content">
+
+                <!-- Treasurer-only notice for non-treasurers -->
+                <div th:if="${currentrole != 'TREASURER'}" class="form-panel" style="border-left: 4px solid #f39c12;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <i class="bi bi-lock-fill" style="font-size:24px; color:#f39c12;"></i>
+                        <div>
+                            <div style="font-weight:700; color:#2d4a44; font-size:15px;">View-Only Access</div>
+                            <div style="font-size:13px; color:#666; margin-top:2px;">Only the <strong>Treasurer</strong> and <strong>Admin</strong> can archive or restore records. You may view archived records below.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Archived Income -->
+                <div class="form-panel">
+                    <div class="form-title"><i class="bi bi-archive"></i> Archived Income Records</div>
+                    <div class="search-filter">
+                        <input type="text" id="archivedIncomeSearch" class="search-input" placeholder="Search archived income...">
+                        <select id="archivedIncomeTypeFilter" class="filter-select">
+                            <option value="">All Types</option>
+                            <option value="DOCUMENT_FEE">Document Fee</option>
+                            <option value="RENTAL">Rental</option>
+                            <option value="DONATION">Donation</option>
+                            <option value="OTHER">Other Services</option>
+                        </select>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>OR#</th>
+                                    <th>Source</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Archived On</th>
+                                    <th th:if="${currentrole == 'TREASURER'}">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="archivedIncomeTableBody">
+                                <tr th:each="inc : ${archivedIncomeList}"
+                                    th:attr="data-type=${inc.incomeType.name()}"
+                                    style="background:#fffbea;">
+                                    <td th:text="${inc.incomeDate}">-</td>
+                                    <td><strong th:text="${inc.orNumber}">-</strong></td>
+                                    <td th:text="${inc.sourceName}">-</td>
+                                    <td><span th:classappend="${inc.incomeType.name() == 'RENTAL'} ? 'badge-rental' : 'badge-income'"
+                                              class="badge-income" th:text="${inc.incomeType.getDisplayName()}">-</span></td>
+                                    <td class="amount-positive" th:text="'₱' + ${inc.amount}">-</td>
+                                    <td style="font-size:11px; color:#888;">
+                                        <span th:text="${inc.archivedAt != null} ? ${#temporals.format(inc.archivedAt, 'MMM dd, yyyy')} : 'N/A'">-</span>
+                                    </td>
+                                    <td th:if="${currentrole == 'TREASURER'}">
+                                        <a th:href="@{|/finance/income/unarchive/${inc.id}|}"
+                                           class="action-btn approve"
+                                           onclick="return confirm('Restore this income record to active?')">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${archivedIncomeList.isEmpty()}">
+                                    <td th:colspan="${currentrole == 'TREASURER'} ? 7 : 6" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox" style="font-size:24px; display:block; margin-bottom:8px; color:#ccc;"></i>
+                                        No archived income records
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
                 <!-- Archived Expenses -->
                 <div class="form-panel">
@@ -558,7 +560,7 @@
                                     <th>Amount</th>
                                     <th>Status</th>
                                     <th>Archived On</th>
-                                    <th th:if="${currentrole == 'ADMIN'}">Actions</th>
+                                    <th th:if="${currentrole == 'TREASURER'}">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="archivedExpenseTableBody">
@@ -597,16 +599,25 @@
 
             <div id="budgetModal1" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
                 <div style="background:white; border-radius:16px; padding:32px; width:100%; max-width:400px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-                    <h5 style="font-weight:700; color:#2d4a44; margin-bottom:6px;"><i class="bi bi-pencil-fill me-2"></i>Update Budget</h5>
-                    <p style="font-size:13px; color:#888; margin-bottom:20px;">Enter the new budget amount.</p>
-                    <label class="form-label">New Budget Amount (₱)</label>
+                    <h5 id="budgetModal1Title" style="font-weight:700; color:#2d4a44; margin-bottom:6px;"><i class="bi bi-pencil-fill me-2"></i>Change Budget</h5>
+                    <p style="font-size:13px; color:#888; margin-bottom:20px;">Enter the budget adjustment amount.</p>
+                    <label class="form-label">Adjustment Type</label>
+                    <div style="display:flex; gap:10px; margin-bottom:16px;">
+                        <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; border:1.5px solid #27ae60; border-radius:8px; padding:9px; font-size:13px; font-weight:600; color:#27ae60; cursor:pointer;">
+                            <input type="radio" name="budgetAdjustType" value="increase" checked onchange="updateBudgetTypeUI()" style="accent-color:#27ae60;"> Increase
+                        </label>
+                        <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; border:1.5px solid #e74c3c; border-radius:8px; padding:9px; font-size:13px; font-weight:600; color:#e74c3c; cursor:pointer;">
+                            <input type="radio" name="budgetAdjustType" value="decrease" onchange="updateBudgetTypeUI()" style="accent-color:#e74c3c;"> Decrease
+                        </label>
+                    </div>
+                    <label class="form-label">Amount (₱)</label>
                     <input type="number" id="budgetStep1Input" class="form-control mb-3" placeholder="e.g. 50000" step="0.01" min="0">
                     <label class="form-label">Reason / Audit Note</label>
                     <input type="text" id="budgetReasonInput" class="form-control mb-2" placeholder="e.g., Monthly fund allocation">
                     <div id="budgetReasonError" style="display:none; color:#e74c3c; font-size:12px; margin-bottom:8px;">Please provide a reason.</div>
                     <div style="display:flex; gap:10px; justify-content:flex-end;">
                         <button onclick="closeBudgetModal()" style="background:#f0f2f1; color:#555; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;">Cancel</button>
-                        <button onclick="proceedToConfirm()" style="background:#2d4a44; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;">Next</button>
+                        <button id="budgetModal1NextBtn" onclick="proceedToConfirm()" style="background:#2d4a44; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;">Next</button>
                     </div>
                 </div>
             </div>
@@ -614,8 +625,9 @@
             <!-- BUDGET MODAL STEP 2: Confirm by retyping -->
             <div id="budgetModal2" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
                 <div style="background:white; border-radius:16px; padding:32px; width:100%; max-width:400px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-                    <h5 style="font-weight:700; color:#2d4a44; margin-bottom:6px;"><i class="bi bi-shield-check me-2"></i>Confirm Budget</h5>
+                    <h5 id="budgetModal2Title" style="font-weight:700; color:#2d4a44; margin-bottom:6px;"><i class="bi bi-shield-check me-2"></i>Confirm Budget</h5>
                     <p style="font-size:13px; color:#888; margin-bottom:4px;">You entered: <strong id="budgetConfirmDisplay" style="color:#2d4a44;"></strong></p>
+                    <p style="font-size:13px; color:#888; margin-bottom:4px;">Reason: <span id="budgetConfirmReasonDisplay" style="color:#2d4a44;"></span></p>
                     <p style="font-size:13px; color:#888; margin-bottom:20px;">Please retype the amount to confirm.</p>
                     <label class="form-label">Retype Amount (₱)</label>
                     <input type="number" id="budgetStep2Input" class="form-control mb-1" placeholder="Retype amount" step="0.01" min="0">
@@ -623,6 +635,9 @@
                     <div style="margin-bottom:16px;"></div>
                     <form id="budgetUpdateForm" th:action="@{/finance/budget/update-total}" method="post">
                         <input type="hidden" name="amount" id="budgetFinalAmount">
+                        <input type="hidden" name="adjustmentAmount" id="budgetAdjustmentAmount">
+                        <input type="hidden" name="adjustmentType" id="budgetAdjustmentType">
+                        <input type="hidden" name="reason" id="budgetAdjustmentReason">
                         <div style="display:flex; gap:10px; justify-content:flex-end;">
                             <button type="button" onclick="backToStep1()" style="background:#f0f2f1; color:#555; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;">Back</button>
                             <button type="button" onclick="submitBudget()" style="background:#FED734; color:#2d4a44; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;"><i class="bi bi-check-lg"></i> Confirm</button>
@@ -650,6 +665,7 @@
     window._th_totalExpensesAll= /*[[${totalExpensesAll}]]*/ 0;
     window._th_incomeByType    = /*[[${incomeByType}]]*/ null;
     window._th_expenseByType   = /*[[${expenseByType}]]*/ null;
+    window._th_totalBudget     = /*[[${totalBudget}]]*/ 0;
 </script>
 
 <script th:inline="javascript">
@@ -660,7 +676,7 @@
             tabs[i].classList.remove('active');
         }
         document.getElementById('tab-' + tabName).classList.add('active');
-        
+
         var btns = document.querySelectorAll('.tab-btn');
         for (var i = 0; i < btns.length; i++) {
             btns[i].classList.remove('active');
@@ -670,14 +686,14 @@
         }
         window.location.hash = tabName;
     }
-    
+
     if (window.location.hash) {
         var tab = window.location.hash.substring(1);
         if (tab === 'dashboard' || tab === 'income' || tab === 'expenses' || tab === 'budget' || tab === 'archive') {
             showTab(tab, null);
         }
     }
-    
+
     function toggleIncomeFields() {
         var type = document.getElementById('incomeTypeSelect');
         if (!type) return;
@@ -686,7 +702,7 @@
         if (docDiv)    docDiv.style.display    = (type.value === 'DOCUMENT_FEE') ? 'block' : 'none';
         if (rentalDiv) rentalDiv.style.display = (type.value === 'RENTAL')       ? 'block' : 'none';
     }
-    
+
     // Period filter helpers shared by Income/Expenses tabs
     function getTabDateRange(period) {
         var now = new Date();
@@ -740,7 +756,6 @@
     if (incomeSearch) incomeSearch.addEventListener('keyup', filterIncomeTable);
     var incomeTypeFilter = document.getElementById('incomeTypeFilter');
     if (incomeTypeFilter) incomeTypeFilter.addEventListener('change', filterIncomeTable);
-    // Apply default period on load
     filterIncomeTable();
 
     // Expenses tab filter (search + status + period)
@@ -764,12 +779,10 @@
         _expensePeriod = period;
         filterExpensesTable();
     }
-
     var expenseSearch = document.getElementById('expenseSearch');
     if (expenseSearch) expenseSearch.addEventListener('keyup', filterExpensesTable);
-    // Apply default period on load
     filterExpensesTable();
-    
+
     function filterExpenses(status, el) {
         _expenseStatus = status;
         filterExpensesTable();
@@ -777,9 +790,8 @@
         for (var i = 0; i < links.length; i++) links[i].classList.remove('active');
         if (el) el.classList.add('active');
     }
-    
-    // ── Archive Tab Filters ──────────────────────────────────────────────────
 
+    // ── Archive Tab Filters ──────────────────────────────────────────────────
     function filterArchivedIncome() {
         var search = (document.getElementById('archivedIncomeSearch')?.value || '').toLowerCase();
         var type   = document.getElementById('archivedIncomeTypeFilter')?.value || '';
@@ -817,11 +829,7 @@
     var archExpStatus = document.getElementById('archivedExpenseStatusFilter');
     if (archExpStatus) archExpStatus.addEventListener('change', filterArchivedExpenses);
 
-
-
     // ── EXPORT UTILITIES ────────────────────────────────────────────────────
-
-    // Returns {start, end} ISO strings for the current dashboard filter period
     function getDashExportDates() {
         var period = window._currentDashPeriod || 'month';
         var now    = new Date();
@@ -848,10 +856,7 @@
         return { start: s || e, end: e };
     }
 
-    // ── PDF render helper — appends visibly off-screen, captures, removes ──
     function renderPDF(htmlContent, filename, orientation, callback) {
-        // Use html2canvas + jsPDF directly to avoid html2pdf's internal iframe,
-        // which causes "Unsafe attempt to load URL" security errors.
         var overlay = document.createElement('div');
         overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:99998;overflow:auto;';
         var el = document.createElement('div');
@@ -862,20 +867,14 @@
 
         setTimeout(function() {
             html2canvas(el, {
-                scale: 2,
-                useCORS: true,
-                logging: false,
-                allowTaint: true,
-                backgroundColor: '#ffffff',
-                width: el.scrollWidth,
-                height: el.scrollHeight,
-                windowWidth: 794
+                scale: 2, useCORS: true, logging: false, allowTaint: true,
+                backgroundColor: '#ffffff', width: el.scrollWidth, height: el.scrollHeight, windowWidth: 794
             }).then(function(canvas) {
                 var { jsPDF } = window.jspdf;
                 var isLandscape = orientation === 'landscape';
-                var pageW = isLandscape ? 297 : 210; // mm (A4)
+                var pageW = isLandscape ? 297 : 210;
                 var pageH = isLandscape ? 210 : 297;
-                var imgW  = pageW - 10; // 5mm margin each side
+                var imgW  = pageW - 10;
                 var ratio = canvas.width / imgW;
                 var imgH  = canvas.height / ratio;
                 var pdf   = new jsPDF({ orientation: orientation, unit: 'mm', format: 'a4' });
@@ -883,9 +882,8 @@
                 var remainH = imgH;
                 var srcY  = 0;
 
-                // Slice canvas into A4 pages
                 while (remainH > 0) {
-                    var sliceH    = Math.min(pageH - 10, remainH); // 5mm top+bottom margin
+                    var sliceH    = Math.min(pageH - 10, remainH);
                     var slicePx   = sliceH * ratio;
                     var sliceCanvas = document.createElement('canvas');
                     sliceCanvas.width  = canvas.width;
@@ -912,7 +910,6 @@
         }, 300);
     }
 
-    // ── CSV: Export table rows that are currently visible ──────────────────
     function exportTableCSV(tbodyId, headers, filePrefix) {
         var rows  = document.querySelectorAll('#' + tbodyId + ' tr');
         var lines = [headers.join(',')];
@@ -920,7 +917,7 @@
             if (row.style.display === 'none') return;
             if (row.cells.length < 2) return;
             var cols = [];
-            for (var i = 0; i < row.cells.length - 1; i++) { // skip last Actions column
+            for (var i = 0; i < row.cells.length - 1; i++) {
                 var txt = (row.cells[i].textContent || '').trim().replace(/\s+/g, ' ');
                 cols.push('"' + txt.replace(/"/g, '""') + '"');
             }
@@ -939,333 +936,47 @@
         showToast('CSV downloaded!', 'success');
     }
 
-    // ── CSV: Dashboard — calls server endpoint for the active period ───────
-    function exportDashboardCSV() {
-        var dates = getDashExportDates();
-        // Build combined CSV from both lists using the server's pdf-data endpoint
-        showToast('Preparing CSV…', 'success');
-        fetch('/finance/reports/pdf-data?startDate=' + dates.start + '&endDate=' + dates.end)
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (!data.success) { showToast('Error: ' + (data.error || 'Unknown'), 'error'); return; }
-                var lines = [];
-                lines.push('BARANGAY FINANCIAL SUMMARY');
-                lines.push('Period,' + dates.start + ' to ' + dates.end);
-                lines.push('Generated,' + new Date().toLocaleString());
-                lines.push('');
-                lines.push('SUMMARY');
-                lines.push('Total Income,' + formatPHP(data.totalIncome));
-                lines.push('Total Expenses,' + formatPHP(data.totalExpenses));
-                lines.push('Net Savings,' + formatPHP(data.netSavings));
-                lines.push('Remaining Budget,' + formatPHP(data.remainingBudget));
-                lines.push('');
-                lines.push('INCOME RECORDS');
-                lines.push('Date,OR Number,Source,Type,Amount');
-                (data.incomeList || []).forEach(function(r) {
-                    lines.push([r.incomeDate, r.orNumber,
-                        '"' + (r.sourceName||'').replace(/"/g,'""') + '"',
-                        r.incomeType, r.amount].join(','));
-                });
-                lines.push('');
-                lines.push('EXPENSE RECORDS');
-                lines.push('Date,Description,Type,Amount,Status');
-                (data.expenseList || []).forEach(function(r) {
-                    lines.push([r.expenseDate,
-                        '"' + (r.description||'').replace(/"/g,'""') + '"',
-                        r.expenseType, r.amount, r.status].join(','));
-                });
-                var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
-                var url  = URL.createObjectURL(blob);
-                var a    = document.createElement('a');
-                a.href     = url;
-                a.download = 'dashboard_' + dates.start + '_to_' + dates.end + '.csv';
-                document.body.appendChild(a); a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                showToast('CSV downloaded!', 'success');
-            })
-            .catch(function(err) { showToast('Export error: ' + err.message, 'error'); });
-    }
-
-    // ── PDF: Export a single table as a clean printable PDF ───────────────
     function exportTablePDF(tbodyId, title, headers) {
         var rows = document.querySelectorAll('#' + tbodyId + ' tr');
         var tableRows = '';
         rows.forEach(function(row) {
             if (row.style.display === 'none') return;
             if (row.cells.length < 2) return;
-            tableRows += '\u003Ctr\u003E';
+            tableRows += '<tr>';
             for (var i = 0; i < row.cells.length - 1; i++) {
                 var txt   = (row.cells[i].textContent || '').trim();
                 var isAmt = txt.startsWith('₱');
-                tableRows += '\u003Ctd style="padding:6px 10px;border-bottom:1px solid #eee;' +
-                    (isAmt ? 'text-align:right;font-weight:600;' : '') + '"\u003E' + txt + '\u003C/td\u003E';
+                tableRows += '<td style="padding:6px 10px;border-bottom:1px solid #eee;' +
+                    (isAmt ? 'text-align:right;font-weight:600;' : '') + '">' + txt + '</td>';
             }
-            tableRows += '\u003C/tr\u003E';
+            tableRows += '</tr>';
         });
         var headerCells = headers.map(function(h) {
-            return '\u003Cth style="padding:8px 10px;background:#f1f5f3;color:#2d4a44;font-size:11px;border-bottom:2px solid #FED734;text-align:left;"\u003E' + h + '\u003C/th\u003E';
+            return '<th style="padding:8px 10px;background:#f1f5f3;color:#2d4a44;font-size:11px;border-bottom:2px solid #FED734;text-align:left;">' + h + '</th>';
         }).join('');
-        var html = '\u003Cdiv style="font-family:Segoe UI,Arial,sans-serif;padding:30px;max-width:900px;"\u003E' +
-            '\u003Cdiv style="border-bottom:3px solid #2d4a44;padding-bottom:12px;margin-bottom:20px;"\u003E' +
-            '\u003Ch2 style="color:#2d4a44;margin:0;"\u003E' + title + '\u003C/h2\u003E' +
-            '\u003Cp style="color:#999;font-size:12px;margin:4px 0 0;"\u003EGenerated: ' + new Date().toLocaleString() + '\u003C/p\u003E\u003C/div\u003E' +
-            '\u003Ctable style="width:100%;border-collapse:collapse;font-size:12px;"\u003E' +
-            '\u003Cthead\u003E\u003Ctr\u003E' + headerCells + '\u003C/tr\u003E\u003C/thead\u003E' +
-            '\u003Ctbody\u003E' + (tableRows || '\u003Ctr\u003E\u003Ctd colspan="' + headers.length + '" style="padding:20px;text-align:center;color:#aaa;"\u003ENo records\u003C/td\u003E\u003C/tr\u003E') + '\u003C/tbody\u003E' +
-            '\u003C/table\u003E' +
-            '\u003Cdiv style="margin-top:24px;text-align:center;font-size:10px;color:#aaa;border-top:1px solid #ddd;padding-top:10px;"\u003ECivilAccess Financial Management System\u003C/div\u003E' +
-            '\u003C/div\u003E';
+        var html = '<div style="font-family:Segoe UI,Arial,sans-serif;padding:30px;max-width:900px;">' +
+            '<div style="border-bottom:3px solid #2d4a44;padding-bottom:12px;margin-bottom:20px;">' +
+            '<h2 style="color:#2d4a44;margin:0;">' + title + '</h2>' +
+            '<p style="color:#999;font-size:12px;margin:4px 0 0;">Generated: ' + new Date().toLocaleString() + '</p></div>' +
+            '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+            '<thead><tr>' + headerCells + '</tr></thead>' +
+            '<tbody>' + (tableRows || '<tr><td colspan="' + headers.length + '" style="padding:20px;text-align:center;color:#aaa;">No records</td></tr>') + '</tbody>' +
+            '</table>' +
+            '<div style="margin-top:24px;text-align:center;font-size:10px;color:#aaa;border-top:1px solid #ddd;padding-top:10px;">CivilAccess Financial Management System</div>' +
+            '</div>';
         renderPDF(html, title.replace(/\s+/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.pdf', 'landscape', function() {
             showToast('PDF downloaded!', 'success');
         });
     }
 
-    // ── PDF: Dashboard summary PDF (uses server pdf-data endpoint) ─────────
-    function exportDashboardPDF() {
-        var dates = getDashExportDates();
-        showToast('Building PDF…', 'success');
-        fetch('/finance/reports/pdf-data?startDate=' + dates.start + '&endDate=' + dates.end)
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (!data.success) { showToast('Error: ' + (data.error || 'Unknown'), 'error'); return; }
-                var typeLabel = function(t) {
-                    var m = { DOCUMENT_FEE:'Document Fee', RENTAL:'Rental', DONATION:'Donation', OTHER:'Other' };
-                    return m[t] || t;
-                };
-                var incRows = (data.incomeList||[]).map(function(r) {
-                    return '\u003Ctr\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;"\u003E' + (r.incomeDate||'') +
-                        '\u003C/td\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;"\u003E' + (r.orNumber||'') +
-                        '\u003C/td\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;"\u003E' + (r.sourceName||'') +
-                        '\u003C/td\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;"\u003E' + typeLabel(r.incomeType) +
-                        '\u003C/td\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;text-align:right;color:#27ae60;font-weight:600;"\u003E' + formatPHP(r.amount) + '\u003C/td\u003E\u003C/tr\u003E';
-                }).join('') || '\u003Ctr\u003E\u003Ctd colspan="5" style="padding:16px;text-align:center;color:#aaa;"\u003ENo records\u003C/td\u003E\u003C/tr\u003E';
-
-                var expRows = (data.expenseList||[]).map(function(r) {
-                    var sc = r.status==='PENDING'?'#f39c12':'#3498db';
-                    return '\u003Ctr\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;"\u003E' + (r.expenseDate||'') +
-                        '\u003C/td\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;"\u003E' + (r.description||'') +
-                        '\u003C/td\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;"\u003E' + (r.expenseType||'') +
-                        '\u003C/td\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;text-align:right;color:#e74c3c;font-weight:600;"\u003E' + formatPHP(r.amount) +
-                        '\u003C/td\u003E\u003Ctd style="padding:5px 8px;border-bottom:1px solid #eee;"\u003E\u003Cspan style="background:' + sc + ';color:#fff;padding:2px 7px;border-radius:10px;font-size:10px;"\u003E' + (r.status||'') + '\u003C/span\u003E\u003C/td\u003E\u003C/tr\u003E';
-                }).join('') || '\u003Ctr\u003E\u003Ctd colspan="5" style="padding:16px;text-align:center;color:#aaa;"\u003ENo records\u003C/td\u003E\u003C/tr\u003E';
-
-                var th = function(t) { return '\u003Cth style="padding:8px 10px;background:#f1f5f3;color:#2d4a44;font-size:11px;border-bottom:2px solid #FED734;text-align:left;"\u003E' + t + '\u003C/th\u003E'; };
-                var sd = function(lbl,val,col) { return '\u003Cdiv style="display:inline-block;width:23%;background:#f8f9fa;border-radius:8px;padding:14px;text-align:center;border-left:4px solid ' + col + ';margin-right:1%;vertical-align:top;"\u003E' + '\u003Cdiv style="font-size:11px;color:#666;text-transform:uppercase;"\u003E' + lbl + '\u003C/div\u003E' + '\u003Cdiv style="font-size:20px;font-weight:bold;color:' + col + ';"\u003E' + val + '\u003C/div\u003E' + '\u003C/div\u003E'; };
-
-                var html = '\u003Cdiv style="font-family:Segoe UI,Arial,sans-serif;padding:30px;max-width:1000px;background:#fff;"\u003E' +
-                    '\u003Cdiv style="text-align:center;border-bottom:3px solid #2d4a44;padding-bottom:14px;margin-bottom:22px;"\u003E' +
-                    '\u003Ch2 style="color:#2d4a44;margin:0;"\u003EBarangay Financial Report\u003C/h2\u003E' +
-                    '\u003Cp style="color:#666;font-size:13px;margin:5px 0 0;"\u003EPeriod: ' + dates.start + ' — ' + dates.end + '\u003C/p\u003E' +
-                    '\u003Cp style="color:#aaa;font-size:11px;margin:3px 0 0;"\u003EGenerated: ' + new Date().toLocaleString() + '\u003C/p\u003E\u003C/div\u003E' +
-                    '\u003Cdiv style="margin-bottom:24px;white-space:nowrap;"\u003E' +
-                    sd('Total Income',    formatPHP(data.totalIncome),   '#27ae60') +
-                    sd('Total Expenses',  formatPHP(data.totalExpenses), '#e74c3c') +
-                    sd('Net Savings',     formatPHP(data.netSavings),    data.netSavings>=0?'#27ae60':'#e74c3c') +
-                    sd('Remaining Budget',formatPHP(data.remainingBudget),'#2d4a44') +
-                    '\u003C/div\u003E' +
-                    '\u003Ch3 style="color:#2d4a44;font-size:15px;margin:0 0 10px;padding-bottom:6px;border-bottom:2px solid #eee;"\u003EIncome Transactions\u003C/h3\u003E' +
-                    '\u003Ctable style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:24px;"\u003E' +
-                    '\u003Cthead\u003E\u003Ctr\u003E' + th('Date')+th('OR #')+th('Source')+th('Type')+th('Amount') + '\u003C/tr\u003E\u003C/thead\u003E' +
-                    '\u003Ctbody\u003E' + incRows + '\u003C/tbody\u003E\u003C/table\u003E' +
-                    '\u003Ch3 style="color:#2d4a44;font-size:15px;margin:0 0 10px;padding-bottom:6px;border-bottom:2px solid #eee;"\u003EExpense Transactions\u003C/h3\u003E' +
-                    '\u003Ctable style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:24px;"\u003E' +
-                    '\u003Cthead\u003E\u003Ctr\u003E' + th('Date')+th('Description')+th('Type')+th('Amount')+th('Status') + '\u003C/tr\u003E\u003C/thead\u003E' +
-                    '\u003Ctbody\u003E' + expRows + '\u003C/tbody\u003E\u003C/table\u003E' +
-                    '\u003Cdiv style="text-align:center;font-size:10px;color:#aaa;border-top:1px solid #ddd;padding-top:10px;margin-top:10px;"\u003ECivilAccess Financial Management System — Official Barangay Report\u003C/div\u003E' +
-                    '\u003C/div\u003E';
-                renderPDF(html, 'financial_report_' + dates.start + '_to_' + dates.end + '.pdf', 'portrait', function() {
-                    showToast('PDF downloaded!', 'success');
-                });
-            })
-            .catch(function(err) { showToast('Export error: ' + err.message, 'error'); });
-    }
-
-    // ── PDF Report Generation Function (budget tab report) ────────────────
-    async function downloadPDFReport() {
-        var startDate = document.getElementById('reportStartDate').value;
-        var endDate = document.getElementById('reportEndDate').value;
-
-        if (!startDate || !endDate) {
-            showToast('Please select both start and end dates', 'error');
-            return;
-        }
-
-        if (new Date(startDate) > new Date(endDate)) {
-            showToast('Start date cannot be after end date', 'error');
-            return;
-        }
-
-        showToast('Generating PDF report...', 'success');
-
-        try {
-            var response = await fetch('/finance/reports/pdf-data?startDate=' + startDate + '&endDate=' + endDate);
-            var data = await response.json();
-
-            if (!data.success) {
-                showToast('Error: ' + (data.error || 'Unknown error'), 'error');
-                return;
-            }
-
-            // Build income table
-            var incomeRows = '';
-            if (data.incomeList && data.incomeList.length > 0) {
-                data.incomeList.forEach(function(inc) {
-                    var typeDisplay = 'Document Fee';
-                    if (inc.incomeType === 'RENTAL') typeDisplay = 'Rental';
-                    else if (inc.incomeType === 'DONATION') typeDisplay = 'Donation';
-                    else if (inc.incomeType === 'DOCUMENT_FEE') typeDisplay = 'Document Fee';
-
-                    incomeRows += '<tr>' +
-                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (inc.incomeDate || '') + '</td>' +
-                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (inc.orNumber || 'N/A') + '</td>' +
-                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (inc.sourceName || '') + '</td>' +
-                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + typeDisplay + '</td>' +
-                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee; color: #27ae60; font-weight: 600;">' + formatPHP(inc.amount) + '</td>' +
-                    '</tr>';
-                });
-            } else {
-                incomeRows = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No income records found</td></tr>';
-            }
-
-            // Build expense table
-            var expenseRows = '';
-            if (data.expenseList && data.expenseList.length > 0) {
-                data.expenseList.forEach(function(exp) {
-                    var statusClass = exp.status === 'PENDING' ? '#f39c12' : (exp.status === 'APPROVED' ? '#3498db' : '#27ae60');
-                    var statusText = exp.status || 'PENDING';
-                    var expenseTypeDisplay = (exp.expenseType || 'OTHER').replace('_', ' ');
-                    expenseTypeDisplay = expenseTypeDisplay.charAt(0).toUpperCase() + expenseTypeDisplay.slice(1).toLowerCase();
-
-                    expenseRows += '<tr>' +
-                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (exp.expenseDate || '') + '</td>' +
-                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (exp.description || '') + '</td>' +
-                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + expenseTypeDisplay + '</td>' +
-                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee; color: #e74c3c; font-weight: 600;">' + formatPHP(exp.amount) + '</td>' +
-                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;"><span style="background: ' + statusClass + '; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px;">' + statusText + '</span></td>' +
-                    '</tr>';
-                });
-            } else {
-                expenseRows = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No expense records found</td></tr>';
-            }
-
-            // Build budget table
-            var budgetRows = '';
-            if (data.budgetList && data.budgetList.length > 0) {
-                data.budgetList.forEach(function(b) {
-                    budgetRows += '<tr>' +
-                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (b.programId || '') + '</td>' +
-                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + (b.budgetItem || '') + '</td>' +
-                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee; color: #27ae60;">' + formatPHP(b.amount) + '</td>' +
-                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee; color: #e74c3c;">' + formatPHP(b.actualSpent || 0) + '</td>' +
-                        '<td style="padding: 6px 8px; border-bottom: 1px solid #eee;">' + formatPHP(b.remainingBudget || 0) + '</td>' +
-                    '</tr>';
-                });
-            } else {
-                budgetRows = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No budget records found</td></tr>';
-            }
-
-            var pdfHtml =
-                '<div style="background: white; padding: 30px; font-family: \'Segoe UI\', Arial, sans-serif; max-width: 1000px; margin: 0 auto;">' +
-                    '<div style="text-align: center; margin-bottom: 25px; border-bottom: 3px solid #2d4a44; padding-bottom: 15px;">' +
-                        '<h2 style="color: #2d4a44; margin: 0 0 5px 0;">Barangay Financial Report</h2>' +
-                        '<p style="margin: 5px 0; color: #666;">Period: ' + new Date(data.startDate).toLocaleDateString() + ' - ' + new Date(data.endDate).toLocaleDateString() + '</p>' +
-                        '<p style="margin: 5px 0; color: #999; font-size: 12px;">Generated on: ' + new Date().toLocaleString() + '</p>' +
-                    '</div>' +
-                    '<div style="display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;">' +
-                        '<div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #27ae60;">' +
-                            '<div style="font-size: 11px; color: #666; text-transform: uppercase;">Total Income</div>' +
-                            '<div style="font-size: 22px; font-weight: bold; color: #27ae60;">' + formatPHP(data.totalIncome) + '</div>' +
-                        '</div>' +
-                        '<div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #e74c3c;">' +
-                            '<div style="font-size: 11px; color: #666; text-transform: uppercase;">Total Expenses</div>' +
-                            '<div style="font-size: 22px; font-weight: bold; color: #e74c3c;">' + formatPHP(data.totalExpenses) + '</div>' +
-                        '</div>' +
-                        '<div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #FED734;">' +
-                            '<div style="font-size: 11px; color: #666; text-transform: uppercase;">Net Savings</div>' +
-                            '<div style="font-size: 22px; font-weight: bold; color: ' + (data.netSavings >= 0 ? '#27ae60' : '#e74c3c') + ';">' + formatPHP(data.netSavings) + '</div>' +
-                        '</div>' +
-                        '<div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #2d4a44;">' +
-                            '<div style="font-size: 11px; color: #666; text-transform: uppercase;">Remaining Budget</div>' +
-                            '<div style="font-size: 22px; font-weight: bold; color: #2d4a44;">' + formatPHP(data.remainingBudget) + '</div>' +
-                        '</div>' +
-                    '</div>' +
-                    '<h3 style="color: #2d4a44; font-size: 16px; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #ddd;">Income Transactions</h3>' +
-                    '<table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">' +
-                        '<thead><tr style="background: #f1f5f3;">' +
-                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Date</th>' +
-                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">OR#</th>' +
-                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Source</th>' +
-                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Type</th>' +
-                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Amount</th>' +
-                        '</tr></thead>' +
-                        '<tbody>' + incomeRows + '</tbody>' +
-                    '</table>' +
-                    '<h3 style="color: #2d4a44; font-size: 16px; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #ddd;">Expense Transactions</h3>' +
-                    '<table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">' +
-                        '<thead><tr style="background: #f1f5f3;">' +
-                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Date</th>' +
-                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Description</th>' +
-                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Category</th>' +
-                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Amount</th>' +
-                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Status</th>' +
-                        '</tr></thead>' +
-                        '<tbody>' + expenseRows + '</tbody>' +
-                    '</table>' +
-                    '<h3 style="color: #2d4a44; font-size: 16px; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #ddd;">Budget Allocations</h3>' +
-                    '<table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">' +
-                        '<thead><tr style="background: #f1f5f3;">' +
-                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Program ID</th>' +
-                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Budget Item</th>' +
-                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Allocated</th>' +
-                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Spent</th>' +
-                            '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Remaining</th>' +
-                        '</tr></thead>' +
-                        '<tbody>' + budgetRows + '</tbody>' +
-                    '</table>' +
-                    '<div style="text-align: center; font-size: 10px; color: #999; margin-top: 25px; padding-top: 10px; border-top: 1px solid #ddd;">' +
-                        'CivilAccess Financial Management System — Official Barangay Report' +
-                    '</div>' +
-                '</div>';
-
-            await new Promise(function(resolve) {
-                renderPDF(pdfHtml, 'Financial_Report_' + data.startDate + '_to_' + data.endDate + '.pdf', 'portrait', resolve);
-            });
-            showToast('PDF report downloaded successfully!', 'success');
-
-        } catch (err) {
-            console.error('PDF Error:', err);
-            showToast('Error generating PDF: ' + err.message, 'error');
-        }
-    }
-    
-    // Charts
     window.addEventListener('DOMContentLoaded', function() {
-        // Set default dates for report (current month)
-        var today = new Date();
-        var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-        var lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        var startDateInput = document.getElementById('reportStartDate');
-        var endDateInput = document.getElementById('reportEndDate');
-        if (startDateInput) startDateInput.value = firstDay.toISOString().split('T')[0];
-        if (endDateInput) endDateInput.value = lastDay.toISOString().split('T')[0];
-        
         toggleIncomeFields();
-        
+
         var successMsg = window._th_success;
         var errorMsg = window._th_error;
         if (successMsg) showToast(successMsg, 'success');
         if (errorMsg) showToast(errorMsg, 'error');
-        
-        // Attach PDF button listener
-        var pdfBtn = document.getElementById('generatePdfReportBtn');
-        if (pdfBtn) {
-            pdfBtn.onclick = function(e) {
-                e.preventDefault();
-                downloadPDFReport();
-            };
-        }
-        
+
         var sidebar = document.querySelector('.sidebar');
         if (sidebar) {
             var toggles = document.querySelectorAll('.section-toggle');
@@ -1286,145 +997,122 @@
             }
         }
     });
-    
+
     function showToast(message, type) {
         var toastWrap = document.getElementById('toastWrap');
         if (!toastWrap) return;
         var toast = document.createElement('div');
         toast.className = 'toast-msg ' + type;
-        toast.innerHTML = '\u003Ci class="bi bi-' + (type === 'success' ? 'check-circle' : 'x-circle') + ' me-2"\u003E\u003C/i\u003E' + message;
+        toast.innerHTML = '<i class="bi bi-' + (type === 'success' ? 'check-circle' : 'x-circle') + ' me-2"></i>' + message;
         toastWrap.appendChild(toast);
         setTimeout(function() { if(toast) toast.remove(); }, 4000);
     }
 
-    // Budget modal logic — now supports 'increase' / 'decrease' mode with reason
-var _budgetMode = 'increase';
+    // ── Budget modal logic — single "Change Budget" entry, direction via toggle ─
+    var _budgetMode = 'increase';
 
-function openBudgetModal(mode) {
-    _budgetMode = mode; // 'increase' or 'decrease'
-    document.getElementById('budgetStep1Input').value = '';
-    document.getElementById('budgetReasonInput').value = '';
-    document.getElementById('budgetReasonError').style.display = 'none';
-
-    var title = document.getElementById('budgetModal1Title');
-    var nextBtn = document.getElementById('budgetModal1NextBtn');
-    if (mode === 'increase') {
-        title.innerHTML = '<i class="bi bi-plus-circle-fill me-2" style="color:#27ae60;"></i>Increase Budget';
-        nextBtn.style.background = '#27ae60';
-    } else {
-        title.innerHTML = '<i class="bi bi-dash-circle-fill me-2" style="color:#e74c3c;"></i>Decrease Budget';
-        nextBtn.style.background = '#e74c3c';
+    function updateBudgetTypeUI() {
+        var checked = document.querySelector('input[name="budgetAdjustType"]:checked');
+        _budgetMode = checked ? checked.value : 'increase';
     }
 
-    document.getElementById('budgetModal1').style.display = 'flex';
-}
+    function openBudgetModal() {
+        _budgetMode = 'increase';
+        document.getElementById('budgetStep1Input').value = '';
+        document.getElementById('budgetReasonInput').value = '';
+        document.getElementById('budgetReasonError').style.display = 'none';
+        document.getElementById('budgetModal1Title').innerHTML = '<i class="bi bi-pencil-fill me-2"></i>Change Budget';
+        document.getElementById('budgetModal1NextBtn').style.background = '#2d4a44';
 
-function closeBudgetModal() {
-    document.getElementById('budgetModal1').style.display = 'none';
-    document.getElementById('budgetModal2').style.display = 'none';
-    document.getElementById('budgetStep1Input').value = '';
-    document.getElementById('budgetStep2Input').value = '';
-    document.getElementById('budgetReasonInput').value = '';
-    document.getElementById('budgetMismatchError').style.display = 'none';
-    document.getElementById('budgetReasonError').style.display = 'none';
-}
+        var radios = document.querySelectorAll('input[name="budgetAdjustType"]');
+        radios.forEach(function(r) { r.checked = (r.value === 'increase'); });
 
-function proceedToConfirm() {
-    var amount = document.getElementById('budgetStep1Input').value;
-    var reason = document.getElementById('budgetReasonInput').value.trim();
-
-    if (!amount || parseFloat(amount) <= 0) {
-        showToast('Please enter a valid amount.', 'error');
-        return;
+        document.getElementById('budgetModal1').style.display = 'flex';
     }
-    if (!reason) {
-        document.getElementById('budgetReasonError').style.display = 'block';
-        return;
+
+    function closeBudgetModal() {
+        document.getElementById('budgetModal1').style.display = 'none';
+        document.getElementById('budgetModal2').style.display = 'none';
+        document.getElementById('budgetStep1Input').value = '';
+        document.getElementById('budgetStep2Input').value = '';
+        document.getElementById('budgetReasonInput').value = '';
+        document.getElementById('budgetMismatchError').style.display = 'none';
+        document.getElementById('budgetReasonError').style.display = 'none';
     }
-    document.getElementById('budgetReasonError').style.display = 'none';
 
-    var sign = _budgetMode === 'increase' ? '+' : '−';
-    var color = _budgetMode === 'increase' ? '#27ae60' : '#e74c3c';
-    document.getElementById('budgetConfirmDisplay').innerHTML =
-        '<span style="color:' + color + ';">' + sign + ' ₱' +
-        parseFloat(amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>';
-    document.getElementById('budgetConfirmReasonDisplay').textContent = reason;
+    function proceedToConfirm() {
+        updateBudgetTypeUI();
+        var amount = document.getElementById('budgetStep1Input').value;
+        var reason = document.getElementById('budgetReasonInput').value.trim();
 
-    var modalTitle = document.getElementById('budgetModal2Title');
-    modalTitle.innerHTML = _budgetMode === 'increase'
-        ? '<i class="bi bi-shield-check me-2"></i>Confirm Increase'
-        : '<i class="bi bi-shield-check me-2"></i>Confirm Decrease';
+        if (!amount || parseFloat(amount) <= 0) {
+            showToast('Please enter a valid amount.', 'error');
+            return;
+        }
+        if (!reason) {
+            document.getElementById('budgetReasonError').style.display = 'block';
+            return;
+        }
+        document.getElementById('budgetReasonError').style.display = 'none';
 
-    document.getElementById('budgetStep2Input').value = '';
-    document.getElementById('budgetMismatchError').style.display = 'none';
-    document.getElementById('budgetModal1').style.display = 'none';
-    document.getElementById('budgetModal2').style.display = 'flex';
-}
+        var sign = _budgetMode === 'increase' ? '+' : '−';
+        var color = _budgetMode === 'increase' ? '#27ae60' : '#e74c3c';
+        document.getElementById('budgetConfirmDisplay').innerHTML =
+            '<span style="color:' + color + ';">' + sign + ' ₱' +
+            parseFloat(amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>';
+        document.getElementById('budgetConfirmReasonDisplay').textContent = reason;
 
-function backToStep1() {
-    document.getElementById('budgetModal2').style.display = 'none';
-    document.getElementById('budgetModal1').style.display = 'flex';
-}
+        var modalTitle = document.getElementById('budgetModal2Title');
+        modalTitle.innerHTML = _budgetMode === 'increase'
+            ? '<i class="bi bi-shield-check me-2"></i>Confirm Increase'
+            : '<i class="bi bi-shield-check me-2"></i>Confirm Decrease';
 
-function submitBudget() {
-    var amount1 = parseFloat(document.getElementById('budgetStep1Input').value);
-    var amount2 = parseFloat(document.getElementById('budgetStep2Input').value);
-    if (isNaN(amount2) || amount1 !== amount2) {
-        document.getElementById('budgetMismatchError').style.display = 'block';
-        return;
+        document.getElementById('budgetStep2Input').value = '';
+        document.getElementById('budgetMismatchError').style.display = 'none';
+        document.getElementById('budgetModal1').style.display = 'none';
+        document.getElementById('budgetModal2').style.display = 'flex';
     }
-    document.getElementById('budgetMismatchError').style.display = 'none';
 
-    var reason = document.getElementById('budgetReasonInput').value.trim();
-    document.getElementById('budgetFinalAmount').value = amount1;
-    document.getElementById('budgetFinalReason').value = reason;
-
-    var form = document.getElementById('budgetUpdateForm');
-    form.action = _budgetMode === 'increase'
-        ? '/finance/budget/increase'
-        : '/finance/budget/decrease';
-    form.submit();
-}
-
-// Close modals on backdrop click
-document.getElementById('budgetModal1').addEventListener('click', function(e) {
-    if (e.target === this) closeBudgetModal();
-});
-document.getElementById('budgetModal2').addEventListener('click', function(e) {
-    if (e.target === this) closeBudgetModal();
-});
-
-// Budget log filter (search + type)
-function filterBudgetLog() {
-    var search = (document.getElementById('budgetLogSearch')?.value || '').toLowerCase();
-    var type   = document.getElementById('budgetLogTypeFilter')?.value || '';
-    var rows   = document.querySelectorAll('#budgetLogTableBody tr');
-    for (var i = 0; i < rows.length; i++) {
-        if (rows[i].cells.length < 5) continue;
-        var reason  = rows[i].cells[3]?.textContent.toLowerCase() || '';
-        var staff   = rows[i].cells[4]?.textContent.toLowerCase() || '';
-        var rowType = rows[i].getAttribute('data-type') || '';
-        var matchSearch = !search || reason.indexOf(search) !== -1 || staff.indexOf(search) !== -1;
-        var matchType   = !type || rowType === type;
-        rows[i].style.display = (matchSearch && matchType) ? '' : 'none';
+    function backToStep1() {
+        document.getElementById('budgetModal2').style.display = 'none';
+        document.getElementById('budgetModal1').style.display = 'flex';
     }
-}
-var budgetLogSearch = document.getElementById('budgetLogSearch');
-if (budgetLogSearch) budgetLogSearch.addEventListener('keyup', filterBudgetLog);
-var budgetLogTypeFilter = document.getElementById('budgetLogTypeFilter');
-if (budgetLogTypeFilter) budgetLogTypeFilter.addEventListener('change', filterBudgetLog);
+
+    function submitBudget() {
+        var amount1 = parseFloat(document.getElementById('budgetStep1Input').value);
+        var amount2 = parseFloat(document.getElementById('budgetStep2Input').value);
+        if (isNaN(amount2) || amount1 !== amount2) {
+            document.getElementById('budgetMismatchError').style.display = 'block';
+            return;
+        }
+        document.getElementById('budgetMismatchError').style.display = 'none';
+
+        var currentTotal = parseFloat(window._th_totalBudget) || 0;
+        var newTotal = _budgetMode === 'increase' ? (currentTotal + amount1) : (currentTotal - amount1);
+
+        if (newTotal < 0) {
+            showToast('Decrease amount cannot exceed the current total budget.', 'error');
+            return;
+        }
+
+        document.getElementById('budgetFinalAmount').value = newTotal;
+        document.getElementById('budgetAdjustmentAmount').value = amount1;
+        document.getElementById('budgetAdjustmentType').value = _budgetMode;
+        document.getElementById('budgetAdjustmentReason').value = document.getElementById('budgetReasonInput').value.trim();
+        document.getElementById('budgetUpdateForm').submit();
+    }
+
+    document.getElementById('budgetModal1').addEventListener('click', function(e) {
+        if (e.target === this) closeBudgetModal();
+    });
+    document.getElementById('budgetModal2').addEventListener('click', function(e) {
+        if (e.target === this) closeBudgetModal();
+    });
 
     // ── Dashboard Period Filter ───────────────────────────────────────────────
     (function() {
-        // Raw transaction data injected by Thymeleaf
         var allIncomeList  = window._th_incomeList;
         var allExpenseList = window._th_expenseList;
-
-        // Fallback stat values from server (already computed for "month")
-        var serverMonthIncome   = window._th_monthIncome;
-        var serverMonthExpenses = window._th_monthExpenses;
-        var serverTotalIncome   = window._th_totalIncomeAll;
-        var serverTotalExpenses = window._th_totalExpensesAll;
 
         var dashIncomeChart  = null;
         var dashExpenseChart = null;
@@ -1502,12 +1190,11 @@ if (budgetLogTypeFilter) budgetLogTypeFilter.addEventListener('change', filterBu
             if (!canvas || !wrap) return null;
             if (existingChart) existingChart.destroy();
             if (!labels || labels.length === 0) {
-                wrap.innerHTML = '\u003Cp style="color:#aaa;text-align:center;padding:50px 0;font-size:13px;"\u003ENo data for this period\u003C/p\u003E';
+                wrap.innerHTML = '<p style="color:#aaa;text-align:center;padding:50px 0;font-size:13px;">No data for this period</p>';
                 return null;
             }
-            // Recreate canvas if it was replaced by text
             if (!wrap.querySelector('canvas')) {
-                wrap.innerHTML = '\u003Ccanvas id="' + canvasId + '" style="position:absolute;inset:0;width:100%!important;height:100%!important;"\u003E\u003C/canvas\u003E';
+                wrap.innerHTML = '<canvas id="' + canvasId + '" style="position:absolute;inset:0;width:100%!important;height:100%!important;"></canvas>';
                 canvas = document.getElementById(canvasId);
             }
             var ctx = canvas.getContext('2d');
@@ -1541,14 +1228,13 @@ if (budgetLogTypeFilter) budgetLogTypeFilter.addEventListener('change', filterBu
             var totalExp = filteredExpense.reduce(function(s,r) { return s + parseAmt(r.amount); }, 0);
             var netSav   = totalInc - totalExp;
 
-            // Update stat cards
             var title = periodTitle(period);
             var incLabelEl = document.getElementById('dashIncomeLabel');
             var expLabelEl = document.getElementById('dashExpenseLabel');
             var savLabelEl = document.getElementById('dashSavingsLabel');
-            if (incLabelEl) incLabelEl.innerHTML = '\u003Ci class="bi bi-graph-up"\u003E\u003C/i\u003E Income — ' + title;
-            if (expLabelEl) expLabelEl.innerHTML = '\u003Ci class="bi bi-graph-down"\u003E\u003C/i\u003E Expenses — ' + title;
-            if (savLabelEl) savLabelEl.innerHTML = '\u003Ci class="bi bi-piggy-bank"\u003E\u003C/i\u003E Net Savings — ' + title;
+            if (incLabelEl) incLabelEl.innerHTML = '<i class="bi bi-graph-up"></i> Income — ' + title;
+            if (expLabelEl) expLabelEl.innerHTML = '<i class="bi bi-graph-down"></i> Expenses — ' + title;
+            if (savLabelEl) savLabelEl.innerHTML = '<i class="bi bi-piggy-bank"></i> Net Savings — ' + title;
 
             var incAmtEl = document.getElementById('dashIncomeAmt');
             var expAmtEl = document.getElementById('dashExpenseAmt');
@@ -1560,24 +1246,20 @@ if (budgetLogTypeFilter) budgetLogTypeFilter.addEventListener('change', filterBu
                 savAmtEl.className = 'stat-amount ' + (netSav >= 0 ? 'text-success' : 'text-danger');
             }
 
-            // Update chart titles
             var incChartTitle = document.getElementById('incomeChartTitle');
             var expChartTitle = document.getElementById('expenseChartTitle');
-            if (incChartTitle) incChartTitle.innerHTML = '\u003Ci class="bi bi-bar-chart"\u003E\u003C/i\u003E Income Breakdown — ' + title;
-            if (expChartTitle) expChartTitle.innerHTML = '\u003Ci class="bi bi-bar-chart"\u003E\u003C/i\u003E Expenses by Category — ' + title;
+            if (incChartTitle) incChartTitle.innerHTML = '<i class="bi bi-bar-chart"></i> Income Breakdown — ' + title;
+            if (expChartTitle) expChartTitle.innerHTML = '<i class="bi bi-bar-chart"></i> Expenses by Category — ' + title;
 
-            // Rebuild charts
             var incByType  = groupByType(filteredIncome,  'incomeType');
             var expByType  = groupByType(filteredExpense, 'expenseType');
             dashIncomeChart  = rebuildChart('incomeChart',  'incomeChartWrap',  Object.keys(incByType),  Object.values(incByType),  incomeColors,  'Amount (₱)', dashIncomeChart);
             dashExpenseChart = rebuildChart('expenseChart', 'expenseChartWrap', Object.keys(expByType),  Object.values(expByType),  expenseColors, 'Amount (₱)', dashExpenseChart);
 
-            // Period label
             var lbl = document.getElementById('dashPeriodLabel');
             if (lbl) lbl.textContent = 'Showing: ' + periodLabel(period, start, end);
         }
 
-        // Expose globally
         window._currentDashPeriod = 'month';
         window._currentDashCustomStart = null;
         window._currentDashCustomEnd   = null;
@@ -1591,7 +1273,7 @@ if (budgetLogTypeFilter) budgetLogTypeFilter.addEventListener('change', filterBu
             var customInputs = document.getElementById('customRangeInputs');
             if (period === 'custom') {
                 if (customInputs) customInputs.classList.add('visible');
-                return; // wait for Apply click
+                return;
             } else {
                 if (customInputs) customInputs.classList.remove('visible');
             }
@@ -1610,9 +1292,6 @@ if (budgetLogTypeFilter) budgetLogTypeFilter.addEventListener('change', filterBu
             applyFilter('custom', start, end);
         };
 
-        // Run default (month) on load — wait until DOMContentLoaded is already done
-        // We hook into the existing DOMContentLoaded to re-apply after charts are built
-        window._dashFilterPending = true;
         window._runDashFilter = function() {
             var range = getDateRange('month');
             applyFilter('month', range.start, range.end);
@@ -1621,10 +1300,6 @@ if (budgetLogTypeFilter) budgetLogTypeFilter.addEventListener('change', filterBu
 
     // ── Dashboard Charts ──────────────────────────────────────────────────────
     (function() {
-        var rawIncome  = window._th_incomeByType;
-        var rawExpense = window._th_expenseByType;
-
-        // Apply default dashboard period filter (month) — this handles the initial chart render via rebuildChart
         if (window._runDashFilter) window._runDashFilter();
     })();
 
