@@ -4,10 +4,12 @@ import com.example.demo.model.BarangayIncome;
 import com.example.demo.model.BarangayExpense;
 import com.example.demo.model.ProgramBudget;
 import com.example.demo.model.AdminUser;
+import com.example.demo.model.BudgetAdjustmentLog;
 import com.example.demo.services.AdminUserServices;
 import com.example.demo.services.BarangayIncomeService;
 import com.example.demo.services.BarangayExpenseService;
 import com.example.demo.services.ProgramBudgetService;
+import com.example.demo.services.BudgetAdjustmentLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
@@ -35,6 +37,9 @@ public class FinancialController {
 
     @Autowired
     private ProgramBudgetService budgetService;
+
+    @Autowired
+    private BudgetAdjustmentLogService budgetAdjustmentLogService;
 
     // ========== HELPER METHODS ==========
 
@@ -135,6 +140,8 @@ public class FinancialController {
         model.addAttribute("totalIncomeAll",   getTotalIncomeAll(allTimeStart, allTimeEnd));
         model.addAttribute("totalExpensesAll", getTotalExpensesAll(allTimeStart, allTimeEnd));
 
+        model.addAttribute("budgetLogs", getBudgetLogs());
+
         return "Finance";
     }
 
@@ -184,6 +191,9 @@ public class FinancialController {
     private List<BarangayExpense> getArchivedExpenseList()  { try { return expenseService.getArchivedExpenses(); } catch (Exception e) { return Collections.emptyList(); } }
     private Double getTotalIncomeAll(LocalDate s, LocalDate e)   { try { return incomeService.getTotalIncome(s, e); }   catch (Exception ex) { return 0.0; } }
     private Double getTotalExpensesAll(LocalDate s, LocalDate e) { try { return expenseService.getTotalExpenses(s, e); } catch (Exception ex) { return 0.0; } }
+    private List<BudgetAdjustmentLog> getBudgetLogs() {
+        try { return budgetAdjustmentLogService.getRecentLogs(); } catch (Exception e) { return Collections.emptyList(); }
+    }
 
     // ========== INCOME MANAGEMENT ==========
 
@@ -449,12 +459,21 @@ public class FinancialController {
 
     @PostMapping("/budget/update-total")
     public String updateTotalBudget(@RequestParam Double amount,
+                                    @RequestParam Double adjustmentAmount,
+                                    @RequestParam String adjustmentType,
+                                    @RequestParam String reason,
+                                    Principal principal,
                                     RedirectAttributes redirectAttributes) {
         try {
             if (amount == null || amount < 0) {
                 redirectAttributes.addFlashAttribute("error", "Invalid budget amount.");
                 return "redirect:/finance#budget";
             }
+            if (reason == null || reason.trim().isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "A reason is required for budget adjustments.");
+                return "redirect:/finance#budget";
+            }
+
             List<ProgramBudget> all = budgetService.getAllBudgets();
             ProgramBudget totalBudgetRecord = all.stream()
                 .filter(b -> "TOTAL_BUDGET".equals(b.getBudgetItem()))
@@ -471,6 +490,20 @@ public class FinancialController {
                 newBudget.setAmount(amount);
                 budgetService.saveManualEntry(newBudget);
             }
+
+            AdminUser admin = (principal != null) ? adminUserService.getAdminByEmail(principal.getName()) : null;
+            BudgetAdjustmentLog.AdjustmentType type = "increase".equalsIgnoreCase(adjustmentType)
+                ? BudgetAdjustmentLog.AdjustmentType.INCREASE
+                : BudgetAdjustmentLog.AdjustmentType.DECREASE;
+
+            budgetAdjustmentLogService.logAdjustment(
+                type,
+                adjustmentAmount,
+                reason.trim(),
+                admin != null ? admin.getId() : 0L,
+                admin != null ? (admin.getName() != null ? admin.getName() : admin.getUsername()) : "Unknown"
+            );
+
             redirectAttributes.addFlashAttribute("success", "Budget updated successfully!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error updating budget: " + e.getMessage());
