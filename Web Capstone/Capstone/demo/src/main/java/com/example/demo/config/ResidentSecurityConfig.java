@@ -50,6 +50,20 @@ public class ResidentSecurityConfig {
         return http.build();
     }
 
+
+    @Bean
+    @Order(0)   // <-- highest precedence, runs before the resident chain
+    public SecurityFilterChain staticResourcesChain(HttpSecurity http) throws Exception {
+        http
+            .securityMatcher("/css/**", "/js/**", "/images/**", "/webjars/**")
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+            // no authentication, no CSRF needed for static content
+            .csrf(csrf -> csrf.disable())
+            .formLogin(form -> form.disable())
+            .httpBasic(basic -> basic.disable());
+
+        return http.build();
+    }
     // ─────────────────────────────────────────────────────────
     // Session guard filter — replaces the interceptor + WebMvcConfigurer
     //

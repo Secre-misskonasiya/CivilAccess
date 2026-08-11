@@ -1,16 +1,16 @@
 // sidebar2.js - Resident Sidebar Functionality
 
 function openLogoutModal() {
-    const modal = document.getElementById('logoutModal');
-    if (modal) modal.style.display = 'flex';
+  const modal = document.getElementById('logoutModal');
+  if (modal) modal.classList.add('open');   // CSS would handle display
 }
-
 function closeLogoutModal() {
-    const modal = document.getElementById('logoutModal');
-    if (modal) modal.style.display = 'none';
+  const modal = document.getElementById('logoutModal');
+  if (modal) modal.classList.remove('open');
 }
 
 function confirmLogout() {
+    localStorage.clear();
     window.location.href = '/resident-logout';
 }
 
@@ -28,11 +28,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const path = window.location.pathname;
 
     const menuMap = {
-        '/resident/announcements': 'nav-announcements',
-        '/resident/my-requests':   'nav-requests',
-        '/resident/safety-reports':'nav-safety',
+        '/resident/announcements':    'nav-announcements',
+        '/resident/my-requests':      'nav-requests',
+        '/resident/safety-reports':   'nav-safety',
         '/resident/emergency-alerts': 'nav-alerts',
-        '/resident/contact':       'nav-contact'
+        '/resident/contact':          'nav-contact',
+        '/resident/facilities':       'nav-facilities'
     };
 
     document.querySelectorAll('.menu li').forEach(item => item.classList.remove('active'));

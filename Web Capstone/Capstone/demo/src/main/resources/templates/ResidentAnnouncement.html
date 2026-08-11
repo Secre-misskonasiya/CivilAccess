@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Lato:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
- <link rel="stylesheet" th:href="@{/css/sidebar.css}">   
+ <link rel="stylesheet" th:href="@{/css/sidebar2.css}">   
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -296,6 +296,8 @@
 
 <div class=" layout">
 <div th:replace="~{fragments/sidebar2 :: sidebar}"></div>
+<div th:replace="~{fragments/sidebar2 :: logoutModal}"></div>
+<div th:replace="~{fragments/sidebar2 :: mobileToggle}"></div>
 
 
 <div class="content">
@@ -627,21 +629,6 @@
 
 
 <script src="/js/sidebar2.js"></script>
-
-<script>
-    function openLogoutModal() {
-        const modal = document.getElementById('logoutModal');
-        if (modal) modal.style.display = 'flex';
-    }
-    function closeLogoutModal() {
-        const modal = document.getElementById('logoutModal');
-        if (modal) modal.style.display = 'none';
-    }
-    function confirmLogout() {
-        localStorage.clear();
-        window.location.href = '/resident-logout';
-    }
-</script>
 
 </body>
 </html>

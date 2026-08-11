@@ -1,31 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" th:href="@{/css/sidebar2.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+</head>
 <body>
-
-<script>
-    // Define functions at global scope FIRST
-    window.openLogoutModal = function() {
-        var modal = document.getElementById('logoutModal');
-        if (modal) modal.style.display = 'flex';
-    };
-    
-    window.closeLogoutModal = function() {
-        var modal = document.getElementById('logoutModal');
-        if (modal) modal.style.display = 'none';
-    };
-    
-    window.confirmLogout = function() {
-        // Clear local storage
-        localStorage.clear();
-        // Redirect to logout endpoint
-        window.location.href = '/resident-logout';
-    };
-    
-    window.toggleMobileMenu = function() {
-        var sidebar = document.getElementById('mainSidebar');
-        if (sidebar) sidebar.classList.toggle('mobile-open');
-    };
-</script>
 
 <!-- Logout Modal Fragment -->
 <div th:fragment="logoutModal" class="logout-modal" id="logoutModal">
@@ -52,7 +31,7 @@
     <div class="header-user">
         <i class="bi bi-person-circle"></i>
         <span th:text="${session.residentName}">Resident</span>
-        <span th:if="${session.userType == 'ADMIN_AS_RESIDENT'}" style="color: #f4c542; font-size:0.7rem;"> (Admin)</span>
+        <span th:if="${session.userType == 'ADMIN_AS_RESIDENT'}" class="admin-tag"> (Admin)</span>
     </div>
 
     <ul class="menu">
@@ -78,42 +57,21 @@
 
     <hr class="sidebar-divider">
 
-    <div class="logout-item" onclick="window.location.href='/resident-logout'">
+    <div class="logout-item" onclick="openLogoutModal()">
         <i class="bi bi-box-arrow-right"></i> Logout
     </div>
 
 </div>
 
-<!-- Mobile menu toggle button -->
-<button class="menu-toggle" onclick="toggleMobileMenu()" id="menuToggle">
+<!-- Mobile menu toggle button — kept as its OWN fragment, not nested inside
+     .sidebar. It must stay a sibling: .sidebar slides off-screen with
+     transform:translateX(-100%) on mobile, and if this button were a child
+     it would slide off-screen with it, making it impossible to reopen. -->
+<button th:fragment="mobileToggle" class="menu-toggle" onclick="toggleMobileMenu()" id="menuToggle">
     <i class="bi bi-list"></i>
 </button>
 
-<script>
-    // Highlight active menu item
-    document.addEventListener('DOMContentLoaded', function() {
-        const path = window.location.pathname;
-        
-        const menuMap = {
-            '/resident/announcements': 'nav-announcements',
-            '/resident/my-requests': 'nav-requests',
-            '/resident/safety-reports': 'nav-safety',
-            '/resident/emergency-alerts': 'nav-alerts',
-            '/resident/facilities': 'nav-facilities',
-            '/resident/contact': 'nav-contact'
-        };
-        
-        document.querySelectorAll('.menu li').forEach(item => item.classList.remove('active'));
-        
-        for (const [route, id] of Object.entries(menuMap)) {
-            if (path === route || path.startsWith(route)) {
-                const el = document.getElementById(id);
-                if (el) el.classList.add('active');
-                break;
-            }
-        }
-    });
-</script>
+<script th:src="@{/js/sidebar2.js}"></script>
 
 </body>
 </html>
