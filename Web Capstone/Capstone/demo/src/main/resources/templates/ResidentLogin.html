@@ -233,7 +233,7 @@
   }
 
   input[type="email"],
-  input[type="password"] {
+  input.styled-input {
     width: 100%;
     padding: 15px 20px;
     background: rgba(255,255,255,0.07);
@@ -332,6 +332,7 @@
 
   .toggle-password:hover { color: rgba(255,255,255,0.7); }
 
+  
   .footer-links {
     margin-top: 16px;
     display: flex;
@@ -440,6 +441,7 @@
   }
   .deact-btn:hover { background: #c0392b; }
 
+  /* Forgot Password Modal Styles */
   .modal-overlay {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.7); z-index: 1000;
@@ -448,68 +450,13 @@
   }
   .modal-overlay.show { display: flex; }
 
-  .modal {
+  .modal-overlay .modal {
     background: #fff; border-radius: 24px;
-    padding: 48px; max-width: 520px; width: 90%;
+    padding: 32px 28px; max-width: 520px; width: 90%;
     max-height: 90vh; overflow-y: auto;
     box-shadow: 0 28px 72px rgba(0,0,0,0.35);
     animation: slideUp 0.3s ease;
     position: relative;
-    display: block; 
-  }
-
-    /* Make the forgot password modal more compact */
-  .modal-overlay .modal {
-    padding: 32px 28px;          /* reduce from 48px */
-    max-height: 60vh;            /* slightly less than viewport */
-    overflow-y: auto;            /* scroll only if absolutely needed */
-  }
-
-  .modal-icon-circle {
-    width: 60px;                 /* smaller icon */
-    height: 60px;
-    font-size: 30px;
-    margin-bottom: 14px;
-  }
-
-  .modal-title {
-    font-size: 1.4rem;
-    margin-bottom: 6px;
-  }
-
-  .modal-subtitle {
-    font-size: 0.9rem;
-    margin-bottom: 16px;
-  }
-
-  .modal-label {
-    font-size: 0.88rem;
-    margin-bottom: 5px;
-    margin-top: 12px;
-  }
-
-  .modal-input {
-    padding: 11px 14px;         /* slightly smaller */
-    font-size: 0.92rem;
-  }
-
-  .modal-btn {
-    padding: 12px;               /* smaller button */
-    margin-top: 14px;
-  }
-
-  /* Ensure inputs are always clearly visible */
-  .modal-input,
-  #fpNewPassword,
-  #fpConfirmPassword {
-    background: #f5f5f5 !important;
-    color: #2d5049 !important;
-    border: 2px solid #e0e0e0 !important;
-  }
-
-  /* Override any Bootstrap display conflicts */
-  #forgotPasswordModal .modal {
-    display: block !important;
   }
 
   .modal-close {
@@ -517,28 +464,40 @@
     background: none; border: none;
     font-size: 28px; color: #7a9d94;
     cursor: pointer; transition: color 0.2s; line-height: 1;
+    z-index: 10;
   }
   .modal-close:hover { color: #2d5049; }
 
   .modal-icon-circle {
-    width: 76px; height: 76px;
+    width: 60px; height: 60px;
     background: linear-gradient(135deg, #5ab5a0, #4a9d8c);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 20px; font-size: 38px;
+    margin: 0 auto 14px; font-size: 30px;
   }
 
-  .modal-title    { color: #2d5049; font-size: 1.7rem; font-weight: 700; text-align: center; margin-bottom: 8px; }
-  .modal-subtitle { color: #5a7872; font-size: 0.95rem; text-align: center; line-height: 1.55; margin-bottom: 24px; }
-  .modal-label    { color: #2d5049; font-size: 0.92rem; font-weight: 600; margin-bottom: 7px; margin-top: 14px; display: block; }
+  .modal-title {
+    color: #2d5049; font-size: 1.4rem; font-weight: 700;
+    text-align: center; margin-bottom: 6px;
+  }
+
+  .modal-subtitle {
+    color: #5a7872; font-size: 0.9rem; text-align: center;
+    line-height: 1.55; margin-bottom: 16px;
+  }
+
+  .modal-label {
+    color: #2d5049; font-size: 0.88rem; font-weight: 600;
+    margin-bottom: 5px; margin-top: 12px; display: block;
+  }
 
   .modal-input {
-    width: 100%; padding: 13px 16px;
-    background: #f5f5f5; border: 2px solid #e0e0e0;
-    border-radius: 11px; color: #2d5049;
-    font-size: 0.98rem; transition: all 0.2s;
+    width: 100%; padding: 11px 14px;
+    background: #f5f5f5 !important; border: 2px solid #e0e0e0 !important;
+    border-radius: 11px; color: #2d5049 !important;
+    font-size: 0.92rem; transition: all 0.2s;
   }
-  .modal-input:focus { outline: none; border-color: #5ab5a0; background: #fff; }
+  .modal-input:focus { outline: none; border-color: #5ab5a0; background: #fff !important; }
 
   .modal-pw-wrapper { position: relative; }
   .modal-pw-wrapper .modal-input { padding-right: 46px; }
@@ -548,22 +507,33 @@
     transform: translateY(-50%);
     background: none; border: none;
     cursor: pointer; color: #888; padding: 0; transition: color 0.2s;
+    z-index: 5;
   }
   .modal-eye:hover { color: #2d5049; }
 
   .modal-btn {
-    width: 100%; padding: 14px;
+    width: 100%; padding: 12px;
     background: #3D6D66; color: #fff;
     font-size: 1rem; font-weight: 700;
     border: none; border-radius: 11px;
     cursor: pointer; font-family: inherit;
-    transition: all 0.25s; margin-top: 18px;
+    transition: all 0.25s; margin-top: 14px;
   }
   .modal-btn:hover { background: #2d5049; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(45,80,73,0.3); }
   .modal-btn:disabled { background: #b8d4cd; cursor: not-allowed; transform: none; box-shadow: none; }
 
-  .modal-error   { background: #fde8e8; color: #c0392b; border-radius: 8px; padding: 10px; font-size: 0.88rem; text-align: center; margin-bottom: 10px; display: none; }
-  .modal-success { background: #e8f5e9; color: #27ae60; border-radius: 8px; padding: 10px; font-size: 0.88rem; text-align: center; margin-bottom: 10px; display: none; }
+  .modal-error {
+    background: #fde8e8; color: #c0392b; border-radius: 8px;
+    padding: 10px; font-size: 0.88rem; text-align: center;
+    margin-bottom: 10px; display: none;
+  }
+
+  .modal-success {
+    background: #e8f5e9; color: #27ae60; border-radius: 8px;
+    padding: 10px; font-size: 0.88rem; text-align: center;
+    margin-bottom: 10px; display: none;
+  }
+
   .modal-error.show, .modal-success.show { display: block; }
 
   .otp-row { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
@@ -583,7 +553,7 @@
   .resend-link:hover { text-decoration: underline; }
   .resend-link.disabled { color: #b8d4cd; cursor: not-allowed; pointer-events: none; }
 
-  .step        { display: none; }
+  .step { display: none; }
   .step.active { display: block; }
 
   @media (max-width: 768px) {
@@ -593,18 +563,18 @@
     .login-title     { font-size: 2.2rem; }
     .welcome-title   { font-size: 1.7rem; }
     .backbutton      { font-size: 0.85rem; padding: 6px 14px; }
-    .modal           { padding: 32px 24px; }
+    .modal-overlay .modal { padding: 32px 24px; }
     .logo            { width: 110px; height: 110px; }
     body             { font-size: 15px; padding: 20px; }
     .login-container { border-radius: 24px; }
-    .modal-title     { font-size: 1.5rem; }
+    .modal-title     { font-size: 1.3rem; }
   }
 
   @media (max-width: 480px) {
     .right-panel { padding: 32px 24px; }
     .login-title { font-size: 1.9rem; }
     .welcome-title { font-size: 1.5rem; }
-    .modal { padding: 28px 20px; }
+    .modal-overlay .modal { padding: 28px 20px; }
     .otp-box { width: 40px; height: 48px; font-size: 18px; }
   }
 </style>
@@ -692,13 +662,13 @@
       <div class="modal-success" id="fp3Success"></div>
       <label class="modal-label" for="fpNewPassword">New Password</label>
       <div class="modal-pw-wrapper">
-        <input class="modal-input" type="password" id="fpNewPassword" placeholder="At least 8 characters">
-        <button class="modal-eye" type="button" onclick="toggleModalPw('fpNewPassword', this)"><i class="bi bi-eye"></i></button>
+        <input class="modal-input" type="password" id="fpNewPassword" placeholder="At least 8 characters" autocomplete="new-password">
+        <button class="modal-eye" type="button" data-target="fpNewPassword"><i class="bi bi-eye"></i></button>
       </div>
       <label class="modal-label" for="fpConfirmPassword">Confirm Password</label>
       <div class="modal-pw-wrapper">
-        <input class="modal-input" type="password" id="fpConfirmPassword" placeholder="Re-enter new password">
-        <button class="modal-eye" type="button" onclick="toggleModalPw('fpConfirmPassword', this)"><i class="bi bi-eye"></i></button>
+        <input class="modal-input" type="password" id="fpConfirmPassword" placeholder="Re-enter new password" autocomplete="new-password">
+        <button class="modal-eye" type="button" data-target="fpConfirmPassword"><i class="bi bi-eye"></i></button>
       </div>
       <button class="modal-btn" id="fpResetBtn">Reset Password</button>
     </div>
@@ -737,7 +707,7 @@
       <div class="form-group">
         <label for="password">Password</label>
         <div class="password-wrapper">
-          <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+          <input type="password" id="password" name="password" class="styled-input" placeholder="••••••••" required autocomplete="current-password">
           <button type="button" class="toggle-password" id="togglePassword" aria-label="Toggle password visibility">
             <i class="bi bi-eye" id="eyeIcon" style="font-size:22px;"></i>
           </button>
@@ -811,12 +781,38 @@
       });
     }
 
-    window.toggleModalPw = function(inputId, btn) {
+    // Modal password toggle function
+    function toggleModalPw(inputId, btn) {
+      console.log('toggleModalPw called for:', inputId);
       const input = document.getElementById(inputId);
-      const show = input.type === 'password';
-      input.type = show ? 'text' : 'password';
-      btn.innerHTML = show ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
-    };
+      if (!input) {
+        console.error('Input not found:', inputId);
+        return;
+      }
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      const icon = btn.querySelector('i');
+      if (icon) {
+        icon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
+      }
+      console.log('Toggled', inputId, 'to', input.type);
+    }
+
+    // Make it available globally
+    window.toggleModalPw = toggleModalPw;
+
+    // Add click handlers to modal eye buttons using event delegation
+    document.addEventListener('click', function(e) {
+      const eyeBtn = e.target.closest('.modal-eye');
+      if (eyeBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const targetId = eyeBtn.getAttribute('data-target');
+        if (targetId) {
+          toggleModalPw(targetId, eyeBtn);
+        }
+      }
+    });
 
     const emailInput = document.getElementById('email');
     const loginButton = document.getElementById('loginButton');
@@ -856,7 +852,6 @@
       });
     }
 
-    // Clear any existing Supabase session when on login page
     async function clearExistingSession() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -1021,47 +1016,28 @@
 
     // ============ FORGOT PASSWORD LOGIC ============
     
-    console.log('Setting up forgot password functionality...');
-    
     const forgotModal = document.getElementById('forgotPasswordModal');
     const forgotLink = document.getElementById('forgotPasswordLink');
     const closeForgotModal = document.getElementById('closeForgotModal');
     let fpCurrentEmail = '';
     let resendTimerRef = null;
 
-    console.log('forgotModal element:', forgotModal);
-    console.log('forgotLink element:', forgotLink);
-    console.log('closeForgotModal element:', closeForgotModal);
-
-    // Function to open forgot password modal
     function openForgotModal(e) {
       if (e) e.preventDefault();
-      console.log('openForgotModal called');
       const emailVal = emailInput ? emailInput.value.trim() : '';
       const fpEmailInput = document.getElementById('fpEmailInput');
       if (fpEmailInput && emailVal) fpEmailInput.value = emailVal;
       showFpStep(1);
       if (forgotModal) {
         forgotModal.classList.add('show');
-        console.log('Modal should now be visible');
-      } else {
-        console.error('forgotModal element not found!');
       }
     }
 
-    // Add click event listener to forgot password link
     if (forgotLink) {
-      console.log('Adding click event listener to forgot password link');
       forgotLink.addEventListener('click', openForgotModal);
-      
-      // Also add onclick attribute as backup
-      forgotLink.setAttribute('onclick', 'document.getElementById(\'forgotPasswordModal\').classList.add(\'show\'); return false;');
-    } else {
-      console.error('Forgot password link not found!');
     }
 
     function closeFP() {
-      console.log('closeFP called');
       if (forgotModal) forgotModal.classList.remove('show');
       if (resendTimerRef) clearInterval(resendTimerRef);
       setTimeout(() => {
@@ -1115,7 +1091,6 @@
         .forEach(el => { el.textContent = ''; el.classList.remove('show'); });
     }
 
-    // Send OTP for password reset
     const fpSendOtpBtn = document.getElementById('fpSendOtpBtn');
     if (fpSendOtpBtn) {
       fpSendOtpBtn.addEventListener('click', async () => {
@@ -1131,7 +1106,6 @@
         btn.textContent = 'Sending...';
         
         try {
-          // Check if email exists in residents table first
           const { data: residentCheck, error: checkError } = await supabase
             .from('residents')
             .select('email')
@@ -1142,12 +1116,9 @@
             throw new Error('Email not found in our records.');
           }
           
-          // Send OTP using signInWithOtp
           const { data, error } = await supabase.auth.signInWithOtp({
             email: email,
-            options: {
-              shouldCreateUser: false,
-            }
+            options: { shouldCreateUser: false }
           });
           
           if (error) throw error;
@@ -1190,7 +1161,6 @@
     function getOtp() { return [...otpBoxes].map(b => b.value).join(''); }
     function clearOtpBoxes() { otpBoxes.forEach(b => b.value = ''); }
 
-    // Verify OTP
     const fpVerifyOtpBtn = document.getElementById('fpVerifyOtpBtn');
     if (fpVerifyOtpBtn) {
       fpVerifyOtpBtn.addEventListener('click', async () => {
@@ -1226,7 +1196,6 @@
       });
     }
 
-    // Reset password
     const fpResetBtn = document.getElementById('fpResetBtn');
     if (fpResetBtn) {
       fpResetBtn.addEventListener('click', async () => {
@@ -1249,24 +1218,12 @@
         btn.textContent = 'Resetting...';
         
         try {
-          // Update user password (user is already authenticated after OTP verification)
-          const { data, error } = await supabase.auth.updateUser({ 
-            password: newPw 
-          });
-          
+          const { data, error } = await supabase.auth.updateUser({ password: newPw });
           if (error) throw error;
           
-          // Also update the password in the residents table
           if (fpCurrentEmail) {
             try {
-              const { error: updateError } = await supabase
-                .from('residents')
-                .update({ valid_id: newPw })
-                .eq('email', fpCurrentEmail);
-              
-              if (updateError) {
-                console.error('Error updating resident password:', updateError);
-              }
+              await supabase.from('residents').update({ valid_id: newPw }).eq('email', fpCurrentEmail);
             } catch (updateErr) {
               console.error('Failed to update resident record:', updateErr);
             }
@@ -1275,7 +1232,6 @@
           showFpSuccess('fp3Success', 'Password reset successfully!');
           setTimeout(() => {
             closeFP();
-            // Sign out after password reset to force re-login with new password
             supabase.auth.signOut();
           }, 1800);
           
@@ -1318,9 +1274,7 @@
         try {
           const { error } = await supabase.auth.signInWithOtp({
             email: fpCurrentEmail,
-            options: {
-              shouldCreateUser: false,
-            }
+            options: { shouldCreateUser: false }
           });
           
           if (error) throw error;
@@ -1336,8 +1290,6 @@
         }
       });
     }
-    
-    console.log('Forgot password setup complete');
   });
 </script>
 

@@ -255,6 +255,16 @@
         let otpTimeout = 60;
         let isOtpVerified = false;
 
+        // ---- Live "email already registered" check (Step 2) ----
+        // isEmailTaken gates final submission (validateStep2); emailCheckTimeout
+        // debounces the Supabase lookup so we're not firing a query on every
+        // keystroke. DEFAULT_EMAIL_ERROR lets us restore the original
+        // "invalid email" message after showing the "already registered" one,
+        // since both messages reuse the same #err-email element.
+        let isEmailTaken = false;
+        let emailCheckTimeout = null;
+        const DEFAULT_EMAIL_ERROR = 'Please enter a valid email address.';
+
         // ---- Defensive event binding ----
         // Each control is bound independently and wrapped in its own
         // try/catch. Previously all bindings lived in one block: if a single
@@ -305,6 +315,25 @@
             bindClick('nextBtn', goToStep2);
             bindClick('backBtn', goToStep1);
             bindClick('submitBtn', sendOtp);
+
+            // Live email-availability check as the user types on Step 2
+            bindInput('email', function() {
+                clearTimeout(emailCheckTimeout);
+                isEmailTaken = false;
+                const email = this.value.trim().toLowerCase();
+
+                // Reset to the default message whenever the field changes —
+                // otherwise a stale "already registered" message can linger
+                // after the user edits the address to something new.
+                const errEl = document.getElementById('err-email');
+                errEl.textContent = DEFAULT_EMAIL_ERROR;
+                hide('err-email');
+
+                if (!emailRx.test(email)) return;
+                emailCheckTimeout = setTimeout(function() {
+                    checkEmailAvailability(email);
+                }, 500);
+            });
 
             // OTP inputs
             try {
@@ -443,7 +472,15 @@
         function validateStep2() {
             clearErrors();
             let ok = true;
-            if (!emailRx.test(val('email'))) { show('err-email'); ok = false; }
+            if (!emailRx.test(val('email'))) {
+                document.getElementById('err-email').textContent = DEFAULT_EMAIL_ERROR;
+                show('err-email');
+                ok = false;
+            } else if (isEmailTaken) {
+                document.getElementById('err-email').textContent = 'An account with this email already exists. Please sign in instead.';
+                show('err-email');
+                ok = false;
+            }
             if (!mobileRx.test(val('mobileNumber'))) { show('err-mobileNumber'); ok = false; }
             const pw = document.getElementById('password').value;
             const cpw = document.getElementById('confirmPassword').value;
@@ -451,6 +488,42 @@
             if (pw !== cpw) { show('err-confirmPassword'); ok = false; }
             if (!ok) showError('Please fix the highlighted fields before continuing.');
             return ok;
+        }
+
+        // Debounced Supabase lookup triggered from the #email input handler
+        // in initRegisterForm(). Only acts on the result if the input still
+        // matches what was queried, since the user may keep typing while the
+        // request is in flight.
+        async function checkEmailAvailability(email) {
+            if (!supabase) return; // re-validated at submit time via sendOtp anyway
+
+            try {
+                const { data, error } = await supabase
+                    .from('residents')
+                    .select('email')
+                    .eq('email', email)
+                    .maybeSingle();
+
+                if (error) {
+                    console.error('[register.html] Email availability check failed:', error);
+                    return; // don't block the user over a transient network/RLS hiccup
+                }
+
+                if (val('email').toLowerCase() !== email) return;
+
+                const errEl = document.getElementById('err-email');
+                if (data) {
+                    isEmailTaken = true;
+                    errEl.textContent = 'An account with this email already exists. Please sign in instead.';
+                    show('err-email');
+                } else {
+                    isEmailTaken = false;
+                    errEl.textContent = DEFAULT_EMAIL_ERROR;
+                    hide('err-email');
+                }
+            } catch (err) {
+                console.error('[register.html] Email availability check threw:', err);
+            }
         }
 
         function goToStep2() {
