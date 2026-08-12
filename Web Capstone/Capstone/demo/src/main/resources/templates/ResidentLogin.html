@@ -271,6 +271,7 @@
     text-decoration: none;
     transition: color 0.2s;
     cursor: pointer;
+    user-select: none;
   }
 
   .forgot-password a:hover { color: var(--gold); }
@@ -454,6 +455,61 @@
     box-shadow: 0 28px 72px rgba(0,0,0,0.35);
     animation: slideUp 0.3s ease;
     position: relative;
+    display: block; 
+  }
+
+    /* Make the forgot password modal more compact */
+  .modal-overlay .modal {
+    padding: 32px 28px;          /* reduce from 48px */
+    max-height: 60vh;            /* slightly less than viewport */
+    overflow-y: auto;            /* scroll only if absolutely needed */
+  }
+
+  .modal-icon-circle {
+    width: 60px;                 /* smaller icon */
+    height: 60px;
+    font-size: 30px;
+    margin-bottom: 14px;
+  }
+
+  .modal-title {
+    font-size: 1.4rem;
+    margin-bottom: 6px;
+  }
+
+  .modal-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+  }
+
+  .modal-label {
+    font-size: 0.88rem;
+    margin-bottom: 5px;
+    margin-top: 12px;
+  }
+
+  .modal-input {
+    padding: 11px 14px;         /* slightly smaller */
+    font-size: 0.92rem;
+  }
+
+  .modal-btn {
+    padding: 12px;               /* smaller button */
+    margin-top: 14px;
+  }
+
+  /* Ensure inputs are always clearly visible */
+  .modal-input,
+  #fpNewPassword,
+  #fpConfirmPassword {
+    background: #f5f5f5 !important;
+    color: #2d5049 !important;
+    border: 2px solid #e0e0e0 !important;
+  }
+
+  /* Override any Bootstrap display conflicts */
+  #forgotPasswordModal .modal {
+    display: block !important;
   }
 
   .modal-close {
@@ -690,7 +746,7 @@
       </div>
 
       <div class="forgot-password">
-        <a id="forgotPasswordLink">Forgot Password?</a>
+        <a href="javascript:void(0)" id="forgotPasswordLink">Forgot Password?</a>
       </div>
 
       <button type="submit" class="login-button" id="loginButton">Sign In</button>
@@ -708,9 +764,11 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded - initializing login page');
+    
     if (typeof window.supabase === 'undefined') {
       console.error('Supabase not loaded');
-      showError('Failed to load authentication service. Please refresh the page.');
+      alert('Failed to load authentication service. Please refresh the page.');
       return;
     }
     
@@ -798,9 +856,7 @@
       });
     }
 
-    // Clear any existing Supabase session when on login page (prevents auto-login on refresh).
-    // NOTE: Do NOT call localStorage.clear() here — it wipes Supabase's internal token store
-    // and triggers an internal refresh that reloads the page, breaking the register OTP flow.
+    // Clear any existing Supabase session when on login page
     async function clearExistingSession() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -813,7 +869,6 @@
       }
     }
     
-    // Call this to prevent auto-login on refresh
     clearExistingSession();
 
     const loginForm = document.getElementById('loginForm');
@@ -838,7 +893,6 @@
         }
 
         try {
-          // First, check with backend to see if credentials are valid
           const checkUrl = `/resident-check-status?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
           const checkRes = await fetch(checkUrl);
           
@@ -852,11 +906,9 @@
           const result = await checkRes.text();
           const isAdmin = result === 'OK_ADMIN';
           
-          // Only try Supabase auth for residents (not for admin users)
           let authData = null;
           
           if (!isAdmin) {
-            // Try Supabase authentication for residents
             const { data, error: authError } = await supabase.auth.signInWithPassword({
               email: email,
               password: password,
@@ -864,14 +916,12 @@
             
             if (authError) {
               console.error('Auth error:', authError);
-              // Check if this resident has a local password (valid_id)
               const { data: residentCheck } = await supabase
                 .from('residents')
                 .select('valid_id')
                 .eq('email', email)
                 .single();
               
-              // If they don't have a valid_id, show error
               if (!residentCheck || !residentCheck.valid_id) {
                 showLoginError('Invalid email or password.');
                 resetLoginButton();
@@ -883,7 +933,6 @@
             }
           }
           
-          // Fetch resident data (only for residents, not admins)
           let residentData = null;
           if (!isAdmin) {
             const { data, error: residentError } = await supabase
@@ -917,7 +966,6 @@
             localStorage.setItem('residentStatus', residentData.account_status);
           }
           
-          // Call backend to create Spring session
           const formData = new URLSearchParams();
           formData.append('email', email);
           formData.append('password', password);
@@ -928,7 +976,6 @@
             body: formData
           });
           
-          // Check where we're being redirected
           if (sessionRes.redirected) {
             const redirectUrl = sessionRes.url;
             if (redirectUrl.includes('error')) {
@@ -938,14 +985,12 @@
               document.getElementById('deactivatedOverlay').classList.add('show');
               resetLoginButton();
             } else {
-              // Success - redirect to announcements
               showSuccess('Login successful! Redirecting...');
               setTimeout(() => {
                 window.location.href = '/resident/announcements';
               }, 1500);
             }
           } else {
-            // Handle non-redirect response
             const text = await sessionRes.text();
             if (text.includes('redirect') || text === '') {
               window.location.href = '/resident/announcements';
@@ -974,32 +1019,49 @@
       }
     }
 
-    // Forgot Password Modal Logic
+    // ============ FORGOT PASSWORD LOGIC ============
+    
+    console.log('Setting up forgot password functionality...');
+    
     const forgotModal = document.getElementById('forgotPasswordModal');
     const forgotLink = document.getElementById('forgotPasswordLink');
     const closeForgotModal = document.getElementById('closeForgotModal');
     let fpCurrentEmail = '';
     let resendTimerRef = null;
 
-    if (forgotLink) {
-      forgotLink.addEventListener('click', openForgotModal);
-    }
-    if (closeForgotModal) {
-      closeForgotModal.addEventListener('click', closeFP);
-    }
-    if (forgotModal) {
-      forgotModal.addEventListener('click', e => { if (e.target === forgotModal) closeFP(); });
-    }
+    console.log('forgotModal element:', forgotModal);
+    console.log('forgotLink element:', forgotLink);
+    console.log('closeForgotModal element:', closeForgotModal);
 
-    function openForgotModal() {
+    // Function to open forgot password modal
+    function openForgotModal(e) {
+      if (e) e.preventDefault();
+      console.log('openForgotModal called');
       const emailVal = emailInput ? emailInput.value.trim() : '';
       const fpEmailInput = document.getElementById('fpEmailInput');
       if (fpEmailInput && emailVal) fpEmailInput.value = emailVal;
       showFpStep(1);
-      if (forgotModal) forgotModal.classList.add('show');
+      if (forgotModal) {
+        forgotModal.classList.add('show');
+        console.log('Modal should now be visible');
+      } else {
+        console.error('forgotModal element not found!');
+      }
+    }
+
+    // Add click event listener to forgot password link
+    if (forgotLink) {
+      console.log('Adding click event listener to forgot password link');
+      forgotLink.addEventListener('click', openForgotModal);
+      
+      // Also add onclick attribute as backup
+      forgotLink.setAttribute('onclick', 'document.getElementById(\'forgotPasswordModal\').classList.add(\'show\'); return false;');
+    } else {
+      console.error('Forgot password link not found!');
     }
 
     function closeFP() {
+      console.log('closeFP called');
       if (forgotModal) forgotModal.classList.remove('show');
       if (resendTimerRef) clearInterval(resendTimerRef);
       setTimeout(() => {
@@ -1013,6 +1075,15 @@
         clearOtpBoxes();
         hideFpMessages();
       }, 300);
+    }
+
+    if (closeForgotModal) {
+      closeForgotModal.addEventListener('click', closeFP);
+    }
+    if (forgotModal) {
+      forgotModal.addEventListener('click', e => { 
+        if (e.target === forgotModal) closeFP(); 
+      });
     }
 
     function showFpStep(n) {
@@ -1029,7 +1100,7 @@
         el.classList.add('show');
       }
     }
-    
+
     function showFpSuccess(id, msg) {
       hideFpMessages();
       const el = document.getElementById(id);
@@ -1044,6 +1115,7 @@
         .forEach(el => { el.textContent = ''; el.classList.remove('show'); });
     }
 
+    // Send OTP for password reset
     const fpSendOtpBtn = document.getElementById('fpSendOtpBtn');
     if (fpSendOtpBtn) {
       fpSendOtpBtn.addEventListener('click', async () => {
@@ -1059,7 +1131,25 @@
         btn.textContent = 'Sending...';
         
         try {
-          const { error } = await supabase.auth.resetPasswordForEmail(email);
+          // Check if email exists in residents table first
+          const { data: residentCheck, error: checkError } = await supabase
+            .from('residents')
+            .select('email')
+            .eq('email', email)
+            .single();
+          
+          if (checkError || !residentCheck) {
+            throw new Error('Email not found in our records.');
+          }
+          
+          // Send OTP using signInWithOtp
+          const { data, error } = await supabase.auth.signInWithOtp({
+            email: email,
+            options: {
+              shouldCreateUser: false,
+            }
+          });
+          
           if (error) throw error;
           
           fpCurrentEmail = email;
@@ -1071,7 +1161,7 @@
           
         } catch (err) {
           console.error('Send OTP error:', err);
-          showFpError('fp1Error', err.message || 'Email not found. Please check and try again.');
+          showFpError('fp1Error', err.message || 'Failed to send verification code. Please try again.');
         } finally {
           btn.disabled = false;
           btn.textContent = 'Send 6-Digit Code';
@@ -1096,10 +1186,11 @@
         if (nextEmpty !== -1) otpBoxes[nextEmpty].focus();
       });
     });
-    
+
     function getOtp() { return [...otpBoxes].map(b => b.value).join(''); }
     function clearOtpBoxes() { otpBoxes.forEach(b => b.value = ''); }
 
+    // Verify OTP
     const fpVerifyOtpBtn = document.getElementById('fpVerifyOtpBtn');
     if (fpVerifyOtpBtn) {
       fpVerifyOtpBtn.addEventListener('click', async () => {
@@ -1114,10 +1205,10 @@
         btn.textContent = 'Verifying...';
         
         try {
-          const { error } = await supabase.auth.verifyOtp({
+          const { data, error } = await supabase.auth.verifyOtp({
             email: fpCurrentEmail,
             token: otp,
-            type: 'recovery',
+            type: 'email',
           });
           
           if (error) throw error;
@@ -1131,6 +1222,69 @@
         } finally {
           btn.disabled = false;
           btn.textContent = 'Verify Code';
+        }
+      });
+    }
+
+    // Reset password
+    const fpResetBtn = document.getElementById('fpResetBtn');
+    if (fpResetBtn) {
+      fpResetBtn.addEventListener('click', async () => {
+        const fpNewPassword = document.getElementById('fpNewPassword');
+        const fpConfirmPassword = document.getElementById('fpConfirmPassword');
+        const newPw = fpNewPassword ? fpNewPassword.value : '';
+        const confPw = fpConfirmPassword ? fpConfirmPassword.value : '';
+        
+        if (!newPw || newPw.length < 8) {
+          showFpError('fp3Error', 'Password must be at least 8 characters.');
+          return;
+        }
+        if (newPw !== confPw) {
+          showFpError('fp3Error', 'Passwords do not match.');
+          return;
+        }
+        
+        const btn = fpResetBtn;
+        btn.disabled = true;
+        btn.textContent = 'Resetting...';
+        
+        try {
+          // Update user password (user is already authenticated after OTP verification)
+          const { data, error } = await supabase.auth.updateUser({ 
+            password: newPw 
+          });
+          
+          if (error) throw error;
+          
+          // Also update the password in the residents table
+          if (fpCurrentEmail) {
+            try {
+              const { error: updateError } = await supabase
+                .from('residents')
+                .update({ valid_id: newPw })
+                .eq('email', fpCurrentEmail);
+              
+              if (updateError) {
+                console.error('Error updating resident password:', updateError);
+              }
+            } catch (updateErr) {
+              console.error('Failed to update resident record:', updateErr);
+            }
+          }
+          
+          showFpSuccess('fp3Success', 'Password reset successfully!');
+          setTimeout(() => {
+            closeFP();
+            // Sign out after password reset to force re-login with new password
+            supabase.auth.signOut();
+          }, 1800);
+          
+        } catch (err) {
+          console.error('Reset password error:', err);
+          showFpError('fp3Error', err.message || 'Failed to reset password. Please try again.');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Reset Password';
         }
       });
     }
@@ -1162,7 +1316,13 @@
         if (resendLink.classList.contains('disabled')) return;
         
         try {
-          const { error } = await supabase.auth.resetPasswordForEmail(fpCurrentEmail);
+          const { error } = await supabase.auth.signInWithOtp({
+            email: fpCurrentEmail,
+            options: {
+              shouldCreateUser: false,
+            }
+          });
+          
           if (error) throw error;
           
           clearOtpBoxes();
@@ -1176,44 +1336,8 @@
         }
       });
     }
-
-    const fpResetBtn = document.getElementById('fpResetBtn');
-    if (fpResetBtn) {
-      fpResetBtn.addEventListener('click', async () => {
-        const fpNewPassword = document.getElementById('fpNewPassword');
-        const fpConfirmPassword = document.getElementById('fpConfirmPassword');
-        const newPw = fpNewPassword ? fpNewPassword.value : '';
-        const confPw = fpConfirmPassword ? fpConfirmPassword.value : '';
-        
-        if (!newPw || newPw.length < 8) {
-          showFpError('fp3Error', 'Password must be at least 8 characters.');
-          return;
-        }
-        if (newPw !== confPw) {
-          showFpError('fp3Error', 'Passwords do not match.');
-          return;
-        }
-        
-        const btn = fpResetBtn;
-        btn.disabled = true;
-        btn.textContent = 'Resetting...';
-        
-        try {
-          const { error } = await supabase.auth.updateUser({ password: newPw });
-          if (error) throw error;
-          
-          showFpSuccess('fp3Success', 'Password reset successfully!');
-          setTimeout(() => closeFP(), 1800);
-          
-        } catch (err) {
-          console.error('Reset password error:', err);
-          showFpError('fp3Error', err.message || 'Failed to reset password. Please try again.');
-        } finally {
-          btn.disabled = false;
-          btn.textContent = 'Reset Password';
-        }
-      });
-    }
+    
+    console.log('Forgot password setup complete');
   });
 </script>
 
