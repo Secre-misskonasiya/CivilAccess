@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f1; }
@@ -856,58 +857,61 @@
         return { start: s || e, end: e };
     }
 
-    function renderPDF(htmlContent, filename, orientation, callback) {
-        var overlay = document.createElement('div');
-        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:99998;overflow:auto;';
-        var el = document.createElement('div');
-        el.style.cssText = 'position:absolute;top:0;left:0;width:794px;background:#ffffff;padding:0;margin:0;';
-        el.innerHTML = htmlContent;
-        overlay.appendChild(el);
-        document.body.appendChild(overlay);
+    // ── PDF EXPORT (styled to match the Program Calendar export) ───────────
+    async function exportTablePDF(tbodyId, title, headers) {
+        var rows = document.querySelectorAll('#' + tbodyId + ' tr');
+        var tableRows = '';
+        var rowIndex = 0;
+        rows.forEach(function(row) {
+            if (row.style.display === 'none') return;
+            if (row.cells.length < 2) return;
+            var bg = rowIndex % 2 === 0 ? 'white' : '#f5faf8';
+            tableRows += '<tr style="background:' + bg + ';">';
+            for (var i = 0; i < row.cells.length - 1; i++) {
+                var txt   = (row.cells[i].textContent || '').trim();
+                var isAmt = txt.startsWith('₱');
+                tableRows += '<td style="border:1px solid #ddd;padding:7px 8px;font-size:11px;' +
+                    (isAmt ? 'text-align:right;font-weight:bold;' : '') + '">' + txt + '</td>';
+            }
+            tableRows += '</tr>';
+            rowIndex++;
+        });
 
-        setTimeout(function() {
-            html2canvas(el, {
-                scale: 2, useCORS: true, logging: false, allowTaint: true,
-                backgroundColor: '#ffffff', width: el.scrollWidth, height: el.scrollHeight, windowWidth: 794
-            }).then(function(canvas) {
-                var { jsPDF } = window.jspdf;
-                var isLandscape = orientation === 'landscape';
-                var pageW = isLandscape ? 297 : 210;
-                var pageH = isLandscape ? 210 : 297;
-                var imgW  = pageW - 10;
-                var ratio = canvas.width / imgW;
-                var imgH  = canvas.height / ratio;
-                var pdf   = new jsPDF({ orientation: orientation, unit: 'mm', format: 'a4' });
-                var posY  = 5;
-                var remainH = imgH;
-                var srcY  = 0;
+        var headerCells = headers.map(function(h) {
+            return '<th style="background:#2d4a44;color:white;padding:8px;font-size:11px;border:1px solid #1a3530;text-align:left;">' + h + '</th>';
+        }).join('');
 
-                while (remainH > 0) {
-                    var sliceH    = Math.min(pageH - 10, remainH);
-                    var slicePx   = sliceH * ratio;
-                    var sliceCanvas = document.createElement('canvas');
-                    sliceCanvas.width  = canvas.width;
-                    sliceCanvas.height = Math.ceil(slicePx);
-                    var ctx = sliceCanvas.getContext('2d');
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
-                    ctx.drawImage(canvas, 0, srcY, canvas.width, Math.ceil(slicePx), 0, 0, canvas.width, Math.ceil(slicePx));
-                    var imgData = sliceCanvas.toDataURL('image/jpeg', 0.98);
-                    if (srcY > 0) pdf.addPage();
-                    pdf.addImage(imgData, 'JPEG', 5, posY, imgW, sliceH);
-                    srcY     += Math.ceil(slicePx);
-                    remainH  -= sliceH;
-                }
+        var bodyContent =
+            '<div style="text-align:center;padding-bottom:16px;margin-bottom:24px;border-bottom:3px solid #2d4a44;">' +
+                '<div style="font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#888;margin-bottom:4px;">CivilAccess Web System</div>' +
+                '<div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">' + title + '</div>' +
+                '<div style="font-size:9px;color:#aaa;margin-top:6px;">Generated on: ' + new Date().toLocaleString() + '</div>' +
+            '</div>' +
+            '<table style="width:100%;border-collapse:collapse;margin-top:8px;">' +
+                '<thead><tr>' + headerCells + '</tr></thead>' +
+                '<tbody>' + (tableRows || '<tr><td colspan="' + headers.length + '" style="border:1px solid #ddd;padding:20px;text-align:center;color:#aaa;font-size:12px;">No records</td></tr>') + '</tbody>' +
+            '</table>' +
+            '<div style="margin-top:30px;padding-top:12px;border-top:1px solid #e0e0e0;text-align:center;font-size:9px;color:#aaa;">Official document from CivilAccess Web System &nbsp;|&nbsp; Confidential</div>';
 
-                pdf.save(filename);
-                document.body.removeChild(overlay);
-                if (callback) callback();
-            }).catch(function(err) {
-                document.body.removeChild(overlay);
-                console.error('PDF render error:', err);
-                showToast('PDF error: ' + err.message, 'error');
-            });
-        }, 300);
+        var wrapper = document.createElement('div');
+        wrapper.style.cssText = 'font-family:Arial,sans-serif;padding:36px;background:white;color:#222;';
+        wrapper.innerHTML = bodyContent;
+
+        var opt = {
+            margin: [0.3, 0.3, 0.3, 0.3],
+            filename: title.replace(/\s+/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+        };
+
+        try {
+            await html2pdf().set(opt).from(wrapper).save();
+            showToast('PDF downloaded!', 'success');
+        } catch (err) {
+            console.error('PDF generation error:', err);
+            showToast('PDF error: ' + err.message, 'error');
+        }
     }
 
     function exportTableCSV(tbodyId, headers, filePrefix) {
@@ -934,39 +938,6 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         showToast('CSV downloaded!', 'success');
-    }
-
-    function exportTablePDF(tbodyId, title, headers) {
-        var rows = document.querySelectorAll('#' + tbodyId + ' tr');
-        var tableRows = '';
-        rows.forEach(function(row) {
-            if (row.style.display === 'none') return;
-            if (row.cells.length < 2) return;
-            tableRows += '<tr>';
-            for (var i = 0; i < row.cells.length - 1; i++) {
-                var txt   = (row.cells[i].textContent || '').trim();
-                var isAmt = txt.startsWith('₱');
-                tableRows += '<td style="padding:6px 10px;border-bottom:1px solid #eee;' +
-                    (isAmt ? 'text-align:right;font-weight:600;' : '') + '">' + txt + '</td>';
-            }
-            tableRows += '</tr>';
-        });
-        var headerCells = headers.map(function(h) {
-            return '<th style="padding:8px 10px;background:#f1f5f3;color:#2d4a44;font-size:11px;border-bottom:2px solid #FED734;text-align:left;">' + h + '</th>';
-        }).join('');
-        var html = '<div style="font-family:Segoe UI,Arial,sans-serif;padding:30px;max-width:900px;">' +
-            '<div style="border-bottom:3px solid #2d4a44;padding-bottom:12px;margin-bottom:20px;">' +
-            '<h2 style="color:#2d4a44;margin:0;">' + title + '</h2>' +
-            '<p style="color:#999;font-size:12px;margin:4px 0 0;">Generated: ' + new Date().toLocaleString() + '</p></div>' +
-            '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
-            '<thead><tr>' + headerCells + '</tr></thead>' +
-            '<tbody>' + (tableRows || '<tr><td colspan="' + headers.length + '" style="padding:20px;text-align:center;color:#aaa;">No records</td></tr>') + '</tbody>' +
-            '</table>' +
-            '<div style="margin-top:24px;text-align:center;font-size:10px;color:#aaa;border-top:1px solid #ddd;padding-top:10px;">CivilAccess Financial Management System</div>' +
-            '</div>';
-        renderPDF(html, title.replace(/\s+/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.pdf', 'landscape', function() {
-            showToast('PDF downloaded!', 'success');
-        });
     }
 
     window.addEventListener('DOMContentLoaded', function() {

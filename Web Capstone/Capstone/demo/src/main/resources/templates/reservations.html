@@ -288,6 +288,23 @@
         margin-bottom: 12px;
     }
 
+    /* Error toast modal (used for validation / failure messages) */
+    .error-toast-modal .modal-content {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+    }
+    .error-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
+    #errorMessage {
+        font-size: 13px;
+        opacity: 0.95;
+        margin-top: 6px;
+    }
+
     /* Confirm Modal Overlay */
     .confirm-modal-overlay {
         display: none;
@@ -336,6 +353,16 @@
     .confirm-ok {
         background-color: #e74c3c;
         color: white;
+    }
+
+    /* Time-conflict modal (specialized "error" confirm-style modal) */
+    #timeConflictModal .confirm-modal-content h4 {
+        color: #e74c3c;
+    }
+    #timeConflictModal .confirm-modal-content p {
+        color: #555;
+        text-align: left;
+        line-height: 1.5;
     }
 </style>
 
@@ -547,6 +574,22 @@
     </div>
 </div>
 
+<!-- Error Modal (validation / failure messages, replaces mis-used success toast) -->
+<div class="modal fade error-toast-modal" id="errorModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="error-icon"><i class="bi bi-x-circle-fill"></i></div>
+                <h5 id="errorTitle">Something went wrong</h5>
+                <p id="errorMessage" class="mb-0"></p>
+            </div>
+            <div class="modal-footer justify-content-center border-0 pb-4">
+                <button type="button" class="btn btn-light" id="errorOkBtn" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Custom Confirmation Modals -->
 <div id="approveConfirmModal" class="confirm-modal-overlay">
     <div class="confirm-modal-content">
@@ -588,6 +631,17 @@
         <div class="confirm-modal-buttons">
             <button class="confirm-cancel" onclick="closeArchiveConfirm()">Cancel</button>
             <button class="confirm-ok" id="confirmArchiveBtn">Archive</button>
+        </div>
+    </div>
+</div>
+
+<!-- Time Slot Conflict Modal (shown instead of the Approve confirm when the slot is taken) -->
+<div id="timeConflictModal" class="confirm-modal-overlay">
+    <div class="confirm-modal-content">
+        <h4><i class="bi bi-exclamation-triangle-fill"></i> Time Slot Unavailable</h4>
+        <p id="timeConflictMessage">This time slot overlaps with an existing approved reservation.</p>
+        <div class="confirm-modal-buttons">
+            <button class="confirm-ok" style="background-color:#e74c3c;" onclick="closeTimeConflictModal()">OK</button>
         </div>
     </div>
 </div>
@@ -723,6 +777,52 @@
     }
 
     // ============================================
+    // TIME FORMATTING HELPERS (12-hour / PH time)
+    // ============================================
+
+    // Converts a "HH:mm" (24h) string to "h:mm AM/PM"
+    function formatTime12(timeString) {
+        if (!timeString) return '';
+        const parts = timeString.split(':');
+        if (parts.length < 2) return timeString;
+        const hour = parseInt(parts[0], 10);
+        const minutes = parts[1].padStart(2, '0');
+        if (isNaN(hour)) return timeString;
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        return `${hour12}:${minutes} ${ampm}`;
+    }
+
+    // Builds a "8:00 AM - 5:00 PM" style label from a reservation object,
+    // regardless of whether it carries timeFrom/timeTo or a pre-built timeSlot string.
+    function formatTimeSlot(r) {
+        if (!r) return 'N/A';
+        if (r.timeFrom && r.timeTo) {
+            return `${formatTime12(r.timeFrom)} - ${formatTime12(r.timeTo)}`;
+        }
+        if (r.timeSlot) {
+            const bits = r.timeSlot.split('-').map(b => b.trim());
+            if (bits.length === 2 && /^\d{1,2}:\d{2}$/.test(bits[0]) && /^\d{1,2}:\d{2}$/.test(bits[1])) {
+                return `${formatTime12(bits[0])} - ${formatTime12(bits[1])}`;
+            }
+            return r.timeSlot; // already formatted / not a plain HH:mm-HH:mm string
+        }
+        return 'N/A';
+    }
+
+    // Pulls out raw "HH:mm" from/to values from a reservation, whichever shape it's in.
+    function getRawTimeRange(r) {
+        if (r.timeFrom && r.timeTo) {
+            return { from: r.timeFrom, to: r.timeTo };
+        }
+        if (r.timeSlot) {
+            const bits = r.timeSlot.split('-').map(b => b.trim());
+            if (bits.length === 2) return { from: bits[0], to: bits[1] };
+        }
+        return { from: null, to: null };
+    }
+
+    // ============================================
     // EXISTING RESERVATIONS FUNCTIONS (unchanged)
     // ============================================
 
@@ -788,7 +888,7 @@
                         <td>${escapeHtml(r.fullName)}</td>
                         <td>${escapeHtml(r.court)}</td>
                         <td>${formatDate(r.date)}</td>
-                        <td>${r.timeSlot || (r.timeFrom && r.timeTo ? r.timeFrom + ' - ' + r.timeTo : 'N/A')}</td>
+                        <td>${formatTimeSlot(r)}</td>
                         <td>${escapeHtml(r.purpose || 'N/A')}</td>
                         <td>${escapeHtml(r.processedBy) || 'N/A'}</td>
                         <td>
@@ -802,7 +902,7 @@
                         <td>${escapeHtml(r.fullName)}</td>
                         <td>${escapeHtml(r.court)}</td>
                         <td>${formatDate(r.date)}</td>
-                        <td>${r.timeSlot || (r.timeFrom && r.timeTo ? r.timeFrom + ' - ' + r.timeTo : 'N/A')}</td>
+                        <td>${formatTimeSlot(r)}</td>
                         <td>${escapeHtml(r.purpose || 'N/A')}</td>
                         <td>${escapeHtml(r.processedBy) || 'N/A'}</td>
                         <td>
@@ -816,11 +916,11 @@
                         <td>${escapeHtml(r.fullName)}</td>
                         <td>${escapeHtml(r.court)}</td>
                         <td>${formatDate(r.date)}</td>
-                        <td>${r.timeSlot}</td>
+                        <td>${formatTimeSlot(r)}</td>
                         <td>${escapeHtml(r.purpose || 'N/A')}</td>
                         <td>
                             <button class="view-btn" onclick="viewReservation(${r.id})">View</button>
-                            ${status === 'incoming' ? `<button class="approve-btn" onclick="openApproveConfirm(${r.id})">Approve</button>` : ''}
+                            ${status === 'incoming' ? `<button class="approve-btn" onclick="checkApprovalConflict(${r.id})">Approve</button>` : ''}
                             ${status === 'approved' ? `<button class="process-btn" onclick="openProcessConfirm(${r.id})">Process</button>` : ''}
                             ${status === 'inprogress' ? `<button class="resolve-btn" onclick="openResolveConfirm(${r.id})">Resolve</button>` : ''}
                             ${status !== 'archive' && status !== 'resolved' ? `<button class="archive-btn" onclick="openArchiveConfirm(${r.id})">Archive</button>` : ''}
@@ -844,6 +944,61 @@
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // ============================================
+    // TIME-SLOT CONFLICT CHECK (runs before Approve)
+    // ============================================
+
+    // Called from the "Approve" button. Fetches the target reservation plus all
+    // currently-active (Approved / In Progress) reservations, and checks for a
+    // court + date + time overlap before letting the normal approve-confirm modal open.
+    async function checkApprovalConflict(id) {
+        try {
+            const [target, approvedList, inProgressList] = await Promise.all([
+                fetch('/reservations/' + id).then(r => r.json()),
+                fetch('/reservations/api/approved').then(r => r.json()),
+                fetch('/reservations/api/inprogress').then(r => r.json())
+            ]);
+
+            const targetRange = getRawTimeRange(target);
+
+            const activeReservations = [...(approvedList || []), ...(inProgressList || [])];
+
+            const conflict = activeReservations.find(r => {
+                if (r.id === target.id) return false;
+                if (r.court !== target.court) return false;
+                if (r.date !== target.date) return false;
+
+                const rRange = getRawTimeRange(r);
+                if (!rRange.from || !rRange.to || !targetRange.from || !targetRange.to) return false;
+
+                // Overlap if the new slot starts before the existing one ends
+                // AND ends after the existing one starts.
+                return targetRange.from < rRange.to && targetRange.to > rRange.from;
+            });
+
+            if (conflict) {
+                const conflictLabel = conflict.status === 'IN_PROGRESS' ? 'In Progress' : 'Approved';
+                document.getElementById('timeConflictMessage').innerHTML =
+                    `<strong>${escapeHtml(target.court)}</strong> on <strong>${formatDate(target.date)}</strong> ` +
+                    `is already booked by <strong>${escapeHtml(conflict.fullName)}</strong> ` +
+                    `from <strong>${formatTimeSlot(conflict)}</strong> (${conflictLabel}). ` +
+                    `Please resolve, archive, or reschedule the conflicting reservation before approving this one.`;
+                document.getElementById('timeConflictModal').style.display = 'flex';
+                return;
+            }
+
+            // No conflict — proceed to the normal approve confirmation.
+            openApproveConfirm(id);
+        } catch (error) {
+            console.error('Error checking time slot conflict:', error);
+            showError('Could Not Verify Availability', 'We couldn\'t check for scheduling conflicts right now. Please try again.');
+        }
+    }
+
+    function closeTimeConflictModal() {
+        document.getElementById('timeConflictModal').style.display = 'none';
     }
 
     // Confirmation modal functions
@@ -941,6 +1096,10 @@
         if (e.target === this) closeArchiveConfirm();
     });
 
+    document.getElementById('timeConflictModal').addEventListener('click', function(e) {
+        if (e.target === this) closeTimeConflictModal();
+    });
+
     function createReservation() {
         const reservation = {
             fullName: document.getElementById('fullName').value,
@@ -953,12 +1112,12 @@
         };
         
         if (!reservation.fullName || !reservation.date || !reservation.timeFrom || !reservation.timeTo) {
-            showSuccess('Please fill in all required fields');
+            showError('Missing Fields', 'Please fill in all required fields.');
             return;
         }
         
         if (reservation.timeFrom >= reservation.timeTo) {
-            showSuccess('End time must be after start time');
+            showError('Invalid Time', 'End time must be after start time.');
             return;
         }
         
@@ -976,10 +1135,13 @@
                 document.getElementById('reservationForm').reset();
                 loadReservations(currentTab);
             } else {
-                showSuccess('Error: ' + (data.error || 'Unknown error'));
+                showError('Could Not Create Reservation', data.error || 'Unknown error');
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            showError('Could Not Create Reservation', 'Something went wrong while saving. Please try again.');
+        });
     }
 
     function viewReservation(id) {
@@ -998,7 +1160,7 @@
                     <p><strong>Resident/Organization:</strong> ${escapeHtml(data.fullName)}</p>
                     <p><strong>Court:</strong> ${escapeHtml(data.court)}</p>
                     <p><strong>Date:</strong> ${formatDate(data.date)}</p>
-                    <p><strong>Time Slot:</strong> ${data.timeSlot || (data.timeFrom && data.timeTo ? data.timeFrom + ' - ' + data.timeTo : 'N/A')}</p>
+                    <p><strong>Time Slot:</strong> ${formatTimeSlot(data)}</p>
                     <p><strong>Purpose:</strong> ${escapeHtml(data.purpose || 'N/A')}</p>
                     ${data.processedBy ? `<p><strong>Processed By:</strong> ${escapeHtml(data.processedBy)}</p>` : ''}
                     <hr>
@@ -1029,8 +1191,12 @@
                 loadReservations(currentTab);
                 updateAllCounts();
             } else {
-                showSuccess('Error updating status');
+                showError('Update Failed', `We couldn't mark this reservation as ${statusText}. Please try again.`);
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('Update Failed', 'Something went wrong. Please try again.');
         });
     }
 
@@ -1077,6 +1243,15 @@
         const successModal = new bootstrap.Modal(document.getElementById('successModal'));
         successModal.show();
         setTimeout(() => successModal.hide(), 2000);
+    }
+
+    // Dedicated error toast — same look/feel as showSuccess but styled red,
+    // used for validation failures and failed requests instead of the green success toast.
+    function showError(title, message) {
+        document.getElementById('errorTitle').textContent = title || 'Something went wrong';
+        document.getElementById('errorMessage').textContent = message || '';
+        const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+        errorModal.show();
     }
 
     function startPolling() {

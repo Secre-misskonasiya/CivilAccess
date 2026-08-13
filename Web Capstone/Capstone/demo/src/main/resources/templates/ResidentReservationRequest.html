@@ -240,13 +240,14 @@
                 <span class="hint-text"  id="hint-date">✓ Valid date</span>
 
                 <!-- Time From / Time To — free selection, mirrors barangay-side inputs -->
-                <label for="timeFrom">Time From *</label>
+                <label for="timeFrom">Time From * (Open 7:00 AM - 10:00 PM)</label>
                 <input type="time" id="timeFrom" oninput="onTimeChange()">
                 <span class="error-text" id="err-timeFrom">Start time is required</span>
 
-                <label for="timeTo">Time To *</label>
+                <label for="timeTo">Time To * (Open 7:00 AM - 10:00 PM)</label>
                 <input type="time" id="timeTo" oninput="onTimeChange()">
                 <span class="error-text" id="err-timeTo">End time is required</span>
+                <span class="hint-text" id="hint-time">✓ Valid time range</span>
 
                 <!-- Purpose -->
                 <label for="purpose">Purpose / Event Description *</label>
@@ -310,6 +311,10 @@
         'Barangay Session Hall',
     ];
 
+    /* ── Operating hours — 7:00 AM to 10:00 PM, matches mobile app ── */
+    const OPEN_TIME  = '07:00';
+    const CLOSE_TIME = '22:00';
+
     /* ── State ── */
     let currentUser  = null;
     let selectedCourt = COURTS[0];
@@ -335,21 +340,44 @@
         return '';
     };
 
-    /* ── Time helpers — NEW: free time-range validation ── */
+    /* ── Time helpers — free time-range validation + operating hours (matches mobile) ── */
+    function validateOperatingHours(time) {
+        if (!time) return '';
+        if (time < OPEN_TIME || time > CLOSE_TIME) {
+            return 'The court is only open from 7:00 AM to 10:00 PM. Please select a time within operating hours.';
+        }
+        return '';
+    }
+
     function validateTimeRange() {
         const from = document.getElementById('timeFrom').value;
         const to   = document.getElementById('timeTo').value;
         let ok = true;
+        showHint('time', false);
 
-        if (!from) { showErr('timeFrom', true, 'Start time is required'); ok = false; }
-        else       { showErr('timeFrom', false); }
+        if (!from) {
+            showErr('timeFrom', true, 'Start time is required'); ok = false;
+        } else {
+            const hoursErr = validateOperatingHours(from);
+            if (hoursErr) { showErr('timeFrom', true, hoursErr); ok = false; }
+            else showErr('timeFrom', false);
+        }
 
-        if (!to)   { showErr('timeTo', true, 'End time is required'); ok = false; }
-        else       { showErr('timeTo', false); }
+        if (!to) {
+            showErr('timeTo', true, 'End time is required'); ok = false;
+        } else {
+            const hoursErr = validateOperatingHours(to);
+            if (hoursErr) { showErr('timeTo', true, hoursErr); ok = false; }
+            else showErr('timeTo', false);
+        }
 
-        if (from && to && from >= to) {
-            showErr('timeTo', true, 'End time must be after start time');
-            ok = false;
+        if (ok && from && to) {
+            if (from >= to) {
+                showErr('timeTo', true, 'End time must be after start time');
+                ok = false;
+            } else {
+                showHint('time', true);
+            }
         }
         return ok;
     }
@@ -359,19 +387,22 @@
         checkTimeConflict();
     }
 
-    /* ── Conflict check against existing reservations for same court+date ── */
+    /* ── Conflict check against existing ACTIVE reservations for same court+date ──
+       Mirrors the mobile app: only INCOMING / APPROVED / IN_PROGRESS / READY reservations
+       are considered blocking (rejected/cancelled/archived slots stay bookable). ── */
     async function checkTimeConflict() {
         const dateVal = document.getElementById('date').value;
         const from    = document.getElementById('timeFrom').value;
         const to      = document.getElementById('timeTo').value;
         if (!selectedCourt || !dateVal || !from || !to || from >= to) return false;
+        if (validateOperatingHours(from) || validateOperatingHours(to)) return false;
 
         const { data, error } = await sb
             .from('reservations')
             .select('id, time_from, time_to, status')
             .eq('court', selectedCourt)
             .eq('date', dateVal)
-            .neq('status', 'ARCHIVED');
+            .in('status', ['INCOMING', 'APPROVED', 'IN_PROGRESS', 'READY']);
 
         if (error) { console.error('Conflict check failed:', error); return false; }
 
@@ -383,6 +414,7 @@
 
         if (hasConflict) {
             showErr('timeTo', true, 'This court is already reserved for an overlapping time on that date. Please pick another time.');
+            showHint('time', false);
         }
         return hasConflict;
     }

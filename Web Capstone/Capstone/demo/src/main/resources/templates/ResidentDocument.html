@@ -479,20 +479,20 @@
         });
     }
 
-    function formatTimeSlot(slot) {
-        if (!slot) return 'N/A';
-        try {
-            const [start, end] = slot.split('-');
-            const fmt = (t) => {
-                const [h, m] = t.split(':').map(Number);
-                const period = h >= 12 ? 'PM' : 'AM';
-                const hour = h % 12 || 12;
-                return `${hour}:${String(m).padStart(2, '0')} ${period}`;
-            };
-            return `${fmt(start)} – ${fmt(end)}`;
-        } catch {
-            return slot;
-        }
+    /* ── Time helpers ──────────────────────────────────────────────────────
+       Reservations store separate time_from / time_to columns (HH:MM, 24h),
+       not a combined "time_slot" string — format them directly. ── */
+    function formatTime12h(t) {
+        if (!t) return 'N/A';
+        const [h, m] = t.split(':').map(Number);
+        const period = h >= 12 ? 'PM' : 'AM';
+        const hour = h % 12 || 12;
+        return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+    }
+
+    function formatTimeRange(from, to) {
+        if (!from || !to) return 'N/A';
+        return `${formatTime12h(from)} – ${formatTime12h(to)}`;
     }
 
     function daysBetween(start, end) {
@@ -640,8 +640,7 @@
     // Reservation Details Modal
     function showReservationDetails(reservation) {
         const status = getStatusStyles(reservation.status);
-        const days = daysBetween(reservation.date, reservation.date);
-        
+
         const html = `
             <div class="status-banner" style="background:${status.color}20;">
                 <i class="bi ${status.icon}" style="color:${status.color}; font-size:24px;"></i>
@@ -664,7 +663,7 @@
                     </div>
                     <div class="info-row">
                         <span class="info-label">Time Slot</span>
-                        <span class="info-value">${formatTimeSlot(reservation.time_slot)}</span>
+                        <span class="info-value">${formatTimeRange(reservation.time_from, reservation.time_to)}</span>
                     </div>
                 </div>
             </div>
@@ -855,7 +854,7 @@
                 table_source: 'reservations',
                 display_name: r.court || 'Court Reservation',
                 display_detail: r.purpose || '',
-                display_meta: r.date ? `${r.date} ${r.time_slot ? '• ' + r.time_slot : ''}` : '',
+                display_meta: r.date ? `${r.date}${r.time_from && r.time_to ? ' • ' + formatTimeRange(r.time_from, r.time_to) : ''}` : '',
                 status: r.status || 'INCOMING',
                 date_submitted: r.created_at,
             }));
