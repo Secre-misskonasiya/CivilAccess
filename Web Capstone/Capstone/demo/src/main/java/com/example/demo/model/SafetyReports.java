@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import java.util.UUID;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,6 +26,9 @@ public class SafetyReports{
     private String reporterName;
     private String reporterContact;
     private LocalDate dateSubmitted;
+
+    @Column(name = "reporter_id")
+    private UUID reporterId;
 
     private String status;
 
@@ -88,6 +92,9 @@ public class SafetyReports{
 
     public LocalDate getDateSubmitted() { return dateSubmitted; }
     public void setDateSubmitted(LocalDate dateSubmitted) { this.dateSubmitted = dateSubmitted; }
+
+    public UUID getReporterId() { return reporterId; }
+    public void setReporterId(UUID reporterId) { this.reporterId = reporterId; }
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
