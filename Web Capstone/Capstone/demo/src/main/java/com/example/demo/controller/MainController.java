@@ -32,6 +32,7 @@ import jakarta.servlet.http.HttpSession;
 import java.security.Principal;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -52,6 +53,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
@@ -1200,5 +1202,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 error.put("error", e.getMessage());
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
             }
+
         }
 }

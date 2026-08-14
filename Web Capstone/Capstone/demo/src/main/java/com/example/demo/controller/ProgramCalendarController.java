@@ -19,9 +19,11 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,24 +133,37 @@ public class ProgramCalendarController {
     // ── Upcoming / Month ──────────────────────────────────────────────────────
 
     @GetMapping("/upcoming")
-    public ResponseEntity<List<Map<String, Object>>> getUpcomingPrograms() {
-        LocalDate today = LocalDate.now();
+    public ResponseEntity<List<Map<String, Object>>> getUpcomingPrograms(
+            @RequestParam(defaultValue = "60") int minutes,
+            @RequestParam(required = false) Long lastId) {
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+        LocalDate untilDate = now.plusMinutes(minutes).toLocalDate();
+
         List<Map<String, Object>> upcoming = calendarService.getAllEvents()
             .stream()
-            .filter(e -> e.getEventDate() != null && !e.getEventDate().isBefore(today))
-            .sorted((a, b) -> a.getEventDate().compareTo(b.getEventDate()))
-            .limit(5)
+            .filter(e -> e.getEventDate() != null)
+            .filter(e -> !e.getEventDate().isBefore(today) && !e.getEventDate().isAfter(untilDate))
+            .filter(e -> e.getStartTime() != null)                        // ignore events without start time
+            .filter(e -> {
+                // If event is today, only include if start time is still in the future
+                if (e.getEventDate().isEqual(today)) {
+                    return e.getStartTime().isAfter(now.toLocalTime());
+                }
+                return true;
+            })
+            .filter(e -> lastId == null || e.getId() > lastId)           // incremental fetching
+            .sorted(Comparator.comparing(ProgramCalendar::getEventDate)
+                    .thenComparing(ProgramCalendar::getStartTime))
             .map(e -> {
                 Map<String, Object> item = new HashMap<>();
-                item.put("id",        e.getId());
-                item.put("notes",     e.getNotes() != null ? e.getNotes() : "Unnamed Program");
-                item.put("eventDate", e.getEventDate().toString());
-                item.put("day",       e.getEventDate().getDayOfMonth());
-                item.put("month",     e.getEventDate().getMonthValue());
-                item.put("year",      e.getEventDate().getYear());
-                item.put("startTime", e.getStartTime() != null ? e.getStartTime().toString() : null);
-                item.put("endTime",   e.getEndTime() != null ? e.getEndTime().toString() : null);
-                item.put("location",  e.getLocation() != null ? e.getLocation() : "");
+                item.put("id",         e.getId());
+                // Use notes as the program name (since there is no separate name field)
+                item.put("programName", e.getNotes() != null ? e.getNotes() : "Community Program");
+                item.put("eventDate",  e.getEventDate().toString());
+                item.put("startTime",  e.getStartTime() != null ? e.getStartTime().toString() : null);
+                item.put("location",   e.getLocation() != null ? e.getLocation() : "TBD");
                 return item;
             })
             .collect(Collectors.toList());
@@ -594,4 +609,6 @@ public class ProgramCalendarController {
             return ResponseEntity.internalServerError().body(Map.of("error", "Failed to clear history"));
         }
     }
+
+
 }
