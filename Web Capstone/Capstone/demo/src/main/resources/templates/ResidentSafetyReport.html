@@ -319,6 +319,9 @@
 </head>
 <body>
 
+<script th:inline="javascript">
+  const CURRENT_RESIDENT_ID = /*[[${currentResidentId}]]*/ null;
+</script>
 
 <div class=" layout">
 <div th:replace="~{fragments/sidebar2 :: sidebar}"></div>
@@ -356,8 +359,10 @@
   <div class="chips">
     <div class="chip active" data-filter="all">All</div>
     <div class="chip" data-filter="incoming">For Verification</div>
+    <div class="chip" data-filter="approved">Approved</div>
     <div class="chip" data-filter="inprogress">In Progress</div>
     <div class="chip" data-filter="resolved">Resolved</div>
+    <div class="chip" data-filter="mine">My Reports</div>
   </div>
 
   <div id="feed">
@@ -365,6 +370,7 @@
     <th:block th:each="report : ${reports}">
       <article th:id="'report-' + ${report.id}"
                th:data-id="${report.id}"
+               th:data-reporterid="${report.reporterId}"
                th:data-status="${report.status != null ? #strings.toUpperCase(report.status) : 'INCOMING'}"
                th:data-type="${report.type}"
                th:data-title="${report.title}"
@@ -653,15 +659,21 @@
 
     cards.forEach(card => {
       const status = (card.dataset.status || 'INCOMING').toUpperCase();
+      const reporterId = card.dataset.reporterid || '';
+      const isMine = CURRENT_RESIDENT_ID && reporterId === CURRENT_RESIDENT_ID;
       const text = ((card.dataset.title || '') + ' ' + (card.dataset.type || '') + ' ' + (card.dataset.location || '')).toLowerCase();
 
       let matchesFilter = true;
       if (currentFilter === 'incoming') {
-        matchesFilter = status === 'INCOMING' || status === 'APPROVED';
+        matchesFilter = status === 'INCOMING';
+      } else if (currentFilter === 'approved') {
+        matchesFilter = status === 'APPROVED';
       } else if (currentFilter === 'inprogress') {
         matchesFilter = status === 'IN_PROGRESS';
       } else if (currentFilter === 'resolved') {
         matchesFilter = status === 'RESOLVED';
+      } else if (currentFilter === 'mine') {
+        matchesFilter = isMine;
       } else {
         matchesFilter = true;
       }
@@ -717,6 +729,7 @@
     article.id = 'report-' + r.id;
     article.className = 'card';
     article.dataset.id = r.id;
+    article.dataset.reporterid = r.reporterId || '';
     article.dataset.status = status;
     article.dataset.type = r.type || '';
     article.dataset.title = r.title || '';
