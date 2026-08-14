@@ -7,8 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -141,8 +140,8 @@
 
   .brgy-title {
     color: #fff;
-    font-size: 1.5rem;
-    font-weight: 650;
+    font-size: 0.95rem;
+    font-weight: 600;
     letter-spacing: 1.5px;
     text-transform: uppercase;
     margin-bottom: 32px;
@@ -232,8 +231,8 @@
     margin-bottom: 10px;
   }
 
-  input[type="email"],
-  input.styled-input {
+  #loginForm input[type="email"],
+  #loginForm input[type="password"] {
     width: 100%;
     padding: 15px 20px;
     background: rgba(255,255,255,0.07);
@@ -245,16 +244,16 @@
     transition: border 0.2s, background 0.2s;
   }
 
-  input::placeholder { color: rgba(255,255,255,0.28); font-size: 0.95rem; }
+  #loginForm input::placeholder { color: rgba(255,255,255,0.28); font-size: 0.95rem; }
 
-  input:focus {
+  #loginForm input:focus {
     outline: none;
     border-color: var(--teal-light);
     background: rgba(255,255,255,0.11);
   }
 
-  input.valid   { border-color: #4ade80; }
-  input.invalid { border-color: #ff6b6b; }
+  #loginForm input.valid   { border-color: #4ade80; }
+  #loginForm input.invalid { border-color: #ff6b6b; }
 
   .field-error { color: #ff8a8a; font-size: 0.82rem; margin-top: 5px; display: none; }
   .field-error.show { display: block; }
@@ -265,7 +264,7 @@
     margin-bottom: 28px;
   }
 
-  .forgot-password a {
+  .forgot-password a, .forgot-password span {
     color: rgba(255,255,255,0.45);
     font-size: 0.9rem;
     text-decoration: none;
@@ -274,7 +273,7 @@
     user-select: none;
   }
 
-  .forgot-password a:hover { color: var(--gold); }
+  .forgot-password a:hover, .forgot-password span:hover { color: var(--gold); }
 
   .login-button {
     width: 100%;
@@ -328,11 +327,11 @@
     color: rgba(255,255,255,0.35);
     padding: 0; display: flex; align-items: center;
     transition: color 0.2s;
+    z-index: 5;
   }
 
   .toggle-password:hover { color: rgba(255,255,255,0.7); }
 
-  
   .footer-links {
     margin-top: 16px;
     display: flex;
@@ -377,12 +376,134 @@
 
   .staff-link-text a:hover { color: #fff; }
 
+  /* Modal Styles */
+  .fp-modal-overlay {
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7); 
+    z-index: 9999;
+    justify-content: center; 
+    align-items: center;
+  }
+  
+  .fp-modal-overlay.show { 
+    display: flex !important; 
+  }
+
+  .fp-modal {
+    background: #fff; 
+    border-radius: 24px;
+    padding: 32px 28px; 
+    max-width: 500px; 
+    width: 90%;
+    max-height: 90vh; 
+    overflow-y: auto;
+    box-shadow: 0 28px 72px rgba(0,0,0,0.35);
+    position: relative;
+  }
+
+  .fp-modal-close {
+    position: absolute; top: 15px; right: 20px;
+    background: none; border: none;
+    font-size: 28px; color: #7a9d94;
+    cursor: pointer; line-height: 1;
+    z-index: 10;
+  }
+  .fp-modal-close:hover { color: #2d5049; }
+
+  .fp-modal-icon-circle {
+    width: 60px; height: 60px;
+    background: linear-gradient(135deg, #5ab5a0, #4a9d8c);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px; font-size: 30px;
+  }
+
+  .fp-modal-title {
+    color: #2d5049; font-size: 1.4rem; font-weight: 700;
+    text-align: center; margin-bottom: 6px;
+  }
+
+  .fp-modal-subtitle {
+    color: #5a7872; font-size: 0.9rem; text-align: center;
+    line-height: 1.55; margin-bottom: 16px;
+  }
+
+  .fp-modal-label {
+    color: #2d5049; font-size: 0.88rem; font-weight: 600;
+    margin-bottom: 5px; margin-top: 12px; display: block;
+  }
+
+  .fp-modal-input {
+    width: 100%; padding: 11px 14px;
+    background: #f5f5f5; border: 2px solid #e0e0e0;
+    border-radius: 11px; color: #2d5049;
+    font-size: 0.92rem; transition: all 0.2s;
+  }
+  .fp-modal-input:focus { outline: none; border-color: #5ab5a0; background: #fff; }
+
+  .fp-modal-pw-wrapper { position: relative; }
+  .fp-modal-pw-wrapper .fp-modal-input { padding-right: 46px; }
+
+  .fp-modal-eye {
+    position: absolute; right: 13px; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none;
+    cursor: pointer; color: #888; padding: 5px;
+    transition: color 0.2s;
+    z-index: 5;
+  }
+  .fp-modal-eye:hover { color: #2d5049; }
+
+  .fp-modal-btn {
+    width: 100%; padding: 12px;
+    background: #3D6D66; color: #fff;
+    font-size: 1rem; font-weight: 700;
+    border: none; border-radius: 11px;
+    cursor: pointer; font-family: inherit;
+    transition: all 0.25s; margin-top: 14px;
+  }
+  .fp-modal-btn:hover { background: #2d5049; }
+  .fp-modal-btn:disabled { background: #b8d4cd; cursor: not-allowed; }
+
+  .fp-modal-error {
+    background: #fde8e8; color: #c0392b; border-radius: 8px;
+    padding: 10px; font-size: 0.88rem; text-align: center;
+    margin-bottom: 10px; display: none;
+  }
+  .fp-modal-success {
+    background: #e8f5e9; color: #27ae60; border-radius: 8px;
+    padding: 10px; font-size: 0.88rem; text-align: center;
+    margin-bottom: 10px; display: none;
+  }
+  .fp-modal-error.show, .fp-modal-success.show { display: block; }
+
+  .fp-otp-row { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
+  .fp-otp-box {
+    width: 46px; height: 54px;
+    border: 2px solid #ddd; border-radius: 10px;
+    background: #f5f5f5; font-size: 22px;
+    font-weight: 700; color: #2d5049;
+    text-align: center; outline: none;
+    transition: border-color 0.2s;
+  }
+  .fp-otp-box:focus { border-color: #5ab5a0; background: #fff; }
+
+  .fp-resend-row { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 14px; }
+  .fp-resend-text { color: #7a9d94; font-size: 0.88rem; }
+  .fp-resend-link { color: #3D6D66; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+  .fp-resend-link:hover { text-decoration: underline; }
+  .fp-resend-link.disabled { color: #b8d4cd; cursor: not-allowed; pointer-events: none; }
+
+  .fp-step { display: none; }
+  .fp-step.active { display: block; }
+
   .sys-overlay {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.72);
     z-index: 99999;
     justify-content: center; align-items: center;
-    animation: fadeIn 0.2s ease;
   }
   .sys-overlay.show { display: flex; }
 
@@ -409,7 +530,7 @@
     border: 2px solid rgba(255,255,255,0.5);
     padding: 9px 32px; border-radius: 8px;
     font-size: 0.95rem; font-weight: 700;
-    cursor: pointer; font-family: inherit; transition: background 0.2s;
+    cursor: pointer; font-family: inherit;
   }
   .sys-btn-ok:hover { background: rgba(255,255,255,0.35); }
 
@@ -425,7 +546,6 @@
     padding: 40px 32px; max-width: 400px; width: 90%;
     text-align: center;
     box-shadow: 0 28px 72px rgba(0,0,0,0.35);
-    animation: slideUp 0.25s ease;
   }
 
   .deact-icon  { font-size: 52px; margin-bottom: 14px; }
@@ -437,124 +557,9 @@
     border: none; border-radius: 10px;
     padding: 12px 32px; font-size: 1rem;
     font-weight: 700; cursor: pointer;
-    font-family: inherit; transition: background 0.2s;
+    font-family: inherit;
   }
   .deact-btn:hover { background: #c0392b; }
-
-  /* Forgot Password Modal Styles */
-  .modal-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7); z-index: 1000;
-    justify-content: center; align-items: center;
-    animation: fadeIn 0.3s ease;
-  }
-  .modal-overlay.show { display: flex; }
-
-  .modal-overlay .modal {
-    background: #fff; border-radius: 24px;
-    padding: 32px 28px; max-width: 520px; width: 90%;
-    max-height: 90vh; overflow-y: auto;
-    box-shadow: 0 28px 72px rgba(0,0,0,0.35);
-    animation: slideUp 0.3s ease;
-    position: relative;
-  }
-
-  .modal-close {
-    position: absolute; top: 20px; right: 22px;
-    background: none; border: none;
-    font-size: 28px; color: #7a9d94;
-    cursor: pointer; transition: color 0.2s; line-height: 1;
-    z-index: 10;
-  }
-  .modal-close:hover { color: #2d5049; }
-
-  .modal-icon-circle {
-    width: 60px; height: 60px;
-    background: linear-gradient(135deg, #5ab5a0, #4a9d8c);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 14px; font-size: 30px;
-  }
-
-  .modal-title {
-    color: #2d5049; font-size: 1.4rem; font-weight: 700;
-    text-align: center; margin-bottom: 6px;
-  }
-
-  .modal-subtitle {
-    color: #5a7872; font-size: 0.9rem; text-align: center;
-    line-height: 1.55; margin-bottom: 16px;
-  }
-
-  .modal-label {
-    color: #2d5049; font-size: 0.88rem; font-weight: 600;
-    margin-bottom: 5px; margin-top: 12px; display: block;
-  }
-
-  .modal-input {
-    width: 100%; padding: 11px 14px;
-    background: #f5f5f5 !important; border: 2px solid #e0e0e0 !important;
-    border-radius: 11px; color: #2d5049 !important;
-    font-size: 0.92rem; transition: all 0.2s;
-  }
-  .modal-input:focus { outline: none; border-color: #5ab5a0; background: #fff !important; }
-
-  .modal-pw-wrapper { position: relative; }
-  .modal-pw-wrapper .modal-input { padding-right: 46px; }
-
-  .modal-eye {
-    position: absolute; right: 13px; top: 50%;
-    transform: translateY(-50%);
-    background: none; border: none;
-    cursor: pointer; color: #888; padding: 0; transition: color 0.2s;
-    z-index: 5;
-  }
-  .modal-eye:hover { color: #2d5049; }
-
-  .modal-btn {
-    width: 100%; padding: 12px;
-    background: #3D6D66; color: #fff;
-    font-size: 1rem; font-weight: 700;
-    border: none; border-radius: 11px;
-    cursor: pointer; font-family: inherit;
-    transition: all 0.25s; margin-top: 14px;
-  }
-  .modal-btn:hover { background: #2d5049; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(45,80,73,0.3); }
-  .modal-btn:disabled { background: #b8d4cd; cursor: not-allowed; transform: none; box-shadow: none; }
-
-  .modal-error {
-    background: #fde8e8; color: #c0392b; border-radius: 8px;
-    padding: 10px; font-size: 0.88rem; text-align: center;
-    margin-bottom: 10px; display: none;
-  }
-
-  .modal-success {
-    background: #e8f5e9; color: #27ae60; border-radius: 8px;
-    padding: 10px; font-size: 0.88rem; text-align: center;
-    margin-bottom: 10px; display: none;
-  }
-
-  .modal-error.show, .modal-success.show { display: block; }
-
-  .otp-row { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
-  .otp-box {
-    width: 46px; height: 54px;
-    border: 2px solid #ddd; border-radius: 10px;
-    background: #f5f5f5; font-size: 22px;
-    font-weight: 700; color: #2d5049;
-    text-align: center; outline: none;
-    transition: border-color 0.2s;
-  }
-  .otp-box:focus { border-color: #5ab5a0; background: #fff; }
-
-  .resend-row { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 14px; }
-  .resend-text { color: #7a9d94; font-size: 0.88rem; }
-  .resend-link { color: #3D6D66; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
-  .resend-link:hover { text-decoration: underline; }
-  .resend-link.disabled { color: #b8d4cd; cursor: not-allowed; pointer-events: none; }
-
-  .step { display: none; }
-  .step.active { display: block; }
 
   @media (max-width: 768px) {
     .login-container { flex-direction: column; height: auto; max-width: 100%; }
@@ -563,24 +568,23 @@
     .login-title     { font-size: 2.2rem; }
     .welcome-title   { font-size: 1.7rem; }
     .backbutton      { font-size: 0.85rem; padding: 6px 14px; }
-    .modal-overlay .modal { padding: 32px 24px; }
     .logo            { width: 110px; height: 110px; }
     body             { font-size: 15px; padding: 20px; }
     .login-container { border-radius: 24px; }
-    .modal-title     { font-size: 1.3rem; }
   }
 
   @media (max-width: 480px) {
     .right-panel { padding: 32px 24px; }
     .login-title { font-size: 1.9rem; }
     .welcome-title { font-size: 1.5rem; }
-    .modal-overlay .modal { padding: 28px 20px; }
-    .otp-box { width: 40px; height: 48px; font-size: 18px; }
+    .fp-modal { padding: 28px 20px; }
+    .fp-otp-box { width: 40px; height: 48px; font-size: 18px; }
   }
 </style>
 </head>
 <body>
 
+<!-- System overlays -->
 <div class="sys-overlay" id="sysSuccessOverlay">
   <div class="sys-modal-box success">
     <div class="sys-modal-body">
@@ -617,60 +621,64 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="forgotPasswordModal">
-  <div class="modal">
-    <button class="modal-close" id="closeForgotModal">&times;</button>
+<!-- Forgot Password Modal -->
+<div class="fp-modal-overlay" id="fpModalOverlay">
+  <div class="fp-modal">
+    <button class="fp-modal-close" id="fpModalClose">&times;</button>
 
-    <div class="step active" id="fpStep1">
-      <div class="modal-icon-circle">✉️</div>
-      <h2 class="modal-title">Forgot Password?</h2>
-      <p class="modal-subtitle">Enter your registered email and we'll send you a 6-digit verification code.</p>
-      <div class="modal-error" id="fp1Error"></div>
-      <div class="modal-success" id="fp1Success"></div>
-      <label class="modal-label" for="fpEmailInput">Email Address</label>
-      <input class="modal-input" type="email" id="fpEmailInput" placeholder="your@email.com" autocomplete="off">
-      <button class="modal-btn" id="fpSendOtpBtn">Send 6-Digit Code</button>
+    <!-- Step 1: Enter Email -->
+    <div class="fp-step active" id="fpStep1">
+      <div class="fp-modal-icon-circle">✉️</div>
+      <h2 class="fp-modal-title">Forgot Password?</h2>
+      <p class="fp-modal-subtitle">Enter your registered email and we'll send you a 6-digit verification code.</p>
+      <div class="fp-modal-error" id="fp1Error"></div>
+      <div class="fp-modal-success" id="fp1Success"></div>
+      <label class="fp-modal-label" for="fpEmailInput">Email Address</label>
+      <input class="fp-modal-input" type="email" id="fpEmailInput" placeholder="your@email.com" autocomplete="off">
+      <button class="fp-modal-btn" id="fpSendOtpBtn">Send 6-Digit Code</button>
     </div>
 
-    <div class="step" id="fpStep2">
-      <div class="modal-icon-circle">🔐</div>
-      <h2 class="modal-title">Enter Verification Code</h2>
-      <p class="modal-subtitle" id="fpStep2Subtitle">We sent a 6-digit code to <strong></strong></p>
-      <div class="modal-error" id="fp2Error"></div>
-      <div class="modal-success" id="fp2Success"></div>
-      <div class="otp-row">
-        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" data-index="0">
-        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" data-index="1">
-        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" data-index="2">
-        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" data-index="3">
-        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" data-index="4">
-        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" data-index="5">
+    <!-- Step 2: Enter OTP -->
+    <div class="fp-step" id="fpStep2">
+      <div class="fp-modal-icon-circle">🔐</div>
+      <h2 class="fp-modal-title">Enter Verification Code</h2>
+      <p class="fp-modal-subtitle">We sent a 6-digit code to <strong id="fpStep2Email"></strong></p>
+      <div class="fp-modal-error" id="fp2Error"></div>
+      <div class="fp-modal-success" id="fp2Success"></div>
+      <div class="fp-otp-row" id="fpOtpRow">
+        <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="0">
+        <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="1">
+        <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="2">
+        <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="3">
+        <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="4">
+        <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="5">
       </div>
-      <button class="modal-btn" id="fpVerifyOtpBtn">Verify Code</button>
-      <div class="resend-row">
-        <span class="resend-text">Didn't receive code?</span>
-        <span class="resend-link" id="resendLink">Resend</span>
-        <span class="resend-text" id="resendTimerText" style="display:none;">&nbsp;(<span id="resendCountdown">60</span>s)</span>
+      <button class="fp-modal-btn" id="fpVerifyOtpBtn">Verify Code</button>
+      <div class="fp-resend-row">
+        <span class="fp-resend-text">Didn't receive code?</span>
+        <span class="fp-resend-link" id="fpResendLink">Resend</span>
+        <span class="fp-resend-text" id="fpResendTimer" style="display:none;">&nbsp;(<span id="fpResendCountdown">60</span>s)</span>
       </div>
     </div>
 
-    <div class="step" id="fpStep3">
-      <div class="modal-icon-circle">🔑</div>
-      <h2 class="modal-title">Reset Password</h2>
-      <p class="modal-subtitle">Enter your new password below. It must be at least 8 characters.</p>
-      <div class="modal-error" id="fp3Error"></div>
-      <div class="modal-success" id="fp3Success"></div>
-      <label class="modal-label" for="fpNewPassword">New Password</label>
-      <div class="modal-pw-wrapper">
-        <input class="modal-input" type="password" id="fpNewPassword" placeholder="At least 8 characters" autocomplete="new-password">
-        <button class="modal-eye" type="button" data-target="fpNewPassword"><i class="bi bi-eye"></i></button>
+    <!-- Step 3: New Password -->
+    <div class="fp-step" id="fpStep3">
+      <div class="fp-modal-icon-circle">🔑</div>
+      <h2 class="fp-modal-title">Reset Password</h2>
+      <p class="fp-modal-subtitle">Enter your new password below. It must be at least 8 characters.</p>
+      <div class="fp-modal-error" id="fp3Error"></div>
+      <div class="fp-modal-success" id="fp3Success"></div>
+      <label class="fp-modal-label" for="fpNewPassword">New Password</label>
+      <div class="fp-modal-pw-wrapper">
+        <input class="fp-modal-input" type="password" id="fpNewPassword" placeholder="At least 8 characters" autocomplete="new-password">
+        <button class="fp-modal-eye" type="button" data-target="fpNewPassword"><i class="bi bi-eye"></i></button>
       </div>
-      <label class="modal-label" for="fpConfirmPassword">Confirm Password</label>
-      <div class="modal-pw-wrapper">
-        <input class="modal-input" type="password" id="fpConfirmPassword" placeholder="Re-enter new password" autocomplete="new-password">
-        <button class="modal-eye" type="button" data-target="fpConfirmPassword"><i class="bi bi-eye"></i></button>
+      <label class="fp-modal-label" for="fpConfirmPassword">Confirm Password</label>
+      <div class="fp-modal-pw-wrapper">
+        <input class="fp-modal-input" type="password" id="fpConfirmPassword" placeholder="Re-enter new password" autocomplete="new-password">
+        <button class="fp-modal-eye" type="button" data-target="fpConfirmPassword"><i class="bi bi-eye"></i></button>
       </div>
-      <button class="modal-btn" id="fpResetBtn">Reset Password</button>
+      <button class="fp-modal-btn" id="fpResetBtn">Reset Password</button>
     </div>
   </div>
 </div>
@@ -678,7 +686,6 @@
 <div class="bg-blob-mid"></div>
 
 <div class="login-container">
-
   <div class="left-panel">
     <a href="/landing-page" class="backbutton">&larr; Back to Landing Page</a>
     <div class="brgy-title">Brgy. San Sebastian</div>
@@ -707,7 +714,7 @@
       <div class="form-group">
         <label for="password">Password</label>
         <div class="password-wrapper">
-          <input type="password" id="password" name="password" class="styled-input" placeholder="••••••••" required autocomplete="current-password">
+          <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
           <button type="button" class="toggle-password" id="togglePassword" aria-label="Toggle password visibility">
             <i class="bi bi-eye" id="eyeIcon" style="font-size:22px;"></i>
           </button>
@@ -716,7 +723,7 @@
       </div>
 
       <div class="forgot-password">
-        <a href="javascript:void(0)" id="forgotPasswordLink">Forgot Password?</a>
+        <span id="forgotPasswordLink">Forgot Password?</span>
       </div>
 
       <button type="submit" class="login-button" id="loginButton">Sign In</button>
@@ -733,11 +740,33 @@
 </div>
 
 <script>
+  // This script runs immediately, before DOMContentLoaded
+  // to ensure the click handler is attached as soon as possible
+  
+  // Show forgot password modal function
+  function showForgotPasswordModal() {
+    console.log('showForgotPasswordModal called');
+    var modal = document.getElementById('fpModalOverlay');
+    if (modal) {
+      modal.classList.add('show');
+      console.log('Modal shown');
+    } else {
+      console.error('Modal element not found!');
+    }
+  }
+
+  // Hide forgot password modal function
+  function hideForgotPasswordModal() {
+    var modal = document.getElementById('fpModalOverlay');
+    if (modal) {
+      modal.classList.remove('show');
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded - initializing login page');
+    console.log('DOM loaded');
     
     if (typeof window.supabase === 'undefined') {
-      console.error('Supabase not loaded');
       alert('Failed to load authentication service. Please refresh the page.');
       return;
     }
@@ -748,375 +777,120 @@
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    function showError(msg) {
-      document.getElementById('sysErrorMessage').innerHTML = msg;
-      document.getElementById('sysErrorOverlay').classList.add('show');
-    }
+    // ============ FORGOT PASSWORD LINK ============
+    var forgotLink = document.getElementById('forgotPasswordLink');
+    console.log('Forgot password link:', forgotLink);
     
-    function showSuccess(msg) {
-      document.getElementById('sysSuccessMessage').innerHTML = msg;
-      document.getElementById('sysSuccessOverlay').classList.add('show');
-    }
-    
-    function showLoginError(msg) {
-      const el = document.getElementById('loginErrorMsg');
-      el.textContent = msg; el.classList.add('show');
-    }
-    
-    function hideLoginError() {
-      const el = document.getElementById('loginErrorMsg');
-      el.textContent = ''; el.classList.remove('show');
+    if (forgotLink) {
+      // Method 1: addEventListener
+      forgotLink.addEventListener('click', function(e) {
+        console.log('Forgot password clicked via addEventListener');
+        e.preventDefault();
+        showForgotPasswordModal();
+      });
+      
+      // Method 2: onclick attribute as backup
+      forgotLink.onclick = function(e) {
+        console.log('Forgot password clicked via onclick');
+        e.preventDefault();
+        showForgotPasswordModal();
+        return false;
+      };
+      
+      // Make sure cursor is pointer
+      forgotLink.style.cursor = 'pointer';
     }
 
-    const passwordInput = document.getElementById('password');
-    const togglePassword = document.getElementById('togglePassword');
-    const eyeIcon = document.getElementById('eyeIcon');
+    // Close modal
+    var closeBtn = document.getElementById('fpModalClose');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', hideForgotPasswordModal);
+    }
 
-    if (togglePassword) {
-      togglePassword.addEventListener('click', () => {
-        const show = passwordInput.type === 'password';
-        passwordInput.type = show ? 'text' : 'password';
-        eyeIcon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
-        eyeIcon.style.fontSize = '22px';
+    // Close on overlay click
+    var overlay = document.getElementById('fpModalOverlay');
+    if (overlay) {
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+          hideForgotPasswordModal();
+        }
       });
     }
 
-    // Modal password toggle function
-    function toggleModalPw(inputId, btn) {
-      console.log('toggleModalPw called for:', inputId);
-      const input = document.getElementById(inputId);
-      if (!input) {
-        console.error('Input not found:', inputId);
-        return;
-      }
-      const isPassword = input.type === 'password';
+    // ============ PASSWORD TOGGLE - MAIN FORM ============
+    var passwordInput = document.getElementById('password');
+    var togglePassword = document.getElementById('togglePassword');
+    var eyeIcon = document.getElementById('eyeIcon');
+
+    if (togglePassword && passwordInput) {
+      togglePassword.addEventListener('click', function(e) {
+        e.preventDefault();
+        var show = passwordInput.type === 'password';
+        passwordInput.type = show ? 'text' : 'password';
+        eyeIcon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+      });
+    }
+
+    // ============ PASSWORD TOGGLE - MODAL ============
+    document.addEventListener('click', function(e) {
+      var eyeBtn = e.target.closest('.fp-modal-eye');
+      if (!eyeBtn) return;
+      
+      e.preventDefault();
+      e.stopPropagation();
+      
+      var targetId = eyeBtn.getAttribute('data-target');
+      if (!targetId) return;
+      
+      var input = document.getElementById(targetId);
+      if (!input) return;
+      
+      var isPassword = input.type === 'password';
       input.type = isPassword ? 'text' : 'password';
-      const icon = btn.querySelector('i');
+      
+      var icon = eyeBtn.querySelector('i');
       if (icon) {
         icon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
       }
-      console.log('Toggled', inputId, 'to', input.type);
-    }
-
-    // Make it available globally
-    window.toggleModalPw = toggleModalPw;
-
-    // Add click handlers to modal eye buttons using event delegation
-    document.addEventListener('click', function(e) {
-      const eyeBtn = e.target.closest('.modal-eye');
-      if (eyeBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-        const targetId = eyeBtn.getAttribute('data-target');
-        if (targetId) {
-          toggleModalPw(targetId, eyeBtn);
-        }
-      }
     });
 
-    const emailInput = document.getElementById('email');
-    const loginButton = document.getElementById('loginButton');
-
-    if (loginButton) {
-      loginButton.disabled = true;
-      loginButton.style.opacity = '0.55';
-    }
-
-    if (emailInput) {
-      emailInput.addEventListener('input', () => {
-        const valid = emailRegex.test(emailInput.value.trim());
-        emailInput.classList.toggle('valid', valid);
-        emailInput.classList.toggle('invalid', !valid && emailInput.value.trim() !== '');
-        const emailError = document.getElementById('email-error');
-        if (emailError) emailError.classList.toggle('show', !valid && emailInput.value.trim() !== '');
-        if (loginButton) {
-          loginButton.disabled = !valid;
-          loginButton.style.opacity = valid ? '1' : '0.55';
-        }
-      });
-
-      emailInput.addEventListener('blur', () => {
-        if (emailInput.value.trim() !== '') {
-          const valid = emailRegex.test(emailInput.value.trim());
-          const emailError = document.getElementById('email-error');
-          if (emailError) emailError.classList.toggle('show', !valid);
-        }
-      });
-    }
-
-    if (passwordInput) {
-      passwordInput.addEventListener('input', () => {
-        const hasPassword = passwordInput.value.trim() !== '';
-        const passwordError = document.getElementById('password-error');
-        if (passwordError) passwordError.classList.toggle('show', !hasPassword);
-      });
-    }
-
-    async function clearExistingSession() {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          console.log('Clearing existing Supabase session on login page');
-          await supabase.auth.signOut();
-        }
-      } catch (err) {
-        console.warn('clearExistingSession error (ignored):', err);
-      }
-    }
-    
-    clearExistingSession();
-
-    const loginForm = document.getElementById('loginForm');
-
-    if (loginForm) {
-      loginForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        hideLoginError();
-
-        const email = emailInput.value.trim().toLowerCase();
-        const password = passwordInput.value;
-
-        if (!password) {
-          const passwordError = document.getElementById('password-error');
-          if (passwordError) passwordError.classList.add('show');
-          return;
-        }
-
-        if (loginButton) {
-          loginButton.textContent = 'Verifying...';
-          loginButton.disabled = true;
-        }
-
-        try {
-          const checkUrl = `/resident-check-status?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
-          const checkRes = await fetch(checkUrl);
-          
-          if (!checkRes.ok) {
-            const errorMsg = await checkRes.text();
-            showLoginError(errorMsg);
-            resetLoginButton();
-            return;
-          }
-          
-          const result = await checkRes.text();
-          const isAdmin = result === 'OK_ADMIN';
-          
-          let authData = null;
-          
-          if (!isAdmin) {
-            const { data, error: authError } = await supabase.auth.signInWithPassword({
-              email: email,
-              password: password,
-            });
-            
-            if (authError) {
-              console.error('Auth error:', authError);
-              const { data: residentCheck } = await supabase
-                .from('residents')
-                .select('valid_id')
-                .eq('email', email)
-                .single();
-              
-              if (!residentCheck || !residentCheck.valid_id) {
-                showLoginError('Invalid email or password.');
-                resetLoginButton();
-                return;
-              }
-            } else {
-              authData = data;
-              console.log('Auth successful:', authData.user?.email);
-            }
-          }
-          
-          let residentData = null;
-          if (!isAdmin) {
-            const { data, error: residentError } = await supabase
-              .from('residents')
-              .select('account_status, first_name, last_name, id')
-              .eq('email', email)
-              .single();
-            
-            if (residentError) {
-              console.error('Error fetching resident:', residentError);
-            } else {
-              residentData = data;
-            }
-          }
-          
-          if (residentData && residentData.account_status === 'DEACTIVATED') {
-            const deactivatedOverlay = document.getElementById('deactivatedOverlay');
-            if (deactivatedOverlay) deactivatedOverlay.classList.add('show');
-            await supabase.auth.signOut();
-            resetLoginButton();
-            return;
-          }
-          
-          localStorage.setItem('userEmail', email);
-          if (authData?.user?.id) {
-            localStorage.setItem('userId', authData.user.id);
-          }
-          
-          if (residentData) {
-            localStorage.setItem('residentName', `${residentData.first_name || ''} ${residentData.last_name || ''}`.trim() || email);
-            localStorage.setItem('residentStatus', residentData.account_status);
-          }
-          
-          const formData = new URLSearchParams();
-          formData.append('email', email);
-          formData.append('password', password);
-          
-          const sessionRes = await fetch('/resident-login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData
-          });
-          
-          if (sessionRes.redirected) {
-            const redirectUrl = sessionRes.url;
-            if (redirectUrl.includes('error')) {
-              showLoginError('Invalid email or password.');
-              resetLoginButton();
-            } else if (redirectUrl.includes('deactivated')) {
-              document.getElementById('deactivatedOverlay').classList.add('show');
-              resetLoginButton();
-            } else {
-              showSuccess('Login successful! Redirecting...');
-              setTimeout(() => {
-                window.location.href = '/resident/announcements';
-              }, 1500);
-            }
-          } else {
-            const text = await sessionRes.text();
-            if (text.includes('redirect') || text === '') {
-              window.location.href = '/resident/announcements';
-            } else if (text === 'deactivated') {
-              document.getElementById('deactivatedOverlay').classList.add('show');
-              resetLoginButton();
-            } else {
-              showLoginError('Login failed. Please try again.');
-              resetLoginButton();
-            }
-          }
-          
-        } catch (err) {
-          console.error('Login error:', err);
-          showLoginError('A connection error occurred. Please try again.');
-          resetLoginButton();
-        }
-      });
-    }
-
-    function resetLoginButton() {
-      if (loginButton) {
-        loginButton.textContent = 'Sign In';
-        loginButton.disabled = false;
-        loginButton.style.opacity = emailRegex.test(emailInput.value.trim()) ? '1' : '0.55';
-      }
-    }
-
-    // ============ FORGOT PASSWORD LOGIC ============
-    
-    const forgotModal = document.getElementById('forgotPasswordModal');
-    const forgotLink = document.getElementById('forgotPasswordLink');
-    const closeForgotModal = document.getElementById('closeForgotModal');
-    let fpCurrentEmail = '';
-    let resendTimerRef = null;
-
-    function openForgotModal(e) {
-      if (e) e.preventDefault();
-      const emailVal = emailInput ? emailInput.value.trim() : '';
-      const fpEmailInput = document.getElementById('fpEmailInput');
-      if (fpEmailInput && emailVal) fpEmailInput.value = emailVal;
-      showFpStep(1);
-      if (forgotModal) {
-        forgotModal.classList.add('show');
-      }
-    }
-
-    if (forgotLink) {
-      forgotLink.addEventListener('click', openForgotModal);
-    }
-
-    function closeFP() {
-      if (forgotModal) forgotModal.classList.remove('show');
-      if (resendTimerRef) clearInterval(resendTimerRef);
-      setTimeout(() => {
-        showFpStep(1);
-        const fpEmailInput = document.getElementById('fpEmailInput');
-        const fpNewPassword = document.getElementById('fpNewPassword');
-        const fpConfirmPassword = document.getElementById('fpConfirmPassword');
-        if (fpEmailInput) fpEmailInput.value = '';
-        if (fpNewPassword) fpNewPassword.value = '';
-        if (fpConfirmPassword) fpConfirmPassword.value = '';
-        clearOtpBoxes();
-        hideFpMessages();
-      }, 300);
-    }
-
-    if (closeForgotModal) {
-      closeForgotModal.addEventListener('click', closeFP);
-    }
-    if (forgotModal) {
-      forgotModal.addEventListener('click', e => { 
-        if (e.target === forgotModal) closeFP(); 
-      });
-    }
+    // ============ FORGOT PASSWORD STEPS ============
+    var fpCurrentEmail = '';
+    var resendTimerRef = null;
+    var fpStep1 = document.getElementById('fpStep1');
+    var fpStep2 = document.getElementById('fpStep2');
+    var fpStep3 = document.getElementById('fpStep3');
 
     function showFpStep(n) {
-      document.querySelectorAll('#forgotPasswordModal .step').forEach(s => s.classList.remove('active'));
-      const step = document.getElementById('fpStep' + n);
+      [fpStep1, fpStep2, fpStep3].forEach(function(s) { if (s) s.classList.remove('active'); });
+      var step = document.getElementById('fpStep' + n);
       if (step) step.classList.add('active');
     }
 
-    function showFpError(id, msg) {
-      hideFpMessages();
-      const el = document.getElementById(id);
-      if (el) {
-        el.textContent = msg;
-        el.classList.add('show');
-      }
-    }
-
-    function showFpSuccess(id, msg) {
-      hideFpMessages();
-      const el = document.getElementById(id);
-      if (el) {
-        el.textContent = msg;
-        el.classList.add('show');
-      }
-    }
-
-    function hideFpMessages() {
-      document.querySelectorAll('#forgotPasswordModal .modal-error, #forgotPasswordModal .modal-success')
-        .forEach(el => { el.textContent = ''; el.classList.remove('show'); });
-    }
-
-    const fpSendOtpBtn = document.getElementById('fpSendOtpBtn');
+    // Send OTP
+    var fpSendOtpBtn = document.getElementById('fpSendOtpBtn');
     if (fpSendOtpBtn) {
-      fpSendOtpBtn.addEventListener('click', async () => {
-        const fpEmailInput = document.getElementById('fpEmailInput');
-        const email = fpEmailInput ? fpEmailInput.value.trim().toLowerCase() : '';
+      fpSendOtpBtn.addEventListener('click', async function() {
+        var emailInput = document.getElementById('fpEmailInput');
+        var email = emailInput ? emailInput.value.trim().toLowerCase() : '';
         if (!emailRegex.test(email)) {
-          showFpError('fp1Error', 'Please enter a valid email address.');
+          document.getElementById('fp1Error').textContent = 'Please enter a valid email address.';
+          document.getElementById('fp1Error').classList.add('show');
           return;
         }
         
-        const btn = fpSendOtpBtn;
-        btn.disabled = true;
-        btn.textContent = 'Sending...';
+        this.disabled = true;
+        this.textContent = 'Sending...';
         
         try {
-          const { data: residentCheck, error: checkError } = await supabase
-            .from('residents')
-            .select('email')
-            .eq('email', email)
-            .single();
+          var { data: residentCheck, error: checkError } = await supabase
+            .from('residents').select('email').eq('email', email).single();
           
           if (checkError || !residentCheck) {
             throw new Error('Email not found in our records.');
           }
           
-          const { data, error } = await supabase.auth.signInWithOtp({
+          var { error } = await supabase.auth.signInWithOtp({
             email: email,
             options: { shouldCreateUser: false }
           });
@@ -1124,61 +898,57 @@
           if (error) throw error;
           
           fpCurrentEmail = email;
-          const fpStep2SubtitleStrong = document.querySelector('#fpStep2Subtitle strong');
-          if (fpStep2SubtitleStrong) fpStep2SubtitleStrong.textContent = email;
+          document.getElementById('fpStep2Email').textContent = email;
           showFpStep(2);
           startResendTimer();
-          showFpSuccess('fp2Success', 'Verification code sent to your email!');
           
         } catch (err) {
-          console.error('Send OTP error:', err);
-          showFpError('fp1Error', err.message || 'Failed to send verification code. Please try again.');
+          document.getElementById('fp1Error').textContent = err.message || 'Failed to send code.';
+          document.getElementById('fp1Error').classList.add('show');
         } finally {
-          btn.disabled = false;
-          btn.textContent = 'Send 6-Digit Code';
+          this.disabled = false;
+          this.textContent = 'Send 6-Digit Code';
         }
       });
     }
 
-    const otpBoxes = document.querySelectorAll('.otp-box');
-    otpBoxes.forEach((box, i) => {
-      box.addEventListener('input', () => {
-        box.value = box.value.replace(/[^0-9]/g, '');
-        if (box.value && i < 5) otpBoxes[i + 1].focus();
+    // OTP boxes
+    var otpBoxes = document.querySelectorAll('.fp-otp-box');
+    otpBoxes.forEach(function(box, i) {
+      box.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        if (this.value && i < 5) otpBoxes[i + 1].focus();
       });
-      box.addEventListener('keydown', e => {
-        if (e.key === 'Backspace' && !box.value && i > 0) otpBoxes[i - 1].focus();
-      });
-      box.addEventListener('paste', e => {
-        e.preventDefault();
-        const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '');
-        [...pasted].slice(0, 6).forEach((ch, j) => { if (otpBoxes[j]) otpBoxes[j].value = ch; });
-        const nextEmpty = [...otpBoxes].findIndex(b => !b.value);
-        if (nextEmpty !== -1) otpBoxes[nextEmpty].focus();
+      box.addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' && !this.value && i > 0) otpBoxes[i - 1].focus();
       });
     });
 
-    function getOtp() { return [...otpBoxes].map(b => b.value).join(''); }
-    function clearOtpBoxes() { otpBoxes.forEach(b => b.value = ''); }
+    function getOtp() {
+      var otp = '';
+      otpBoxes.forEach(function(b) { otp += b.value; });
+      return otp;
+    }
 
-    const fpVerifyOtpBtn = document.getElementById('fpVerifyOtpBtn');
+    // Verify OTP
+    var fpVerifyOtpBtn = document.getElementById('fpVerifyOtpBtn');
     if (fpVerifyOtpBtn) {
-      fpVerifyOtpBtn.addEventListener('click', async () => {
-        const otp = getOtp();
+      fpVerifyOtpBtn.addEventListener('click', async function() {
+        var otp = getOtp();
         if (otp.length !== 6) {
-          showFpError('fp2Error', 'Please enter the complete 6-digit code.');
+          document.getElementById('fp2Error').textContent = 'Please enter the complete 6-digit code.';
+          document.getElementById('fp2Error').classList.add('show');
           return;
         }
         
-        const btn = fpVerifyOtpBtn;
-        btn.disabled = true;
-        btn.textContent = 'Verifying...';
+        this.disabled = true;
+        this.textContent = 'Verifying...';
         
         try {
-          const { data, error } = await supabase.auth.verifyOtp({
+          var { error } = await supabase.auth.verifyOtp({
             email: fpCurrentEmail,
             token: otp,
-            type: 'email',
+            type: 'email'
           });
           
           if (error) throw error;
@@ -1187,75 +957,86 @@
           showFpStep(3);
           
         } catch (err) {
-          console.error('Verify OTP error:', err);
-          showFpError('fp2Error', err.message || 'Invalid or expired code. Please try again.');
+          document.getElementById('fp2Error').textContent = err.message || 'Invalid or expired code.';
+          document.getElementById('fp2Error').classList.add('show');
         } finally {
-          btn.disabled = false;
-          btn.textContent = 'Verify Code';
+          this.disabled = false;
+          this.textContent = 'Verify Code';
         }
       });
     }
 
-    const fpResetBtn = document.getElementById('fpResetBtn');
+    // Reset password
+    var fpResetBtn = document.getElementById('fpResetBtn');
     if (fpResetBtn) {
-      fpResetBtn.addEventListener('click', async () => {
-        const fpNewPassword = document.getElementById('fpNewPassword');
-        const fpConfirmPassword = document.getElementById('fpConfirmPassword');
-        const newPw = fpNewPassword ? fpNewPassword.value : '';
-        const confPw = fpConfirmPassword ? fpConfirmPassword.value : '';
+      fpResetBtn.addEventListener('click', async function() {
+        var newPw = document.getElementById('fpNewPassword').value;
+        var confPw = document.getElementById('fpConfirmPassword').value;
         
         if (!newPw || newPw.length < 8) {
-          showFpError('fp3Error', 'Password must be at least 8 characters.');
+          document.getElementById('fp3Error').textContent = 'Password must be at least 8 characters.';
+          document.getElementById('fp3Error').classList.add('show');
           return;
         }
         if (newPw !== confPw) {
-          showFpError('fp3Error', 'Passwords do not match.');
+          document.getElementById('fp3Error').textContent = 'Passwords do not match.';
+          document.getElementById('fp3Error').classList.add('show');
           return;
         }
         
-        const btn = fpResetBtn;
-        btn.disabled = true;
-        btn.textContent = 'Resetting...';
+        this.disabled = true;
+        this.textContent = 'Resetting...';
         
         try {
-          const { data, error } = await supabase.auth.updateUser({ password: newPw });
+          var { error } = await supabase.auth.updateUser({ password: newPw });
           if (error) throw error;
           
-          if (fpCurrentEmail) {
-            try {
-              await supabase.from('residents').update({ valid_id: newPw }).eq('email', fpCurrentEmail);
-            } catch (updateErr) {
-              console.error('Failed to update resident record:', updateErr);
-            }
-          }
+          try {
+            await supabase.from('residents').update({ valid_id: newPw }).eq('email', fpCurrentEmail);
+          } catch (e) {}
           
-          showFpSuccess('fp3Success', 'Password reset successfully!');
-          setTimeout(() => {
-            closeFP();
+          document.getElementById('fp3Success').textContent = 'Password reset successfully!';
+          document.getElementById('fp3Success').classList.add('show');
+          
+          setTimeout(function() {
+            hideForgotPasswordModal();
             supabase.auth.signOut();
+            // Reset modal state
+            setTimeout(function() {
+              showFpStep(1);
+              document.getElementById('fpEmailInput').value = '';
+              document.getElementById('fpNewPassword').value = '';
+              document.getElementById('fpConfirmPassword').value = '';
+              otpBoxes.forEach(function(b) { b.value = ''; });
+              document.querySelectorAll('.fp-modal-error, .fp-modal-success').forEach(function(el) {
+                el.textContent = '';
+                el.classList.remove('show');
+              });
+            }, 300);
           }, 1800);
           
         } catch (err) {
-          console.error('Reset password error:', err);
-          showFpError('fp3Error', err.message || 'Failed to reset password. Please try again.');
+          document.getElementById('fp3Error').textContent = err.message || 'Failed to reset password.';
+          document.getElementById('fp3Error').classList.add('show');
         } finally {
-          btn.disabled = false;
-          btn.textContent = 'Reset Password';
+          this.disabled = false;
+          this.textContent = 'Reset Password';
         }
       });
     }
 
     function startResendTimer() {
-      let countdown = 60;
-      const link = document.getElementById('resendLink');
-      const timerTxt = document.getElementById('resendTimerText');
-      const counter = document.getElementById('resendCountdown');
+      var countdown = 60;
+      var link = document.getElementById('fpResendLink');
+      var timerTxt = document.getElementById('fpResendTimer');
+      var counter = document.getElementById('fpResendCountdown');
+      
       if (link) link.classList.add('disabled');
       if (timerTxt) timerTxt.style.display = 'inline';
       if (counter) counter.textContent = countdown;
       
       if (resendTimerRef) clearInterval(resendTimerRef);
-      resendTimerRef = setInterval(() => {
+      resendTimerRef = setInterval(function() {
         countdown--;
         if (counter) counter.textContent = countdown;
         if (countdown <= 0) {
@@ -1266,30 +1047,137 @@
       }, 1000);
     }
 
-    const resendLink = document.getElementById('resendLink');
+    var resendLink = document.getElementById('fpResendLink');
     if (resendLink) {
-      resendLink.addEventListener('click', async () => {
-        if (resendLink.classList.contains('disabled')) return;
+      resendLink.addEventListener('click', async function() {
+        if (this.classList.contains('disabled')) return;
         
         try {
-          const { error } = await supabase.auth.signInWithOtp({
+          var { error } = await supabase.auth.signInWithOtp({
             email: fpCurrentEmail,
             options: { shouldCreateUser: false }
           });
           
           if (error) throw error;
           
-          clearOtpBoxes();
+          otpBoxes.forEach(function(b) { b.value = ''; });
           if (otpBoxes[0]) otpBoxes[0].focus();
-          showFpSuccess('fp2Success', 'New code sent successfully!');
+          document.getElementById('fp2Success').textContent = 'New code sent successfully!';
+          document.getElementById('fp2Success').classList.add('show');
           startResendTimer();
           
         } catch (err) {
-          console.error('Resend error:', err);
-          showFpError('fp2Error', 'Failed to resend code. Please try again.');
+          document.getElementById('fp2Error').textContent = 'Failed to resend code.';
+          document.getElementById('fp2Error').classList.add('show');
         }
       });
     }
+
+    // ============ LOGIN FORM ============
+    var emailInput = document.getElementById('email');
+    var loginButton = document.getElementById('loginButton');
+
+    if (loginButton) {
+      loginButton.disabled = true;
+      loginButton.style.opacity = '0.55';
+    }
+
+    if (emailInput) {
+      emailInput.addEventListener('input', function() {
+        var valid = emailRegex.test(this.value.trim());
+        this.classList.toggle('valid', valid);
+        this.classList.toggle('invalid', !valid && this.value.trim() !== '');
+        if (loginButton) {
+          loginButton.disabled = !valid;
+          loginButton.style.opacity = valid ? '1' : '0.55';
+        }
+      });
+    }
+
+    // Clear existing session
+    (async function() {
+      try {
+        var { data: { session } } = await supabase.auth.getSession();
+        if (session) await supabase.auth.signOut();
+      } catch (e) {}
+    })();
+
+    var loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+      loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var email = emailInput.value.trim().toLowerCase();
+        var password = passwordInput.value;
+        
+        if (!password) return;
+        
+        loginButton.textContent = 'Verifying...';
+        loginButton.disabled = true;
+        
+        try {
+          var checkRes = await fetch('/resident-check-status?email=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(password));
+          if (!checkRes.ok) {
+            document.getElementById('loginErrorMsg').textContent = await checkRes.text();
+            document.getElementById('loginErrorMsg').classList.add('show');
+            resetLoginButton();
+            return;
+          }
+          
+          var result = await checkRes.text();
+          var isAdmin = result === 'OK_ADMIN';
+          var authData = null;
+          
+          if (!isAdmin) {
+            var { data, error: authError } = await supabase.auth.signInWithPassword({ email: email, password: password });
+            if (authError) {
+              document.getElementById('loginErrorMsg').textContent = 'Invalid email or password.';
+              document.getElementById('loginErrorMsg').classList.add('show');
+              resetLoginButton();
+              return;
+            }
+            authData = data;
+          }
+          
+          var { data: residentData } = await supabase.from('residents').select('account_status, first_name, last_name, id').eq('email', email).single();
+          
+          if (residentData && residentData.account_status === 'DEACTIVATED') {
+            document.getElementById('deactivatedOverlay').classList.add('show');
+            resetLoginButton();
+            return;
+          }
+          
+          localStorage.setItem('userEmail', email);
+          if (authData?.user?.id) localStorage.setItem('userId', authData.user.id);
+          if (residentData) {
+            localStorage.setItem('residentName', (residentData.first_name + ' ' + residentData.last_name).trim() || email);
+          }
+          
+          var formData = new URLSearchParams();
+          formData.append('email', email);
+          formData.append('password', password);
+          
+          var sessionRes = await fetch('/resident-login', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: formData });
+          
+          if (sessionRes.redirected) {
+            window.location.href = '/resident/announcements';
+          } else {
+            window.location.href = '/resident/announcements';
+          }
+        } catch (err) {
+          document.getElementById('loginErrorMsg').textContent = 'A connection error occurred.';
+          document.getElementById('loginErrorMsg').classList.add('show');
+          resetLoginButton();
+        }
+      });
+    }
+
+    function resetLoginButton() {
+      loginButton.textContent = 'Sign In';
+      loginButton.disabled = false;
+      loginButton.style.opacity = emailRegex.test(emailInput.value.trim()) ? '1' : '0.55';
+    }
+
+    console.log('Initialization complete. Click "Forgot Password?" to test.');
   });
 </script>
 
