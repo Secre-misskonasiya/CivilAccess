@@ -389,6 +389,15 @@
     function onFileSelect(type, input) {
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
+
+        // Reject anything that isn't actually an image (accept="image/*" only filters
+        // the picker UI, it doesn't block videos/other files from being selected).
+        if (!file.type || !file.type.startsWith('image/')) {
+            showErrorModal('Invalid file format. Please upload an image file (JPG, PNG, etc.) — videos and other file types are not allowed.');
+            input.value = '';
+            return;
+        }
+
         if (type === 'id') {
             fileIdFile = file;
             setUploadSelected('uploadIdBtn', 'uploadIdIcon', 'uploadIdLabel', 'ID Selected', 'err-validID');
