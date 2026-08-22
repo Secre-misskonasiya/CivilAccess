@@ -239,6 +239,10 @@
             cursor: pointer; min-width: 120px;
         }
 
+        /* ── Error modal — mirrors success modal, error color ── */
+        .modal-icon.error-icon { color: var(--error); }
+        .modal-btn.error-btn { background: var(--error); }
+
         @media (max-width: 768px) {
             .content      { margin-left: 0; }
             .bottom-sheet { left: 0; }
@@ -380,6 +384,16 @@
             <span class="modal-total-amount" id="modalTotal">₱0.00</span>
         </div>
         <button class="modal-btn" onclick="closeModal()">OK</button>
+    </div>
+</div>
+
+<!-- Error Modal — mirrors success modal, styled for errors -->
+<div class="modal-overlay" id="errorModal">
+    <div class="modal-box">
+        <i class="bi bi-x-circle-fill modal-icon error-icon"></i>
+        <div class="modal-title">Error</div>
+        <p class="modal-msg" id="errorModalMsg">Something went wrong.</p>
+        <button class="modal-btn error-btn" onclick="closeErrorModal()">OK</button>
     </div>
 </div>
 
@@ -569,11 +583,11 @@
     /* ── handleSubmit — mirrors handleSubmit() ── */
     async function handleSubmit() {
         if (!validateAll()) {
-            alert('Please fix the errors before submitting.');
+            showErrorModal('Please fix the errors before submitting.');
             return;
         }
         if (!currentUser) {
-            alert('Please log in to submit a rental request.');
+            showErrorModal('Please log in to submit a rental request.');
             return;
         }
 
@@ -608,7 +622,7 @@
             document.getElementById('successModal').classList.add('show');
 
         } catch (err) {
-            alert('Submission Failed: ' + err.message);
+            showErrorModal('Submission Failed: ' + err.message);
         } finally {
             btn.disabled = false;
             btn.classList.remove('loading');
@@ -618,6 +632,15 @@
     function closeModal() {
         document.getElementById('successModal').classList.remove('show');
         window.location.href = '/resident/my-requests';
+    }
+
+    /* ── error modal helpers ── */
+    function showErrorModal(msg) {
+        document.getElementById('errorModalMsg').textContent = msg;
+        document.getElementById('errorModal').classList.add('show');
+    }
+    function closeErrorModal() {
+        document.getElementById('errorModal').classList.remove('show');
     }
 
     /* ── helpers ── */
