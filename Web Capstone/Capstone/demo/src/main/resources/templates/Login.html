@@ -343,7 +343,9 @@
     to   { transform: translateY(0);    opacity: 1; }
   }
 
-  .modal {
+ .fp-modal-box {
+    justify-content: center;
+    align-items: center;
     background: #fff;
     border-radius: 24px;
     padding: 48px;
@@ -768,16 +770,16 @@
 
 <!-- Forgot Password Modal -->
 <div class="modal-overlay" id="forgotPasswordModal">
-  <div class="modal">
+    <div class="fp-modal-box">
     <button class="modal-close" id="closeModal">&times;</button>
 
     <div class="step active" id="step1">
       <div class="modal-header">
         <h2 class="modal-title">Forgot Password?</h2>
-        <p class="modal-subtitle">Enter your email to receive a verification code</p>
       </div>
       <div class="success-message" id="emailSuccess"></div>
       <div class="modal-error-message" id="emailError"></div>
+      <p class="modal-subtitle">Enter your email to receive a verification code</p>
       <div class="modal-form-group">
         <label for="resetEmail">Email Address</label>
         <input type="email" id="resetEmail" placeholder="your.email@example.com">
