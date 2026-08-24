@@ -188,7 +188,7 @@
 
 <!-- Sidebar -->
 <div th:replace="~{fragments/sidebar :: sidebar}"></div>
-
+<div th:replace="~{fragments/LockModal :: lockModal}"></div>
 <div class="content">
 
     <div class="top-header">
@@ -818,7 +818,7 @@
             <h2>Edit Resident Account</h2>
             <span class="close-btn" onclick="closeResidentModal()">&times;</span>
         </div>
-        <form id="residentForm" th:action="@{/residents/update}" method="post" enctype="multipart/form-data"
+        <form id="residentForm" th:action="@{/residents/register}" method="post" enctype="multipart/form-data"
               onsubmit="handleResidentFormSubmit(event)">
             <input type="hidden" id="res-id" name="id">
             <input type="hidden" id="res-address" name="address">

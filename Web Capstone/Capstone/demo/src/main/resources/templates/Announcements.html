@@ -154,9 +154,6 @@
 
     [id^="dynamicConfirmModal_"] { z-index: 10550 !important; }
     [id^="dynamicConfirmModal_"] + .modal-backdrop { z-index: 10540 !important; }
-
-    [id^="dynamicErrorModal_"] { z-index: 10550 !important; }
-    [id^="dynamicErrorModal_"] + .modal-backdrop { z-index: 10540 !important; }
     
     .modal.success-toast-modal { z-index: 10600 !important; }
     .modal.success-toast-modal + .modal-backdrop { z-index: 10590 !important; }
@@ -413,79 +410,6 @@
         font-size: 60px;
         margin-bottom: 12px;
     }
-
-    /* ══════════════════════════════════════
-       SYSTEM ERROR MODAL (matches login page style)
-    ══════════════════════════════════════ */
-    .sys-overlay {
-        display: none;
-        position: fixed; inset: 0;
-        background: rgba(0,0,0,0.72);
-        z-index: 99999;
-        justify-content: center;
-        align-items: center;
-        animation: sysFadeIn 0.2s ease;
-    }
-    .sys-overlay.show { display: flex; }
-
-    @keyframes sysFadeIn  { from { opacity: 0 } to { opacity: 1 } }
-    @keyframes sysSlideUp {
-        from { transform: translateY(40px); opacity: 0; }
-        to   { transform: translateY(0);    opacity: 1; }
-    }
-
-    .sys-modal-box {
-        border-radius: 16px;
-        overflow: hidden;
-        min-width: 300px;
-        max-width: 420px;
-        width: 90%;
-        box-shadow: 0 28px 72px rgba(0,0,0,0.45);
-        animation: sysSlideUp 0.25s ease;
-    }
-
-    .sys-modal-box.error {
-        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-    }
-
-    .sys-modal-body {
-        text-align: center;
-        padding: 32px 28px 20px;
-    }
-
-    .sys-modal-icon {
-        font-size: 56px;
-        margin-bottom: 12px;
-    }
-
-    .sys-modal-body h5 {
-        color: #fff;
-        font-size: 1.05rem;
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .sys-modal-footer {
-        display: flex;
-        justify-content: center;
-        padding: 0 28px 28px;
-        gap: 10px;
-    }
-
-    .sys-btn-ok {
-        background: rgba(255,255,255,0.2);
-        color: #fff;
-        border: 2px solid rgba(255,255,255,0.5);
-        padding: 9px 32px;
-        border-radius: 8px;
-        font-size: 0.95rem;
-        font-weight: 700;
-        cursor: pointer;
-        font-family: inherit;
-        transition: background 0.2s;
-    }
-    .sys-btn-ok:hover { background: rgba(255,255,255,0.35); }
-
     /* ══════════════════════════════════════
        FORCE MODAL
     ══════════════════════════════════════ */
@@ -597,7 +521,7 @@
 
 <!-- Sidebar -->
 <div th:replace="~{fragments/sidebar :: sidebar}"></div>
-
+<div th:replace="~{fragments/LockModal :: lockModal}"></div>
   <div class="content">
 
     <!-- Top header -->
@@ -762,21 +686,6 @@
     </div>
 </div>
 
-<!-- Error Modal (matches login page style) -->
-<div class="sys-overlay" id="sysErrorOverlay">
-  <div class="sys-modal-box error">
-    <div class="sys-modal-body">
-      <div class="sys-modal-icon">
-        <i class="bi bi-x-circle-fill text-white"></i>
-      </div>
-      <h5 id="sysErrorMessage">An error occurred.</h5>
-    </div>
-    <div class="sys-modal-footer">
-      <button class="sys-btn-ok" onclick="document.getElementById('sysErrorOverlay').classList.remove('show')">OK</button>
-    </div>
-  </div>
-</div>
-
 <!-- View Announcement Modal -->
 <div class="modal fade" id="viewAnnouncementModal" tabindex="-1">
   <div class="modal-dialog">
@@ -909,13 +818,6 @@
   let lastKnownArchivedIds = new Set();
   let isModalOpen = false;
   let pendingUpdates = false;
-
-  // ============================================
-  // IMAGE UPLOAD HANDLER REFERENCES (needed so we
-  // can reset the create form's image preview)
-  // ============================================
-  let createImageHandlers = null;
-  let editImageHandlers = null;
   
   function initSupabase() {
     if (typeof supabase !== 'undefined' && supabase.createClient) {
@@ -1133,35 +1035,6 @@
     
     successModal.show();
   }
-
-  // ============================================
-  // showError: now uses the same pure-CSS overlay
-  // style as the login page's error modal
-  // (icon + gradient card + OK button) instead of
-  // a dynamically-built Bootstrap modal.
-  // ============================================
-  function showError(message, title = 'Error') {
-    document.getElementById('sysErrorMessage').innerHTML = message;
-    document.getElementById('sysErrorOverlay').classList.add('show');
-  }
-
-  // ============================================
-  // NEW - resetCreateForm: clears the "Create
-  // Announcement" form (fields + image preview)
-  // so it never opens pre-filled with the last
-  // announcement's details again.
-  // ============================================
-  function resetCreateForm() {
-    const form = document.getElementById('createAnnouncementForm');
-    if (form) form.reset();
-    document.getElementById('title').value = '';
-    document.getElementById('priority').value = 'NORMAL';
-    document.getElementById('content').value = '';
-    document.getElementById('imageUrl').value = '';
-    if (createImageHandlers && typeof createImageHandlers.hideImage === 'function') {
-      createImageHandlers.hideImage();
-    }
-  }
   
   // ============================================
   // ALL EXISTING FUNCTIONS KEPT EXACTLY THE SAME
@@ -1210,11 +1083,8 @@
           const openModal = bootstrap.Modal.getInstance(document.querySelector('.modal.show'));
           if (openModal) openModal.hide();
           showSuccess('Announcement archived successfully!');
-        } else {
-          showError('Failed to archive announcement. Please try again.');
         }
-      })
-      .catch(error => { console.error('Error archiving announcement:', error); showError('Failed to archive announcement. Please try again.'); });
+      });
     });
   }
   
@@ -1226,11 +1096,8 @@
           const openModal = bootstrap.Modal.getInstance(document.querySelector('.modal.show'));
           if (openModal) openModal.hide();
           showSuccess('Announcement restored successfully!');
-        } else {
-          showError('Failed to restore announcement. Please try again.');
         }
-      })
-      .catch(error => { console.error('Error restoring announcement:', error); showError('Failed to restore announcement. Please try again.'); });
+      });
     });
   }
   
@@ -1242,7 +1109,7 @@
       image: document.getElementById('imageUrl').value
     };
     if (!announcement.title || !announcement.content) {
-      showError('Please fill in all required fields.', 'Missing Information');
+      alert('Please fill in all required fields');
       return;
     }
     showConfirm('Create this new announcement?', 'Create Announcement', () => {
@@ -1255,13 +1122,10 @@
         if (response.ok) {
           const createModal = bootstrap.Modal.getInstance(document.getElementById('createAnnouncementModal'));
           if (createModal) createModal.hide();
-          resetCreateForm();
           showSuccess('Announcement created successfully!');
-        } else {
-          showError('Error creating announcement. Please try again.');
-        }
+        } else alert('Error creating announcement');
       })
-      .catch(error => { console.error('Error:', error); showError('Error creating announcement. Please try again.'); });
+      .catch(error => { console.error('Error:', error); });
     });
   }
   
@@ -1273,10 +1137,6 @@
       content: document.getElementById('editContent').value,
       image: document.getElementById('editImageUrl').value
     };
-    if (!announcement.title || !announcement.content) {
-      showError('Please fill in all required fields.', 'Missing Information');
-      return;
-    }
     showConfirm('Update this announcement with the new changes?', 'Update Announcement', () => {
       fetch('/announcements/' + id, {
         method: 'PUT',
@@ -1288,11 +1148,8 @@
           const editModal = bootstrap.Modal.getInstance(document.getElementById('editAnnouncementModal'));
           if (editModal) editModal.hide();
           showSuccess('Announcement updated successfully!');
-        } else {
-          showError('Error updating announcement. Please try again.');
-        }
-      })
-      .catch(error => { console.error('Error updating announcement:', error); showError('Error updating announcement. Please try again.'); });
+        } else alert('Error updating announcement');
+      });
     });
   }
 
@@ -1387,7 +1244,7 @@
       }, 500);
     } catch (error) {
       console.error('Supabase upload error:', error);
-      showError('Failed to upload image to Supabase: ' + error.message, 'Upload Error');
+      alert('Failed to upload image to Supabase: ' + error.message);
       if (progressDiv) progressDiv.style.display = 'none';
       if (progressBar) progressBar.style.width = '0%';
       hideImage();
@@ -1482,10 +1339,10 @@
         }
         setTimeout(() => { filterAndSortAnnouncements(); }, 50);
       } else {
-        showError('Failed to update pin status.');
+        alert('Failed to update pin status.');
       }
     })
-    .catch(error => { console.error('Error updating priority:', error); showError('Failed to update pin status.'); })
+    .catch(error => { console.error('Error updating priority:', error); })
     .finally(() => { el.style.opacity = ''; el.style.cursor = ''; });
   }
 
@@ -1517,7 +1374,7 @@
         `;
         new bootstrap.Modal(document.getElementById('viewAnnouncementModal')).show();
       })
-      .catch(error => { console.error('Error viewing announcement:', error); showError('Failed to load announcement details.'); });
+      .catch(error => { console.error('Error viewing announcement:', error); });
   }
 
   function editAnnouncement(id) {
@@ -1542,8 +1399,7 @@
           if (removeBtn) removeBtn.style.display = 'inline-block';
         }
         new bootstrap.Modal(document.getElementById('editAnnouncementModal')).show();
-      })
-      .catch(error => { console.error('Error loading announcement for edit:', error); showError('Failed to load announcement for editing.'); });
+      });
   }
 
   function escapeHtml(text) {
@@ -1571,18 +1427,8 @@
   }
   
   document.addEventListener('DOMContentLoaded', function() {
-    createImageHandlers = setupImageUpload('imageUploadArea', 'imageFile', 'imagePreview', 'uploadProgress', 'imageUrl', 'removeImageBtn', 'uploadPlaceholder');
-    editImageHandlers = setupImageUpload('editImageUploadArea', 'editImageFile', 'editImagePreview', 'editUploadProgress', 'editImageUrl', 'editRemoveImageBtn', 'editUploadPlaceholder');
-
-    // Reset the create form every time the Create modal is closed
-    // (Cancel, backdrop click, X button, or after a successful create)
-    // so it never reopens pre-filled with the previous announcement.
-    const createModalEl = document.getElementById('createAnnouncementModal');
-    if (createModalEl) {
-      createModalEl.addEventListener('hidden.bs.modal', function() {
-        resetCreateForm();
-      });
-    }
+    setupImageUpload('imageUploadArea', 'imageFile', 'imagePreview', 'uploadProgress', 'imageUrl', 'removeImageBtn', 'uploadPlaceholder');
+    setupImageUpload('editImageUploadArea', 'editImageFile', 'editImagePreview', 'editUploadProgress', 'editImageUrl', 'editRemoveImageBtn', 'editUploadPlaceholder');
     
     const resetBtn = document.querySelector('.search-bar-area .filter-btn');
     if (resetBtn && resetBtn.textContent.includes('Reset')) {

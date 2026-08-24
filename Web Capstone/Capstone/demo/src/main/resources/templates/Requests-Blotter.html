@@ -19,7 +19,7 @@
         .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); }
         .filter-select, .export-btn, .add-blotter-btn { padding: 9px 16px; border-radius: 6px; cursor: pointer; }
         .export-btn { background: #FED734; border: none; font-weight: bold; }
-        .add-blotter-btn { background: #44C375; border: none; color: white; font-weight: bold; }
+        .add-blotter-btn { background: #5cb85c; border: none; color: white; font-weight: bold; }
         .panel { padding: 20px; flex: 1; overflow-y: auto; }
         .panel-inner { background: white; border-radius: 8px; border: 1px solid #e0e0e0; overflow: hidden; }
         .panel-header { background-color: #3d5f58; color: white; padding: 14px 20px; font-weight: bold; font-size: 16px; }
@@ -99,7 +99,6 @@
         .modal-header { background-color: #2d4a44; color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
         .modal-header h4 { margin: 0; font-size: 18px; }
         .modal-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
-        .modal-close:hover { opacity: 0.8; }
         .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
         .modal-footer { padding: 16px 24px; border-top: 1px solid #e0e0e0; display: flex; justify-content: flex-end; gap: 10px; background: #f9f9f9; }
         
@@ -122,104 +121,6 @@
         .force-modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); }
         .force-modal-content { background: white; width: 400px; padding: 30px; border-radius: 8px; text-align: center; margin: 15% auto; }
         .table-footer { padding: 12px 16px; border-top: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #666; }
-
-        /* Success Toast Modal - matching announcements */
-        .success-toast-modal .modal-content {
-            background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
-            color: white;
-            border: none;
-            border-radius: 16px;
-        }
-        .success-toast-modal .modal-header {
-            background: transparent;
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-        .success-toast-modal .modal-body {
-            text-align: center;
-            padding: 20px;
-        }
-        .success-toast-modal .modal-footer {
-            border-top: none;
-            justify-content: center;
-            padding-top: 0;
-            background: transparent;
-        }
-        .success-icon {
-            font-size: 60px;
-            margin-bottom: 12px;
-        }
-
-        /* System Error Modal - matching announcements */
-        .sys-overlay {
-            display: none;
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.72);
-            z-index: 99999;
-            justify-content: center;
-            align-items: center;
-            animation: sysFadeIn 0.2s ease;
-        }
-        .sys-overlay.show { display: flex; }
-
-        @keyframes sysFadeIn { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes sysSlideUp {
-            from { transform: translateY(40px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        .sys-modal-box {
-            border-radius: 16px;
-            overflow: hidden;
-            min-width: 300px;
-            max-width: 420px;
-            width: 90%;
-            box-shadow: 0 28px 72px rgba(0,0,0,0.45);
-            animation: sysSlideUp 0.25s ease;
-        }
-
-        .sys-modal-box.error {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-        }
-
-        .sys-modal-body {
-            text-align: center;
-            padding: 32px 28px 20px;
-        }
-
-        .sys-modal-icon {
-            font-size: 56px;
-            margin-bottom: 12px;
-            color: white;
-        }
-
-        .sys-modal-body h5 {
-            color: #fff;
-            font-size: 1.05rem;
-            font-weight: 600;
-            margin: 0;
-        }
-
-        .sys-modal-footer {
-            display: flex;
-            justify-content: center;
-            padding: 0 28px 28px;
-            gap: 10px;
-        }
-
-        .sys-btn-ok {
-            background: rgba(255,255,255,0.2);
-            color: #fff;
-            border: 2px solid rgba(255,255,255,0.5);
-            padding: 9px 32px;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: inherit;
-            transition: background 0.2s;
-        }
-        .sys-btn-ok:hover { background: rgba(255,255,255,0.35); }
     </style>
 </head>
 <body>
@@ -227,7 +128,7 @@
 <div class="layout">
     <!-- Sidebar -->
     <div th:replace="~{fragments/sidebar :: sidebar}"></div>
-
+    <div th:replace="~{fragments/LockModal :: lockModal}"></div>
     <div class="content">
         <div class="top-header">
             <div class="top-header-tab">Blotter Records</div>
@@ -411,7 +312,7 @@
             <button class="modal-close" onclick="closeAddModal()">&times;</button>
         </div>
         <div class="modal-body">
-            <form id="addForm">
+            <form id="addForm" th:action="@{/requests-blotter/submit}" method="post">
                 <div class="modal-section-title">Complainant Information</div>
                 <div class="form-group">
                     <label>Complainant Name *</label>
@@ -466,44 +367,13 @@
                 <div class="modal-section-title">Employee Notes</div>
                 <div class="form-group">
                     <label>Remarks</label>
-                    <textarea id="add-remarks" name="remarks" rows="2" placeholder="Optional remarks..."></textarea>
+                    <textarea name="remarks" rows="2" placeholder="Optional remarks..."></textarea>
                 </div>
             </form>
         </div>
         <div class="modal-footer">
             <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
             <button class="btn-submit" onclick="submitAddForm()">Submit Blotter</button>
-        </div>
-    </div>
-</div>
-
-<!-- Success Modal -->
-<div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0"></div>
-            <div class="modal-body">
-                <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
-                <h5 id="successMessage">Success!</h5>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" id="successOkBtn">OK</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Error Modal -->
-<div class="sys-overlay" id="sysErrorOverlay">
-    <div class="sys-modal-box error">
-        <div class="sys-modal-body">
-            <div class="sys-modal-icon">
-                <i class="bi bi-x-circle-fill"></i>
-            </div>
-            <h5 id="sysErrorMessage">An error occurred.</h5>
-        </div>
-        <div class="sys-modal-footer">
-            <button class="sys-btn-ok" onclick="document.getElementById('sysErrorOverlay').classList.remove('show')">OK</button>
         </div>
     </div>
 </div>
@@ -668,10 +538,6 @@
         document.getElementById('edit-narrative').value = narrative;
         document.getElementById('edit-remarks').value = remarks;
 
-        // Clear any previous validation errors
-        document.querySelectorAll('#editForm .field-error').forEach(e => e.style.display = 'none');
-        document.querySelectorAll('#editForm .input-error').forEach(e => e.classList.remove('input-error'));
-
         document.getElementById('editModal').style.display = 'block';
         document.body.style.overflow = 'hidden';
     }
@@ -707,34 +573,8 @@
         if (valid) {
             const form = document.getElementById('editForm');
             const id = document.getElementById('edit-id').value;
-            const formData = new FormData(form);
-            
-            // Show loading state
-            const submitBtn = document.querySelector('#editModal .btn-submit');
-            submitBtn.textContent = 'Saving...';
-            submitBtn.disabled = true;
-            
-            fetch('/requests-blotter/' + id + '/update', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (response.ok) {
-                    closeEditModal();
-                    showSuccess('Blotter record updated successfully!');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showError('Failed to update blotter record. Please try again.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showError('Failed to update blotter record. Please try again.');
-            })
-            .finally(() => {
-                submitBtn.textContent = 'Save Changes';
-                submitBtn.disabled = false;
-            });
+            form.action = '/requests-blotter/' + id + '/update';
+            form.submit();
         }
     }
 
@@ -776,35 +616,7 @@
             }
         });
         if (valid) {
-            const form = document.getElementById('addForm');
-            const formData = new FormData(form);
-            
-            // Show loading state
-            const submitBtn = document.querySelector('#addModal .btn-submit');
-            submitBtn.textContent = 'Submitting...';
-            submitBtn.disabled = true;
-            
-            fetch('/requests-blotter/submit', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (response.ok) {
-                    closeAddModal();
-                    showSuccess('Blotter record created successfully!');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showError('Failed to create blotter record. Please try again.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showError('Failed to create blotter record. Please try again.');
-            })
-            .finally(() => {
-                submitBtn.textContent = 'Submit Blotter';
-                submitBtn.disabled = false;
-            });
+            document.getElementById('addForm').submit();
         }
     }
 
@@ -821,30 +633,6 @@
         } else {
             alert('PDF export plugin missing. Please refresh the page.');
         }
-    }
-
-    // Success Modal
-    function showSuccess(message) {
-        document.getElementById('successMessage').innerHTML = message;
-        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-        
-        const modalElement = document.getElementById('successModal');
-        const okButton = modalElement.querySelector('#successOkBtn');
-        
-        const newOkButton = okButton.cloneNode(true);
-        okButton.parentNode.replaceChild(newOkButton, okButton);
-        
-        newOkButton.addEventListener('click', function() {
-            successModal.hide();
-        });
-        
-        successModal.show();
-    }
-
-    // Error Modal
-    function showError(message) {
-        document.getElementById('sysErrorMessage').innerHTML = message;
-        document.getElementById('sysErrorOverlay').classList.add('show');
     }
 
     // Force password change
@@ -889,4 +677,4 @@
 })();
 </script>
 </body>
-</html>
+</html> 

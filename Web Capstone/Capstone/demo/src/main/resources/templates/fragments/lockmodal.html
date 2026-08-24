@@ -1,0 +1,107 @@
+<!--
+  LOCK MODAL FRAGMENT
+  ============================================================
+  Forces "New" status admins to change their password before
+  they can use anything else. No close button, no overlay-click
+  dismiss — the only way out is the button, which sends them to
+  /user-profile.
+
+  USAGE — drop this near the end of <body> on any page that
+  already calls addCurrentAdminToModel(principal, model), so
+  ${currentstatus} is available:
+
+    <div th:replace="~{fragments/LockModal :: lockModal}"></div>
+
+  Adjust the "fragments/LockModal" path to wherever you put this
+  file relative to src/main/resources/templates/.
+-->
+<div th:fragment="lockModal">
+
+  <div th:if="${currentstatus != null and (#strings.equalsIgnoreCase(currentstatus, 'New') or #strings.equalsIgnoreCase(currentstatus, 'Newly Updated') or #strings.equalsIgnoreCase(accountStatus, 'Newly Updated') or #strings.equalsIgnoreCase(accountStatus, 'New'))}"
+       class="lock-modal-overlay show">
+    <div class="lock-modal-box">
+      <div class="lock-modal-icon">
+        <i class="bi bi-lock-fill"></i>
+      </div>
+      <h5>Password Change Required</h5>
+      <p>
+        Your account is new. For security, please set a new password
+        before you can continue using the system.
+      </p>
+      <a th:href="@{/user-profile}" class="lock-modal-btn">
+        Go to Profile Settings
+      </a>
+    </div>
+  </div>
+
+  <style>
+    .lock-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 999999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .lock-modal-overlay.show {
+      display: flex;
+    }
+
+    .lock-modal-box {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 32px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 28px 72px rgba(0, 0, 0, 0.45);
+      font-family: "DM Sans", "Segoe UI", Arial, sans-serif;
+    }
+
+    .lock-modal-icon {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, #f4c542, #f5d06a);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+      font-size: 32px;
+      color: #1a3a30;
+    }
+
+    .lock-modal-box h5 {
+      color: #2d5049;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 0 0 10px;
+    }
+
+    .lock-modal-box p {
+      color: #5a7872;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin: 0 0 22px;
+    }
+
+    .lock-modal-btn {
+      display: inline-block;
+      background: #f4c542;
+      color: #1a3a30;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+    }
+
+    .lock-modal-btn:hover {
+      background: #f5d06a;
+    }
+  </style>
+
+</div>

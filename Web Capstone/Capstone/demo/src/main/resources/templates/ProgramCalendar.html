@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
 
 <style>
@@ -394,11 +394,6 @@
         outline: none;
         border-color: #2d4a44;
         box-shadow: 0 0 0 2px rgba(45,74,68,0.1);
-    }
-    .form-group input.has-error,
-    .form-group textarea.has-error {
-        border-color: #e74c3c;
-        background-color: #fff5f5;
     }
 
     .form-row {
@@ -984,7 +979,7 @@
 
 <!-- Sidebar -->
 <div th:replace="~{fragments/sidebar :: sidebar}"></div>
-
+<div th:replace="~{fragments/LockModal :: lockModal}"></div>
   <div class="content">
 
     <div class="top-header">
@@ -1094,21 +1089,18 @@
         
         <div class="form-row">
             <div class="form-col">
-                <label>Start <span style="color:#e74c3c;">(7:00 AM - 10:00 PM)</span></label>
-                <input type="time" id="startTime" onchange="validateEventTimes()">
+                <label>Start Time</label>
+                <input type="time" id="startTime">
             </div>
             <div class="form-col">
-                <label>End  <span style="color:#e74c3c;">(7:00 AM - 10:00 PM)</span></label>
-                <input type="time" id="endTime" onchange="validateEventTimes()">
+                <label>End Time</label>
+                <input type="time" id="endTime">
             </div>
         </div>
-        <div id="timeError" style="color:#e74c3c; font-size:12px; margin-bottom:10px; display:none;"></div>
         
         <div class="form-group">
             <label>Estimated Budget (&#8369;)</label>
-            <input type="number" id="eventBudget" placeholder="0" value="0" onchange="validateBudget()">
-            <div id="budgetError" style="color:#e74c3c; font-size:12px; margin-top:4px; display:none;"></div>
-            <div style="font-size:11px; color:#888; margin-top:4px;">Maximum budget: <span id="maxBudgetDisplay">&#8369;0.00</span></div>
+            <input type="number" id="eventBudget" placeholder="0" value="0">
         </div>
         
         <div class="form-group">
@@ -1153,12 +1145,6 @@
 <script src="/js/sidebar.js"></script>
 
 <script>
-  // ============================================
-  // BARANGAY BUDGET & OPERATING HOURS
-  // ============================================
-  const BARANGAY_BUDGET = 100000; // ₱100,000 max budget
-  const OPERATING_START = '07:00';
-  const OPERATING_END = '22:00';
 
   let dbEvents = {}; 
   let allEvents = [];
@@ -1171,6 +1157,11 @@
   // ============================================
   // PURE CSS MODAL HELPERS
   // ============================================
+ window.onload = function() {
+        const status = document.getElementById("accountStatus").value;
+        if (status === "New" || status === 'Newly Updated') { document.getElementById("forcePasswordModal").style.display = "block"; document.body.style.overflow = "hidden"; }
+    };
+    
   function showSuccess(message) {
     document.getElementById('sysSuccessMessage').innerHTML = message;
     document.getElementById('sysSuccessOverlay').classList.add('show');
@@ -1194,100 +1185,40 @@
   }
 
   // ============================================
-  // VALIDATION FUNCTIONS
+  // CONFIRMATION & SUCCESS MODAL FUNCTIONS (exactly like System Settings)
   // ============================================
-  function validateEventTimes() {
-    const start = document.getElementById('startTime').value;
-    const end = document.getElementById('endTime').value;
-    const errorEl = document.getElementById('timeError');
+
+  function showSuccessBS(message) {
+    document.getElementById('successMessage').innerHTML = message;
+    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+    successModal.show();
+  }
+
+  function showConfirmBS(message, title, onConfirm) {
+    document.getElementById('confirmModalTitle').innerHTML = title || 'Confirm Action';
+    document.getElementById('confirmModalMessage').innerHTML = message;
     
-    if (!start || !end) {
-      errorEl.style.display = 'none';
-      return true;
-    }
-
-    // Check operating hours
-    if (start < OPERATING_START || start > OPERATING_END) {
-      errorEl.textContent = `Start time must be between ${OPERATING_START} and ${OPERATING_END}`;
-      errorEl.style.display = 'block';
-      return false;
-    }
-
-    if (end < OPERATING_START || end > OPERATING_END) {
-      errorEl.textContent = `End time must be between ${OPERATING_START} and ${OPERATING_END}`;
-      errorEl.style.display = 'block';
-      return false;
-    }
-
-    if (start >= end) {
-      errorEl.textContent = 'End time must be after start time';
-      errorEl.style.display = 'block';
-      return false;
-    }
-
-    errorEl.style.display = 'none';
-    return true;
-  }
-
-  function validateBudget() {
-    const budget = parseInt(document.getElementById('eventBudget').value) || 0;
-    const errorEl = document.getElementById('budgetError');
+    _pendingConfirmAction = onConfirm;
     
-    if (budget < 0) {
-      errorEl.textContent = 'Budget cannot be negative';
-      errorEl.style.display = 'block';
-      return false;
-    }
-
-    // Calculate total budget used for all events in the selected month
-    const date = document.getElementById('eventDate').value;
-    if (date) {
-      const totalBudget = calculateTotalBudgetForMonth(date);
-      if (budget + totalBudget > BARANGAY_BUDGET) {
-        const available = BARANGAY_BUDGET - totalBudget;
-        errorEl.textContent = `Budget exceeds available funds. Remaining budget: ₱${available.toLocaleString()}`;
-        errorEl.style.display = 'block';
-        return false;
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+    
+    const confirmBtn = document.getElementById('confirmModalOkBtn');
+    const oldBtnClick = confirmBtn.onclick;
+    confirmBtn.onclick = function() {
+      if (_pendingConfirmAction && typeof _pendingConfirmAction === 'function') {
+        _pendingConfirmAction();
       }
-    }
-
-    if (budget > BARANGAY_BUDGET) {
-      errorEl.textContent = `Budget cannot exceed the barangay budget of ₱${BARANGAY_BUDGET.toLocaleString()}`;
-      errorEl.style.display = 'block';
-      return false;
-    }
-
-    errorEl.style.display = 'none';
-    return true;
+      confirmModal.hide();
+    };
+    
+    confirmModal.show();
+    
+    document.getElementById('confirmationModal').addEventListener('hidden.bs.modal', function() {
+      confirmBtn.onclick = oldBtnClick;
+      _pendingConfirmAction = null;
+    }, { once: true });
   }
 
-  function calculateTotalBudgetForMonth(dateStr) {
-    if (!dateStr) return 0;
-    const [year, month] = dateStr.split('-').map(Number);
-    let total = 0;
-    allEvents.forEach(e => {
-      if (!e.eventDate) return;
-      const [y, m] = e.eventDate.split('-').map(Number);
-      if (y === year && m === month) {
-        total += e.program_budget || 0;
-      }
-    });
-    return total;
-  }
-
-  function updateMaxBudgetDisplay() {
-    const date = document.getElementById('eventDate').value;
-    let totalUsed = 0;
-    if (date) {
-      totalUsed = calculateTotalBudgetForMonth(date);
-    }
-    const available = BARANGAY_BUDGET - totalUsed;
-    document.getElementById('maxBudgetDisplay').textContent = `₱${available.toLocaleString()}`;
-  }
-
-  // ============================================
-  // LOAD EVENTS
-  // ============================================
   async function loadEvents() {
     try {
         const response = await fetch('/api/calendar/all');
@@ -1305,7 +1236,6 @@
 
         if (currentView === 'year') renderYearView(); else renderCalendar();
         renderUpcomingEvents(allEvents);
-        updateMaxBudgetDisplay();
     } catch (error) {
         console.error('Failed to load events:', error);
         if (currentView === 'year') renderYearView(); else renderCalendar();
@@ -1471,9 +1401,6 @@
     document.getElementById('eventLocation').value = '';
     document.getElementById('eventBudget').value = 0;
     document.getElementById('eventNotes').value = '';
-    document.getElementById('timeError').style.display = 'none';
-    document.getElementById('budgetError').style.display = 'none';
-    updateMaxBudgetDisplay();
     document.getElementById('addEventModal').style.display = 'block';
   }
 
@@ -1490,7 +1417,6 @@
     const budget = parseInt(document.getElementById('eventBudget').value) || 0;
     const notes = document.getElementById('eventNotes').value.trim();
 
-    // Validate required fields
     if (!eventName) {
         showError('Please enter an event name.');
         return;
@@ -1508,7 +1434,6 @@
         return;
     }
     
-    // Validate date (cannot be past)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const selectedDate = new Date(eventDate);
@@ -1516,30 +1441,6 @@
     
     if (selectedDate < today) {
         showError('Cannot add events on past dates. Please select a future or today\'s date.');
-        return;
-    }
-
-    // Validate operating hours
-    if (!validateEventTimes()) {
-        return;
-    }
-
-    // Validate budget
-    if (!validateBudget()) {
-        return;
-    }
-
-    // Check if budget exceeds barangay budget
-    if (budget > BARANGAY_BUDGET) {
-        showError(`Budget cannot exceed the barangay budget of ₱${BARANGAY_BUDGET.toLocaleString()}`);
-        return;
-    }
-
-    // Check total monthly budget
-    const totalMonthly = calculateTotalBudgetForMonth(eventDate);
-    if (budget + totalMonthly > BARANGAY_BUDGET) {
-        const available = BARANGAY_BUDGET - totalMonthly;
-        showError(`Budget exceeds available funds. Remaining budget for this month: ₱${available.toLocaleString()}`);
         return;
     }
 
@@ -1941,11 +1842,7 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
-    loadEvents();
-    // Update budget display when date changes
-    document.getElementById('eventDate').addEventListener('change', updateMaxBudgetDisplay);
-  });
+  document.addEventListener('DOMContentLoaded', loadEvents);
 
 </script>
 <script>
