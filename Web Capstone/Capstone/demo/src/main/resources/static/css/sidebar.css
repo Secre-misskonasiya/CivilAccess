@@ -187,14 +187,12 @@
 
     /* ── Section body (collapsible) ── */
     .section-body {
-        display: none;
         overflow: hidden;
         max-height: 0;
         transition: max-height 0.25s ease;
     }
 
     .section-body.open {
-        display: block;
         max-height: 600px;
     }
 
