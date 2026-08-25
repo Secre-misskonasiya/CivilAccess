@@ -1,10 +1,11 @@
 package com.example.demo.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
@@ -89,7 +90,7 @@ public class EmailService {
             "<h2>Confirm your Action</h2>" +
             "<p>Dear " + fullname + ",</p>" +
             "<p>Good day.</p>" +
-            "<p>A request has been made to update an Employee account in the " +
+            "<p>A request has been made on an Employee account in the " +
             "Barangay San Sebastian Digitalized System. To proceed with this action, " +
             "please use the One-Time Password (OTP) provided below:</p>" +
             "<div class='otp-box'>" +
@@ -185,7 +186,7 @@ public class EmailService {
         message.setText(
             "Dear " + fullname + ",\n\n" +
             "Good day.\n\n" +
-            "A request has been made to update an Employee account in the " +
+            "A request has been made on an Employee account in the " +
             "Barangay San Sebastian Digitalized System. To proceed with this action, " +
             "please use the One-Time Password (OTP) provided below:\n\n" +
             "      " + otp + "\n\n" +
