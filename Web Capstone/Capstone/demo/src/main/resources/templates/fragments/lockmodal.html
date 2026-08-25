@@ -17,7 +17,8 @@
 -->
 <div th:fragment="lockModal">
 
-  <div th:if="${currentstatus != null and (#strings.equalsIgnoreCase(currentstatus, 'New') or #strings.equalsIgnoreCase(currentstatus, 'Newly Updated'))}"
+  <div th:if="${(#vars.containsKey('currentstatus') and currentstatus != null and (#strings.equalsIgnoreCase(currentstatus, 'New') or #strings.equalsIgnoreCase(currentstatus, 'Newly Updated')))
+            or (#vars.containsKey('accountStatus') and accountStatus != null and (#strings.equalsIgnoreCase(accountStatus, 'New') or #strings.equalsIgnoreCase(accountStatus, 'Newly Updated')))}"
        class="lock-modal-overlay show">
     <div class="lock-modal-box">
       <div class="lock-modal-icon">
