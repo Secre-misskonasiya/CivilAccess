@@ -373,87 +373,63 @@ public class MainController {
     // =========================================================
 
     @PostMapping("/residents/verify/{id}")
-    @ResponseBody
-    public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
-        ResidentUser resident = residentUserService.getResidentById(id);
-        
-        if (resident == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Resident not found");
+@ResponseBody
+public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
+    ResidentUser resident = residentUserService.getResidentById(id);
+    
+    if (resident == null) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Resident not found");
+    }
+    
+    resident.setAccount_status("VERIFIED");
+    residentUserService.saveResident(resident);
+    
+    // Update modification timestamp
+    lastAccountsModificationTime = System.currentTimeMillis();
+    
+    return ResponseEntity.ok().body("{\"success\":true}");
+}
+
+
+
+
+    // =========================================================
+    // REGISTER / UPDATE RESIDENT
+    // =========================================================
+
+    @PostMapping("/residents/register")
+    public String registerResident(
+            @ModelAttribute("newResident") ResidentUser resident,
+            @RequestParam("selfieFile") org.springframework.web.multipart.MultipartFile file)
+            throws java.io.IOException {
+
+        if (resident.getId() != null && resident.getId().toString().isEmpty()) {
+            resident.setId(null);
         }
-        
-        resident.setAccount_status("VERIFIED");
+
+        ResidentUser existingResident = null;
+        if (resident.getId() != null) {
+            existingResident = residentUserService.getResidentById(resident.getId());
+        }
+
+        if ("Auto-generated".equals(resident.getResidentId()) ||
+                (resident.getResidentId() != null && resident.getResidentId().isEmpty())) {
+            resident.setResidentId(null);
+        }
+
+        if (file != null && !file.isEmpty()) {
+            String base64Selfie = Base64.getEncoder().encodeToString(file.getBytes());
+            resident.setSelfie(base64Selfie);
+            resident.setImageType(file.getContentType());
+        } else if (existingResident != null) {
+            resident.setSelfie(existingResident.getSelfie());
+            resident.setImageType(existingResident.getImageType());
+        }
+
         residentUserService.saveResident(resident);
         
         // Update modification timestamp
         lastAccountsModificationTime = System.currentTimeMillis();
-        
-        return ResponseEntity.ok().body("{\"success\":true}");
-    }
-
-
-
-
-        // =========================================================
-        // REGISTER / UPDATE RESIDENT
-        // =========================================================
-
-        @PostMapping("/residents/register")
-            public String updateResident(
-            @ModelAttribute ResidentUser resident,
-            @RequestParam(value = "selfieFile", required = false) 
-            org.springframework.web.multipart.MultipartFile file,
-            RedirectAttributes redirectAttributes,
-            Principal principal,
-            HttpServletRequest request) {
-        
-        try {
-            ResidentUser existingResident = residentUserService.getResidentById(resident.getId());
-            
-            if (existingResident == null) {
-                redirectAttributes.addFlashAttribute("error", "Resident not found.");
-                return "redirect:/account";
-            }
-            
-            // Update fields
-            existingResident.setFirstName(resident.getFirstName());
-            existingResident.setLastName(resident.getLastName());
-            existingResident.setGender(resident.getGender());
-            existingResident.setBirthDate(resident.getBirthDate());
-            existingResident.setMobileNumber(resident.getMobileNumber());
-            existingResident.setEmail(resident.getEmail());
-            existingResident.setAddress(resident.getAddress());
-            
-            // Handle file upload if present
-            if (file != null && !file.isEmpty()) {
-                String base64Selfie = Base64.getEncoder().encodeToString(file.getBytes());
-                existingResident.setSelfie(base64Selfie);
-                existingResident.setImageType(file.getContentType());
-            }
-            // If no new file, keep existing selfie (don't overwrite)
-            
-            // Save the updated resident
-            residentUserService.saveResident(existingResident);
-            
-            // Log the activity
-            AdminUser currentAdmin = adminUserService.getAdminByEmail(principal.getName());
-            activityLogService.log(
-                currentAdmin.getName(), 
-                currentAdmin.getRole(), 
-                "UPDATED", 
-                "Accounts",
-                truncate("Updated resident account for " + existingResident.getFirstName() + " " + existingResident.getLastName()),
-                request.getRemoteAddr(), 
-                "Success"
-            );
-            
-            // Update modification timestamp
-            lastAccountsModificationTime = System.currentTimeMillis();
-            
-            redirectAttributes.addFlashAttribute("success", "Resident updated successfully!");
-            
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Failed to update resident: " + e.getMessage());
-        }
         
         return "redirect:/account";
     }
