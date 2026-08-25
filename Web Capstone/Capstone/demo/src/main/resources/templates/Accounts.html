@@ -7,16 +7,19 @@
     .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
     .top-header { background-color: #2d4a44; display: flex; border-bottom: 2px solid #FED734; }
     .top-header-tab { flex: 1; color: white; text-align: center; padding: 16px 20px; font-size: 16px; font-weight: bold; cursor: pointer; }
-    .search-bar-area { padding: 16px 20px 10px 20px; display: flex; align-items: center; gap: 10px; background-color: #f5f5f5; }
-    .search-input-wrap { flex: 1; position: relative; }
+    .search-bar-area { padding: 16px 20px 10px 20px; display: flex; align-items: center; gap: 10px; background-color: #f5f5f5; flex-wrap: wrap; }
+    .search-input-wrap { flex: 1; position: relative; min-width: 200px; }
     .search-input-wrap input { width: 100%; padding: 9px 14px 9px 38px; border: 1px solid #d0d5dd; border-radius: 6px; font-size: 14px; background: white; box-sizing: border-box; }
     .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; }
     .filter-btn { padding: 9px 16px; border: 1px solid #d0d5dd; border-radius: 6px; background: white; font-size: 14px; cursor: pointer; color: #444; white-space: nowrap; }
     .export-btn { padding: 9px 20px; border: none; border-radius: 6px; background: #FED734; font-size: 14px; font-weight: bold; cursor: pointer; color: #2d4a44; }
+    .export-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .new-account-btn { padding: 9px 20px; border: none; border-radius: 6px; background: #44C375; font-size: 14px; font-weight: bold; cursor: pointer; color: white; white-space: nowrap; }
-    .tabbar { display: flex; background-color: white; border-bottom: 1px solid #e0e0e0; padding: 0 20px; gap: 4px; }
+    .new-account-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .tabbar { display: flex; background-color: white; border-bottom: 1px solid #e0e0e0; padding: 0 20px; gap: 4px; flex-wrap: wrap; }
     .tab { padding: 12px 18px; color: #666; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 6px; }
     .tab.active { background-color: #2d4a44; color: white; border-radius: 6px 6px 0 0; font-weight: bold; }
+    .tab.disabled { opacity: 0.5; cursor: not-allowed; }
     .panel { padding: 20px; background-color: #f5f5f5; flex: 1; overflow-y: auto; }
     .panel-inner { background: white; border-radius: 8px; border: 1px solid #e0e0e0; overflow: hidden; }
     .panel-header { background-color: #3d5f58; color: white; padding: 14px 20px; font-weight: bold; font-size: 15px; }
@@ -51,12 +54,24 @@
     #resident-table th:nth-child(6), #resident-table td:nth-child(6) { width: 120px; }
     #resident-table th:nth-child(7), #resident-table td:nth-child(7) { width: 200px; white-space: normal; word-break: break-word; }
     #resident-table th:nth-child(8), #resident-table td:nth-child(8) { width: 120px; }
-    .action-buttons { display: inline-flex; gap: 6px; }
+    #resident-table th:nth-child(9), #resident-table td:nth-child(9) { width: 160px; }
+    .action-buttons { display: inline-flex; gap: 6px; flex-wrap: wrap; }
     .view-btn { background-color: #3498db; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
+    .view-btn:hover { background-color: #2176ae; }
     .update-btn { background-color: #FED734; color: #30534D; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
+    .update-btn:hover { background-color: #f5c800; }
+    .update-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .delete-btn { background-color: #e74c3c; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
+    .delete-btn:hover { background-color: #c0392b; }
+    .delete-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .restore-btn { background-color: #27ae60; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
-    .table-footer { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid #e0e0e0; font-size: 13px; color: #888; }
+    .restore-btn:hover { background-color: #1e8449; }
+    .verify-btn { background-color: #44C375; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
+    .verify-btn:hover { background-color: #2ea05e; }
+    .verify-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .verify-btn.verified { background-color: #95a5a6; cursor: default; }
+    .verify-btn.verified:hover { background-color: #95a5a6; }
+    .table-footer { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid #e0e0e0; font-size: 13px; color: #888; flex-wrap: wrap; gap: 10px; }
     .page-item.active .page-link { background-color: #2d4a44; border-color: #2d4a44; }
     .page-link { color: #2d4a44; }
 
@@ -108,29 +123,25 @@
     .regen-password-btn { white-space: nowrap; padding: 9px 14px; background: #30534D; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 600; }
     .regen-password-btn:hover { background: #3d6b63; }
 
-
     /* Fix horizontal scrolling for resident tables - KEEP VERTICAL SCROLLING */
-.panel-content {
-    overflow-x: auto !important;
-    overflow-y: visible !important;
-    width: 100%;
-}
+    .panel-content {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        width: 100%;
+    }
 
-#resident-table,
-#resarchive-table {
-    width: 100%;
-    table-layout: auto !important;
-}
+    #resident-table,
+    #resarchive-table {
+        width: 100%;
+        table-layout: auto !important;
+    }
 
-#resident-table th,
-#resident-table td,
-#resarchive-table th,
-#resarchive-table td {
-    white-space: nowrap;
-}
-
-
-
+    #resident-table th,
+    #resident-table td,
+    #resarchive-table th,
+    #resarchive-table td {
+        white-space: nowrap;
+    }
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -146,11 +157,15 @@
 <title>Accounts</title>
 </head>
 <body>
+
+<!-- Hidden inputs for status and role -->
+<input type="hidden" id="accountStatus" th:value="${currentstatus}">
+<input type="hidden" id="currentUserRole" th:value="${currentrole}">
+
 <script src="/js/notif.js"></script>
 <div class="toast-container" id="toastContainer"></div>
 
 <div class="layout">
-
 
 <!-- Sidebar -->
 <div th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -164,8 +179,9 @@
     <div class="tabbar">
         <div class="tab active" onclick="switchTab('employee')">Employee</div>
         <div class="tab" onclick="switchTab('residents')">Residents</div>
-        <div class="tab" onclick="switchTab('archives')">Archives</div>
-        <div class="tab" onclick="switchTab('resarchives')">Residents Archives</div>
+        <!-- Archives tabs - Only ADMIN can view -->
+        <div class="tab" th:if="${currentrole == 'ADMIN'}" onclick="switchTab('archives')">Archives</div>
+        <div class="tab" th:if="${currentrole == 'ADMIN'}" onclick="switchTab('resarchives')">Residents Archives</div>
     </div>
 
     <!-- ═══════════════════════════════════════════ -->
@@ -182,7 +198,6 @@
                     <i class="bi bi-funnel"></i> <span id="employee-filter-label">All Roles</span>
                     <i class="bi bi-chevron-down" style="font-size:11px;"></i>
                 </button>
-                <!-- FIX 1: colIndex changed from 7 to 6 (Role is the 7th column, index 6) -->
                 <div id="employee-filter-dropdown" class="filter-dropdown">
                     <div class="filter-dropdown-title">Filter by Role</div>
                     <div class="filter-option" onclick="applyFilter('employee','','All Roles','employee-filter-label',3)">All Roles <i class="bi bi-check filter-check"></i></div>
@@ -190,16 +205,21 @@
                     <div class="filter-option" onclick="applyFilter('employee','BARANGAY-CAPTAIN','Barangay Captain','employee-filter-label',3)">Barangay Captain <i class="bi bi-check filter-check"></i></div>
                     <div class="filter-option" onclick="applyFilter('employee','TREASURER','Treasurer','employee-filter-label',3)">Treasurer <i class="bi bi-check filter-check"></i></div>
                     <div class="filter-option" onclick="applyFilter('employee','TANOD','Tanod','employee-filter-label',3)">Tanod <i class="bi bi-check filter-check"></i></div>
+                    <div class="filter-option" onclick="applyFilter('employee','SECRETARY','Secretary','employee-filter-label',3)">Secretary <i class="bi bi-check filter-check"></i></div>
                     <div class="filter-option" onclick="applyFilter('employee','SECRETARIAT STAFF','Secretariat Staff','employee-filter-label',3)">Secretariat Staff <i class="bi bi-check filter-check"></i></div>
                 </div>
             </div>
             
-
+            <!-- Create Account - Only ADMIN, SECRETARY, SECRETARIAT STAFF -->
             <button class="new-account-btn" onclick="openModal()"
-                    th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
+                    th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
                 <i class="bi bi-person-plus"></i> Create New Account
             </button>
-            <button th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" class="export-btn" onclick="exportToPDF('employee-panel')">Export</button>
+            <!-- Export - Only ADMIN, SECRETARY, SECRETARIAT STAFF -->
+            <button class="export-btn" onclick="exportToPDF('employee-panel')"
+                    th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
+                Export
+            </button>
         </div>
         <div class="panel-inner">
             <div class="panel-header">Employee Accounts</div>
@@ -225,6 +245,7 @@
                             <td th:text="${admin.empstatus}"></td>
                             <td>
                                 <div class="action-buttons">
+                                    <!-- View button - ALL roles can view -->
                                     <button class="view-btn"
                                         th:attr="data-id=${admin.id},
                                                 data-employee=${admin.employeeId},
@@ -240,9 +261,10 @@
                                                 data-status=${admin.empstatus},
                                                 data-picture=${admin.profilePicture}"
                                         onclick="openViewModalFromButton(this)">View</button>
-                                    <!-- Update button: ADMIN only -->
+                                    
+                                    <!-- Update button - Only ADMIN, SECRETARY, SECRETARIAT STAFF -->
                                     <button class="update-btn"
-                                        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}"
+                                        th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
                                         th:onclick="openEditModal(
                                             [[${admin.id}]],
                                             [[${admin.employeeId}]],
@@ -255,7 +277,8 @@
                                             [[${#temporals.format(admin.birthDate, 'yyyy-MM-dd')}]],
                                             [[${admin.phoneNumber}]],
                                             [[${admin.address}]])">Update</button>
-                                    <!-- Archive button: ADMIN only -->
+                                    
+                                    <!-- Archive button - ONLY ADMIN -->
                                     <button type="button" class="delete-btn"
                                         th:if="${currentrole == 'ADMIN'}"
                                         th:data-url="'/delete-admin/' + ${admin.id}"
@@ -292,24 +315,24 @@
                     <i class="bi bi-funnel"></i> <span id="residents-filter-label">All</span>
                     <i class="bi bi-chevron-down" style="font-size:11px;"></i>
                 </button>
-
-                <!-- colIndex 3 = Gender column (correct) -->
                 <div id="residents-filter-dropdown" class="filter-dropdown">
-                <div class="filter-dropdown-title">Filter by Gender</div>
-                <div class="filter-option" onclick="applyFilter('residents','','All','residents-filter-label',3)">All <i class="bi bi-check filter-check"></i></div>
-                <div class="filter-option" onclick="applyFilter('residents','Male','Male','residents-filter-label',3)">Male <i class="bi bi-check filter-check"></i></div>
-                <div class="filter-option" onclick="applyFilter('residents','Female','Female','residents-filter-label',3)">Female <i class="bi bi-check filter-check"></i></div>
-                <div class="filter-option" onclick="applyFilter('residents','Other','Other','residents-filter-label',3)">Other <i class="bi bi-check filter-check"></i></div>
-                <div class="dropdown-divider" style="height:1px; background:#eee; margin:6px 0;"></div>
-                <div class="filter-dropdown-title">Filter by Status</div>
-                <div class="filter-option" onclick="applyFilterByStatus('residents','','All Status','residents-filter-label')">All Status <i class="bi bi-check filter-check"></i></div>
-                <div class="filter-option" onclick="applyFilterByStatus('residents','VERIFIED','VERIFIED','residents-filter-label')">VERIFIED <i class="bi bi-check filter-check"></i></div>
-                <div class="filter-option" onclick="applyFilterByStatus('residents','UNVERIFIED','UNVERIFIED','residents-filter-label')">UNVERIFIED <i class="bi bi-check filter-check"></i></div>
+                    <div class="filter-dropdown-title">Filter by Gender</div>
+                    <div class="filter-option" onclick="applyFilter('residents','','All','residents-filter-label',3)">All <i class="bi bi-check filter-check"></i></div>
+                    <div class="filter-option" onclick="applyFilter('residents','Male','Male','residents-filter-label',3)">Male <i class="bi bi-check filter-check"></i></div>
+                    <div class="filter-option" onclick="applyFilter('residents','Female','Female','residents-filter-label',3)">Female <i class="bi bi-check filter-check"></i></div>
+                    <div class="filter-option" onclick="applyFilter('residents','Other','Other','residents-filter-label',3)">Other <i class="bi bi-check filter-check"></i></div>
+                    <div class="dropdown-divider" style="height:1px; background:#eee; margin:6px 0;"></div>
+                    <div class="filter-dropdown-title">Filter by Status</div>
+                    <div class="filter-option" onclick="applyFilterByStatus('residents','','All Status','residents-filter-label')">All Status <i class="bi bi-check filter-check"></i></div>
+                    <div class="filter-option" onclick="applyFilterByStatus('residents','VERIFIED','VERIFIED','residents-filter-label')">VERIFIED <i class="bi bi-check filter-check"></i></div>
+                    <div class="filter-option" onclick="applyFilterByStatus('residents','UNVERIFIED','UNVERIFIED','residents-filter-label')">UNVERIFIED <i class="bi bi-check filter-check"></i></div>
+                </div>
             </div>
-
-                
-            </div>
-            <button class="export-btn" onclick="exportToPDF('residents-panel')">Export</button>
+            <!-- Export - Only ADMIN, SECRETARY, SECRETARIAT STAFF -->
+            <button class="export-btn" onclick="exportToPDF('residents-panel')"
+                    th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
+                Export
+            </button>
         </div>
         <div class="panel-inner">
             <div class="panel-header">Resident Accounts</div>
@@ -324,67 +347,95 @@
                             <th>Birth Date</th>
                             <th>Phone</th>
                             <th>Address</th>
-                            <th>Priority</th>   <!-- add this -->
+                            <th>Priority</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        
-<tr th:each="res : ${residentList}"
-    th:attr="data-id=${res.id},
-             data-resident-id=${res.residentId},
-             data-first-name=${res.firstName},
-             data-last-name=${res.lastName},
-             data-gender=${res.gender},
-             data-birth=${res.birthDate},
-             data-phone=${res.mobileNumber},
-             data-address=${res.address},
-             data-email=${res.email},
-             data-selfie=${res.selfie},
-             data-validid=${res.validId},
-             data-indigency=${res.barangayIndigency},
-             data-status=${res.account_status},
-             data-avatar=${res.avatar_url},
-             data-pwdimage=${res.pwdImage},
-             data-seniorimage=${res.seniorImage}">
-    <td th:text="${res.residentId}"></td>
-    <td th:text="${res.firstName}"></td>
-    <td th:text="${res.lastName}"></td>
-    <td th:text="${res.gender}"></td>
-    <td th:text="${res.birthDate}"></td>
-    <td th:text="${res.mobileNumber}"></td>
-    <td th:text="${res.address}"></td>
-    <td>
-        <span th:if="${res.pwdImage != null and res.seniorImage != null}">PWD &amp; Senior</span>
-        <span th:if="${res.pwdImage != null and res.seniorImage == null}">PWD</span>
-        <span th:if="${res.pwdImage == null and res.seniorImage != null}">Senior</span>
-        <span th:if="${res.pwdImage == null and res.seniorImage == null}" style="color:#aaa;">—</span>
-    </td>
-    <td>
-        <div class="action-buttons">
-            <!-- Edit button: ADMIN only -->
-            <button class="update-btn"
-                th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
-                th:onclick="openEditResidentModal(
-                    [[${res.id}]],
-                    [[${res.residentId}]],
-                    [[${res.firstName}]],
-                    [[${res.lastName}]],
-                    [[${res.gender}]],
-                    [[${#temporals.format(res.birthDate, 'yyyy-MM-dd')}]],
-                    [[${res.mobileNumber}]],
-                    [[${res.email}]],
-                    [[${res.address}]])">Edit</button>
-            <!-- Archive button: ADMIN only -->
-            <button type="button" class="delete-btn"
-                th:if="${currentrole == 'ADMIN'}"
-                th:data-url="'/residents/delete/' + ${res.id}"
-                th:data-email="${res.email}"
-                th:data-fullname="${res.firstName + ' ' + res.lastName}"
-                onclick="triggerResidentDelete(this)">Archive</button>
-        </div>
-    </td>
-                  
+                        <tr th:each="res : ${residentList}"
+                            th:attr="data-id=${res.id},
+                                     data-resident-id=${res.residentId},
+                                     data-first-name=${res.firstName},
+                                     data-last-name=${res.lastName},
+                                     data-gender=${res.gender},
+                                     data-birth=${res.birthDate},
+                                     data-phone=${res.mobileNumber},
+                                     data-address=${res.address},
+                                     data-email=${res.email},
+                                     data-selfie=${res.selfie},
+                                     data-validid=${res.validId},
+                                     data-indigency=${res.barangayIndigency},
+                                     data-status=${res.account_status},
+                                     data-avatar=${res.avatar_url},
+                                     data-pwdimage=${res.pwdImage},
+                                     data-seniorimage=${res.seniorImage}">
+                            <td th:text="${res.residentId}"></td>
+                            <td th:text="${res.firstName}"></td>
+                            <td th:text="${res.lastName}"></td>
+                            <td th:text="${res.gender}"></td>
+                            <td th:text="${res.birthDate}"></td>
+                            <td th:text="${res.mobileNumber}"></td>
+                            <td th:text="${res.address}"></td>
+                            <td>
+                                <span th:if="${res.pwdImage != null and res.seniorImage != null}">PWD &amp; Senior</span>
+                                <span th:if="${res.pwdImage != null and res.seniorImage == null}">PWD</span>
+                                <span th:if="${res.pwdImage == null and res.seniorImage != null}">Senior</span>
+                                <span th:if="${res.pwdImage == null and res.seniorImage == null}" style="color:#aaa;">—</span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <!-- View button - ALL roles can view -->
+                                    <button class="view-btn" 
+                                        th:attr="data-id=${res.id},
+                                                data-resident-id=${res.residentId},
+                                                data-first-name=${res.firstName},
+                                                data-last-name=${res.lastName},
+                                                data-gender=${res.gender},
+                                                data-birth=${res.birthDate},
+                                                data-phone=${res.mobileNumber},
+                                                data-address=${res.address},
+                                                data-email=${res.email},
+                                                data-selfie=${res.selfie},
+                                                data-validid=${res.validId},
+                                                data-indigency=${res.barangayIndigency},
+                                                data-status=${res.account_status},
+                                                data-avatar=${res.avatar_url}"
+                                        onclick="openResidentViewModal(this)">View</button>
+                                    
+                                    <!-- Verify button - Only ADMIN, SECRETARY, SECRETARIAT STAFF -->
+                                    <button class="verify-btn"
+                                        th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                        th:classappend="${res.account_status == 'VERIFIED' ? 'verified' : ''}"
+                                        th:attr="data-id=${res.id},
+                                                data-first-name=${res.firstName},
+                                                data-last-name=${res.lastName},
+                                                data-status=${res.account_status}"
+                                        onclick="openVerifyModal(this)">Verify</button>
+                                    
+                                    <!-- Edit button - Only ADMIN, SECRETARY, SECRETARIAT STAFF -->
+                                    <button class="update-btn"
+                                        th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                        th:onclick="openEditResidentModal(
+                                            [[${res.id}]],
+                                            [[${res.residentId}]],
+                                            [[${res.firstName}]],
+                                            [[${res.lastName}]],
+                                            [[${res.gender}]],
+                                            [[${#temporals.format(res.birthDate, 'yyyy-MM-dd')}]],
+                                            [[${res.mobileNumber}]],
+                                            [[${res.email}]],
+                                            [[${res.address}]])">Edit</button>
+                                    
+                                    <!-- Archive button - ONLY ADMIN -->
+                                    <button type="button" class="delete-btn"
+                                        th:if="${currentrole == 'ADMIN'}"
+                                        th:data-url="'/residents/delete/' + ${res.id}"
+                                        th:data-email="${res.email}"
+                                        th:data-fullname="${res.firstName + ' ' + res.lastName}"
+                                        onclick="triggerResidentDelete(this)">Archive</button>
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
                 <div class="table-footer" id="footer-residents">
@@ -413,7 +464,6 @@
                     <i class="bi bi-funnel"></i> <span id="archive-filter-label">All Roles</span>
                     <i class="bi bi-chevron-down" style="font-size:11px;"></i>
                 </button>
-                <!-- FIX 2: colIndex changed from 7 to 6 (Role is the 7th column, index 6) -->
                 <div id="archive-filter-dropdown" class="filter-dropdown">
                     <div class="filter-dropdown-title">Filter by Role</div>
                     <div class="filter-option" onclick="applyFilter('archive','','All Roles','archive-filter-label',3)">All Roles <i class="bi bi-check filter-check"></i></div>
@@ -425,7 +475,9 @@
                     <div class="filter-option" onclick="applyFilter('archive','SECRETARIAT STAFF','Secretariat Staff','archive-filter-label',3)">Secretariat Staff <i class="bi bi-check filter-check"></i></div>
                 </div>
             </div>
-            <button class="export-btn" onclick="exportToPDF('archived-panel')">Export</button>
+            <!-- Export - Only ADMIN -->
+            <button class="export-btn" onclick="exportToPDF('archived-panel')"
+                    th:if="${currentrole == 'ADMIN'}">Export</button>
         </div>
         <div class="panel-inner">
             <div class="panel-header">Archived Employee Accounts</div>
@@ -450,6 +502,7 @@
                             <td th:text="${admin.empstatus}"></td>
                             <td>
                                 <div class="action-buttons">
+                                    <!-- View button - ALL roles can view -->
                                     <button class="view-btn"
                                         th:attr="data-id=${admin.id},
                                             data-employee=${admin.employeeId},
@@ -465,6 +518,10 @@
                                             data-status=${admin.empstatus},
                                             data-picture=${admin.profilePicture}"
                                         onclick="openViewModalFromButton(this)">View</button>
+                                    <!-- Restore button - ONLY ADMIN -->
+                                    <button class="restore-btn"
+                                        th:if="${currentrole == 'ADMIN'}"
+                                        th:onclick="restoreEmployee([[${admin.id}]])">Restore</button>
                                 </div>
                             </td>
                         </tr>
@@ -496,7 +553,6 @@
                     <i class="bi bi-funnel"></i> <span id="resarchive-filter-label">All</span>
                     <i class="bi bi-chevron-down" style="font-size:11px;"></i>
                 </button>
-                <!-- colIndex 3 = Gender column (correct) -->
                 <div id="resarchive-filter-dropdown" class="filter-dropdown">
                     <div class="filter-dropdown-title">Filter by Gender</div>
                     <div class="filter-option" onclick="applyFilter('resarchive','','All','resarchive-filter-label',3)">All <i class="bi bi-check filter-check"></i></div>
@@ -505,7 +561,9 @@
                     <div class="filter-option" onclick="applyFilter('resarchive','Other','Other','resarchive-filter-label',3)">Other <i class="bi bi-check filter-check"></i></div>
                 </div>
             </div>
-            <button class="export-btn" onclick="exportToPDF('residents-archived-panel')">Export</button>
+            <!-- Export - Only ADMIN -->
+            <button class="export-btn" onclick="exportToPDF('residents-archived-panel')"
+                    th:if="${currentrole == 'ADMIN'}">Export</button>
         </div>
         <div class="panel-inner">
             <div class="panel-header">Archived Resident Accounts</div>
@@ -580,8 +638,6 @@
                         <small style="color:#999;font-size:11px;">Auto-generated</small>
                     </div>
                     <input type="hidden" th:field="*{empstatus}" id="edit-employeeStatus"/>
-                    <input type="hidden" id="accountStatus" th:value="${currentstatus}">
-                    <input type="hidden" id="currentUserRole" th:value="${currentrole}">
                 </div>
                 <div class="modal-two-col">
                     <div class="modal-section-title">Personal Information
@@ -702,11 +758,10 @@
 </div>
 
 <!-- ═══════════════════════════════════════════ -->
-<!-- VIEW MODAL                                  -->
+<!-- VIEW MODAL (Employee)                       -->
 <!-- ═══════════════════════════════════════════ -->
 <div id="viewModal" class="modal">
   <div class="modal-content" style="width:500px; padding:0; overflow:hidden;">
-
     <div style="background:#2d4a44; padding:20px 24px 0; position:relative;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <span class="close-btn" onclick="closeViewModal()" style="position:absolute; top:12px; right:16px; color:white; opacity:0.7;">&times;</span>
@@ -718,7 +773,6 @@
           <p style="font-size:17px; font-weight:500; color:#2d4a44; margin:0;" id="view-status">ACTIVE</p>
         </div>
       </div>
-
       <div style="display:flex; align-items:flex-end; gap:16px; margin-top:20px;">
         <div id="view-avatar" style="width:72px; height:72px; border-radius:50%; background:#3d6b63; border:2px solid #9fd4c8; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:10px; overflow:hidden;">
             <img id="view-avatar-img" src="" alt="Profile" style="width:100%; height:100%; object-fit:cover; display:none; border-radius:50%;">
@@ -732,7 +786,6 @@
         </div>
       </div>
     </div>
-
     <div style="padding:28px 24px 20px;">
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
         <div style="background:#f5f5f5; border-radius:6px; padding:10px 14px;">
@@ -744,7 +797,6 @@
           <p style="font-size:20px; font-weight:bold; color:#333; margin:0;" id="view-username"></p>
         </div>
       </div>
-
       <div style="border-top:1px solid #eee; padding-top:14px; display:flex; flex-direction:column; gap:10px;">
         <div style="display:flex; justify-content:space-between;">
           <span style="font-size:16px; color:#888;">Email</span>
@@ -767,12 +819,71 @@
           <p style="font-size:20px; color:#333; font-weight:bold; margin:0; line-height:1.5;" id="view-address"></p>
         </div>
       </div>
-
       <div style="margin-top:16px; border-top:1px solid #eee; padding-top:14px; text-align:center;">
         <p style="font-size:25px; color:#aaa; letter-spacing:0.05em; margin:0;">BARANGAY SAN SEBASTIAN · KAWIT, CAVITE</p>
       </div>
     </div>
+  </div>
+</div>
 
+<!-- ═══════════════════════════════════════════ -->
+<!-- RESIDENT VIEW MODAL                         -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="residentViewModal" class="modal">
+  <div class="modal-content" style="width:500px; padding:0; overflow:hidden;">
+    <div style="background:#2d4a44; padding:20px 24px 0; position:relative;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <span class="close-btn" onclick="document.getElementById('residentViewModal').style.display='none'" style="position:absolute; top:12px; right:16px; color:white; opacity:0.7;">&times;</span>
+        <div>
+          <p style="color:#9fd4c8; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; margin:0 0 2px;">Barangay San Sebastian</p>
+          <p style="color:white; font-size:15px; font-weight:500; margin:0;">Resident Record</p>
+        </div>
+        <div style="background:#FED734; border-radius:4px; padding:4px 10px; margin-right:24px;">
+          <p style="font-size:14px; font-weight:500; color:#2d4a44; margin:0;" id="rv_status">ACTIVE</p>
+        </div>
+      </div>
+      <div style="display:flex; align-items:flex-end; gap:16px; margin-top:20px;">
+        <div id="rv-avatar" style="width:72px; height:72px; border-radius:50%; background:#3d6b63; border:2px solid #9fd4c8; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:10px; overflow:hidden;">
+            <img id="rv-avatar-img" src="" alt="Profile" style="width:100%; height:100%; object-fit:cover; display:none; border-radius:50%;">
+            <svg id="rv-avatar-svg" width="36" height="36" viewBox="0 0 24 24" fill="#9fd4c8">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+        </div>
+        <div style="padding-bottom:20px;">
+          <p style="color:white; font-size:18px; font-weight:500; margin:0;" id="rv_fullname"></p>
+          <p style="color:#9fd4c8; font-size:13px; margin:4px 0 0;" id="rv_id"></p>
+        </div>
+      </div>
+    </div>
+    <div style="padding:28px 24px 20px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+        <div style="background:#f5f5f5; border-radius:6px; padding:10px 14px;">
+          <p style="font-size:16px; color:#888; text-transform:uppercase; letter-spacing:0.07em; margin:0 0 3px;">Email</p>
+          <p style="font-size:20px; font-weight:bold; color:#333; margin:0;" id="rv_email"></p>
+        </div>
+        <div style="background:#f5f5f5; border-radius:6px; padding:10px 14px;">
+          <p style="font-size:16px; color:#888; text-transform:uppercase; letter-spacing:0.07em; margin:0 0 3px;">Phone</p>
+          <p style="font-size:20px; font-weight:bold; color:#333; margin:0;" id="rv_phone"></p>
+        </div>
+      </div>
+      <div style="border-top:1px solid #eee; padding-top:14px; display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; justify-content:space-between;">
+          <span style="font-size:16px; color:#888;">Gender</span>
+          <span style="font-size:20px; color:#333; font-weight:bold;" id="rv_gender"></span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span style="font-size:16px; color:#888;">Birth date</span>
+          <span style="font-size:20px; color:#333; font-weight:bold;" id="rv_birth"></span>
+        </div>
+        <div style="border-top:1px solid #eee; padding-top:10px;">
+          <p style="font-size:16px; color:#888; margin:0 0 4px;">Address</p>
+          <p style="font-size:20px; color:#333; font-weight:bold; margin:0; line-height:1.5;" id="rv_address"></p>
+        </div>
+      </div>
+      <div style="margin-top:16px; border-top:1px solid #eee; padding-top:14px; text-align:center;">
+        <p style="font-size:25px; color:#aaa; letter-spacing:0.05em; margin:0;">BARANGAY SAN SEBASTIAN · KAWIT, CAVITE</p>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -842,7 +953,51 @@
 </div>
 
 <!-- ═══════════════════════════════════════════ -->
-<!-- CONFIRM MODAL (Enhanced for Archive)        -->
+<!-- VERIFY MODAL                                -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="verifyModal" class="modal">
+    <div class="modal-content" style="width:750px;">
+        <div class="modal-header">
+            <h2>Verify Resident Documents</h2>
+            <span class="close-btn" onclick="document.getElementById('verifyModal').style.display='none'">&times;</span>
+        </div>
+        <div class="modal-form-body">
+            <h3 id="verifyName" style="text-align:center; margin-bottom:10px;"></h3>
+            <p style="text-align:center"><strong>Current Status:</strong> <span id="verifyStatus" style="display:inline-block; padding:4px 12px; border-radius:20px;"></span></p>
+            <div class="verify-docs-grid" style="display:flex; gap:20px; justify-content:center; margin:20px 0; flex-wrap:wrap;">
+                <div class="doc-card" style="flex:1; min-width:180px; text-align:center; background:#f9f9f9; border-radius:12px; padding:16px;">
+                    <h4 style="font-size:14px; color:#2d4a44; margin-bottom:12px;">Selfie</h4>
+                    <div id="selfieImg" style="background:#e9ecef; height:160px; display:flex; align-items:center; justify-content:center; border-radius:8px;">No image</div>
+                </div>
+                <div class="doc-card" style="flex:1; min-width:180px; text-align:center; background:#f9f9f9; border-radius:12px; padding:16px;">
+                    <h4 style="font-size:14px; color:#2d4a44; margin-bottom:12px;">Valid ID</h4>
+                    <div id="validIdImg" style="background:#e9ecef; height:160px; display:flex; align-items:center; justify-content:center; border-radius:8px;">No image</div>
+                </div>
+                <div class="doc-card" style="flex:1; min-width:180px; text-align:center; background:#f9f9f9; border-radius:12px; padding:16px;">
+                    <h4 style="font-size:14px; color:#2d4a44; margin-bottom:12px;">Barangay Indigency</h4>
+                    <div id="indigencyImg" style="background:#e9ecef; height:160px; display:flex; align-items:center; justify-content:center; border-radius:8px;">No image</div>
+                </div>
+            </div>
+            <div id="priorityDocsSection" style="display:none; justify-content:center; margin:0 0 16px; flex-wrap:wrap; gap:20px;">
+                <div id="pwdDocCard" style="display:none; flex:1; min-width:180px; text-align:center; background:#eef4ff; border:1px solid #aed6f1; border-radius:12px; padding:16px; flex-direction:column;">
+                    <h4 style="font-size:14px; color:#2471a3; margin-bottom:12px;">PWD Certificate</h4>
+                    <div id="pwdImg" style="background:#dce8f5; height:160px; display:flex; align-items:center; justify-content:center; border-radius:8px;">No image</div>
+                </div>
+                <div id="seniorDocCard" style="display:none; flex:1; min-width:180px; text-align:center; background:#fff8e1; border:1px solid #FED734; border-radius:12px; padding:16px; flex-direction:column;">
+                    <h4 style="font-size:14px; color:#b8860b; margin-bottom:12px;">Senior Citizen ID</h4>
+                    <div id="seniorImg" style="background:#f5edcc; height:160px; display:flex; align-items:center; justify-content:center; border-radius:8px;">No image</div>
+                </div>
+            </div>
+            <div id="verifyModalButtons" style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px; padding-top:16px; border-top:1px solid #eee;">
+                <button class="btn-cancel" style="background:#95a5a6; color:white; border:none; padding:10px 24px; border-radius:6px; cursor:pointer;" onclick="document.getElementById('verifyModal').style.display='none'">Cancel</button>
+                <button class="btn-verify-confirm" id="verifyConfirmBtn" style="background:#27ae60; color:white; border:none; padding:10px 24px; border-radius:6px; font-weight:bold; cursor:pointer;">Verify & Set VERIFIED</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- CONFIRM MODAL                               -->
 <!-- ═══════════════════════════════════════════ -->
 <div id="confirmModal" class="modal">
     <div class="modal-content" style="width:450px; text-align:center; padding:20px;">
@@ -860,13 +1015,9 @@
     </div>
 </div>
 
-<!-- Logout Modal -->
-<div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
-
-
-
-
-<!-- Send Password Modal -->
+<!-- ═══════════════════════════════════════════ -->
+<!-- SEND PASSWORD MODAL                         -->
+<!-- ═══════════════════════════════════════════ -->
 <div id="sendPasswordModal" class="modal" style="display:none;z-index:2000;">
     <div class="modal-content" style="text-align:center;max-width:400px;padding:30px;">
         <div style="font-size:48px;margin-bottom:12px;">📧</div>
@@ -877,45 +1028,115 @@
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════ -->
+<!-- IMAGE ENLARGE MODAL                         -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="imageEnlargeModal" class="modal" style="z-index: 10000; background-color: rgba(0,0,0,0.9);">
+    <div class="modal-content" style="width:auto; max-width:90%; max-height:90%; margin:2% auto; padding:0; background:transparent; box-shadow:none; text-align:center;">
+        <span class="close-btn" onclick="document.getElementById('imageEnlargeModal').style.display='none'" style="position:absolute; top:10px; right:25px; color:white; font-size:40px; background:rgba(0,0,0,0.5); width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10001;">&times;</span>
+        <img id="enlargedImage" src="" style="max-width:90%; max-height:85vh; object-fit:contain; border-radius:8px;">
+    </div>
+</div>
+
+<!-- Logout Modal -->
+<div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
+
 <script>
+// ─── ROLE-BASED ACCESS CONTROL ──────────────────────────────────────────────
+
+function getCurrentUserRole() {
+    return document.getElementById('currentUserRole')?.value || '';
+}
+
+function isAdmin() {
+    return getCurrentUserRole() === 'ADMIN';
+}
+
+function isSecretary() {
+    return getCurrentUserRole() === 'SECRETARY';
+}
+
+function isSecretariatStaff() {
+    return getCurrentUserRole() === 'SECRETARIAT STAFF';
+}
+
+function canManageAccounts() {
+    const role = getCurrentUserRole();
+    return role === 'ADMIN' || role === 'SECRETARY' || role === 'SECRETARIAT STAFF';
+}
+
+function canArchive() {
+    return getCurrentUserRole() === 'ADMIN';
+}
+
+// ─── Role Restriction Enforcement ──────────────────────────────────────────
+
+(function() {
+    const userRole = getCurrentUserRole();
+    const isAdminRole = isAdmin();
+    const canManage = canManageAccounts();
     
-    const modal     = document.getElementById("accountModal");
-    const viewModal = document.getElementById("viewModal");
-    const adminForm = document.getElementById("adminForm");
+    console.log('🔐 Role:', userRole);
+    console.log('🔐 Can Manage:', canManage);
+    console.log('🔐 Can Archive:', isAdminRole);
+    
+    // Disable buttons based on role
+    document.querySelectorAll('.update-btn, .verify-btn').forEach(btn => {
+        if (!canManage) {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+        }
+    });
+    
+    document.querySelectorAll('.delete-btn, .archive-btn').forEach(btn => {
+        if (!isAdminRole) {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+        }
+    });
+    
+    // Disable "Create New Account" for non-authorized
+    const createBtn = document.querySelector('.new-account-btn');
+    if (createBtn && !canManage) {
+        createBtn.disabled = true;
+        createBtn.style.opacity = '0.5';
+        createBtn.style.cursor = 'not-allowed';
+    }
+    
+    // Disable Export for non-authorized
+    const exportBtns = document.querySelectorAll('.export-btn');
+    if (!canManage) {
+        exportBtns.forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+        });
+    }
+})();
 
-    let originalUsername = '';
-    let originalEmail    = '';
-    let originalPhone    = '';
-    let isEditMode       = false;
-    let activeAdminForm  = null;
-    let activeResidentForm = null;
-
-    const today         = new Date();
-    const maxDate       = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
-    const maxDateString = maxDate.toISOString().split('T')[0];
-
-    // ── Active filter state per tab ────────────────────────────
-    const activeFilters = {
-        employee:   { value: '', colIndex: 6 },
-        residents:  { value: '', colIndex: 3 },
-        archive:    { value: '', colIndex: 6 },
-        resarchive: { value: '', colIndex: 3 }
-    };
-
-    // ── Tab switching ──────────────────────────────────────────
-    function switchTab(tabName) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById('employee-panel').style.display           = 'none';
-        document.getElementById('residents-panel').style.display          = 'none';
-        document.getElementById('archived-panel').style.display           = 'none';
-        document.getElementById('residents-archived-panel').style.display = 'none';
-        const tabMap   = { employee: 0, residents: 1, archives: 2, resarchives: 3 };
-        const panelMap = { employee: 'employee-panel', residents: 'residents-panel', archives: 'archived-panel', resarchives: 'residents-archived-panel' };
-        document.querySelectorAll('.tab')[tabMap[tabName]].classList.add('active');
+// ─── Tab switching ──────────────────────────────────────────
+function switchTab(tabName) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('employee-panel').style.display = 'none';
+    document.getElementById('residents-panel').style.display = 'none';
+    document.getElementById('archived-panel').style.display = 'none';
+    document.getElementById('residents-archived-panel').style.display = 'none';
+    
+    const tabMap = { employee: 0, residents: 1, archives: 2, resarchives: 3 };
+    const panelMap = { employee: 'employee-panel', residents: 'residents-panel', archives: 'archived-panel', resarchives: 'residents-archived-panel' };
+    
+    // Only show tab if it exists (some may be hidden based on role)
+    const tabs = document.querySelectorAll('.tab');
+    if (tabs[tabMap[tabName]]) {
+        tabs[tabMap[tabName]].classList.add('active');
         document.getElementById(panelMap[tabName]).style.display = 'block';
     }
+}
 
-   // ── Filter: toggle dropdown ────────────────────────────────
+// ─── Filter functions ────────────────────────────────────────────────────
+
 function toggleFilter(event, dropdownId) {
     event.stopPropagation();
     document.querySelectorAll('.filter-dropdown').forEach(dd => {
@@ -925,10 +1146,12 @@ function toggleFilter(event, dropdownId) {
     dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
 }
 
-// ── Filter: apply selection (by column index - Gender) ─────────────────
 function applyFilter(tabKey, value, label, labelElId, colIndex) {
-    activeFilters[tabKey].value    = value;
-    activeFilters[tabKey].colIndex = colIndex;
+    // Store filter state
+    if (!window.activeFilters) window.activeFilters = {};
+    if (!window.activeFilters[tabKey]) window.activeFilters[tabKey] = {};
+    window.activeFilters[tabKey].value = value;
+    window.activeFilters[tabKey].colIndex = colIndex;
 
     document.getElementById(labelElId).textContent = label;
 
@@ -944,17 +1167,16 @@ function applyFilter(tabKey, value, label, labelElId, colIndex) {
 
     dropdown.style.display = 'none';
 
-    const searchInputId = tabKey === 'employee'   ? 'employee-search'  :
-                          tabKey === 'residents'  ? 'residents-search' :
-                          tabKey === 'archive'    ? 'archive-search'   : 'resarchive-search';
-    const tableSelector = tabKey === 'employee'   ? '#employee-table'          :
-                          tabKey === 'residents'  ? '#resident-table'          :
-                          tabKey === 'archive'    ? '#archived-employee-table' : '#resarchive-table';
+    const searchInputId = tabKey === 'employee' ? 'employee-search' :
+                          tabKey === 'residents' ? 'residents-search' :
+                          tabKey === 'archive' ? 'archive-search' : 'resarchive-search';
+    const tableSelector = tabKey === 'employee' ? '#employee-table' :
+                          tabKey === 'residents' ? '#resident-table' :
+                          tabKey === 'archive' ? '#archived-employee-table' : '#resarchive-table';
     const q = document.getElementById(searchInputId).value.toLowerCase();
     filterRows(tableSelector, q, tabKey);
 }
 
-// ── Filter by Account Status (VERIFIED/UNVERIFIED) ─────────────────
 function applyFilterByStatus(tabKey, value, label, labelElId) {
     document.getElementById(labelElId).textContent = label;
     
@@ -986,478 +1208,884 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
             matchesStatus = statusCell === value;
         }
         
-       row.setAttribute('data-filtered', (matchesSearch && matchesStatus) ? '' : 'hidden');
+        row.setAttribute('data-filtered', (matchesSearch && matchesStatus) ? '' : 'hidden');
     });
 }
 
-    // ── Core filter+search logic (shared) ─────────────────────
-    function filterRows(tableSelector, q, tabKey) {
-        const { value: filterVal, colIndex } = activeFilters[tabKey];
-        document.querySelectorAll(tableSelector + ' tbody tr').forEach(row => {
-            const cells = row.querySelectorAll('td');
-            const matchesSearch = !q || Array.from(cells).slice(0, -1)
+function filterRows(tableSelector, q, tabKey) {
+    const filterVal = window.activeFilters && window.activeFilters[tabKey] ? window.activeFilters[tabKey].value : '';
+    const colIndex = window.activeFilters && window.activeFilters[tabKey] ? window.activeFilters[tabKey].colIndex : 3;
+    
+    document.querySelectorAll(tableSelector + ' tbody tr').forEach(row => {
+        const cells = row.querySelectorAll('td');
+        const matchesSearch = !q || Array.from(cells).slice(0, -1)
             .some(cell => cell.textContent.toLowerCase().includes(q));
-            const cellVal       = cells[colIndex] ? cells[colIndex].textContent.trim() : '';
-            const matchesFilter = !filterVal || cellVal === filterVal;
-            const visible = matchesSearch && matchesFilter;
+        const cellVal = cells[colIndex] ? cells[colIndex].textContent.trim() : '';
+        const matchesFilter = !filterVal || cellVal === filterVal;
+        const visible = matchesSearch && matchesFilter;
+        row.setAttribute('data-filtered', visible ? '' : 'hidden');
+    });
+}
 
-            // Use data-filtered attribute instead of style.display
-            row.setAttribute('data-filtered', visible ? '' : 'hidden');
-        });
-        }
+function setupSearch(inputId, tableSelector, tabKey) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    input.addEventListener('keyup', function () {
+        filterRows(tableSelector, this.value.toLowerCase(), tabKey);
+    });
+}
 
-    // ── Search (shared, filter-aware) ─────────────────────────
-    function setupSearch(inputId, tableSelector, tabKey) {
-        const input = document.getElementById(inputId);
-        if (!input) return;
-        input.addEventListener('keyup', function () {
-            filterRows(tableSelector, this.value.toLowerCase(), tabKey);
-        });
-    }
+setupSearch('employee-search', '#employee-table', 'employee');
+setupSearch('residents-search', '#resident-table', 'residents');
+setupSearch('archive-search', '#archived-employee-table', 'archive');
+setupSearch('resarchive-search', '#resarchive-table', 'resarchive');
 
-    setupSearch('employee-search',   '#employee-table',          'employee');
-    setupSearch('residents-search',  '#resident-table',          'residents');
-    setupSearch('archive-search',    '#archived-employee-table', 'archive');
-    setupSearch('resarchive-search', '#resarchive-table',        'resarchive');
+// ─── Modal functions ────────────────────────────────────────────────────
 
-    // ── Close all dropdowns on outside click ───────────────────
-    window.onclick = function (event) {
-        if (!event.target.closest('.filter-dropdown') && !event.target.closest('.filter-btn')) {
-            document.querySelectorAll('.filter-dropdown').forEach(dd => dd.style.display = 'none');
-        }
-        if (event.target === viewModal) closeViewModal();
-        const isSending = document.getElementById('sendPasswordModal').style.display === 'block';
-        if (event.target === modal && !isSending) closeModal();
-        const logoutModal = document.getElementById('logoutModal');
-        if (logoutModal && event.target === logoutModal) closeLogoutModal();
-        const residentModal = document.getElementById('residentModal');
-        if (residentModal && event.target === residentModal) closeResidentModal();
-        const confirmModal = document.getElementById('confirmModal');
-        if (confirmModal && event.target === confirmModal) closeConfirmModal();
+// Account Modal
+const modal = document.getElementById("accountModal");
+const viewModal = document.getElementById("viewModal");
+const adminForm = document.getElementById("adminForm");
+
+let originalUsername = '';
+let originalEmail = '';
+let originalPhone = '';
+let isEditMode = false;
+let activeAdminForm = null;
+let activeResidentForm = null;
+
+const today = new Date();
+const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+const maxDateString = maxDate.toISOString().split('T')[0];
+
+// ─── Password helpers ───────────────────────────────────────
+function generatePassword() {
+    const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ', lower = 'abcdefghjkmnpqrstuvwxyz';
+    const digits = '23456789', special = '!@#$%';
+    const all = upper + lower + digits + special;
+    let pwd = '';
+    pwd += upper[Math.floor(Math.random() * upper.length)];
+    pwd += lower[Math.floor(Math.random() * lower.length)];
+    pwd += digits[Math.floor(Math.random() * digits.length)];
+    pwd += special[Math.floor(Math.random() * special.length)];
+    for (let i = 4; i < 6; i++) pwd += all[Math.floor(Math.random() * all.length)];
+    return pwd.split('').sort(() => Math.random() - 0.5).join('');
+}
+
+function regenerateCreatePassword() {
+    const pwd = generatePassword();
+    document.getElementById('password-actual').value = pwd;
+    document.getElementById('edit-password-display').value = pwd;
+}
+
+function enablePasswordRegen() {
+    const pwd = generatePassword();
+    document.getElementById('password-actual').value = pwd;
+    document.getElementById('password-new-display').textContent = pwd;
+    document.getElementById('password-keep-notice').style.display = 'none';
+    document.getElementById('password-new-notice').style.display = 'block';
+    const btn = document.getElementById('regenToggleBtn');
+    btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Regenerate Password';
+    btn.style.background = '#1a6e1a';
+    btn.onclick = function () {
+        const newPwd = generatePassword();
+        document.getElementById('password-actual').value = newPwd;
+        document.getElementById('password-new-display').textContent = newPwd;
     };
+}
 
-    // ── Password helpers ───────────────────────────────────────
-    function generatePassword() {
-        const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ', lower = 'abcdefghjkmnpqrstuvwxyz';
-        const digits = '23456789', special = '!@#$%';
-        const all = upper + lower + digits + special;
-        let pwd = '';
-        pwd += upper[Math.floor(Math.random() * upper.length)];
-        pwd += lower[Math.floor(Math.random() * lower.length)];
-        pwd += digits[Math.floor(Math.random() * digits.length)];
-        pwd += special[Math.floor(Math.random() * special.length)];
-        for (let i = 4; i < 6; i++) pwd += all[Math.floor(Math.random() * all.length)];
-        return pwd.split('').sort(() => Math.random() - 0.5).join('');
+// ─── Phone helpers ──────────────────────────────────────────
+function enforcePhoneFormat(input) {
+    let value = input.value.replace(/\D/g, '');
+    if (value.length > 0 && value[0] !== '0') value = '09' + value;
+    else if (value.length >= 2 && value.substring(0, 2) !== '09') value = '09' + value.substring(1);
+    else if (value.length === 1 && value === '0') value = '09';
+    else if (value.length === 0) value = '09';
+    if (value.length > 11) value = value.substring(0, 11);
+    input.value = value;
+    validatePhoneNumber(input);
+}
+
+function validatePhoneNumber(input) {
+    const value = input.value;
+    const isValidFormat = /^09[0-9]{9}$/.test(value);
+    const errorMsg = document.getElementById('phone-error');
+    const errorMsg2 = document.getElementById('phone-error2');
+    if (errorMsg) errorMsg.style.display = 'none';
+    if (errorMsg2) errorMsg2.style.display = 'none';
+    if (!isValidFormat) {
+        if (errorMsg) errorMsg.style.display = 'block';
+        updateFieldValidation(input, null, null, false);
+        return;
     }
-    function regenerateCreatePassword() {
-        const pwd = generatePassword();
-        document.getElementById('password-actual').value       = pwd;
-        document.getElementById('edit-password-display').value = pwd;
+    if (value !== originalPhone && window.phoneList && window.phoneList.includes(value)) {
+        if (errorMsg2) errorMsg2.style.display = 'block';
+        updateFieldValidation(input, null, null, false);
+        return;
     }
-    function enablePasswordRegen() {
-        const pwd = generatePassword();
-        document.getElementById('password-actual').value = pwd;
-        document.getElementById('password-new-display').textContent = pwd;
-        document.getElementById('password-keep-notice').style.display = 'none';
-        document.getElementById('password-new-notice').style.display  = 'block';
-        const btn = document.getElementById('regenToggleBtn');
-        btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Regenerate Password';
-        btn.style.background = '#1a6e1a';
-        btn.onclick = function () {
-            const newPwd = generatePassword();
-            document.getElementById('password-actual').value = newPwd;
-            document.getElementById('password-new-display').textContent = newPwd;
+    updateFieldValidation(input, null, null, true);
+}
+
+// ─── Address builders ───────────────────────────────────────
+function buildAddress() {
+    const block = document.getElementById('edit-block').value.trim();
+    const lot = document.getElementById('edit-lot').value.trim();
+    const street = document.getElementById('edit-street').value.trim();
+    const village = document.getElementById('edit-village').value;
+    document.getElementById('edit-address').value = (block && lot && street && village)
+        ? `Block ${block} Lot ${lot} ${street}, ${village}, San Sebastian, Kawit, Cavite` : '';
+    if (block && lot && street && village) document.getElementById('address-error').style.display = 'none';
+}
+
+function buildResAddress() {
+    const block = document.getElementById('res-block').value.trim();
+    const lot = document.getElementById('res-lot').value.trim();
+    const street = document.getElementById('res-street').value.trim();
+    const village = document.getElementById('res-village').value;
+    document.getElementById('res-address').value = (block && lot && street && village)
+        ? `Block ${block} Lot ${lot} ${street}, ${village}, San Sebastian, Kawit, Cavite` : '';
+    if (block && lot && street && village) document.getElementById('res-address-error').style.display = 'none';
+}
+
+// ─── Validation helpers ─────────────────────────────────────
+function updateFieldValidation(input, iconId, errorId, isValid) {
+    if (!input) return false;
+    const errorMsg = errorId ? document.getElementById(errorId) : null;
+    const isEmpty = (input.tagName === 'SELECT') ? (input.value === '') : (input.value.trim() === '');
+    if (isEmpty) {
+        input.classList.remove('valid', 'invalid');
+        if (errorMsg) errorMsg.style.display = 'none';
+        return false;
+    }
+    if (isValid) {
+        input.classList.remove('invalid');
+        input.classList.add('valid');
+        if (errorMsg) errorMsg.style.display = 'none';
+        return true;
+    }
+    input.classList.remove('valid');
+    input.classList.add('invalid');
+    if (errorMsg) errorMsg.style.display = 'block';
+    return false;
+}
+
+function validateField(input, errorId, isValid) {
+    const errorMsg = document.getElementById(errorId);
+    if (!isValid) {
+        input.classList.add('invalid');
+        if (errorMsg) errorMsg.style.display = 'block';
+        return false;
+    }
+    input.classList.remove('invalid');
+    if (errorMsg) errorMsg.style.display = 'none';
+    return true;
+}
+
+// ─── Modal open/close ───────────────────────────────────────
+function openModal() {
+    if (!canManageAccounts()) {
+        alert('You do not have permission to create accounts.');
+        return;
+    }
+    
+    isEditMode = false;
+    document.getElementById("modalTitle").innerText = "Create New Account";
+    document.getElementById("submitBtn").innerText = "Save Account";
+    
+    const currentRole = document.getElementById('currentUserRole').value;
+    const roleSelect = document.getElementById('edit-role');
+    const allowedRoles = currentRole === 'ADMIN'
+        ? ['ADMIN', 'BARANGAY-CAPTAIN', 'TREASURER', 'SECRETARY', 'SECRETARIAT STAFF', 'TANOD']
+        : ['SECRETARIAT STAFF', 'TREASURER', 'BARANGAY-CAPTAIN', 'TANOD'];
+    
+    Array.from(roleSelect.options).forEach(opt => {
+        if (opt.value === '') return;
+        opt.style.display = allowedRoles.includes(opt.value) ? '' : 'none';
+    });
+    
+    adminForm.reset();
+    document.getElementById("edit-id").value = "";
+    originalUsername = '';
+    originalEmail = '';
+    originalPhone = '';
+    document.getElementById('edit-employeeId').value = "Auto-generated";
+    document.getElementById('edit-phoneNumber').value = '09';
+    document.getElementById('edit-birthDate').setAttribute('max', maxDateString);
+    document.getElementById('create-password-row').style.display = 'flex';
+    document.getElementById('edit-password-row').style.display = 'none';
+    document.getElementById('password-hint').style.display = 'block';
+    
+    const pwd = generatePassword();
+    document.getElementById('password-actual').value = pwd;
+    document.getElementById('edit-password-display').value = pwd;
+    
+    ['edit-block','edit-lot','edit-street','edit-village'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    resetFormStyles();
+    modal.style.display = "block";
+}
+
+function closeModal() {
+    if (document.getElementById('sendPasswordModal').style.display === 'block') return;
+    modal.style.display = "none";
+    adminForm.reset();
+    ['edit-block','edit-lot','edit-street','edit-village'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    resetFormStyles();
+    const pic = document.getElementById('profilePicture');
+    if (pic) pic.value = '';
+}
+
+function resetFormStyles() {
+    document.querySelectorAll('.error-msg').forEach(m => m.style.display = 'none');
+    document.querySelectorAll('#adminForm input, #adminForm select').forEach(el => el.classList.remove('invalid', 'valid'));
+    const fe = document.getElementById('fileError');
+    if (fe) fe.style.display = 'none';
+}
+
+function openEditModal(id, employee, fName, lName, username, email, role, gender, birth, phone, address) {
+    if (!canManageAccounts()) {
+        alert('You do not have permission to edit accounts.');
+        return;
+    }
+    
+    isEditMode = true;
+    document.getElementById("modalTitle").innerText = "Edit Account";
+    document.getElementById("submitBtn").innerText = "Update Changes";
+    document.getElementById("edit-id").value = id || '';
+    document.getElementById("edit-firstName").value = fName || '';
+    document.getElementById("edit-lastName").value = lName || '';
+    document.getElementById("edit-username").value = username || '';
+    document.getElementById("edit-email").value = email || '';
+    document.getElementById("edit-phoneNumber").value = phone || '09';
+    originalUsername = username || '';
+    originalEmail = email || '';
+    originalPhone = phone || '';
+    
+    const addrStr = address || '';
+    const blockMatch = addrStr.match(/Block\s+(\S+)/i);
+    const lotMatch = addrStr.match(/Lot\s+(\S+)/i);
+    const villageMatch = addrStr.match(/(Lancaster Village \d)/i);
+    const streetMatch = addrStr.match(/Lot\s+\S+\s+(.+?),\s*Lancaster/i);
+    
+    document.getElementById('edit-block').value = blockMatch ? blockMatch[1] : '';
+    document.getElementById('edit-lot').value = lotMatch ? lotMatch[1] : '';
+    document.getElementById('edit-street').value = streetMatch ? streetMatch[1].trim() : '';
+    document.getElementById('edit-village').value = villageMatch ? villageMatch[1] : '';
+    document.getElementById('edit-address').value = addrStr;
+    document.getElementById("edit-gender").value = gender || '';
+    document.getElementById("edit-birthDate").value = birth || '';
+    document.getElementById("edit-birthDate").setAttribute('max', maxDateString);
+    document.getElementById("edit-role").value = role || '';
+    
+    const currentRoleEdit = document.getElementById('currentUserRole').value;
+    const roleSelectEdit = document.getElementById('edit-role');
+    const allowedRolesEdit = currentRoleEdit === 'ADMIN'
+        ? ['ADMIN', 'BARANGAY-CAPTAIN', 'TREASURER', 'SECRETARY', 'SECRETARIAT STAFF', 'TANOD']
+        : ['SECRETARIAT STAFF', 'TREASURER', 'BARANGAY-CAPTAIN', 'TANOD'];
+    
+    Array.from(roleSelectEdit.options).forEach(opt => {
+        if (opt.value === '') return;
+        opt.style.display = allowedRolesEdit.includes(opt.value) ? '' : 'none';
+    });
+    
+    const empInput = document.getElementById('edit-employeeId');
+    if (empInput) {
+        empInput.value = employee || '';
+        empInput.readOnly = true;
+        empInput.style.backgroundColor = "#f0f0f0";
+    }
+    
+    document.getElementById('create-password-row').style.display = 'none';
+    document.getElementById('edit-password-row').style.display = 'block';
+    document.getElementById('password-hint').style.display = 'none';
+    document.getElementById('password-actual').value = '';
+    document.getElementById('password-keep-notice').style.display = 'block';
+    document.getElementById('password-new-notice').style.display = 'none';
+    
+    const regenBtn = document.getElementById('regenToggleBtn');
+    regenBtn.innerHTML = '<i class="bi bi-envelope-arrow-up"></i> Generate &amp; Send New Password';
+    regenBtn.style.background = '#30534D';
+    regenBtn.disabled = false;
+    regenBtn.onclick = enablePasswordRegen;
+    
+    resetFormStyles();
+    modal.style.display = "block";
+}
+
+// ─── Form submit ────────────────────────────────────────────
+adminForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    let valid = true;
+    valid &= validateField(document.getElementById('edit-firstName'), 'name-error', document.getElementById('edit-firstName').value.trim().length > 0);
+    valid &= validateField(document.getElementById('edit-lastName'), 'lastname-error', document.getElementById('edit-lastName').value.trim().length >= 2);
+    valid &= validateField(document.getElementById('edit-username'), 'username-error', document.getElementById('edit-username').value.trim().length >= 3);
+    valid &= validateField(document.getElementById('edit-email'), 'email-error', /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(document.getElementById('edit-email').value));
+    valid &= validateField(document.getElementById('edit-phoneNumber'), 'phone-error', /^09[0-9]{9}$/.test(document.getElementById('edit-phoneNumber').value));
+    valid &= validateField(document.getElementById('edit-role'), 'role-error', document.getElementById('edit-role').value !== '');
+    
+    const birthVal = document.getElementById('edit-birthDate').value;
+    if (birthVal) valid &= validateField(document.getElementById('edit-birthDate'), 'birthdate-error', new Date(birthVal) <= maxDate);
+    
+    if (!document.getElementById('edit-address').value.trim()) {
+        document.getElementById('address-error').style.display = 'block';
+        valid = false;
+    }
+    if (!valid) return;
+    handleFormSubmit(e);
+});
+
+function handleFormSubmit(event) {
+    event.preventDefault();
+    activeAdminForm = adminForm;
+    const email = document.getElementById('edit-email').value;
+    if (!email) {
+        alert("Email is required.");
+        return;
+    }
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.innerText = "Saving...";
+    submitBtn.disabled = true;
+    
+    if (!isEditMode) {
+        document.getElementById('edit-employeeStatus').value = 'New';
+        const password = document.getElementById('password-actual').value;
+        if (!password) {
+            alert("Password not generated. Please click Regenerate.");
+            submitBtn.innerText = "Save Changes";
+            submitBtn.disabled = false;
+            return;
+        }
+        sendPasswordEmail(email, password);
+    } else {
+        const newPassword = document.getElementById('password-actual').value;
+        if (newPassword.trim() !== '') sendPasswordEmail(email, newPassword);
+        else activeAdminForm.submit();
+    }
+}
+
+function sendPasswordEmail(email, password) {
+    const capturedPassword = password;
+    document.getElementById("displayEmail").innerText = email;
+    document.getElementById("sendPasswordStatus").innerText = "Please wait...";
+    document.getElementById("accountModal").style.display = "none";
+    document.getElementById("sendPasswordModal").style.display = "block";
+    
+    fetch('/send-password?email=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(capturedPassword), { method: 'POST' })
+        .then(response => {
+            document.getElementById("sendPasswordStatus").innerHTML = response.ok
+                ? '✅ Password sent successfully! Saving account...'
+                : '⚠️ Could not send email, but account will still be saved.';
+            document.getElementById('password-actual').value = capturedPassword;
+            setTimeout(() => { activeAdminForm.submit(); }, 1200);
+        })
+        .catch(() => {
+            document.getElementById("sendPasswordStatus").innerHTML = '⚠️ Network error — saving account anyway.';
+            document.getElementById('password-actual').value = capturedPassword;
+            setTimeout(() => { activeAdminForm.submit(); }, 1800);
+        });
+}
+
+// ─── Image upload ───────────────────────────────────────────
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    const fileError = document.getElementById('fileError');
+    if (file && file.size > 2000 * 1024) {
+        fileError.style.display = 'block';
+        event.target.value = '';
+        return;
+    }
+    if (fileError) fileError.style.display = 'none';
+}
+
+// ─── View modal (Employee) ─────────────────────────────────
+function openViewModalFromButton(button) {
+    const fname = button.getAttribute('data-fname');
+    const lname = button.getAttribute('data-lname');
+    const picture = button.getAttribute('data-picture');
+
+    document.getElementById('view-id').textContent = button.getAttribute('data-employee') || '';
+    document.getElementById('view-fullname').textContent = (fname || '') + ' ' + (lname || '');
+    document.getElementById('view-role').textContent = button.getAttribute('data-role') || '';
+    document.getElementById('view-email').textContent = button.getAttribute('data-email') || '';
+    document.getElementById('view-username').textContent = button.getAttribute('data-username') || '';
+    document.getElementById('view-phone').textContent = button.getAttribute('data-phone') || '';
+    document.getElementById('view-gender').textContent = button.getAttribute('data-gender') || '';
+    document.getElementById('view-birth').textContent = button.getAttribute('data-birth') || '';
+    document.getElementById('view-address').textContent = button.getAttribute('data-address') || '';
+    document.getElementById('view-status').textContent = button.getAttribute('data-status') || '';
+
+    const img = document.getElementById('view-avatar-img');
+    const svg = document.getElementById('view-avatar-svg');
+    if (picture && picture !== 'null' && picture.trim() !== '') {
+        img.src = picture;
+        img.style.display = 'block';
+        svg.style.display = 'none';
+    } else {
+        img.src = '';
+        img.style.display = 'none';
+        svg.style.display = 'block';
+    }
+
+    viewModal.style.display = "block";
+}
+
+function closeViewModal() {
+    viewModal.style.display = "none";
+}
+
+// ─── Resident View Modal ───────────────────────────────────
+function openResidentViewModal(button) {
+    const firstName = button.getAttribute('data-first-name') || '';
+    const lastName = button.getAttribute('data-last-name') || '';
+    const residentId = button.getAttribute('data-resident-id') || '';
+    const gender = button.getAttribute('data-gender') || '';
+    const birth = button.getAttribute('data-birth') || '';
+    const phone = button.getAttribute('data-phone') || '';
+    const address = button.getAttribute('data-address') || '';
+    const email = button.getAttribute('data-email') || '';
+    const status = button.getAttribute('data-status') || 'UNVERIFIED';
+    const avatar = button.getAttribute('data-avatar') || '';
+
+    document.getElementById('rv_fullname').textContent = firstName + ' ' + lastName;
+    document.getElementById('rv_id').textContent = residentId;
+    document.getElementById('rv_email').textContent = email;
+    document.getElementById('rv_phone').textContent = phone;
+    document.getElementById('rv_gender').textContent = gender;
+    document.getElementById('rv_birth').textContent = birth;
+    document.getElementById('rv_address').textContent = address;
+    document.getElementById('rv_status').textContent = status;
+
+    const avatarImg = document.getElementById('rv-avatar-img');
+    const avatarSvg = document.getElementById('rv-avatar-svg');
+    if (avatar && avatar !== 'null' && avatar !== '') {
+        avatarImg.src = avatar;
+        avatarImg.style.display = 'block';
+        avatarSvg.style.display = 'none';
+    } else {
+        avatarImg.src = '';
+        avatarImg.style.display = 'none';
+        avatarSvg.style.display = 'block';
+    }
+
+    document.getElementById('residentViewModal').style.display = 'block';
+}
+
+// ─── Verify Modal ──────────────────────────────────────────
+function openVerifyModal(button) {
+    if (!canManageAccounts()) {
+        alert('You do not have permission to verify residents.');
+        return;
+    }
+    
+    const row = button.closest('tr');
+    const residentId = row.getAttribute('data-id');
+    const firstName = row.getAttribute('data-first-name') || '';
+    const lastName = row.getAttribute('data-last-name') || '';
+    const status = row.getAttribute('data-status') || 'UNVERIFIED';
+    const selfie = row.getAttribute('data-selfie') || '';
+    const validId = row.getAttribute('data-validid') || '';
+    const indigency = row.getAttribute('data-indigency') || '';
+    const pwdImage = row.getAttribute('data-pwdimage') || '';
+    const seniorImage = row.getAttribute('data-seniorimage') || '';
+
+    window.currentVerifyId = residentId;
+    window.currentVerifyName = firstName + ' ' + lastName;
+    document.getElementById('verifyName').innerHTML = 'Resident: <strong>' + window.currentVerifyName + '</strong>';
+    document.getElementById('verifyStatus').innerText = status;
+
+    function setImage(url, container) {
+        if (url && url !== 'null' && url !== '' && url !== 'undefined') {
+            container.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:180px; border-radius:8px; cursor:pointer;" onclick="enlargeImage(\'' + url + '\')">';
+        } else {
+            container.innerHTML = '<div style="padding:60px;">No document</div>';
+        }
+    }
+
+    setImage(selfie, document.getElementById('selfieImg'));
+    setImage(validId, document.getElementById('validIdImg'));
+    setImage(indigency, document.getElementById('indigencyImg'));
+
+    // Priority docs
+    const hasPwd = pwdImage && pwdImage !== 'null' && pwdImage !== '';
+    const hasSenior = seniorImage && seniorImage !== 'null' && seniorImage !== '';
+    const prioritySection = document.getElementById('priorityDocsSection');
+    const pwdCard = document.getElementById('pwdDocCard');
+    const seniorCard = document.getElementById('seniorDocCard');
+
+    if (hasPwd || hasSenior) {
+        prioritySection.style.display = 'flex';
+        prioritySection.style.gap = '20px';
+        prioritySection.style.flexWrap = 'wrap';
+        if (hasPwd) {
+            pwdCard.style.display = 'flex';
+            pwdCard.style.flexDirection = 'column';
+            setImage(pwdImage, document.getElementById('pwdImg'));
+        } else {
+            pwdCard.style.display = 'none';
+        }
+        if (hasSenior) {
+            seniorCard.style.display = 'flex';
+            seniorCard.style.flexDirection = 'column';
+            setImage(seniorImage, document.getElementById('seniorImg'));
+        } else {
+            seniorCard.style.display = 'none';
+        }
+    } else {
+        prioritySection.style.display = 'none';
+    }
+
+    // Hide buttons if status is already VERIFIED
+    const buttonsDiv = document.getElementById('verifyModalButtons');
+    if (status === 'VERIFIED') {
+        buttonsDiv.style.display = 'none';
+    } else {
+        buttonsDiv.style.display = 'flex';
+    }
+
+    document.getElementById('verifyModal').style.display = 'block';
+}
+
+// Setup verify confirmation
+document.addEventListener('DOMContentLoaded', function() {
+    const verifyBtnConfirm = document.getElementById('verifyConfirmBtn');
+    if (verifyBtnConfirm) {
+        const newBtn = verifyBtnConfirm.cloneNode(true);
+        verifyBtnConfirm.parentNode.replaceChild(newBtn, verifyBtnConfirm);
+        newBtn.onclick = function() {
+            if (!window.currentVerifyId) {
+                alert('No resident selected');
+                return;
+            }
+            if (!canManageAccounts()) {
+                alert('You do not have permission to verify residents.');
+                return;
+            }
+            const btn = this;
+            btn.disabled = true;
+            btn.innerText = 'Processing...';
+            fetch('/residents/verify/' + window.currentVerifyId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    alert('✅ ' + window.currentVerifyName + ' has been VERIFIED!');
+                    document.getElementById('verifyModal').style.display = 'none';
+                    window.location.reload();
+                } else {
+                    alert('Error: Could not verify resident');
+                    btn.disabled = false;
+                    btn.innerText = 'Verify & Set VERIFIED';
+                }
+            })
+            .catch(function() {
+                alert('Server error');
+                btn.disabled = false;
+                btn.innerText = 'Verify & Set VERIFIED';
+            });
         };
     }
+});
 
-    // ── Phone helpers ──────────────────────────────────────────
-    function enforcePhoneFormat(input) {
-        let value = input.value.replace(/\D/g, '');
-        if (value.length > 0 && value[0] !== '0') value = '09' + value;
-        else if (value.length >= 2 && value.substring(0, 2) !== '09') value = '09' + value.substring(1);
-        else if (value.length === 1 && value === '0') value = '09';
-        else if (value.length === 0) value = '09';
-        if (value.length > 11) value = value.substring(0, 11);
-        input.value = value;
-        validatePhoneNumber(input);
-    }
-    function validatePhoneNumber(input) {
-        const value = input.value;
-        const isValidFormat = /^09[0-9]{9}$/.test(value);
-        const errorMsg  = document.getElementById('phone-error');
-        const errorMsg2 = document.getElementById('phone-error2');
-        if (errorMsg)  errorMsg.style.display  = 'none';
-        if (errorMsg2) errorMsg2.style.display = 'none';
-        if (!isValidFormat) { if (errorMsg) errorMsg.style.display = 'block'; updateFieldValidation(input, null, null, false); return; }
-        if (value !== originalPhone && window.phoneList && window.phoneList.includes(value)) {
-            if (errorMsg2) errorMsg2.style.display = 'block'; updateFieldValidation(input, null, null, false); return;
-        }
-        updateFieldValidation(input, null, null, true);
-    }
+// ─── Image Enlarge ──────────────────────────────────────────
+function enlargeImage(src) {
+    document.getElementById('enlargedImage').src = src;
+    document.getElementById('imageEnlargeModal').style.display = 'block';
+}
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const phoneInput = document.getElementById('edit-phoneNumber');
-        if (phoneInput) {
-            if (!phoneInput.value) phoneInput.value = '09';
-            phoneInput.addEventListener('focus', function () { if (this.value.length < 2) this.value = '09'; });
-            phoneInput.addEventListener('keydown', function (e) { if ((e.key === 'Backspace' || e.key === 'Delete') && this.selectionStart <= 2) e.preventDefault(); });
-        }
+document.getElementById('imageEnlargeModal').onclick = function(e) {
+    if (e.target === this) {
+        this.style.display = 'none';
+    }
+};
+
+// ─── Resident Modal ─────────────────────────────────────────
+function openEditResidentModal(id, resId, fName, lName, gender, bDate, phone, email, addr) {
+    if (!canManageAccounts()) {
+        alert('You do not have permission to edit resident accounts.');
+        return;
+    }
+    
+    document.getElementById("res-id").value = id;
+    document.getElementById("res-residentId").value = resId;
+    document.getElementById("res-firstName").value = fName;
+    document.getElementById("res-lastName").value = lName;
+    document.getElementById("res-gender").value = gender;
+    document.getElementById("res-birthDate").value = bDate;
+    document.getElementById("res-birthDate").setAttribute('max', maxDateString);
+    document.getElementById("res-mobileNumber").value = phone || '09';
+    document.getElementById("res-email").value = email;
+    
+    const addrStr = addr || '';
+    const blockMatch = addrStr.match(/Block\s+(\S+)/i);
+    const lotMatch = addrStr.match(/Lot\s+(\S+)/i);
+    const villageMatch = addrStr.match(/(Lancaster Village \d)/i);
+    const streetMatch = addrStr.match(/Lot\s+\S+\s+(.+?),\s*Lancaster/i);
+    
+    document.getElementById('res-block').value = blockMatch ? blockMatch[1] : '';
+    document.getElementById('res-lot').value = lotMatch ? lotMatch[1] : '';
+    document.getElementById('res-street').value = streetMatch ? streetMatch[1].trim() : '';
+    document.getElementById('res-village').value = villageMatch ? villageMatch[1] : '';
+    document.getElementById('res-address').value = addrStr;
+    
+    document.getElementById("residentModal").style.display = "block";
+}
+
+function closeResidentModal() {
+    const rm = document.getElementById("residentModal");
+    if (rm) rm.style.display = "none";
+}
+
+function handleResidentFormSubmit(event) {
+    event.preventDefault();
+    activeResidentForm = event.currentTarget;
+    activeResidentForm.submit();
+}
+
+// ─── Confirm modal ─────────────────────────────────────────
+let pendingArchiveAction = null;
+
+function openConfirmModal(title, message, onConfirm) {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    const btn = document.getElementById('confirmContinue');
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    pendingArchiveAction = onConfirm;
+    newBtn.addEventListener('click', function () {
+        if (pendingArchiveAction) pendingArchiveAction();
+        closeConfirmModal();
     });
+    document.getElementById('confirmModal').style.display = 'block';
+}
 
-    // ── Address builders ───────────────────────────────────────
-    function buildAddress() {
-        const block = document.getElementById('edit-block').value.trim(), lot = document.getElementById('edit-lot').value.trim();
-        const street = document.getElementById('edit-street').value.trim(), village = document.getElementById('edit-village').value;
-        document.getElementById('edit-address').value = (block && lot && street && village)
-            ? `Block ${block} Lot ${lot} ${street}, ${village}, San Sebastian, Kawit, Cavite` : '';
-        if (block && lot && street && village) document.getElementById('address-error').style.display = 'none';
+function closeConfirmModal() {
+    document.getElementById('confirmModal').style.display = 'none';
+    pendingArchiveAction = null;
+}
+
+// ─── Archive triggers ──────────────────────────────────────
+function triggerAdminDelete(btn) {
+    if (!canArchive()) {
+        alert('You do not have permission to archive employee accounts.');
+        return;
     }
-    function buildResAddress() {
-        const block = document.getElementById('res-block').value.trim(), lot = document.getElementById('res-lot').value.trim();
-        const street = document.getElementById('res-street').value.trim(), village = document.getElementById('res-village').value;
-        document.getElementById('res-address').value = (block && lot && street && village)
-            ? `Block ${block} Lot ${lot} ${street}, ${village}, San Sebastian, Kawit, Cavite` : '';
-        if (block && lot && street && village) document.getElementById('res-address-error').style.display = 'none';
+    const deleteUrl = btn.getAttribute('data-url');
+    const email = btn.getAttribute('data-email');
+    if (!email || email === "undefined") {
+        alert("Error: Could not retrieve admin email.");
+        return;
+    }
+    openConfirmModal("Archive Employee Account", `Are you sure you want to archive the account of ${email}? This action can be reverted from the Archives tab.`, function () {
+        window.location.href = deleteUrl;
+    });
+}
+
+function triggerResidentDelete(btn) {
+    if (!canArchive()) {
+        alert('You do not have permission to archive resident accounts.');
+        return;
+    }
+    const deleteUrl = btn.getAttribute('data-url');
+    const fullname = btn.getAttribute('data-fullname');
+    if (!fullname || fullname.trim() === '' || fullname === 'null undefined') {
+        alert("Error: Could not retrieve resident name.");
+        return;
+    }
+    openConfirmModal("Archive Resident Account", `Are you sure you want to archive the resident account of ${fullname}? This action can be reverted from the Residents Archives tab.`, function () {
+        window.location.href = deleteUrl;
+    });
+}
+
+// ─── Restore Employee ──────────────────────────────────────
+function restoreEmployee(id) {
+    if (!canArchive()) {
+        alert('You do not have permission to restore employee accounts.');
+        return;
+    }
+    if (confirm('Are you sure you want to restore this employee?')) {
+        window.location.href = '/restore-admin/' + id;
+    }
+}
+
+// ─── Export to PDF ──────────────────────────────────────────
+function exportToPDF(panelId) {
+    if (!canManageAccounts()) {
+        alert('You do not have permission to export data.');
+        return;
+    }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const panel = document.getElementById(panelId);
+    const table = panel.querySelector('table');
+    const title = panel.querySelector('.panel-header').innerText;
+    doc.text(title, 14, 15);
+    const lastColIndex = table.querySelectorAll('thead th').length - 1;
+    doc.autoTable({
+        html: table,
+        startY: 20,
+        didParseCell: function (data) {
+            if (data.column.index === lastColIndex) {
+                data.cell.text = [];
+                data.cell.styles.minCellWidth = 0;
+            }
+        },
+        columnStyles: { [lastColIndex]: { cellWidth: 0.1 } }
+    });
+    doc.save(title.replace(/\s+/g, '_') + '.pdf');
+}
+
+// ─── Logout ──────────────────────────────────────────────────
+function openLogoutModal() {
+    document.getElementById('logoutModal').style.display = 'block';
+}
+
+function closeLogoutModal() {
+    document.getElementById('logoutModal').style.display = 'none';
+}
+
+function confirmLogout() {
+    window.location.href = '/logout';
+}
+
+// ─── Close modals on outside click ─────────────────────────
+window.onclick = function (event) {
+    if (!event.target.closest('.filter-dropdown') && !event.target.closest('.filter-btn')) {
+        document.querySelectorAll('.filter-dropdown').forEach(dd => dd.style.display = 'none');
+    }
+    if (event.target === viewModal) closeViewModal();
+    const isSending = document.getElementById('sendPasswordModal').style.display === 'block';
+    if (event.target === modal && !isSending) closeModal();
+    const logoutModal = document.getElementById('logoutModal');
+    if (logoutModal && event.target === logoutModal) closeLogoutModal();
+    const residentModal = document.getElementById('residentModal');
+    if (residentModal && event.target === residentModal) closeResidentModal();
+    const confirmModal = document.getElementById('confirmModal');
+    if (confirmModal && event.target === confirmModal) closeConfirmModal();
+    const residentViewModal = document.getElementById('residentViewModal');
+    if (residentViewModal && event.target === residentViewModal) {
+        residentViewModal.style.display = 'none';
+    }
+    const verifyModal = document.getElementById('verifyModal');
+    if (verifyModal && event.target === verifyModal) {
+        verifyModal.style.display = 'none';
+    }
+    const imageEnlargeModal = document.getElementById('imageEnlargeModal');
+    if (imageEnlargeModal && event.target === imageEnlargeModal) {
+        imageEnlargeModal.style.display = 'none';
+    }
+};
+
+// ─── Field validation listeners ─────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+    // Setup phone input initial value
+    const phoneInput = document.getElementById('edit-phoneNumber');
+    if (phoneInput) {
+        if (!phoneInput.value) phoneInput.value = '09';
+        phoneInput.addEventListener('focus', function() {
+            if (this.value.length < 2) this.value = '09';
+        });
+        phoneInput.addEventListener('keydown', function(e) {
+            if ((e.key === 'Backspace' || e.key === 'Delete') && this.selectionStart <= 2) {
+                e.preventDefault();
+            }
+        });
     }
 
-    // ── Validation helpers ─────────────────────────────────────
-    function updateFieldValidation(input, iconId, errorId, isValid) {
-        if (!input) return false;
-        const errorMsg = errorId ? document.getElementById(errorId) : null;
-        const isEmpty = (input.tagName === 'SELECT') ? (input.value === '') : (input.value.trim() === '');
-        if (isEmpty) { input.classList.remove('valid', 'invalid'); if (errorMsg) errorMsg.style.display = 'none'; return false; }
-        if (isValid) { input.classList.remove('invalid'); input.classList.add('valid'); if (errorMsg) errorMsg.style.display = 'none'; return true; }
-        input.classList.remove('valid'); input.classList.add('invalid'); if (errorMsg) errorMsg.style.display = 'block'; return false;
-    }
-    function validateField(input, errorId, isValid) {
-        const errorMsg = document.getElementById(errorId);
-        if (!isValid) { input.classList.add('invalid'); if (errorMsg) errorMsg.style.display = 'block'; return false; }
-        input.classList.remove('invalid'); if (errorMsg) errorMsg.style.display = 'none'; return true;
-    }
-
-    // ── Field validation listeners ─────────────────────────────
-    document.getElementById('edit-firstName').addEventListener('input', function () {
-        const value = this.value.trim(), regexValid = /^[a-zA-Z\s-]+$/.test(value);
-        document.getElementById('name-error').style.display  = value.length > 0 ? 'none' : 'block';
+    // Setup other field validations
+    document.getElementById('edit-firstName').addEventListener('input', function() {
+        const value = this.value.trim();
+        const regexValid = /^[a-zA-Z\s-]+$/.test(value);
+        document.getElementById('name-error').style.display = value.length > 0 ? 'none' : 'block';
         document.getElementById('name-error2').style.display = (value && !regexValid) ? 'block' : 'none';
         updateFieldValidation(this, null, null, value.length > 0 && regexValid);
     });
-    document.getElementById('edit-lastName').addEventListener('input', function () {
-        const value = this.value.trim(), regexValid = /^[a-zA-Z\s-]+$/.test(value);
-        document.getElementById('lastname-error').style.display  = 'none';
+
+    document.getElementById('edit-lastName').addEventListener('input', function() {
+        const value = this.value.trim();
+        const regexValid = /^[a-zA-Z\s-]+$/.test(value);
+        document.getElementById('lastname-error').style.display = 'none';
         document.getElementById('lastname-error2').style.display = 'none';
-        if (value.length > 0 && value.length < 2) { document.getElementById('lastname-error').style.display = 'block'; updateFieldValidation(this, null, null, false); return; }
-        if (value && !regexValid) { document.getElementById('lastname-error2').style.display = 'block'; updateFieldValidation(this, null, null, false); return; }
+        if (value.length > 0 && value.length < 2) {
+            document.getElementById('lastname-error').style.display = 'block';
+            updateFieldValidation(this, null, null, false);
+            return;
+        }
+        if (value && !regexValid) {
+            document.getElementById('lastname-error2').style.display = 'block';
+            updateFieldValidation(this, null, null, false);
+            return;
+        }
         updateFieldValidation(this, null, null, value.length >= 2 && regexValid);
     });
-    document.getElementById('edit-birthDate').addEventListener('change', function () {
+
+    document.getElementById('edit-birthDate').addEventListener('change', function() {
         const isValid = new Date(this.value) <= maxDate;
         document.getElementById('birthdate-error').style.display = isValid ? 'none' : 'block';
         updateFieldValidation(this, null, null, isValid);
     });
-    document.getElementById('edit-username').addEventListener('input', function () {
-        const value = this.value.trim(), regexValid = /^[a-zA-Z0-9-]*$/.test(value);
-        ['username-error','username-error2','username-error3'].forEach(id => document.getElementById(id).style.display = 'none');
-        if (!value) { updateFieldValidation(this, null, null, false); return; }
-        if (value.length < 3) { document.getElementById('username-error').style.display = 'block'; updateFieldValidation(this, null, null, false); return; }
-        if (!regexValid) { document.getElementById('username-error2').style.display = 'block'; updateFieldValidation(this, null, null, false); return; }
+
+    document.getElementById('edit-username').addEventListener('input', function() {
+        const value = this.value.trim();
+        const regexValid = /^[a-zA-Z0-9-]*$/.test(value);
+        ['username-error','username-error2','username-error3'].forEach(id => {
+            document.getElementById(id).style.display = 'none';
+        });
+        if (!value) {
+            updateFieldValidation(this, null, null, false);
+            return;
+        }
+        if (value.length < 3) {
+            document.getElementById('username-error').style.display = 'block';
+            updateFieldValidation(this, null, null, false);
+            return;
+        }
+        if (!regexValid) {
+            document.getElementById('username-error2').style.display = 'block';
+            updateFieldValidation(this, null, null, false);
+            return;
+        }
         if (value.toLowerCase() !== originalUsername.toLowerCase() && window.usernameList && window.usernameList.includes(value.toLowerCase())) {
-            document.getElementById('username-error3').style.display = 'block'; updateFieldValidation(this, null, null, false); return;
+            document.getElementById('username-error3').style.display = 'block';
+            updateFieldValidation(this, null, null, false);
+            return;
         }
         updateFieldValidation(this, null, null, true);
     });
-    document.getElementById('edit-email').addEventListener('input', function () {
-        const value = this.value.trim(), isValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+    document.getElementById('edit-email').addEventListener('input', function() {
+        const value = this.value.trim();
+        const isValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
         ['email-error','email-error2'].forEach(id => document.getElementById(id).style.display = 'none');
-        if (!isValidFormat) { document.getElementById('email-error').style.display = 'block'; updateFieldValidation(this, null, null, false); return; }
+        if (!isValidFormat) {
+            document.getElementById('email-error').style.display = 'block';
+            updateFieldValidation(this, null, null, false);
+            return;
+        }
         if (value !== originalEmail && window.emailList && window.emailList.includes(value.toLowerCase())) {
-            document.getElementById('email-error2').style.display = 'block'; updateFieldValidation(this, null, null, false); return;
+            document.getElementById('email-error2').style.display = 'block';
+            updateFieldValidation(this, null, null, false);
+            return;
         }
         updateFieldValidation(this, null, null, true);
     });
-    document.getElementById('edit-role').addEventListener('change', function () { updateFieldValidation(this, null, 'role-error', this.value !== ''); });
-    document.getElementById('edit-gender').addEventListener('change', function () { updateFieldValidation(this, null, null, this.value !== ''); });
 
-    // ── Modal open/close ───────────────────────────────────────
-    function openModal() {
-        isEditMode = false;
-        document.getElementById("modalTitle").innerText = "Create New Account";
-        document.getElementById("submitBtn").innerText  = "Save Account";
-        const currentRole = document.getElementById('currentUserRole').value;
-        const roleSelect = document.getElementById('edit-role');
-        const allowedRoles = currentRole === 'ADMIN'
-            ? ['ADMIN', 'BARANGAY-CAPTAIN', 'TREASURER', 'SECRETARY', 'SECRETARIAT STAFF', 'TANOD']  // ✅ ADDED
-            : ['SECRETARIAT STAFF','TREASURER', 'BARANGAY-CAPTAIN', 'TANOD'];
-        Array.from(roleSelect.options).forEach(opt => {
-            if (opt.value === '') return; // keep the placeholder
-            opt.style.display = allowedRoles.includes(opt.value) ? '' : 'none';
-        });
-        adminForm.reset();
-        document.getElementById("edit-id").value = "";
-        originalUsername = ''; originalEmail = ''; originalPhone = '';
-        document.getElementById('edit-employeeId').value = "Auto-generated";
-        document.getElementById('edit-phoneNumber').value = '09';
-        document.getElementById('edit-birthDate').setAttribute('max', maxDateString);
-        document.getElementById('create-password-row').style.display = 'flex';
-        document.getElementById('edit-password-row').style.display   = 'none';
-        document.getElementById('password-hint').style.display       = 'block';
-        const pwd = generatePassword();
-        document.getElementById('password-actual').value       = pwd;
-        document.getElementById('edit-password-display').value = pwd;
-        ['edit-block','edit-lot','edit-street','edit-village'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-        resetFormStyles();
-        modal.style.display = "block";
-    }
-    function redirectToPassword() { window.location.href = "/user-profile"; }
-    function closeModal() {
-        if (document.getElementById('sendPasswordModal').style.display === 'block') return;
-        modal.style.display = "none";
-        adminForm.reset();
-        ['edit-block','edit-lot','edit-street','edit-village'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-        resetFormStyles();
-        const pic = document.getElementById('profilePicture'); if (pic) pic.value = '';
-    }
-    function resetFormStyles() {
-        document.querySelectorAll('.error-msg').forEach(m => m.style.display = 'none');
-        document.querySelectorAll('#adminForm input, #adminForm select').forEach(el => el.classList.remove('invalid', 'valid'));
-        const fe = document.getElementById('fileError'); if (fe) fe.style.display = 'none';
-    }
-    function openEditModal(id, employee, fName, lName, username, email, role, gender, birth, phone, address) {
-        isEditMode = true;
-        document.getElementById("modalTitle").innerText  = "Edit Account";
-        document.getElementById("submitBtn").innerText   = "Update Changes";
-        document.getElementById("edit-id").value         = id       || '';
-        document.getElementById("edit-firstName").value  = fName    || '';
-        document.getElementById("edit-lastName").value   = lName    || '';
-        document.getElementById("edit-username").value   = username || '';
-        document.getElementById("edit-email").value      = email    || '';
-        document.getElementById("edit-phoneNumber").value = phone   || '09';
-        originalUsername = username || ''; originalEmail = email || ''; originalPhone = phone || '';
-        const addrStr = address || '';
-        const blockMatch   = addrStr.match(/Block\s+(\S+)/i);
-        const lotMatch     = addrStr.match(/Lot\s+(\S+)/i);
-        const villageMatch = addrStr.match(/(Lancaster Village \d)/i);
-        const streetMatch  = addrStr.match(/Lot\s+\S+\s+(.+?),\s*Lancaster/i);
-        document.getElementById('edit-block').value   = blockMatch   ? blockMatch[1]         : '';
-        document.getElementById('edit-lot').value     = lotMatch     ? lotMatch[1]           : '';
-        document.getElementById('edit-street').value  = streetMatch  ? streetMatch[1].trim() : '';
-        document.getElementById('edit-village').value = villageMatch ? villageMatch[1]        : '';
-        document.getElementById('edit-address').value = addrStr;
-        document.getElementById("edit-gender").value   = gender || '';
-        document.getElementById("edit-birthDate").value = birth || '';
-        document.getElementById("edit-birthDate").setAttribute('max', maxDateString);
-        document.getElementById("edit-role").value     = role   || '';
-        const currentRoleEdit = document.getElementById('currentUserRole').value;
-        const roleSelectEdit = document.getElementById('edit-role');
-        const allowedRolesEdit = currentRoleEdit === 'ADMIN'
-            ? ['ADMIN', 'BARANGAY-CAPTAIN', 'TREASURER', 'SECRETARY', 'SECRETARIAT STAFF', 'TANOD']  // ✅ ADDED
-            : ['SECRETARIAT STAFF','TREASURER', 'BARANGAY-CAPTAIN', 'TANOD'];
-        Array.from(roleSelectEdit.options).forEach(opt => {
-            if (opt.value === '') return;
-            opt.style.display = allowedRolesEdit.includes(opt.value) ? '' : 'none';
-        });
-        const empInput = document.getElementById('edit-employeeId');
-        if (empInput) { empInput.value = employee || ''; empInput.readOnly = true; empInput.style.backgroundColor = "#f0f0f0"; }
-        document.getElementById('create-password-row').style.display = 'none';
-        document.getElementById('edit-password-row').style.display   = 'block';
-        document.getElementById('password-hint').style.display       = 'none';
-        document.getElementById('password-actual').value = '';
-        document.getElementById('password-keep-notice').style.display = 'block';
-        document.getElementById('password-new-notice').style.display  = 'none';
-        const regenBtn = document.getElementById('regenToggleBtn');
-        regenBtn.innerHTML = '<i class="bi bi-envelope-arrow-up"></i> Generate &amp; Send New Password';
-        regenBtn.style.background = '#30534D'; regenBtn.disabled = false; regenBtn.onclick = enablePasswordRegen;
-        resetFormStyles();
-        modal.style.display = "block";
-    }
-
-    // ── Form submit ────────────────────────────────────────────
-    adminForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        let valid = true;
-        valid &= validateField(document.getElementById('edit-firstName'),   'name-error',     document.getElementById('edit-firstName').value.trim().length > 0);
-        valid &= validateField(document.getElementById('edit-lastName'),    'lastname-error',  document.getElementById('edit-lastName').value.trim().length >= 2);
-        valid &= validateField(document.getElementById('edit-username'),    'username-error',  document.getElementById('edit-username').value.trim().length >= 3);
-        valid &= validateField(document.getElementById('edit-email'),       'email-error',     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(document.getElementById('edit-email').value));
-        valid &= validateField(document.getElementById('edit-phoneNumber'), 'phone-error',     /^09[0-9]{9}$/.test(document.getElementById('edit-phoneNumber').value));
-        valid &= validateField(document.getElementById('edit-role'),        'role-error',      document.getElementById('edit-role').value !== '');
-        const birthVal = document.getElementById('edit-birthDate').value;
-        if (birthVal) valid &= validateField(document.getElementById('edit-birthDate'), 'birthdate-error', new Date(birthVal) <= maxDate);
-        if (!document.getElementById('edit-address').value.trim()) { document.getElementById('address-error').style.display = 'block'; valid = false; }
-        if (!valid) return;
-        handleFormSubmit(e);
+    document.getElementById('edit-role').addEventListener('change', function() {
+        updateFieldValidation(this, null, 'role-error', this.value !== '');
     });
-    function handleFormSubmit(event) {
-        event.preventDefault();
-        activeAdminForm = adminForm;
-        const email = document.getElementById('edit-email').value;
-        if (!email) { alert("Email is required."); return; }
-        const submitBtn = document.getElementById('submitBtn');
-        submitBtn.innerText = "Saving..."; submitBtn.disabled = true;
-        if (!isEditMode) {
-            document.getElementById('edit-employeeStatus').value = 'New';
-            const password = document.getElementById('password-actual').value;
-            if (!password) { alert("Password not generated. Please click Regenerate."); return; }
-            sendPasswordEmail(email, password);
-        } else {
-            const newPassword = document.getElementById('password-actual').value;
-            if (newPassword.trim() !== '') sendPasswordEmail(email, newPassword);
-            else activeAdminForm.submit();
-        }
-    }
-    function sendPasswordEmail(email, password) {
-        const capturedPassword = password;
-        document.getElementById("displayEmail").innerText       = email;
-        document.getElementById("sendPasswordStatus").innerText = "Please wait...";
-        document.getElementById("accountModal").style.display      = "none";
-        document.getElementById("sendPasswordModal").style.display = "block";
-        fetch('/send-password?email=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(capturedPassword), { method: 'POST' })
-            .then(response => {
-                document.getElementById("sendPasswordStatus").innerHTML = response.ok
-                    ? '✅ Password sent successfully! Saving account...'
-                    : '⚠️ Could not send email, but account will still be saved.';
-                document.getElementById('password-actual').value = capturedPassword;
-                setTimeout(() => { activeAdminForm.submit(); }, 1200);
-            })
-            .catch(() => {
-                document.getElementById("sendPasswordStatus").innerHTML = '⚠️ Network error — saving account anyway.';
-                document.getElementById('password-actual').value = capturedPassword;
-                setTimeout(() => { activeAdminForm.submit(); }, 1800);
-            });
-    }
 
-    // ── Image upload ───────────────────────────────────────────
-    function handleImageUpload(event) {
-        const file = event.target.files[0];
-        const fileError = document.getElementById('fileError');
-        if (file && file.size > 2000 * 1024) { fileError.style.display = 'block'; event.target.value = ''; return; }
-        if (fileError) fileError.style.display = 'none';
-    }
+    document.getElementById('edit-gender').addEventListener('change', function() {
+        updateFieldValidation(this, null, null, this.value !== '');
+    });
+});
 
-    // ── View modal ─────────────────────────────────────────────
-    function openViewModalFromButton(button) {
-        const fname = button.getAttribute('data-fname');
-        const lname = button.getAttribute('data-lname');
-        const picture = button.getAttribute('data-picture');
-
-        document.getElementById('view-id').textContent       = button.getAttribute('data-employee') || '';
-        document.getElementById('view-fullname').textContent = (fname || '') + ' ' + (lname || '');
-        document.getElementById('view-role').textContent     = button.getAttribute('data-role')     || '';
-        document.getElementById('view-email').textContent    = button.getAttribute('data-email')    || '';
-        document.getElementById('view-username').textContent = button.getAttribute('data-username') || '';
-        document.getElementById('view-phone').textContent    = button.getAttribute('data-phone')    || '';
-        document.getElementById('view-gender').textContent   = button.getAttribute('data-gender')   || '';
-        document.getElementById('view-birth').textContent    = button.getAttribute('data-birth')    || '';
-        document.getElementById('view-address').textContent  = button.getAttribute('data-address')  || '';
-        document.getElementById('view-status').textContent   = button.getAttribute('data-status')   || '';
-
-        // Show profile picture or fallback to SVG icon
-        const img = document.getElementById('view-avatar-img');
-        const svg = document.getElementById('view-avatar-svg');
-        if (picture && picture !== 'null' && picture.trim() !== '') {
-            img.src          = picture;
-            img.style.display = 'block';
-            svg.style.display = 'none';
-        } else {
-            img.src          = '';
-            img.style.display = 'none';
-            svg.style.display = 'block';
-        }
-
-        viewModal.style.display = "block";
-    }
-    function closeViewModal() { viewModal.style.display = "none"; }
-
-    // ── Resident modal ─────────────────────────────────────────
-    function openEditResidentModal(id, resId, fName, lName, gender, bDate, phone, email, addr) {
-        document.getElementById("res-id").value           = id;
-        document.getElementById("res-residentId").value   = resId;
-        document.getElementById("res-firstName").value    = fName;
-        document.getElementById("res-lastName").value     = lName;
-        document.getElementById("res-gender").value       = gender;
-        document.getElementById("res-birthDate").value    = bDate;
-        document.getElementById("res-birthDate").setAttribute('max', maxDateString);
-        document.getElementById("res-mobileNumber").value = phone || '09';
-        document.getElementById("res-email").value        = email;
-        const addrStr = addr || '';
-        const blockMatch   = addrStr.match(/Block\s+(\S+)/i);
-        const lotMatch     = addrStr.match(/Lot\s+(\S+)/i);
-        const villageMatch = addrStr.match(/(Lancaster Village \d)/i);
-        const streetMatch  = addrStr.match(/Lot\s+\S+\s+(.+?),\s*Lancaster/i);
-        document.getElementById('res-block').value   = blockMatch   ? blockMatch[1]         : '';
-        document.getElementById('res-lot').value     = lotMatch     ? lotMatch[1]           : '';
-        document.getElementById('res-street').value  = streetMatch  ? streetMatch[1].trim() : '';
-        document.getElementById('res-village').value = villageMatch ? villageMatch[1]        : '';
-        document.getElementById('res-address').value = addrStr;
-        document.getElementById("residentModal").style.display = "block";
-    }
-    function closeResidentModal() { const rm = document.getElementById("residentModal"); if (rm) rm.style.display = "none"; }
-    function handleResidentFormSubmit(event) { event.preventDefault(); activeResidentForm = event.currentTarget; activeResidentForm.submit(); }
-
-    // ── Confirm modal (with onConfirm callback) ─────────────────
-    let pendingArchiveAction = null;
-    function openConfirmModal(title, message, onConfirm) {
-        document.getElementById('confirmTitle').textContent   = title;
-        document.getElementById('confirmMessage').textContent = message;
-        const btn = document.getElementById('confirmContinue');
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-        pendingArchiveAction = onConfirm;
-        newBtn.addEventListener('click', function () {
-            if (pendingArchiveAction) pendingArchiveAction();
-            closeConfirmModal();
-        });
-        document.getElementById('confirmModal').style.display = 'block';
-    }
-    function closeConfirmModal() { 
-        document.getElementById('confirmModal').style.display = 'none';
-        pendingArchiveAction = null;
-    }
-
-    function openLogoutModal()   { document.getElementById('logoutModal').style.display  = 'block'; }
-    function closeLogoutModal()  { document.getElementById('logoutModal').style.display  = 'none'; }
-    function confirmLogout()     { window.location.href = '/logout'; }
-
-    // ── Archive triggers with confirmation ─────────────────────
-    function triggerAdminDelete(btn) {
-        const deleteUrl = btn.getAttribute('data-url'), email = btn.getAttribute('data-email');
-        if (!email || email === "undefined") { alert("Error: Could not retrieve admin email."); return; }
-        openConfirmModal("Archive Employee Account", `Are you sure you want to archive the account of ${email}? This action can be reverted from the Archives tab.`, function () { window.location.href = deleteUrl; });
-    }
-    function triggerResidentDelete(btn) {
-        const deleteUrl = btn.getAttribute('data-url'), fullname = btn.getAttribute('data-fullname');
-        if (!fullname || fullname.trim() === '' || fullname === 'null undefined') { alert("Error: Could not retrieve resident name."); return; }
-        openConfirmModal("Archive Resident Account", `Are you sure you want to archive the resident account of ${fullname}? This action can be reverted from the Residents Archives tab.`, function () { window.location.href = deleteUrl; });
-    }
-
-    // ── Export to PDF ──────────────────────────────────────────
-    function exportToPDF(panelId) {
-        const { jsPDF } = window.jspdf;
-        const doc   = new jsPDF();
-        const panel = document.getElementById(panelId);
-        const table = panel.querySelector('table');
-        const title = panel.querySelector('.panel-header').innerText;
-        doc.text(title, 14, 15);
-        const lastColIndex = table.querySelectorAll('thead th').length - 1;
-        doc.autoTable({
-            html: table,
-            startY: 20,
-            didParseCell: function (data) {
-                if (data.column.index === lastColIndex) { data.cell.text = []; data.cell.styles.minCellWidth = 0; }
-            },
-            columnStyles: { [lastColIndex]: { cellWidth: 0.1 } }
-        });
-        doc.save(title.replace(/\s+/g, '_') + '.pdf');
-    }
-
-    function toggleDropdown(el) {
-        const dropdown = document.getElementById('requests-dropdown');
-        const arrow    = el.querySelector('.dropdown-arrow');
-        const isOpen   = dropdown.style.display === 'block';
-        dropdown.style.display = isOpen ? 'none' : 'block';
-        arrow.classList.toggle('open', !isOpen);
-    }
-
+// ─── Polling ──────────────────────────────────────────────────
 console.log("=== POLLING SCRIPT STARTED ===");
 
 (function() {
@@ -1484,8 +2112,6 @@ console.log("=== POLLING SCRIPT STARTED ===");
             if (xhr.status === 200) {
                 try {
                     var data = JSON.parse(xhr.responseText);
-                    
-                    // Create a snapshot of the data (ignore lastModified for comparison)
                     var snapshot = JSON.stringify({
                         employees: data.employeeAccounts ? data.employeeAccounts.length : 0,
                         archivedEmployees: data.archivedEmployeeAccounts ? data.archivedEmployeeAccounts.length : 0,
@@ -1494,7 +2120,6 @@ console.log("=== POLLING SCRIPT STARTED ===");
                     });
                     
                     if (lastDataSnapshot === '') {
-                        // First poll - store baseline
                         lastDataSnapshot = snapshot;
                         console.log("[Poll] Baseline set: " + snapshot);
                     } else if (snapshot !== lastDataSnapshot) {
@@ -1514,433 +2139,108 @@ console.log("=== POLLING SCRIPT STARTED ===");
     poll();
     setInterval(poll, 5000);
 })();
+
+// ─── Pagination ──────────────────────────────────────────────
+(function() {
+    const PAGE_SIZE = 10;
+
+    function initPagination(tableId, footerId) {
+        const tbody = document.querySelector('#' + tableId + ' tbody');
+        const footer = document.getElementById(footerId);
+        if (!tbody || !footer) return;
+
+        let currentPage = 1;
+
+        function getVisibleRows() {
+            return Array.from(tbody.querySelectorAll('tr')).filter(r => r.getAttribute('data-filtered') !== 'hidden');
+        }
+
+        function render() {
+            const all = getVisibleRows();
+            const total = all.length;
+            const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const end = start + PAGE_SIZE;
+
+            Array.from(tbody.querySelectorAll('tr')).forEach(r => {
+                if (r.getAttribute('data-filtered') === 'hidden') {
+                    r.style.display = 'none';
+                    return;
+                }
+                const idx = all.indexOf(r);
+                r.style.display = (idx >= start && idx < end) ? '' : 'none';
+            });
+
+            const fromNum = total === 0 ? 0 : start + 1;
+            const toNum = Math.min(end, total);
+
+            let paginationHtml = '<ul class="pagination pagination-sm mb-0">';
+            if (currentPage > 1) {
+                paginationHtml += `<li class="page-item">
+                    <a class="page-link" href="#" data-action="prev"><i class="bi bi-arrow-left"></i> Prev</a>
+                </li>`;
+            }
+            for (let p = 1; p <= totalPages; p++) {
+                paginationHtml += `<li class="page-item${p === currentPage ? ' active' : ''}">
+                    <a class="page-link" href="#" data-action="goto" data-page="${p}">${p}</a>
+                </li>`;
+            }
+            if (currentPage < totalPages) {
+                paginationHtml += `<li class="page-item">
+                    <a class="page-link" href="#" data-action="next">Next <i class="bi bi-arrow-right"></i></a>
+                </li>`;
+            }
+            paginationHtml += '</ul>';
+
+            footer.innerHTML = `<span>Showing ${fromNum}–${toNum} of ${total}</span><nav>${paginationHtml}</nav>`;
+        }
+
+        footer.addEventListener('click', function(e) {
+            e.preventDefault();
+            const link = e.target.closest('a[data-action]');
+            if (!link) return;
+
+            const all = getVisibleRows();
+            const totalPages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+            const action = link.getAttribute('data-action');
+
+            if (action === 'prev' && currentPage > 1) currentPage--;
+            else if (action === 'next' && currentPage < totalPages) currentPage++;
+            else if (action === 'goto') currentPage = parseInt(link.getAttribute('data-page'));
+
+            render();
+        });
+
+        new MutationObserver(() => {
+            currentPage = 1;
+            render();
+        }).observe(tbody, { attributes: true, subtree: true, attributeFilter: ['data-filtered'] });
+
+        render();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initPagination('employee-table', 'footer-employee');
+        initPagination('archived-employee-table', 'footer-archive');
+        initPagination('resident-table', 'footer-residents');
+        initPagination('resarchive-table', 'footer-resarchive');
+    });
+})();
+
+// ─── Thymeleaf inline script data ───────────────────────────
 </script>
 <script th:inline="javascript">
     /*<![CDATA[*/
-    const rawEmails    = /*[[${emailList}]]*/ [];
+    const rawEmails = /*[[${emailList}]]*/ [];
     const rawUsernames = /*[[${usernameList}]]*/ [];
-    const rawPhones    = /*[[${phoneList}]]*/ [];
-    window.emailList    = (rawEmails    || []).map(e => e.toLowerCase());
+    const rawPhones = /*[[${phoneList}]]*/ [];
+    window.emailList = (rawEmails || []).map(e => e.toLowerCase());
     window.usernameList = (rawUsernames || []).map(u => u.toLowerCase());
-    window.phoneList    = (rawPhones    || []);
+    window.phoneList = (rawPhones || []);
     /*]]>*/
 </script>
 
-<script>
-   // Create image enlarge modal with higher z-index to appear on top
-    if (!document.getElementById('imageEnlargeModal')) {
-        var enlargeModalHtml = `
-        <div id="imageEnlargeModal" class="modal" style="z-index: 10000; background-color: rgba(0,0,0,0.9);">
-            <div class="modal-content" style="width:auto; max-width:90%; max-height:90%; margin:2% auto; padding:0; background:transparent; box-shadow:none; text-align:center;">
-                <span class="close-btn" onclick="document.getElementById('imageEnlargeModal').style.display='none'" style="position:absolute; top:10px; right:25px; color:white; font-size:40px; background:rgba(0,0,0,0.5); width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10001;">&times;</span>
-                <img id="enlargedImage" src="" style="max-width:90%; max-height:85vh; object-fit:contain; border-radius:8px;">
-            </div>
-        </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', enlargeModalHtml);
-    }
-    
-    // Function to enlarge image
-    window.enlargeImage = function(src) {
-        document.getElementById('enlargedImage').src = src;
-        document.getElementById('imageEnlargeModal').style.display = 'block';
-    };
-    
-    // Close enlarge modal when clicking on the background
-    document.getElementById('imageEnlargeModal').onclick = function(e) {
-        if (e.target === this) {
-            this.style.display = 'none';
-        }
-    };
-    
-    // Create modals if they don't exist
-    (function() {
-        // Create Resident View Modal
-        if (!document.getElementById('residentViewModal')) {
-    var viewModalHtml = `
-    <div id="residentViewModal" class="modal">
-      <div class="modal-content" style="width:500px; padding:0; overflow:hidden;">
-        <div style="background:#2d4a44; padding:20px 24px 0; position:relative;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <span class="close-btn" onclick="document.getElementById('residentViewModal').style.display='none'" style="position:absolute; top:12px; right:16px; color:white; opacity:0.7;">&times;</span>
-            <div>
-              <p style="color:#9fd4c8; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; margin:0 0 2px;">Barangay San Sebastian</p>
-              <p style="color:white; font-size:15px; font-weight:500; margin:0;">Resident Record</p>
-            </div>
-            <div style="background:#FED734; border-radius:4px; padding:4px 10px; margin-right:24px;">
-              <p style="font-size:14px; font-weight:500; color:#2d4a44; margin:0;" id="rv_status">ACTIVE</p>
-            </div>
-          </div>
-          <div style="display:flex; align-items:flex-end; gap:16px; margin-top:20px;">
-            <div id="view-avatar" style="width:72px; height:72px; border-radius:50%; background:#3d6b63; border:2px solid #9fd4c8; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-bottom:10px; overflow:hidden;">
-                <img id="view-avatar-img" src="" alt="Profile" style="width:100%; height:100%; object-fit:cover; display:none; border-radius:50%;">
-                <svg id="view-avatar-svg" width="36" height="36" viewBox="0 0 24 24" fill="#9fd4c8">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                </svg>
-            </div>
-            <div style="padding-bottom:20px;">
-              <p style="color:white; font-size:18px; font-weight:500; margin:0;" id="rv_fullname"></p>
-              <p style="color:#9fd4c8; font-size:13px; margin:4px 0 0;" id="rv_id"></p>
-            </div>
-          </div>
-        </div>
-        <div style="padding:28px 24px 20px;">
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
-            <div style="background:#f5f5f5; border-radius:6px; padding:10px 14px;">
-              <p style="font-size:16px; color:#888; text-transform:uppercase; letter-spacing:0.07em; margin:0 0 3px;">Email</p>
-              <p style="font-size:20px; font-weight:bold; color:#333; margin:0;" id="rv_email"></p>
-            </div>
-            <div style="background:#f5f5f5; border-radius:6px; padding:10px 14px;">
-              <p style="font-size:16px; color:#888; text-transform:uppercase; letter-spacing:0.07em; margin:0 0 3px;">Phone</p>
-              <p style="font-size:20px; font-weight:bold; color:#333; margin:0;" id="rv_phone"></p>
-            </div>
-          </div>
-          <div style="border-top:1px solid #eee; padding-top:14px; display:flex; flex-direction:column; gap:10px;">
-            <div style="display:flex; justify-content:space-between;">
-              <span style="font-size:16px; color:#888;">Gender</span>
-              <span style="font-size:20px; color:#333; font-weight:bold;" id="rv_gender"></span>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-              <span style="font-size:16px; color:#888;">Birth date</span>
-              <span style="font-size:20px; color:#333; font-weight:bold;" id="rv_birth"></span>
-            </div>
-            <div style="border-top:1px solid #eee; padding-top:10px;">
-              <p style="font-size:16px; color:#888; margin:0 0 4px;">Address</p>
-              <p style="font-size:20px; color:#333; font-weight:bold; margin:0; line-height:1.5;" id="rv_address"></p>
-            </div>
-          </div>
-          <div style="margin-top:16px; border-top:1px solid #eee; padding-top:14px; text-align:center;">
-            <p style="font-size:25px; color:#aaa; letter-spacing:0.05em; margin:0;">BARANGAY SAN SEBASTIAN · KAWIT, CAVITE</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', viewModalHtml);
-}
-        
-       // Create Verify Modal
-if (!document.getElementById('verifyModal')) {
-    var verifyModalHtml = `
-    <div id="verifyModal" class="modal">
-        <div class="modal-content" style="width:750px;">
-            <div class="modal-header">
-                <h2>Verify Resident Documents</h2>
-                <span class="close-btn" onclick="document.getElementById('verifyModal').style.display='none'">&times;</span>
-            </div>
-            <div class="modal-form-body">
-                <h3 id="verifyName" style="text-align:center; margin-bottom:10px;"></h3>
-                <p style="text-align:center"><strong>Current Status:</strong> <span id="verifyStatus" style="display:inline-block; padding:4px 12px; border-radius:20px;"></span></p>
-                <div class="verify-docs-grid" style="display:flex; gap:20px; justify-content:center; margin:20px 0; flex-wrap:wrap;">
-
-                    <div class="doc-card" style="flex:1; min-width:180px; text-align:center; background:#f9f9f9; border-radius:12px; padding:16px;">
-                        <h4 style="font-size:14px; color:#2d4a44; margin-bottom:12px;">Selfie</h4>
-                        <div id="selfieImg" style="background:#e9ecef; height:160px; display:flex; align-items:center; justify-content:center; border-radius:8px;">No image</div>
-                    </div>
-
-                    <div class="doc-card" style="flex:1; min-width:180px; text-align:center; background:#f9f9f9; border-radius:12px; padding:16px;">
-                        <h4 style="font-size:14px; color:#2d4a44; margin-bottom:12px;">Valid ID</h4>
-                        <div id="validIdImg" style="background:#e9ecef; height:160px; display:flex; align-items:center; justify-content:center; border-radius:8px;">No image</div>
-                    </div>
-
-                    <div class="doc-card" style="flex:1; min-width:180px; text-align:center; background:#f9f9f9; border-radius:12px; padding:16px;">
-                        <h4 style="font-size:14px; color:#2d4a44; margin-bottom:12px;">Barangay Indigency</h4>
-                        <div id="indigencyImg" style="background:#e9ecef; height:160px; display:flex; align-items:center; justify-content:center; border-radius:8px;">No image</div>
-                    </div>
-
-                </div>
-
-                <div id="priorityDocsSection" style="display:none; justify-content:center; margin:0 0 16px; flex-wrap:wrap; gap:20px;">
-                    
-                    <div id="pwdDocCard" style="display:none; flex:1; min-width:180px; text-align:center; background:#eef4ff; border:1px solid #aed6f1; border-radius:12px; padding:16px; flex-direction:column;">
-                        <h4 style="font-size:14px; color:#2471a3; margin-bottom:12px;">PWD Certificate</h4>
-                        <div id="pwdImg" style="background:#dce8f5; height:160px; display:flex; align-items:center; justify-content:center; border-radius:8px;">No image</div>
-                    </div>
-
-                    <div id="seniorDocCard" style="display:none; flex:1; min-width:180px; text-align:center; background:#fff8e1; border:1px solid #FED734; border-radius:12px; padding:16px; flex-direction:column;">
-                        <h4 style="font-size:14px; color:#b8860b; margin-bottom:12px;">Senior Citizen ID</h4>
-                        <div id="seniorImg" style="background:#f5edcc; height:160px; display:flex; align-items:center; justify-content:center; border-radius:8px;">No image</div>
-                    </div>
-                </div>
-
-                <div id="verifyModalButtons" style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px; padding-top:16px; border-top:1px solid #eee;">
-                    <button class="btn-cancel" style="background:#95a5a6; color:white; border:none; padding:10px 24px; border-radius:6px; cursor:pointer;" onclick="document.getElementById('verifyModal').style.display='none'">Cancel</button>
-                    <button class="btn-verify-confirm" id="verifyConfirmBtn" style="background:#27ae60; color:white; border:none; padding:10px 24px; border-radius:6px; font-weight:bold; cursor:pointer;">Verify & Set VERIFIED</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', verifyModalHtml);
-}
-        
-        // Add style for verify button
-        var style = document.createElement('style');
-        style.textContent = `.verify-btn { background-color: #44C375 !important; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }`;
-        document.head.appendChild(style);
-        
-        // Add View and Verify buttons to each resident row
-        var residentTable = document.getElementById('resident-table');
-        if (residentTable) {
-            var rows = residentTable.querySelectorAll('tbody tr');
-            rows.forEach(function(row) {
-                var actionsCell = row.querySelector('td:last-child .action-buttons');
-                if (!actionsCell) return;
-                if (actionsCell.querySelector('.new-view-btn')) return;
-                
-                // Get data from row attributes
-                var firstName = row.getAttribute('data-first-name') || '';
-                var lastName = row.getAttribute('data-last-name') || '';
-                var residentId = row.getAttribute('data-resident-id') || '';
-                var gender = row.getAttribute('data-gender') || '';
-                var birth = row.getAttribute('data-birth') || '';
-                var phone = row.getAttribute('data-phone') || '';
-                var address = row.getAttribute('data-address') || '';
-                var email = row.getAttribute('data-email') || '';
-                var selfie = row.getAttribute('data-selfie') || '';
-                var validId = row.getAttribute('data-validid') || '';
-                var indigency = row.getAttribute('data-indigency') || '';
-                var residentUUID = row.getAttribute('data-id') || '';
-                var status = row.getAttribute('data-status') || 'UNVERIFIED';
-                var pwdImage    = row.getAttribute('data-pwdimage')    || '';
-                var seniorImage = row.getAttribute('data-seniorimage') || '';
-                
-// Create View button
-var viewBtn = document.createElement('button');
-viewBtn.innerHTML = 'View';
-viewBtn.className = 'view-btn new-view-btn';
-viewBtn.onclick = function() {
-    document.getElementById('rv_fullname').innerText = firstName + ' ' + lastName;
-    document.getElementById('rv_id').innerText = residentId;
-    document.getElementById('rv_email').innerText = email;
-    document.getElementById('rv_phone').innerText = phone;
-    document.getElementById('rv_gender').innerText = gender;
-    document.getElementById('rv_birth').innerText = birth;
-    document.getElementById('rv_address').innerText = address;
-    document.getElementById('rv_status').innerText = status;
-    
-    // Handle avatar
-    var avatarUrl = row.getAttribute('data-avatar');
-        var avatarImg = document.querySelector('#residentViewModal #view-avatar-img');
-    var avatarSvg = document.querySelector('#residentViewModal #view-avatar-svg');
-
-    if (avatarUrl && avatarUrl !== 'null' && avatarUrl !== '') {
-        avatarImg.src = avatarUrl;
-        avatarImg.style.display = 'block';
-        avatarSvg.style.display = 'none';
-    } else {
-        avatarImg.src = '';
-        avatarImg.style.display = 'none';
-        avatarSvg.style.display = 'block';
-    }
-    
-    document.getElementById('residentViewModal').style.display = 'block';
-};
-
-
-// Create Verify button with clickable images
-var verifyBtn = document.createElement('button');
-verifyBtn.innerHTML = 'Verify';
-verifyBtn.className = 'verify-btn new-verify-btn';
-
-var accountStatus = row.getAttribute('data-status') || 'UNVERIFIED';
-
-if (accountStatus === 'VERIFIED') {
-    verifyBtn.style.setProperty('background-color', '#95a5a6', 'important');
-    
-} else {
-    verifyBtn.style.setProperty('background-color', '#44C375', 'important');
-}
-
-verifyBtn.onclick = function() {
-    window.currentVerifyId = residentUUID;
-    window.currentVerifyName = firstName + ' ' + lastName;
-    document.getElementById('verifyName').innerHTML = 'Resident: <strong>' + window.currentVerifyName + '</strong>';
-    document.getElementById('verifyStatus').innerText = status;
-    
-    function setImage(url, container) {
-        if (url && url !== 'null' && url !== '' && url !== 'undefined') {
-            container.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:180px; border-radius:8px; cursor:pointer;" onclick="enlargeImage(\'' + url + '\')">';
-        } else {
-            container.innerHTML = '<div style="padding:60px;">No document</div>';
-        }
-    }
-    setImage(selfie,    document.getElementById('selfieImg'));
-    setImage(validId,   document.getElementById('validIdImg'));
-    setImage(indigency, document.getElementById('indigencyImg'));
-
-    // ── Priority docs ──────────────────────────────────────────
-    var hasPwd    = pwdImage    && pwdImage    !== 'null' && pwdImage    !== '';
-    var hasSenior = seniorImage && seniorImage !== 'null' && seniorImage !== '';
-    var prioritySection = document.getElementById('priorityDocsSection');
-    var pwdCard         = document.getElementById('pwdDocCard');
-    var seniorCard      = document.getElementById('seniorDocCard');
-
-    if (hasPwd || hasSenior) {
-        prioritySection.style.display = 'flex';
-        prioritySection.style.gap     = '20px';
-        prioritySection.style.flexWrap = 'wrap';
-        if (hasPwd)    { pwdCard.style.display    = 'flex'; pwdCard.style.flexDirection    = 'column'; setImage(pwdImage,    document.getElementById('pwdImg')); }
-        else             { pwdCard.style.display    = 'none'; }
-        if (hasSenior) { seniorCard.style.display = 'flex'; seniorCard.style.flexDirection = 'column'; setImage(seniorImage, document.getElementById('seniorImg')); }
-        else             { seniorCard.style.display = 'none'; }
-    } else {
-        prioritySection.style.display = 'none';
-    }
-    // ──────────────────────────────────────────────────────────
-
-    // Hide buttons if status is already VERIFIED
-    var buttonsDiv = document.getElementById('verifyModalButtons');
-    if (status === 'VERIFIED') {
-        buttonsDiv.style.display = 'none';
-    } else {
-        buttonsDiv.style.display = 'flex';
-    }
-    
-    document.getElementById('verifyModal').style.display = 'block';
-};
-
-actionsCell.insertBefore(viewBtn, actionsCell.firstChild);
-actionsCell.insertBefore(verifyBtn, actionsCell.firstChild);
-});
-}
-
-// Setup verify confirmation
-var verifyBtnConfirm = document.getElementById('verifyConfirmBtn');
-if (verifyBtnConfirm) {
-    var newBtn = verifyBtnConfirm.cloneNode(true);
-    verifyBtnConfirm.parentNode.replaceChild(newBtn, verifyBtnConfirm);
-    newBtn.onclick = function() {
-        if (!window.currentVerifyId) { alert('No resident selected'); return; }
-        var btn = this;
-        btn.disabled = true;
-        btn.innerText = 'Processing...';
-        fetch('/residents/verify/' + window.currentVerifyId, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-            if (data.success) {
-                alert('✅ ' + window.currentVerifyName + ' has been VERIFIED!');
-                document.getElementById('verifyModal').style.display = 'none';
-                // FORCE RELOAD THE PAGE
-                window.location.reload();
-            } else {
-                alert('Error: Could not verify resident');
-                btn.disabled = false;
-                btn.innerText = 'Verify & Set VERIFIED';
-            }
-        })
-        .catch(function() {
-            alert('Server error');
-            btn.disabled = false;
-            btn.innerText = 'Verify & Set VERIFIED';
-        });
-    };
-}
-})();
-</script>
-<script>
-(function() {
-  const PAGE_SIZE = 10;
-
-  function initPagination(tableId, footerId) {
-    const tbody = document.querySelector('#' + tableId + ' tbody');
-    const footer = document.getElementById(footerId);
-    if (!tbody || !footer) return;
-
-    let currentPage = 1;
-
-    function getVisibleRows() {
-      return Array.from(tbody.querySelectorAll('tr')).filter(r => r.getAttribute('data-filtered') !== 'hidden');
-    }
-
-    function render() {
-      const all = getVisibleRows();
-      const total = all.length;
-      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-      if (currentPage > totalPages) currentPage = totalPages;
-
-      const start = (currentPage - 1) * PAGE_SIZE;
-      const end   = start + PAGE_SIZE;
-
-      // Show/hide rows for current page
-      Array.from(tbody.querySelectorAll('tr')).forEach(r => {
-        if (r.getAttribute('data-filtered') === 'hidden') {
-          r.style.display = 'none';
-          return;
-        }
-        const idx = all.indexOf(r);
-        r.style.display = (idx >= start && idx < end) ? '' : 'none';
-      });
-
-      // Build footer
-      const fromNum = total === 0 ? 0 : start + 1;
-      const toNum   = Math.min(end, total);
-
-      let paginationHtml = '<ul class="pagination pagination-sm mb-0">';
-
-      // Prev — hidden on first page
-      if (currentPage > 1) {
-        paginationHtml += `<li class="page-item">
-          <a class="page-link" href="#" data-action="prev"><i class="bi bi-arrow-left"></i> Prev</a>
-        </li>`;
-      }
-
-      // Page numbers
-      for (let p = 1; p <= totalPages; p++) {
-        paginationHtml += `<li class="page-item${p === currentPage ? ' active' : ''}">
-          <a class="page-link" href="#" data-action="goto" data-page="${p}">${p}</a>
-        </li>`;
-      }
-
-      // Next — hidden on last page
-      if (currentPage < totalPages) {
-        paginationHtml += `<li class="page-item">
-          <a class="page-link" href="#" data-action="next">Next <i class="bi bi-arrow-right"></i></a>
-        </li>`;
-      }
-
-      paginationHtml += '</ul>';
-
-      footer.innerHTML = `<span>Showing ${fromNum}–${toNum} of ${total}</span><nav>${paginationHtml}</nav>`;
-    }
-
-    // Single delegated listener on the footer — no re-attachment on render
-    footer.addEventListener('click', function(e) {
-      e.preventDefault();
-      const link = e.target.closest('a[data-action]');
-      if (!link) return;
-
-      const all = getVisibleRows();
-      const totalPages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
-      const action = link.getAttribute('data-action');
-
-      if (action === 'prev' && currentPage > 1) currentPage--;
-      else if (action === 'next' && currentPage < totalPages) currentPage++;
-      else if (action === 'goto') currentPage = parseInt(link.getAttribute('data-page'));
-
-      render();
-    });
-
-    // Watch for filter changes — use data-filtered attribute instead of style
-    new MutationObserver(() => {
-      currentPage = 1;
-      render();
-    }).observe(tbody, { attributes: true, subtree: true, attributeFilter: ['data-filtered'] });
-
-    render();
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    initPagination('employee-table',          'footer-employee');
-    initPagination('archived-employee-table', 'footer-archive');
-    initPagination('resident-table',          'footer-residents');
-    initPagination('resarchive-table',        'footer-resarchive');
-    initPagination('activity-log-table',      'footer-logs');
-  });
-})();
-</script>
 </body>
 </html>
