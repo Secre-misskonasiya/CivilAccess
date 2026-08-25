@@ -482,11 +482,7 @@
 <script>
     // ── Force password modal ──────────────────────────────────
     window.onload = function () {
-        const status = document.getElementById("accountStatus").value;
-        if (status === "New" || status === "Newly Updated") {
-            document.getElementById("forcePasswordModal").style.display = "block";
-            document.body.style.overflow = "hidden";
-        }
+
         populateFilterDropdowns();
     };
 

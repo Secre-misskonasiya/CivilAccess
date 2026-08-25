@@ -227,12 +227,13 @@
                     <div class="filter-option" onclick="applyFilter('employee','SECRETARIAT STAFF','Secretariat Staff','employee-filter-label',3)">Secretariat Staff <i class="bi bi-check filter-check"></i></div>
                 </div>
             </div>
-            <!-- Only ADMIN can create new account -->
+            
+
             <button class="new-account-btn" onclick="openModal()"
-                th:if="${currentrole == 'ADMIN'}">
+                    th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
                 <i class="bi bi-person-plus"></i> Create New Account
             </button>
-            <button class="export-btn" onclick="exportToPDF('employee-panel')">Export</button>
+            <button th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" class="export-btn" onclick="exportToPDF('employee-panel')">Export</button>
         </div>
         <div class="panel-inner">
             <div class="panel-header">Employee Accounts</div>
@@ -275,7 +276,7 @@
                                         onclick="openViewModalFromButton(this)">View</button>
                                     <!-- Update button: ADMIN only -->
                                     <button class="update-btn"
-                                        th:if="${currentrole == 'ADMIN'}"
+                                        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}"
                                         th:onclick="openEditModal(
                                             [[${admin.id}]],
                                             [[${admin.employeeId}]],
@@ -397,7 +398,7 @@
         <div class="action-buttons">
             <!-- Edit button: ADMIN only -->
             <button class="update-btn"
-                th:if="${currentrole == 'ADMIN'}"
+                th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
                 th:onclick="openEditResidentModal(
                     [[${res.id}]],
                     [[${res.residentId}]],
@@ -1239,23 +1240,6 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
         resetFormStyles();
         modal.style.display = "block";
     }
-    window.onload = function () {
-        try {
-            const accountStatusEl = document.getElementById("accountStatus");
-            if (accountStatusEl) {
-                const status = accountStatusEl.value;
-                if (status === "New" || status === "Newly Updated") {
-                    const forceModal = document.getElementById("forcePasswordModal");
-                    if (forceModal) {
-                        forceModal.style.display = "block";
-                        document.body.style.overflow = "hidden";
-                    }
-                }
-            }
-        } catch(e) {
-            console.log("Force password check skipped:", e.message);
-        }
-    };
     function redirectToPassword() { window.location.href = "/user-profile"; }
     function closeModal() {
         if (document.getElementById('sendPasswordModal').style.display === 'block') return;

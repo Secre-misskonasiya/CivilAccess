@@ -24,7 +24,7 @@
             <li onclick="window.location.href='/home'">
                 <img src="/icons/dashboard.svg" class="icon"> Dashboard
             </li>
-            <li th:if="${currentrole != 'TREASURER'}" onclick="window.location.href='/announcements'">
+            <li onclick="window.location.href='/announcements'">
                 <img src="/icons/announcements.svg" class="icon"> Announcements
             </li>
         </ul>
@@ -38,16 +38,16 @@
     </button>
     <div class="section-body" id="sec-management">
         <ul class="menu">
-            <li th:if="${currentrole == 'ADMIN'}" onclick="window.location.href='/account'">
+            <li th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF' || currentrole == 'BARANGAY-CAPTAIN'}" onclick="window.location.href='/account'">
                 <img src="/icons/accounts.svg" class="icon"> Accounts
             </li>
             <li onclick="window.location.href='/user-profile'">
                 <img src="/icons/user.svg" class="icon"> User Profile
             </li>
-            <li th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" onclick="window.location.href='/Resident-census'">
+            <li onclick="window.location.href='/Resident-census'">
                 <img src="/icons/user.svg" class="icon"> Resident Census
             </li>
-            <li th:if="${currentrole == 'ADMIN' || currentrole == 'TREASURER'}" onclick="window.location.href='/finance'">
+            <li onclick="window.location.href='/finance'">
                 <img src="/icons/cash.svg" class="icon"> Expenditures
             </li>
         </ul>
@@ -61,11 +61,11 @@
     </button>
     <div class="section-body" id="sec-resident">
         <ul class="menu">
-            <li th:if="${currentrole != 'BARANGAY-CAPTAIN' && currentrole != 'TREASURER'}" onclick="toggleSubMenu(this, 'sub-requests')">
+            <li onclick="toggleSubMenu(this, 'sub-requests')">
                 <img src="/icons/requests.svg" class="icon"> Requests
                 <i class="bi bi-chevron-down dropdown-arrow"></i>
             </li>
-            <ul class="sub-menu" id="sub-requests" th:if="${currentrole != 'BARANGAY-CAPTAIN' && currentrole != 'TREASURER'}">
+            <ul class="sub-menu" id="sub-requests">
                 <li onclick="window.location.href='/requests-blotter'">Blotter Reports</li>
                 <li onclick="window.location.href='/requests-document'">Documents</li>
                 <li onclick="window.location.href='/reservations'">Reservations</li>
@@ -82,13 +82,13 @@
 
     <!-- COMMUNITY SAFETY -->
     <button class="section-toggle" onclick="toggleSection(this, 'sec-safety')"
-        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
+        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF' || currentrole == 'BARANGAY-CAPTAIN'}">
         <span class="section-notif-dot" id="dot-safety"></span>
         Community Safety
         <i class="bi bi-chevron-down section-arrow"></i>
     </button>
     <div class="section-body" id="sec-safety"
-        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
+        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF' || currentrole == 'BARANGAY-CAPTAIN'}">
         <ul class="menu">
             <li onclick="window.location.href='/safety-reports'">
                 <img src="/icons/safety.svg" class="icon"> Reports &amp; Alerts

@@ -189,42 +189,6 @@
     }
     .new-cancelled-row { animation: cancelFlash 2s ease-out; }
 
-    /* ══════════════════════════════════════
-       FORCE MODAL
-    ══════════════════════════════════════ */
-    .force-modal {
-        display: none;
-        position: fixed; z-index: 9999;
-        left: 0; top: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.55);
-        backdrop-filter: blur(2px);
-    }
-    .force-modal-content {
-        background: white;
-        width: 440px;
-        padding: 44px;
-        border-radius: var(--radius-lg);
-        text-align: center;
-        margin: 18% auto;
-        box-shadow: var(--shadow-lg);
-    }
-    .force-modal-content h2 { color: var(--green-900); margin-bottom: 12px; font-size: 22px; font-weight: 700; }
-    .force-modal-content p { font-size: 15px; color: var(--gray-500); }
-    .force-modal-content button {
-        margin-top: 22px;
-        padding: 13px 32px;
-        background: var(--green-700);
-        color: white;
-        border: none;
-        border-radius: var(--radius-sm);
-        cursor: pointer;
-        font-size: 15px;
-        font-weight: 600;
-        font-family: var(--font);
-        transition: background 0.2s;
-    }
-    .force-modal-content button:hover { background: var(--green-900); }
-
     /* Toast */
     #sos-toast {
         position: fixed;
@@ -450,15 +414,6 @@
 
 <div class="layout">
 
-<input type="hidden" id="accountStatus" th:value="${currentstatus}">
-<div id="forcePasswordModal" class="force-modal">
-    <div class="force-modal-content">
-        <h2>First Login Detected</h2>
-        <p>You must change your password before using the system.</p>
-        <button onclick="redirectToPassword()">Change Password</button>
-    </div>
-</div>
-
 <!-- Success Modal -->
 <div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -479,6 +434,9 @@
 
 <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 <div th:replace="~{fragments/LockModal :: lockModal}"></div>
+
+<!-- Role hidden field, used by JS for role-aware behavior -->
+<input type="hidden" id="currentUserRole" th:value="${currentrole}">
 
 <div class="content">
 
@@ -550,7 +508,15 @@
                                     ? 'Latitude (Y): ' + report.latitude + ', Longitude (X): ' + report.longitude 
                                     : 'N/A')}">N/A</td>
                             <td><span class="status-incoming">Incoming</span></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'PROCESSING\')'">Process</button><button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
+                                    <th:block th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
+                                        <button class="resolve-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'PROCESSING\')'">Process</button>
+                                        <button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button>
+                                    </th:block>
+                                </div>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -576,7 +542,15 @@
                                     ? 'Latitude (Y): ' + report.latitude + ', Longitude (X): ' + report.longitude 
                                     : 'N/A')}">N/A</td>
                             <td><span class="status-processing">Processing</span></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'RESOLVED\')'">Resolve</button><button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
+                                    <th:block th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
+                                        <button class="resolve-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'RESOLVED\')'">Resolve</button>
+                                        <button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button>
+                                    </th:block>
+                                </div>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -602,7 +576,12 @@
                                     ? 'Latitude (Y): ' + report.latitude + ', Longitude (X): ' + report.longitude 
                                     : 'N/A')}">N/A</td>
                             <td><span class="status-resolved">Resolved</span></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
+                                    <button class="archive-btn" th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button>
+                                </div>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -654,7 +633,12 @@
                                     ? 'Latitude (Y): ' + report.latitude + ', Longitude (X): ' + report.longitude 
                                     : 'N/A')}">N/A</td>
                             <td><span class="status-cancelled">Cancelled</span></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button></div></td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
+                                    <button class="archive-btn" th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button>
+                                </div>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -686,11 +670,6 @@
 <script src="/js/sidebar.js"></script>
 
 <script>
-
-window.onload = function() {
-        const status = document.getElementById("accountStatus").value;
-        if (status === "New" || status === 'Newly Updated') { document.getElementById("forcePasswordModal").style.display = "block"; document.body.style.overflow = "hidden"; }
-    };
 
 // =================================================================
 // SUCCESS MODAL FUNCTION
@@ -999,6 +978,12 @@ async function pollCancelled() {
     } catch (_) {}
 }
 
+// =================================================================
+// POLLING ROW BUILDERS — plain JS, no Thymeleaf syntax.
+// These run entirely in the browser, so th:if / th:onclick / ${...}
+// mean nothing here. Buttons always render; the backend endpoint is
+// the actual enforcement point for who's allowed to act on them.
+// =================================================================
 function buildIncomingRow(r) {
     return `<td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-incoming">Incoming</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatusWithConfirm(${r.id},'PROCESSING')">Process</button><button class="archive-btn" onclick="updateStatusWithConfirm(${r.id},'ARCHIVED')">Archive</button></div></td>`;
 }
@@ -1192,8 +1177,6 @@ function exportToPDF() {
     doc.autoTable({ html: panel.querySelector('table'), startY: 20, margin: { top: 20 }, columnStyles: { 5: { cellWidth: 'wrap', minCellWidth: 0 } }, didParseCell: d => { if (d.column.index === 5) { d.cell.styles.fontSize = 0; d.cell.styles.textColor = [255,255,255]; } } });
     doc.save(title.replace(/\s+/g, '_') + '.pdf');
 }
-
-function redirectToPassword() { window.location.href = '/user-profile'; }
 
 window.addEventListener('DOMContentLoaded', () => {
     applyFilters();

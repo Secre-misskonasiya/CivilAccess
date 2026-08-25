@@ -504,17 +504,6 @@
 </head>
 <body>
 
-  
-<!-- Lock Modal
- <input type="hidden" id="accountStatus" th:value="${currentstatus}">
-<div id="forcePasswordModal" class="force-modal">
-    <div class="force-modal-content">
-        <h2>First Login Detected</h2>
-        <p>You must change your password before using the system.</p>
-        <button onclick="redirectToPassword()">Change Password</button>
-    </div>
-</div> -->
-
   <script src="/js/notif.js"></script>
 <div class="toast-container" id="toastContainer"></div>
 <div class="layout">
@@ -536,8 +525,11 @@
         <input type="text" id="announcement-search" placeholder="Search announcements...">
       </div>
       <button class="filter-btn" onclick="window.location.href='/announcements'"><i class="bi bi-funnel"></i> Reset</button>
-      <button class="create-announcement-btn" data-bs-toggle="modal" data-bs-target="#createAnnouncementModal"><i class="bi bi-plus-circle"></i> Create Announcement</button>
-    </div>
+      <button class="create-announcement-btn" data-bs-toggle="modal" data-bs-target="#createAnnouncementModal"
+          th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
+          <i class="bi bi-plus-circle"></i> Create Announcement
+      </button>
+</div>
 
     <!-- Tabs -->
     <div class="tabbar">
@@ -591,9 +583,9 @@
                   <div class="row-date" th:text="${announcement.datePosted != null ? #temporals.format(announcement.datePosted, 'MMM dd, yyyy') : 'N/A'}">Mar 15, 2026</div>
 
                   <div class="row-actions">
-                    <button class="view-btn" th:attr="onclick='viewAnnouncement(' + ${announcement.id} + ')'">View</button>
-                    <button class="edit-btn" th:attr="onclick='editAnnouncement(' + ${announcement.id} + ')'">Edit</button>
-                    <button class="archive-btn" th:attr="onclick='archiveAnnouncementWithConfirm(' + ${announcement.id} + ')'">Archive</button>
+                      <button class="view-btn" th:attr="onclick='viewAnnouncement(' + ${announcement.id} + ')'">View</button>
+                      <button class="edit-btn" th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" th:attr="onclick='editAnnouncement(' + ${announcement.id} + ')'">Edit</button>
+                      <button class="archive-btn" th:if="${currentrole == 'ADMIN'}" th:attr="onclick='archiveAnnouncementWithConfirm(' + ${announcement.id} + ')'">Archive</button>
                   </div>
 
                 </div>
@@ -646,7 +638,7 @@
 
                   <div class="row-actions">
                     <button class="view-btn" th:attr="onclick='viewAnnouncement(' + ${announcement.id} + ')'">View</button>
-                    <button class="restore-btn" th:attr="onclick='restoreAnnouncementWithConfirm(' + ${announcement.id} + ')'">Restore</button>
+                    <button class="restore-btn" th:if="${currentrole == 'ADMIN'}" th:attr="onclick='restoreAnnouncementWithConfirm(' + ${announcement.id} + ')'">Restore</button>
                   </div>
 
                 </div>
@@ -950,9 +942,9 @@
         <div class="row-snippet">${escapeHtml(a.content || '')}</div>
         <div class="row-date">${dateStr}</div>
         <div class="row-actions">
-          <button class="view-btn" onclick="viewAnnouncement(${a.id})">View</button>
-          <button class="edit-btn" onclick="editAnnouncement(${a.id})">Edit</button>
-          <button class="archive-btn" onclick="archiveAnnouncementWithConfirm(${a.id})">Archive</button>
+            <button class="view-btn" th:attr="onclick='viewAnnouncement(' + ${announcement.id} + ')'">View</button>
+            <button class="edit-btn" th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" th:attr="onclick='editAnnouncement(' + ${announcement.id} + ')'">Edit</button>
+            <button class="archive-btn" th:if="${currentrole == 'ADMIN'}" th:attr="onclick='archiveAnnouncementWithConfirm(' + ${announcement.id} + ')'">Archive</button>
         </div>
       `;
       container.appendChild(row);
@@ -988,7 +980,7 @@
         <div class="row-date">${dateStr}</div>
         <div class="row-actions">
           <button class="view-btn" onclick="viewAnnouncement(${a.id})">View</button>
-          <button class="restore-btn" onclick="restoreAnnouncementWithConfirm(${a.id})">Restore</button>
+          <button class="restore-btn" th:if="${currentrole == 'ADMIN'}" th:attr="onclick='restoreAnnouncementWithConfirm(' + ${announcement.id} + ')'">Restore</button>
         </div>
       `;
       container.appendChild(row);
@@ -1500,13 +1492,7 @@
     if (pollingInterval) clearInterval(pollingInterval);
   });
   
-  window.onload = function () {
-        const status = document.getElementById("accountStatus").value;
-        if (status === "New" || status === "Newly Updated") {
-            document.getElementById("forcePasswordModal").style.display = "block";
-            document.body.style.overflow = "hidden";
-        }
-    };
+
 </script>
 
 </body>
