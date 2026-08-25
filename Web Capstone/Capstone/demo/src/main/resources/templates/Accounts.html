@@ -521,8 +521,9 @@
                                     <!-- Restore button - ONLY ADMIN -->
                                     <button class="restore-btn"
                                         th:if="${currentrole == 'ADMIN'}"
-                                        th:onclick="restoreEmployee([[${admin.id}]])">Restore</button>
-                                </div>
+                                        th:onclick="restoreEmployee([[${admin.id}]])">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                    </button>
                             </td>
                         </tr>
                     </tbody>
@@ -540,71 +541,82 @@
     </div>
 
     <!-- ═══════════════════════════════════════════ -->
-    <!-- RESIDENTS ARCHIVES PANEL                    -->
-    <!-- ═══════════════════════════════════════════ -->
-    <div class="panel" id="residents-archived-panel" style="display:none;">
-        <div class="search-bar-area">
-            <div class="search-input-wrap">
-                <span class="search-icon"><i class="bi bi-search"></i></span>
-                <input type="text" id="resarchive-search" placeholder="Search by name, email, or phone...">
-            </div>
-            <div style="position:relative;">
-                <button class="filter-btn" onclick="toggleFilter(event,'resarchive-filter-dropdown')">
-                    <i class="bi bi-funnel"></i> <span id="resarchive-filter-label">All</span>
-                    <i class="bi bi-chevron-down" style="font-size:11px;"></i>
-                </button>
-                <div id="resarchive-filter-dropdown" class="filter-dropdown">
-                    <div class="filter-dropdown-title">Filter by Gender</div>
-                    <div class="filter-option" onclick="applyFilter('resarchive','','All','resarchive-filter-label',3)">All <i class="bi bi-check filter-check"></i></div>
-                    <div class="filter-option" onclick="applyFilter('resarchive','Male','Male','resarchive-filter-label',3)">Male <i class="bi bi-check filter-check"></i></div>
-                    <div class="filter-option" onclick="applyFilter('resarchive','Female','Female','resarchive-filter-label',3)">Female <i class="bi bi-check filter-check"></i></div>
-                    <div class="filter-option" onclick="applyFilter('resarchive','Other','Other','resarchive-filter-label',3)">Other <i class="bi bi-check filter-check"></i></div>
-                </div>
-            </div>
-            <!-- Export - Only ADMIN -->
-            <button class="export-btn" onclick="exportToPDF('residents-archived-panel')"
-                    th:if="${currentrole == 'ADMIN'}">Export</button>
+<!-- RESIDENTS ARCHIVES PANEL                    -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="panel" id="residents-archived-panel" style="display:none;">
+    <div class="search-bar-area">
+        <div class="search-input-wrap">
+            <span class="search-icon"><i class="bi bi-search"></i></span>
+            <input type="text" id="resarchive-search" placeholder="Search by name, email, or phone...">
         </div>
-        <div class="panel-inner">
-            <div class="panel-header">Archived Resident Accounts</div>
-            <div class="panel-content">
-                <table class="table table-bordered table-hover mb-0" id="resarchive-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Gender</th>
-                            <th>Birth Date</th>
-                            <th>Phone</th>
-                            <th>Address</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="res : ${archivedResidents}">
-                            <td th:text="${res.residentId}"></td>
-                            <td th:text="${res.firstName}"></td>
-                            <td th:text="${res.lastName}"></td>
-                            <td th:text="${res.gender}"></td>
-                            <td th:text="${res.birthDate}"></td>
-                            <td th:text="${res.mobileNumber}"></td>
-                            <td th:text="${res.address}"></td>
-                            <td th:text="${res.status}"></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="table-footer" id="footer-resarchive">
-                    <span>Showing archived resident accounts</span>
-                    <nav><ul class="pagination pagination-sm mb-0">
-                        <li class="page-item"><a class="page-link" href="#"><i class="bi bi-arrow-left"></i> Prev</a></li>
-                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">Next <i class="bi bi-arrow-right"></i></a></li>
-                    </ul></nav>
-                </div>
+        <div style="position:relative;">
+            <button class="filter-btn" onclick="toggleFilter(event,'resarchive-filter-dropdown')">
+                <i class="bi bi-funnel"></i> <span id="resarchive-filter-label">All</span>
+                <i class="bi bi-chevron-down" style="font-size:11px;"></i>
+            </button>
+            <div id="resarchive-filter-dropdown" class="filter-dropdown">
+                <div class="filter-dropdown-title">Filter by Gender</div>
+                <div class="filter-option" onclick="applyFilter('resarchive','','All','resarchive-filter-label',3)">All <i class="bi bi-check filter-check"></i></div>
+                <div class="filter-option" onclick="applyFilter('resarchive','Male','Male','resarchive-filter-label',3)">Male <i class="bi bi-check filter-check"></i></div>
+                <div class="filter-option" onclick="applyFilter('resarchive','Female','Female','resarchive-filter-label',3)">Female <i class="bi bi-check filter-check"></i></div>
+                <div class="filter-option" onclick="applyFilter('resarchive','Other','Other','resarchive-filter-label',3)">Other <i class="bi bi-check filter-check"></i></div>
+            </div>
+        </div>
+        <!-- Export - Only ADMIN -->
+        <button class="export-btn" onclick="exportToPDF('residents-archived-panel')"
+                th:if="${currentrole == 'ADMIN'}">Export</button>
+    </div>
+    <div class="panel-inner">
+        <div class="panel-header">Archived Resident Accounts</div>
+        <div class="panel-content">
+            <table class="table table-bordered table-hover mb-0" id="resarchive-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Gender</th>
+                        <th>Birth Date</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="res : ${archivedResidents}">
+                        <td th:text="${res.residentId}"></td>
+                        <td th:text="${res.firstName}"></td>
+                        <td th:text="${res.lastName}"></td>
+                        <td th:text="${res.gender}"></td>
+                        <td th:text="${res.birthDate}"></td>
+                        <td th:text="${res.mobileNumber}"></td>
+                        <td th:text="${res.address}"></td>
+                        <td th:text="${res.status}"></td>
+                        <td>
+                            <div class="action-buttons">
+                                <!-- Restore button - ONLY ADMIN -->
+                                <button class="restore-btn"
+                                    th:if="${currentrole == 'ADMIN'}"
+                                    th:onclick="restoreResident([[${res.id}]], '[[${res.firstName}]] [[${res.lastName}]]')">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="table-footer" id="footer-resarchive">
+                <span>Showing archived resident accounts</span>
+                <nav><ul class="pagination pagination-sm mb-0">
+                    <li class="page-item"><a class="page-link" href="#"><i class="bi bi-arrow-left"></i> Prev</a></li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">Next <i class="bi bi-arrow-right"></i></a></li>
+                </ul></nav>
             </div>
         </div>
     </div>
+</div>
 
 </div><!-- end .content -->
 </div><!-- end .layout -->
@@ -1911,6 +1923,50 @@ function restoreEmployee(id) {
     }
     if (confirm('Are you sure you want to restore this employee?')) {
         window.location.href = '/restore-admin/' + id;
+    }
+}
+
+// ─── Restore Resident ──────────────────────────────────────
+function restoreResident(id, fullName) {
+    if (!canArchive()) {
+        alert('You do not have permission to restore resident accounts.');
+        return;
+    }
+    
+    if (confirm(`Are you sure you want to restore the resident account of ${fullName}?`)) {
+        // Show loading state
+        const restoreBtn = document.querySelector(`button[onclick*="restoreResident(${id}"]`);
+        if (restoreBtn) {
+            restoreBtn.disabled = true;
+            restoreBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Restoring...';
+        }
+        
+        fetch('/residents/restore/' + id, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('✅ Resident account restored successfully!');
+                window.location.reload();
+            } else {
+                alert('❌ Error restoring resident account. Please try again.');
+                if (restoreBtn) {
+                    restoreBtn.disabled = false;
+                    restoreBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Restore';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('❌ Server error. Please try again.');
+            if (restoreBtn) {
+                restoreBtn.disabled = false;
+                restoreBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Restore';
+            }
+        });
     }
 }
 
