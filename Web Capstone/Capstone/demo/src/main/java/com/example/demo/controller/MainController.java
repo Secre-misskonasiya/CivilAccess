@@ -1,5 +1,36 @@
 package com.example.demo.controller;
 
+import java.security.Principal;
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import com.example.demo.dto.AdminUserDTO;
 import com.example.demo.dto.ResidentDTO;
 import com.example.demo.model.Activitylogs;
@@ -7,66 +38,24 @@ import com.example.demo.model.AdminUser;
 import com.example.demo.model.ContactHelpRequest;
 import com.example.demo.model.ResidentUser;
 import com.example.demo.repository.CensusRecordRepository;
+import com.example.demo.services.ActivityLogService;
 import com.example.demo.services.AdminUserServices;
 import com.example.demo.services.AnnouncementsService;
-import com.example.demo.services.ResidentUserService;
-import com.example.demo.services.EmailService;
-import com.example.demo.services.ActivityLogService;
 import com.example.demo.services.BlotterService;
 import com.example.demo.services.CensusRecordService;
 import com.example.demo.services.ContactHelpService;
 import com.example.demo.services.DocumentRequestService;
-import com.example.demo.services.SosReportsService;
-import com.example.demo.services.SystemSettingsService;
-import com.example.demo.services.SafetyReportService;
+import com.example.demo.services.EmailService;
 import com.example.demo.services.ProgramBudgetService;
 import com.example.demo.services.ProgramCalendarService;
-import com.example.demo.model.ProgramCalendar;
 import com.example.demo.services.RentalService;
-
+import com.example.demo.services.ResidentUserService;
+import com.example.demo.services.SafetyReportService;
+import com.example.demo.services.SosReportsService;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-
-import java.security.Principal;
-import java.security.SecureRandom;
-import java.util.Base64;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import java.util.TimeZone;
-
-import org.springframework.web.bind.annotation.RequestBody;
-
-import java.util.HashMap;
-import java.util.ArrayList;
-
-import org.springframework.web.multipart.MultipartFile;
 
 
 @Controller
@@ -434,7 +423,31 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
         return "redirect:/account";
     }
 
-
+    @GetMapping("/residents/restore/{id}")
+    public String restoreResident(@PathVariable UUID id, Principal principal, HttpServletRequest request) {
+        AdminUser currentAdmin = adminUserService.getAdminByEmail(principal.getName());
+        ResidentUser resident = residentUserService.getResidentById(id);
+        
+        if (resident != null) {
+            resident.setStatus("ACTIVE");
+            resident.setAccount_status("VERIFIED");
+            residentUserService.saveResident(resident);
+            
+            activityLogService.log(
+                currentAdmin.getName(), 
+                currentAdmin.getRole(), 
+                "RESTORED", 
+                "Accounts",
+                "Restored the resident account of " + resident.getFirstName() + " " + resident.getLastName(),
+                request.getRemoteAddr(), 
+                "Success"
+            );
+            
+            lastAccountsModificationTime = System.currentTimeMillis();
+        }
+        
+        return "redirect:/account?tab=resarchives";
+    }
 
 // =========================================================
 // SIMPLE POLLING ENDPOINT (like Safety Reports)
@@ -637,6 +650,11 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
         }
         if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Your Account is deactivated.");
+        }
+        // 🔥 NEW: TANOD RESTRICTION
+        if ("TANOD".equalsIgnoreCase(admin.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Tanod accounts can only log in through the mobile app.");
         }
         // Validate password if provided
         if (password != null && !passwordEncoder.matches(password, admin.getPassword())) {
