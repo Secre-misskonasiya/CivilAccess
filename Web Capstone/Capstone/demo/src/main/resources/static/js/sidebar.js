@@ -44,24 +44,29 @@ window.onclick = function (event) {
     window.__lockModalInitialized = true;
 
     function checkAndShowLockModal() {
+        console.log('🔍 Checking lock modal status...');
+        
         // Try multiple ways to get the account status
         let status = null;
+        let foundIn = null;
         
         // Check all possible input fields
         const statusInputs = [
-            document.getElementById('accountStatus'),
-            document.getElementById('currentstatus'),
-            document.getElementById('status'),
-            document.querySelector('input[name="accountStatus"]'),
-            document.querySelector('input[name="currentstatus"]'),
-            document.querySelector('meta[name="account-status"]')
+            { el: document.getElementById('accountStatus'), name: 'accountStatus' },
+            { el: document.getElementById('currentstatus'), name: 'currentstatus' },
+            { el: document.getElementById('status'), name: 'status' },
+            { el: document.querySelector('input[name="accountStatus"]'), name: 'input[name="accountStatus"]' },
+            { el: document.querySelector('input[name="currentstatus"]'), name: 'input[name="currentstatus"]' },
+            { el: document.querySelector('meta[name="account-status"]'), name: 'meta[name="account-status"]' }
         ];
         
-        for (const input of statusInputs) {
-            if (input) {
-                const value = input.value || input.getAttribute('content');
+        for (const {el, name} of statusInputs) {
+            if (el) {
+                const value = el.value || el.getAttribute('content');
                 if (value) {
                     status = value;
+                    foundIn = name;
+                    console.log(`✅ Found status "${value}" in: ${name}`);
                     break;
                 }
             }
@@ -70,31 +75,46 @@ window.onclick = function (event) {
         // If still not found, check for inline script variables
         if (!status && window.accountStatus) {
             status = window.accountStatus;
+            foundIn = 'window.accountStatus';
+            console.log(`✅ Found status "${status}" in: window.accountStatus`);
         }
         if (!status && window.currentstatus) {
             status = window.currentstatus;
+            foundIn = 'window.currentstatus';
+            console.log(`✅ Found status "${status}" in: window.currentstatus`);
+        }
+        
+        if (!status) {
+            console.warn('❌ No status found! Check if the page has an input with id="accountStatus" or id="currentstatus"');
+            // Check all inputs for any status-related values
+            const allInputs = document.querySelectorAll('input');
+            console.log('All inputs on page:', Array.from(allInputs).map(i => ({id: i.id, name: i.name, value: i.value})));
+            return;
         }
         
         // Check if status requires password change
         const needsPasswordChange = status === 'New' || status === 'Newly Updated';
+        console.log(`📊 Status: "${status}", Needs password change: ${needsPasswordChange}`);
         
         // Find the modal
         const modal = document.getElementById('forcePasswordModal');
         if (!modal) {
-            // Modal doesn't exist - create it dynamically
+            console.warn('❌ Modal not found! Creating it now...');
             createLockModal();
             // Try again after creation
-            setTimeout(checkAndShowLockModal, 100);
+            setTimeout(checkAndShowLockModal, 200);
             return;
         }
         
+        console.log('✅ Modal found:', modal);
+        
         if (needsPasswordChange) {
+            console.log('🔒 SHOWING LOCK MODAL');
             modal.style.display = 'block';
             modal.style.visibility = 'visible';
             modal.classList.add('show');
             document.body.style.overflow = 'hidden';
             document.body.style.pointerEvents = 'none';
-            // Allow clicks on the modal itself
             modal.style.pointerEvents = 'auto';
             
             // Create overlay if needed
@@ -115,7 +135,9 @@ window.onclick = function (event) {
                 `;
                 document.body.insertBefore(overlay, modal);
             }
+            console.log('✅ Modal should now be visible');
         } else {
+            console.log('🔓 HIDING LOCK MODAL (status does not require password change)');
             modal.style.display = 'none';
             modal.style.visibility = 'hidden';
             modal.classList.remove('show');
@@ -169,8 +191,8 @@ window.onclick = function (event) {
 
     // Run on page load
     function initLockModal() {
-        // Small delay to ensure DOM is fully loaded
-        setTimeout(checkAndShowLockModal, 100);
+        console.log('🚀 Initializing Lock Modal...');
+        setTimeout(checkAndShowLockModal, 300);
     }
 
     if (document.readyState === 'loading') {
@@ -187,6 +209,7 @@ window.onclick = function (event) {
     // Expose functions globally
     window.checkLockModal = checkAndShowLockModal;
     window.createLockModal = createLockModal;
+    window.initLockModal = initLockModal;
 })();
 
 // ─── Active section & submenu on page load ────────────────────────────────────
@@ -320,6 +343,8 @@ window.SidebarBadges = {
     update: updateSidebarBadges,
     set:    setSidebarBadge,
 };
+
+// ─── Program Notification Polling ────────────────────────────────────────────
 
 (function() {
     // Avoid duplicate script execution

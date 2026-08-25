@@ -188,7 +188,11 @@
 
 <!-- Sidebar -->
 <div th:replace="~{fragments/sidebar :: sidebar}"></div>
-<div th:replace="~{fragments/LockModal :: lockModal}"></div>
+<input type="hidden" id="accountStatus" th:value="${currentstatus}">
+<input type="hidden" id="currentstatus" th:value="${currentstatus}">
+
+<!-- Lock Modal -->
+<div th:insert="~{fragments/LockModal :: lockModal}"></div>
 <div class="content">
 
     <div class="top-header">
