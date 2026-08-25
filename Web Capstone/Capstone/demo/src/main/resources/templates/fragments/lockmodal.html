@@ -1,67 +1,68 @@
-<!--
-  LOCK MODAL FRAGMENT
-  ============================================================
-  Forces "New" status admins to change their password before
-  they can use anything else. No close button, no overlay-click
-  dismiss — the only way out is the button, which sends them to
-  /user-profile.
-
-  USAGE — drop this near the end of <body> on any page that
-  already calls addCurrentAdminToModel(principal, model), so
-  ${currentstatus} is available:
-
-    <div th:replace="~{fragments/LockModal :: lockModal}"></div>
-
-  Adjust the "fragments/LockModal" path to wherever you put this
-  file relative to src/main/resources/templates/.
--->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
 <div th:fragment="lockModal">
-
-  <div th:if="${(#vars.containsKey('currentstatus') and currentstatus != null and (#strings.equalsIgnoreCase(currentstatus, 'New') or #strings.equalsIgnoreCase(currentstatus, 'Newly Updated')))
-            or (#vars.containsKey('accountStatus') and accountStatus != null and (#strings.equalsIgnoreCase(accountStatus, 'New') or #strings.equalsIgnoreCase(accountStatus, 'Newly Updated')))}"
-       class="lock-modal-overlay show">
-    <div class="lock-modal-box">
-      <div class="lock-modal-icon">
+  <!-- 
+    Check for account status using MULTIPLE possible variable names:
+    - currentstatus (used in home page)
+    - accountStatus (used in some pages)
+    - status (fallback)
+  -->
+  <div id="forcePasswordModal" class="force-modal"
+       th:classappend="${(
+         (currentstatus != null and (currentstatus == 'New' or currentstatus == 'Newly Updated')) or
+         (accountStatus != null and (accountStatus == 'New' or accountStatus == 'Newly Updated')) or
+         (status != null and (status == 'New' or status == 'Newly Updated'))
+       ) ? 'show' : ''}"
+       th:style="${(
+         (currentstatus != null and (currentstatus == 'New' or currentstatus == 'Newly Updated')) or
+         (accountStatus != null and (accountStatus == 'New' or accountStatus == 'Newly Updated')) or
+         (status != null and (status == 'New' or status == 'Newly Updated'))
+       ) ? 'display:block !important;' : 'display:none !important;'}">
+    <div class="force-modal-content">
+      <div class="lock-icon-wrapper">
         <i class="bi bi-lock-fill"></i>
       </div>
-      <h5>Password Change Required</h5>
-      <p>
-        Your account is new. For security, please set a new password
-        before you can continue using the system.
-      </p>
-      <a th:href="@{/user-profile}" class="lock-modal-btn">
-        Go to Profile Settings
-      </a>
+      <h2>Password Change Required</h2>
+      <p>Your account is new. For security, please set a new password before you can continue using the system.</p>
+      <a th:href="@{/user-profile}" class="force-modal-btn">Go to Profile Settings</a>
     </div>
   </div>
 
   <style>
-    .lock-modal-overlay {
+    .force-modal {
       display: none;
       position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.75);
-      z-index: 999999;
-      justify-content: center;
-      align-items: center;
+      z-index: 99999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(3px);
     }
-
-    .lock-modal-overlay.show {
-      display: flex;
+    .force-modal.show {
+      display: block !important;
     }
-
-    .lock-modal-box {
-      background: #fff;
-      border-radius: 16px;
-      padding: 40px 32px;
-      max-width: 400px;
-      width: 90%;
+    .force-modal-content {
+      background: white;
+      width: 420px;
+      max-width: 90%;
+      padding: 32px 36px 36px 36px;
+      border-radius: 20px;
       text-align: center;
-      box-shadow: 0 28px 72px rgba(0, 0, 0, 0.45);
-      font-family: "DM Sans", "Segoe UI", Arial, sans-serif;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+      animation: modalFadeIn 0.3s ease-out;
     }
-
-    .lock-modal-icon {
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: translate(-50%, -48%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+    .lock-icon-wrapper {
       width: 72px;
       height: 72px;
       background: linear-gradient(135deg, #f4c542, #f5d06a);
@@ -73,36 +74,38 @@
       font-size: 32px;
       color: #1a3a30;
     }
-
-    .lock-modal-box h5 {
-      color: #2d5049;
-      font-size: 1.2rem;
+    .force-modal-content h2 {
+      color: #2d4a44;
+      margin-bottom: 12px;
+      font-size: 24px;
       font-weight: 700;
-      margin: 0 0 10px;
     }
-
-    .lock-modal-box p {
-      color: #5a7872;
-      font-size: 0.95rem;
+    .force-modal-content p {
+      font-size: 15px;
+      color: #555;
       line-height: 1.5;
-      margin: 0 0 22px;
+      margin-bottom: 8px;
     }
-
-    .lock-modal-btn {
+    .force-modal-btn {
+      margin-top: 24px;
+      padding: 12px 32px;
+      background: #2d4a44;
+      color: white !important;
+      border: none;
+      border-radius: 40px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
       display: inline-block;
-      background: #f4c542;
-      color: #1a3a30;
-      padding: 12px 28px;
-      border-radius: 10px;
-      font-weight: 700;
-      text-decoration: none;
-      font-size: 0.95rem;
-      transition: background 0.2s;
+      text-decoration: none !important;
+      transition: all 0.2s ease;
     }
-
-    .lock-modal-btn:hover {
-      background: #f5d06a;
+    .force-modal-btn:hover {
+      background: #1f3631;
+      transform: translateY(-1px);
+      color: white !important;
     }
   </style>
-
 </div>
+</body>
+</html>

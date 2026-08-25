@@ -24,6 +24,7 @@ public class SecurityConfig {
                 .requestMatchers("/", "/landing-page", "/login", "/images/**", "/icons/**", "/css/**", "/js/**",
                 "/check-admin-email", "/send-otp", "/verify-otp",
                 "/api/forgot-password/**",
+                "/api/**",  // ✅ Permit ALL API endpoints
                 "/resident-login", "/resident-logout", "/resident-check-status",
                 "/resident-register", "/api/resident/**", "/resident/**").permitAll()
                 .anyRequest().authenticated()
