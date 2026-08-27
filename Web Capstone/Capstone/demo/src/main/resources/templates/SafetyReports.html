@@ -1372,7 +1372,21 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header"><h5 class="modal-title">Resolution Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body"><div class="resolution-info-row"><div class="row mb-2"><div class="col-4 label">Report Title:</div><div class="col-8 value" id="viewInfoTitle">-</div></div><div class="row mb-2"><div class="col-4 label">Location:</div><div class="col-8 value" id="viewInfoLocation">-</div></div><div class="row mb-2"><div class="col-4 label">Type:</div><div class="col-8 value" id="viewInfoType">-</div></div><div class="row mb-2"><div class="col-4 label">Priority:</div><div class="col-8 value" id="viewInfoPriority">-</div></div><div class="row mb-2"><div class="col-4 label">Reporter:</div><div class="col-8 value" id="viewInfoReporter">-</div></div><div class="row mb-2"><div class="col-4 label">Date Submitted:</div><div class="col-8 value" id="viewInfoDate">-</div></div><div class="row mb-2"><div class="col-4 label">Resolved By:</div><div class="col-8 value" id="viewInfoResolvedBy">-</div></div><div class="row mb-2"><div class="col-4 label">Resolved On:</div><div class="col-8 value" id="viewInfoResolvedOn">-</div></div></div><div class="readonly-field"><strong>Response Time</strong><p id="viewResponseTime">-</p></div><div class="readonly-field"><strong>Actions Taken</strong><p id="viewActionsTaken">-</p></div><div class="readonly-field"><strong>Additional Notes</strong><p id="viewAdditionalNotes">-</p></div></div>
+            <div class="modal-body">
+                <div class="resolution-info-row">
+                    <div class="row mb-2"><div class="col-4 label">Report Title:</div><div class="col-8 value" id="viewInfoTitle">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Location:</div><div class="col-8 value" id="viewInfoLocation">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Type:</div><div class="col-8 value" id="viewInfoType">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Priority:</div><div class="col-8 value" id="viewInfoPriority">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Reporter:</div><div class="col-8 value" id="viewInfoReporter">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Date Submitted:</div><div class="col-8 value" id="viewInfoDate">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Resolved By:</div><div class="col-8 value" id="viewInfoResolvedBy">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Resolved On:</div><div class="col-8 value" id="viewInfoResolvedOn">-</div></div>
+                </div>
+                <div class="readonly-field"><strong>Response Time</strong><p id="viewResponseTime">-</p></div>
+                <div class="readonly-field"><strong>Actions Taken</strong><p id="viewActionsTaken">-</p></div>
+                <div class="readonly-field"><strong>Additional Notes</strong><p id="viewAdditionalNotes">-</p></div>
+            </div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div>
         </div>
     </div>
@@ -1687,9 +1701,6 @@
         }
     }
 
-    // ============================================
-    // VIEW REPORT
-    // ============================================
     function escapeHtml(text) {
         if (!text) return text;
         const div = document.createElement('div');
@@ -1697,6 +1708,9 @@
         return div.innerHTML;
     }
 
+    // ============================================
+    // VIEW REPORT - FIXED with Time Submitted
+    // ============================================
     function viewReport(id) {
         currentModalReportId = id;
         fetch('/safety-reports/' + id)
@@ -1707,6 +1721,21 @@
                 const hasLocation = data.latitude && data.longitude && data.latitude !== 0 && data.longitude !== 0;
                 const priorityClass = data.priority === 'HIGH' ? 'priority-high' : data.priority === 'MEDIUM' ? 'priority-medium' : 'priority-low';
                 const statusColor = getStatusColor(data.status);
+
+                // Format time submitted - using data.timeSubmitted (camelCase from API)
+                let timeSubmittedDisplay = 'N/A';
+                if (data.timeSubmitted) {
+                    try {
+                        const timeParts = data.timeSubmitted.split(':');
+                        let hour = parseInt(timeParts[0]);
+                        const minute = timeParts[1] || '00';
+                        const ampm = hour >= 12 ? 'PM' : 'AM';
+                        hour = hour % 12 || 12;
+                        timeSubmittedDisplay = `${hour}:${minute} ${ampm}`;
+                    } catch(e) {
+                        timeSubmittedDisplay = data.timeSubmitted;
+                    }
+                }
 
                 let resolutionBlock = '';
                 if (data.resolutionActions || data.resolutionResponseTime || data.resolutionNotes) {
@@ -1778,6 +1807,7 @@
                                             <div class="vr-card-value wrap" style="margin-top:10px;">${escapeHtml(data.description) || 'No description provided.'}</div>
                                             <div style="font-size:12px;color:#aaa;margin-top:10px;line-height:1.6;">
                                                 <i class="bi bi-calendar3"></i> ${data.dateSubmitted || 'N/A'}
+                                                ${data.timeSubmitted ? `&nbsp;&nbsp;<i class="bi bi-clock"></i> ${timeSubmittedDisplay}` : ''}
                                                 ${data.resolvedBy ? `&nbsp;&nbsp;<i class="bi bi-person-check-fill"></i> Resolved by: ${escapeHtml(data.resolvedBy)}` : ''}
                                             </div>
                                         </div>
@@ -1905,7 +1935,7 @@
     }
 
     // ============================================
-    // RESOLUTION MODAL
+    // RESOLUTION MODAL - FIXED Resolved By
     // ============================================
     function viewResolutionDetails(id) {
         fetch('/safety-reports/' + id).then(response => response.json()).then(data => {
@@ -1916,6 +1946,7 @@
             document.getElementById('viewInfoPriority').innerHTML = `<span class="badge-priority ${priorityClass}">${data.priority || 'LOW'}</span>`;
             document.getElementById('viewInfoReporter').textContent = data.reporterName || 'N/A';
             document.getElementById('viewInfoDate').textContent = data.dateSubmitted || 'N/A';
+            // FIXED: Use data.resolvedBy (camelCase from API)
             document.getElementById('viewInfoResolvedBy').textContent = data.resolvedBy || 'N/A';
             document.getElementById('viewInfoResolvedOn').textContent = data.dateHandled ? new Date(data.dateHandled).toLocaleString() : 'N/A';
             document.getElementById('viewResponseTime').textContent = data.resolutionResponseTime || 'N/A';

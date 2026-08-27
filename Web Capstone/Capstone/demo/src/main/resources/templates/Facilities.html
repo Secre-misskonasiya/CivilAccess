@@ -323,6 +323,78 @@
     .success-toast-modal + .modal-backdrop {
         z-index: 10590 !important;
     }
+
+    /* Error Modal - matches System Settings style */
+    .sys-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.65);
+        z-index: 99999;
+        justify-content: center;
+        align-items: center;
+        animation: sysFadeIn 0.2s ease;
+    }
+    .sys-overlay.show { display: flex; }
+
+    @keyframes sysFadeIn { from { opacity: 0 } to { opacity: 1 } }
+    @keyframes sysSlideUp {
+        from { transform: translateY(40px); opacity: 0; }
+        to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .sys-modal-box {
+        border-radius: 16px;
+        overflow: hidden;
+        min-width: 300px;
+        max-width: 420px;
+        width: 90%;
+        box-shadow: 0 28px 72px rgba(0,0,0,0.45);
+        animation: sysSlideUp 0.25s ease;
+    }
+
+    .sys-modal-box.error {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    }
+
+    .sys-modal-body {
+        text-align: center;
+        padding: 32px 28px 20px;
+    }
+
+    .sys-modal-icon {
+        font-size: 56px;
+        margin-bottom: 12px;
+        color: white;
+    }
+
+    .sys-modal-body h5 {
+        color: #fff;
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .sys-modal-footer {
+        display: flex;
+        justify-content: center;
+        padding: 0 28px 28px;
+        gap: 10px;
+    }
+
+    .sys-btn-ok {
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+        border: 2px solid rgba(255,255,255,0.5);
+        padding: 9px 32px;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background 0.2s;
+    }
+    .sys-btn-ok:hover { background: rgba(255,255,255,0.35); }
 </style>
 
 <meta charset="UTF-8">
@@ -338,8 +410,6 @@
     <script src="/js/notif.js"></script>
 <div class="toast-container" id="toastContainer"></div>
 <div class="layout">
-
-
 
 <!-- Sidebar -->
 <div th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -562,6 +632,21 @@
     </div>
 </div>
 
+<!-- Error Modal -->
+<div class="sys-overlay" id="sysErrorOverlay">
+    <div class="sys-modal-box error">
+        <div class="sys-modal-body">
+            <div class="sys-modal-icon">
+                <i class="bi bi-x-circle-fill"></i>
+            </div>
+            <h5 id="sysErrorMessage">An error occurred.</h5>
+        </div>
+        <div class="sys-modal-footer">
+            <button class="sys-btn-ok" onclick="document.getElementById('sysErrorOverlay').classList.remove('show')">OK</button>
+        </div>
+    </div>
+</div>
+
 <!-- View Facility Modal -->
 <div class="modal fade" id="viewFacilityModal" tabindex="-1">
     <div class="modal-dialog">
@@ -598,7 +683,8 @@
                         <option value="EMERGENCY">Emergency Station</option>
                     </select>
                     <label>Contact Number:</label>
-                    <input type="text" class="form-control mb-2" id="contactNumber">
+                    <input type="text" class="form-control mb-2" id="contactNumber" oninput="validatePhoneNumber(this)">
+                    <span id="phoneError" style="color:#e74c3c; font-size:12px; display:none;">Please enter only numbers (0-9)</span>
                     <label>Email:</label>
                     <input type="email" class="form-control mb-2" id="email">
                     <label>Address:</label>
@@ -634,7 +720,8 @@
                         <option value="EMERGENCY">Emergency Station</option>
                     </select>
                     <label>Contact Number:</label>
-                    <input type="text" class="form-control mb-2" id="editContactNumber">
+                    <input type="text" class="form-control mb-2" id="editContactNumber" oninput="validatePhoneNumber(this)">
+                    <span id="editPhoneError" style="color:#e74c3c; font-size:12px; display:none;">Please enter only numbers (0-9)</span>
                     <label>Email:</label>
                     <input type="email" class="form-control mb-2" id="editEmail">
                     <label>Address:</label>
@@ -657,6 +744,32 @@
 // ============================================
 // Confirmation & Success Modal Functions
 // ============================================
+
+// Error Modal function
+function showError(message) {
+    document.getElementById('sysErrorMessage').innerHTML = message;
+    document.getElementById('sysErrorOverlay').classList.add('show');
+}
+
+// Phone number validation
+function validatePhoneNumber(input) {
+    // Remove any non-digit characters
+    input.value = input.value.replace(/[^0-9]/g, '');
+    
+    // Show/hide error message
+    const errorId = input.id === 'contactNumber' ? 'phoneError' : 'editPhoneError';
+    const errorEl = document.getElementById(errorId);
+    if (errorEl) {
+        if (input.value.length > 0) {
+            errorEl.style.display = 'none';
+        }
+    }
+    
+    // Optional: limit length to 15 digits
+    if (input.value.length > 15) {
+        input.value = input.value.slice(0, 15);
+    }
+}
 
 // Regular showSuccess (no reload)
 function showSuccess(message) {
@@ -725,28 +838,41 @@ function deleteFacilityWithConfirm(id, facilityName) {
                 if (response.ok) {
                     showSuccessWithReload('Facility deleted successfully!');
                 } else {
-                    alert('Error deleting facility');
+                    showError('Error deleting facility. Please try again.');
                 }
+            })
+            .catch(() => {
+                showError('Error deleting facility. Please try again.');
             });
         }
     );
 }
 
 // Save with confirmation - RELOADS when user clicks OK
-    function saveFacilityWithConfirm() {
-        const facility = {
-        facilityName: document.getElementById('facilityName').value,
-        facilityType: document.getElementById('facilityType').value,
-        contactNumber: document.getElementById('contactNumber').value,
-        email: document.getElementById('email').value,
-        address: document.getElementById('address').value,
-        status: 'OPEN'   // ← hardcoded instead of reading a missing element
-    };
+function saveFacilityWithConfirm() {
+    const facilityName = document.getElementById('facilityName').value;
+    const contactNumber = document.getElementById('contactNumber').value;
     
-    if (!facility.facilityName) {
-        alert('Please enter facility name');
+    // Validate facility name
+    if (!facilityName) {
+        showError('Please enter facility name.');
         return;
     }
+    
+    // Validate phone number (must be digits only)
+    if (contactNumber && !/^[0-9]+$/.test(contactNumber)) {
+        showError('Contact number must contain only numbers (0-9).');
+        return;
+    }
+    
+    const facility = {
+        facilityName: facilityName,
+        facilityType: document.getElementById('facilityType').value,
+        contactNumber: contactNumber,
+        email: document.getElementById('email').value,
+        address: document.getElementById('address').value,
+        status: 'OPEN'
+    };
     
     showConfirm(
         'Add new facility "<strong>' + escapeHtml(facility.facilityName) + '</strong>"?',
@@ -761,8 +887,11 @@ function deleteFacilityWithConfirm(id, facilityName) {
                 if (response.ok) {
                     showSuccessWithReload('Facility added successfully!');
                 } else {
-                    alert('Error adding facility');
+                    showError('Error adding facility. Please try again.');
                 }
+            })
+            .catch(() => {
+                showError('Error adding facility. Please try again.');
             });
         }
     );
@@ -771,20 +900,30 @@ function deleteFacilityWithConfirm(id, facilityName) {
 // Update with confirmation - RELOADS when user clicks OK
 function updateFacilityWithConfirm() {
     const id = document.getElementById('editFacilityId').value;
-        const facility = {
-        facilityName: document.getElementById('editFacilityName').value,
-        facilityType: document.getElementById('editFacilityType').value,
-        contactNumber: document.getElementById('editContactNumber').value,
-        email: document.getElementById('editEmail').value,
-        address: document.getElementById('editAddress').value,
-        status: 'OPEN'   // ← same here
-    };
-        
-    if (!facility.facilityName) {
-        alert('Please enter facility name');
+    const facilityName = document.getElementById('editFacilityName').value;
+    const contactNumber = document.getElementById('editContactNumber').value;
+    
+    // Validate facility name
+    if (!facilityName) {
+        showError('Please enter facility name.');
         return;
     }
     
+    // Validate phone number (must be digits only)
+    if (contactNumber && !/^[0-9]+$/.test(contactNumber)) {
+        showError('Contact number must contain only numbers (0-9).');
+        return;
+    }
+    
+    const facility = {
+        facilityName: facilityName,
+        facilityType: document.getElementById('editFacilityType').value,
+        contactNumber: contactNumber,
+        email: document.getElementById('editEmail').value,
+        address: document.getElementById('editAddress').value,
+        status: 'OPEN'
+    };
+        
     showConfirm(
         'Update facility "<strong>' + escapeHtml(facility.facilityName) + '</strong>" with the new information?',
         'Update Facility',
@@ -798,8 +937,11 @@ function updateFacilityWithConfirm() {
                 if (response.ok) {
                     showSuccessWithReload('Facility updated successfully!');
                 } else {
-                    alert('Error updating facility');
+                    showError('Error updating facility. Please try again.');
                 }
+            })
+            .catch(() => {
+                showError('Error updating facility. Please try again.');
             });
         }
     );

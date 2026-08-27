@@ -149,6 +149,8 @@ public class SafetyReportsController {
         response.put("latitude", report.getLatitude() != null ? report.getLatitude() : null);
         response.put("longitude", report.getLongitude() != null ? report.getLongitude() : null);
         response.put("imageUrl", report.getImageUrl() != null ? report.getImageUrl() : null);
+        // ADDED: timeSubmitted field
+        response.put("timeSubmitted", report.getTimeSubmitted() != null ? report.getTimeSubmitted().toString() : null);
         return ResponseEntity.ok(response);
     }
 
@@ -279,7 +281,8 @@ public class SafetyReportsController {
         report.setHandledByName(admin.getName());
         report.setHandledByRole(admin.getRole());
 
-        if ("REJECTED".equals(status) || "CANCELLED".equals(status)) {
+        // FIX: Set resolvedBy for REJECTED, CANCELLED, AND RESOLVED
+        if ("REJECTED".equals(status) || "CANCELLED".equals(status) || "RESOLVED".equals(status)) {
             report.setResolvedBy(admin.getName());
         }
 

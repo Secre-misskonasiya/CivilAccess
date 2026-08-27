@@ -7,7 +7,7 @@
 
     body { margin: 0; font-family: Arial, sans-serif; }
     .layout { display: flex; height: 100vh; overflow: hidden; }
-    
+
     .content {
         flex: 1;
         display: flex;
@@ -1150,13 +1150,14 @@
 
 <!-- Logout Modal -->
 <div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
-
+<script src="/js/sidebar.js"></script>
 
 <script>
   // ============================================
   // BARANGAY BUDGET & OPERATING HOURS
   // ============================================
-  const BARANGAY_BUDGET = 100000; // ₱100,000 max budget
+  // Budget will be fetched from database via API
+  let BARANGAY_BUDGET = 0; // Will be updated from database
   const OPERATING_START = '07:00';
   const OPERATING_END = '22:00';
 
@@ -1167,6 +1168,22 @@
 
   let currentDate = new Date();
   currentDate.setDate(1);
+
+  // ============================================
+  // FETCH BUDGET FROM DATABASE (like Planner page)
+  // ============================================
+  async function loadCurrentBudget() {
+    try {
+      const response = await fetch('/api/calendar/budget/current');
+      const data = await response.json();
+      BARANGAY_BUDGET = data.totalBudget || 0;
+      console.log('Budget loaded from database:', BARANGAY_BUDGET);
+      updateMaxBudgetDisplay();
+    } catch (e) {
+      console.error('Failed to load budget:', e);
+      BARANGAY_BUDGET = 0;
+    }
+  }
 
   // ============================================
   // PURE CSS MODAL HELPERS
@@ -1191,6 +1208,39 @@
       overlay.classList.remove('show');
       onConfirm();
     };
+  }
+
+  // ============================================
+  // CONFLICT DETECTION FUNCTION
+  // ============================================
+  function checkLocationConflict(eventDate, location, startTime, endTime, excludeEventId) {
+    // Get all events for the selected date
+    const dayEvents = dbEvents[eventDate] || [];
+    
+    for (let event of dayEvents) {
+      // Skip the event being edited (if updating)
+      if (excludeEventId && event.id === excludeEventId) continue;
+      
+      // Check if same location
+      if (event.location && event.location.toLowerCase() === location.toLowerCase()) {
+        // Check if time overlaps
+        const existingStart = event.startTime || '00:00';
+        const existingEnd = event.endTime || '23:59';
+        
+        // Time overlap check
+        const newStart = startTime || '00:00';
+        const newEnd = endTime || '23:59';
+        
+        // Check if time ranges overlap
+        if (newStart < existingEnd && newEnd > existingStart) {
+          return {
+            conflict: true,
+            conflictingEvent: event
+          };
+        }
+      }
+    }
+    return { conflict: false };
   }
 
   // ============================================
@@ -1543,13 +1593,27 @@
         return;
     }
 
+    // ============================================
+    // CHECK FOR LOCATION/TIME CONFLICT
+    // ============================================
+    if (location) {
+      const conflictCheck = checkLocationConflict(eventDate, location, startTime, endTime);
+      if (conflictCheck.conflict) {
+        const conflictingEvent = conflictCheck.conflictingEvent;
+        showError(
+          `Location "${location}" is already booked on ${formatDateLong(eventDate)} from ${formatTime(conflictingEvent.startTime)} to ${formatTime(conflictingEvent.endTime)} for "${conflictingEvent.notes || 'Community Program'}".\n\nPlease choose a different time, date, or location.`
+        );
+        return;
+      }
+    }
+
     const eventData = {
         notes: eventName,
         eventDate: eventDate,
         startTime: startTime,
         endTime: endTime,
         location: location || 'TBD',
-        programBudget: budget,
+        program_budget: budget,
         programId: 1
     };
 
@@ -1564,6 +1628,7 @@
             showSuccess('Event added successfully!');
             closeAddEventModal();
             loadEvents();
+            loadCurrentBudget(); // Refresh budget after adding
         } else {
             const error = await response.text();
             showError('Failed to add event: ' + error);
@@ -1886,12 +1951,15 @@
     }
 
     let bodyContent = `
-        <div style="text-align:center;padding-bottom:16px;margin-bottom:24px;border-bottom:3px solid #2d4a44;">
-            <div style="font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#888;margin-bottom:4px;">CivilAccess Web System</div>
-            <div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">Program Calendar</div>
-            <div style="font-size:13px;color:#555;">${currentMonthYear}</div>
-            <div style="font-size:9px;color:#aaa;margin-top:6px;">Generated on: ${new Date().toLocaleString()}</div>
-        </div>`;
+    <div style="text-align:center;padding-bottom:16px;margin-bottom:24px;border-bottom:3px solid #2d4a44;">
+        <div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <img src="/images/seal1.png" alt="Barangay Seal" style="width:50px;height:50px;object-fit:contain;">
+            <span style="font-size:15px;text-transform:uppercase;letter-spacing:2px;color:#888;">CivilAccess Web System</span>
+        </div>
+        <div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">Program Calendar</div>
+        <div style="font-size:13px;color:#555;">${currentMonthYear}</div>
+        <div style="font-size:9px;color:#aaa;margin-top:6px;">Generated on: ${new Date().toLocaleString()}</div>
+    </div>`;
 
     if (format === 'both') {
         bodyContent += `
@@ -1911,7 +1979,7 @@
             </div>`;
     }
 
-    bodyContent += `<div style="margin-top:30px;padding-top:12px;border-top:1px solid #e0e0e0;text-align:center;font-size:9px;color:#aaa;">Official document from CivilAccess Web System &nbsp;|&nbsp; Confidential</div>`;
+    bodyContent += `<div style="margin-top:30px;padding-top:12px;border-top:1px solid #e0e0e0;text-align:center;font-size:9px;color:#aaa;">Official document from Brgy. San Sebastian &nbsp;|&nbsp; Confidential</div>`;
 
     const wrapper = document.createElement('div');
     wrapper.style.cssText = 'font-family:Arial,sans-serif;padding:36px;background:white;color:#222;';
@@ -1942,7 +2010,10 @@
   }
 
   document.addEventListener('DOMContentLoaded', function() {
-    loadEvents();
+    // Load budget first, then events
+    loadCurrentBudget().then(() => {
+      loadEvents();
+    });
     // Update budget display when date changes
     document.getElementById('eventDate').addEventListener('change', updateMaxBudgetDisplay);
   });
