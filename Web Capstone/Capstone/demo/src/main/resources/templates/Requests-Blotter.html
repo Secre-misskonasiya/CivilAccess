@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { margin: 0; font-family: Arial, sans-serif; background-color: #f5f5f5; }
         .layout { display: flex; height: 100vh; overflow: hidden; }
@@ -808,19 +809,122 @@
         }
     }
 
-    // Export to PDF
+       // Export to PDF
     function exportToPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('landscape');
         const table = document.querySelector('table');
+        if (!table) return;
+
         const title = 'Blotter Records';
-        doc.text(title, 14, 15);
-        if (typeof doc.autoTable === 'function') {
-            doc.autoTable({ html: table, startY: 20, margin: { top: 20 } });
-            doc.save('Blotter_Records.pdf');
+
+        // Columns to exclude: Status (hidden) and Actions (buttons)
+        const excludedHeaders = ['Status', ''];
+
+        const headerCellsAll = table.querySelectorAll('thead th');
+        const includedIndexes = [];
+        const headers = [];
+        headerCellsAll.forEach((th, idx) => {
+            const text = th.textContent.trim();
+            if (!excludedHeaders.includes(text)) {
+                includedIndexes.push(idx);
+                headers.push(text);
+            }
+        });
+
+        const rows = [];
+        const bodyRows = document.querySelectorAll('#blotter-table-body tr');
+        bodyRows.forEach(tr => {
+            if (tr.style.display === 'none') return;
+            if (tr.querySelector('td[colspan]')) return; // skip "no records" row
+            const cells = tr.querySelectorAll('td');
+            const rowData = [];
+            includedIndexes.forEach(i => {
+                rowData.push(cells[i] ? cells[i].textContent.trim() : '');
+            });
+            rows.push(rowData);
+        });
+
+        // Columns that need to wrap instead of clip
+        const wideColumns = ['Location'];
+
+        // Page header — same layout as Program Calendar / Accounts export
+        let tableHtml = `
+        <div style="position:relative;text-align:center;padding-bottom:12px;margin-bottom:20px;border-bottom:3px solid #2d4a44;">
+            <div style="position:absolute;left:-30px;top:-25px;display:flex;align-items:center;gap:5px;">
+                <img src="/images/seal1.png" alt="Barangay Seal" style="width:16px;height:16px;object-fit:contain;">
+                <span style="font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#888;white-space:nowrap;">CivilAccess Web System</span>
+            </div>
+            <div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">${title}</div>
+            <div style="font-size:13px;color:#555;">${new Date().toLocaleString()}</div>
+        </div>`;
+
+        tableHtml += `
+        <div style="font-size:13px;font-weight:bold;color:#2d4a44;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #ddd;">
+            ${title} <span style="font-weight:normal;font-size:11px;color:#888;">(${rows.length} record${rows.length !== 1 ? 's' : ''})</span>
+        </div>`;
+
+        if (rows.length === 0) {
+            tableHtml += `<p style="color:#888;text-align:center;padding:20px 0;">No data to display.</p>`;
         } else {
-            alert('PDF export plugin missing. Please refresh the page.');
+            let headerRowHtml = '';
+            headers.forEach(h => {
+                const isWide = wideColumns.includes(h);
+                headerRowHtml += `<th style="background-color:#2d4a44 !important;color:white !important;padding:8px;font-size:11px !important;border:1px solid #1a3530;${isWide ? 'min-width:160px;' : 'white-space:nowrap;'}">${h}</th>`;
+            });
+
+            let tableRowsHtml = '';
+            rows.forEach((row, i) => {
+                const bg = i % 2 === 0 ? 'white' : '#f5faf8';
+                tableRowsHtml += `<tr style="background-color:${bg} !important;">`;
+                row.forEach((cell, idx) => {
+                    const isWide = wideColumns.includes(headers[idx]);
+                    tableRowsHtml += `<td style="border:1px solid #ddd;padding:7px 8px;font-size:11px !important;vertical-align:top;${isWide ? 'white-space:normal;word-break:break-word;' : 'white-space:nowrap;'}">${cell}</td>`;
+                });
+                tableRowsHtml += `</tr>`;
+            });
+
+            tableHtml += `
+            <table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;table-layout:auto;">
+                <thead><tr>${headerRowHtml}</tr></thead>
+                <tbody>${tableRowsHtml}</tbody>
+            </table>`;
         }
+
+        tableHtml += `<div style="margin-top:20px;padding-top:10px;border-top:1px solid #e0e0e0;text-align:center;font-size:9px;color:#aaa;">Official document from Brgy. San Sebastian &nbsp;|&nbsp; Confidential</div>`;
+
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'font-family:Arial,sans-serif;padding:36px;background:white;color:#222;';
+        wrapper.innerHTML = tableHtml;
+
+        const opt = {
+            margin: [0.3, 0.3, 0.3, 0.3],
+            filename: `Blotter_Records_${new Date().toISOString().split('T')[0]}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+        };
+
+        const exportBtn = document.querySelector('.export-btn');
+        const originalText = exportBtn ? exportBtn.innerHTML : 'Export';
+        if (exportBtn) {
+            exportBtn.innerHTML = 'Generating...';
+            exportBtn.disabled = true;
+        }
+
+        html2pdf().set(opt).from(wrapper).save()
+            .then(() => {
+                if (exportBtn) {
+                    exportBtn.innerHTML = originalText;
+                    exportBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('PDF generation error:', error);
+                showError('Error generating PDF. Please try again.');
+                if (exportBtn) {
+                    exportBtn.innerHTML = originalText;
+                    exportBtn.disabled = false;
+                }
+            });
     }
 
     // Success Modal

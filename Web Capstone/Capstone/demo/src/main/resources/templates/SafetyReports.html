@@ -998,6 +998,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <title>Safety Reports</title>
 </head>
@@ -1988,10 +1989,285 @@
             .catch(error => { console.error(error); alert('Error saving resolution'); });
     });
 
-    // ============================================
-    // EXPORT TO PDF
-    // ============================================
-    function exportToPDF() { const { jsPDF } = window.jspdf; const doc = new jsPDF(); const activePanel = document.querySelector('.panel-inner:not(.d-none)'); const title = activePanel.querySelector('.panel-header').innerText; doc.text(title, 14, 15); doc.autoTable({ html: activePanel.querySelector('table'), startY: 20, margin: { top: 20 } }); doc.save(title.replace(/\s+/g, '_') + '.pdf'); }
+    
+   //export to pdf  
+ 
+function exportToPDF() {
+    const activePanel = document.querySelector('.panel-inner:not(.d-none)');
+    if (!activePanel) return;
+
+    // If on Incident Map tab, export summary instead
+    if (activePanel.id === 'tab-incidentmap') {
+        exportMapSummaryPDF();
+        return;
+    }
+
+    const table = activePanel.querySelector('table');
+    if (!table) return;
+
+    const title = activePanel.querySelector('.panel-header').innerText.trim();
+
+    // Columns to exclude: Actions (buttons) and Resolved By/Status columns with badges are kept as text
+    const excludedHeaders = ['Actions', ''];
+
+    const headerCellsAll = table.querySelectorAll('thead th');
+    const includedIndexes = [];
+    const headers = [];
+    headerCellsAll.forEach((th, idx) => {
+        const text = th.textContent.trim();
+        if (!excludedHeaders.includes(text)) {
+            includedIndexes.push(idx);
+            headers.push(text);
+        }
+    });
+
+    const rows = [];
+    const bodyRows = table.querySelectorAll('tbody tr');
+    bodyRows.forEach(tr => {
+        if (tr.style.display === 'none') return;
+        if (tr.querySelector('td[colspan]')) return; // skip "no records" row
+        const cells = tr.querySelectorAll('td');
+        const rowData = [];
+        includedIndexes.forEach(i => {
+            const cell = cells[i];
+            let text = '';
+            if (cell) {
+                const titleDiv = cell.querySelector('.report-title');
+                const locDiv = cell.querySelector('.report-location');
+                if (titleDiv) {
+                    text = titleDiv.textContent.trim() + (locDiv ? ' — ' + locDiv.textContent.trim() : '');
+                } else {
+                    text = cell.textContent.trim();
+                }
+            }
+            rowData.push(text);
+        });
+        rows.push(rowData);
+    });
+
+    const wideColumns = ['Report'];
+
+    let tableHtml = `
+    <div style="position:relative;text-align:center;padding-bottom:12px;margin-bottom:20px;border-bottom:3px solid #2d4a44;">
+        <div style="position:absolute;left:-30px;top:-25px;display:flex;align-items:center;gap:5px;">
+            <img src="/images/seal1.png" alt="Barangay Seal" style="width:16px;height:16px;object-fit:contain;">
+            <span style="font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#888;white-space:nowrap;">CivilAccess Web System</span>
+        </div>
+        <div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">${title}</div>
+        <div style="font-size:13px;color:#555;">${new Date().toLocaleString()}</div>
+    </div>`;
+
+    tableHtml += `
+    <div style="font-size:13px;font-weight:bold;color:#2d4a44;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #ddd;">
+        ${title} <span style="font-weight:normal;font-size:11px;color:#888;">(${rows.length} record${rows.length !== 1 ? 's' : ''})</span>
+    </div>`;
+
+    if (rows.length === 0) {
+        tableHtml += `<p style="color:#888;text-align:center;padding:20px 0;">No data to display.</p>`;
+    } else {
+        let headerRowHtml = '';
+        headers.forEach(h => {
+            const isWide = wideColumns.includes(h);
+            headerRowHtml += `<th style="background-color:#2d4a44 !important;color:white !important;padding:8px;font-size:11px !important;border:1px solid #1a3530;${isWide ? 'min-width:160px;' : 'white-space:nowrap;'}">${h}</th>`;
+        });
+
+        let tableRowsHtml = '';
+        rows.forEach((row, i) => {
+            const bg = i % 2 === 0 ? 'white' : '#f5faf8';
+            tableRowsHtml += `<tr style="background-color:${bg} !important;">`;
+            row.forEach((cell, idx) => {
+                const isWide = wideColumns.includes(headers[idx]);
+                tableRowsHtml += `<td style="border:1px solid #ddd;padding:7px 8px;font-size:11px !important;vertical-align:top;${isWide ? 'white-space:normal;word-break:break-word;' : 'white-space:nowrap;'}">${cell}</td>`;
+            });
+            tableRowsHtml += `</tr>`;
+        });
+
+        tableHtml += `
+        <table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;table-layout:auto;">
+            <thead><tr>${headerRowHtml}</tr></thead>
+            <tbody>${tableRowsHtml}</tbody>
+        </table>`;
+    }
+
+    tableHtml += `<div style="margin-top:20px;padding-top:10px;border-top:1px solid #e0e0e0;text-align:center;font-size:9px;color:#aaa;">Official document from Brgy. San Sebastian &nbsp;|&nbsp; Confidential</div>`;
+
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'font-family:Arial,sans-serif;padding:36px;background:white;color:#222;';
+    wrapper.innerHTML = tableHtml;
+
+    const opt = {
+        margin: [0.3, 0.3, 0.3, 0.3],
+        filename: `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+    };
+
+    const exportBtn = document.getElementById('export-pdf-btn');
+    const originalText = exportBtn ? exportBtn.innerHTML : 'Export';
+    if (exportBtn) {
+        exportBtn.innerHTML = 'Generating...';
+        exportBtn.disabled = true;
+    }
+
+    html2pdf().set(opt).from(wrapper).save()
+        .then(() => {
+            if (exportBtn) {
+                exportBtn.innerHTML = originalText;
+                exportBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('PDF generation error:', error);
+            alert('Error generating PDF. Please try again.');
+            if (exportBtn) {
+                exportBtn.innerHTML = originalText;
+                exportBtn.disabled = false;
+            }
+        });
+}
+
+// Export summary table for Incident Map tab - Portrait orientation
+function exportMapSummaryPDF() {
+    const data = allReportsData || [];
+    const title = 'Incident Map Summary';
+
+    // Build summary data
+    const byType = {};
+    data.forEach(r => {
+        const t = r.type || 'Unknown';
+        byType[t] = (byType[t] || 0) + 1;
+    });
+    const sortedTypes = Object.entries(byType).sort((a, b) => b[1] - a[1]);
+
+    const byPriority = { HIGH: 0, MEDIUM: 0, LOW: 0 };
+    data.forEach(r => { byPriority[(r.priority || 'LOW').toUpperCase()] = (byPriority[(r.priority || 'LOW').toUpperCase()] || 0) + 1; });
+
+    const byStatus = {};
+    data.forEach(r => { byStatus[r.status || 'UNKNOWN'] = (byStatus[r.status || 'UNKNOWN'] || 0) + 1; });
+
+    // Build table rows
+    let tableRows = '';
+    let rowCount = 0;
+
+    // Priority section
+    const priorityColors = { HIGH: '#e74c3c', MEDIUM: '#e67e22', LOW: '#27ae60' };
+    Object.entries(byPriority).forEach(([p, c]) => {
+        const bg = rowCount % 2 === 0 ? 'white' : '#f5faf8';
+        tableRows += `
+            <tr style="background-color:${bg} !important;">
+                <td style="border:1px solid #ddd;padding:7px 8px;font-size:11px !important;">
+                    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${priorityColors[p]};margin-right:8px;"></span>
+                    ${p}
+                </td>
+                <td style="border:1px solid #ddd;padding:7px 8px;font-size:11px !important;text-align:center;font-weight:bold;">${c}</td>
+            </tr>
+        `;
+        rowCount++;
+    });
+
+    // Status section
+    Object.entries(byStatus).forEach(([s, c]) => {
+        const bg = rowCount % 2 === 0 ? 'white' : '#f5faf8';
+        tableRows += `
+            <tr style="background-color:${bg} !important;">
+                <td style="border:1px solid #ddd;padding:7px 8px;font-size:11px !important;">
+                    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${getStatusColor(s)};margin-right:8px;"></span>
+                    ${getStatusLabel(s)}
+                </td>
+                <td style="border:1px solid #ddd;padding:7px 8px;font-size:11px !important;text-align:center;font-weight:bold;">${c}</td>
+            </tr>
+        `;
+        rowCount++;
+    });
+
+    // Type section
+    sortedTypes.forEach(([t, c]) => {
+        const bg = rowCount % 2 === 0 ? 'white' : '#f5faf8';
+        tableRows += `
+            <tr style="background-color:${bg} !important;">
+                <td style="border:1px solid #ddd;padding:7px 8px;font-size:11px !important;">${t}</td>
+                <td style="border:1px solid #ddd;padding:7px 8px;font-size:11px !important;text-align:center;font-weight:bold;">${c}</td>
+            </tr>
+        `;
+        rowCount++;
+    });
+
+    // Total row
+    tableRows += `
+        <tr style="background-color:#eaf2f0 !important;font-weight:bold;">
+            <td style="border:1px solid #ddd;padding:7px 8px;font-size:12px !important;">TOTAL REPORTS</td>
+            <td style="border:1px solid #ddd;padding:7px 8px;font-size:12px !important;text-align:center;">${data.length}</td>
+        </tr>
+    `;
+
+    let tableHtml = `
+    <div style="position:relative;text-align:center;padding-bottom:12px;margin-bottom:20px;border-bottom:3px solid #2d4a44;">
+        <div style="position:absolute;left:-30px;top:-25px;display:flex;align-items:center;gap:5px;">
+            <img src="/images/seal1.png" alt="Barangay Seal" style="width:16px;height:16px;object-fit:contain;">
+            <span style="font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#888;white-space:nowrap;">CivilAccess Web System</span>
+        </div>
+        <div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">${title}</div>
+        <div style="font-size:13px;color:#555;">${new Date().toLocaleString()}</div>
+    </div>
+    <div style="font-size:13px;font-weight:bold;color:#2d4a44;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #ddd;">
+        Incident Summary <span style="font-weight:normal;font-size:11px;color:#888;">(Total: ${data.length} reports)</span>
+    </div>`;
+
+    if (data.length === 0) {
+        tableHtml += `<p style="color:#888;text-align:center;padding:20px 0;">No incident data available.</p>`;
+    } else {
+        tableHtml += `
+        <table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;table-layout:auto;">
+            <thead>
+                <tr>
+                    <th style="background-color:#2d4a44 !important;color:white !important;padding:8px;font-size:11px !important;border:1px solid #1a3530;text-align:left;width:70%;">Category</th>
+                    <th style="background-color:#2d4a44 !important;color:white !important;padding:8px;font-size:11px !important;border:1px solid #1a3530;text-align:center;width:30%;">Count</th>
+                </tr>
+            </thead>
+            <tbody>${tableRows}</tbody>
+        </table>`;
+    }
+
+    tableHtml += `<div style="margin-top:20px;padding-top:10px;border-top:1px solid #e0e0e0;text-align:center;font-size:9px;color:#aaa;">Official document from Brgy. San Sebastian &nbsp;|&nbsp; Confidential</div>`;
+
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'font-family:Arial,sans-serif;padding:36px;background:white;color:#222;';
+    wrapper.innerHTML = tableHtml;
+
+    const opt = {
+        margin: [0.3, 0.3, 0.3, 0.3],
+        filename: `Incident_Map_Summary_${new Date().toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+
+    const exportBtn = document.getElementById('export-pdf-btn');
+    const originalText = exportBtn ? exportBtn.innerHTML : 'Export';
+    if (exportBtn) {
+        exportBtn.innerHTML = 'Generating...';
+        exportBtn.disabled = true;
+    }
+
+    html2pdf().set(opt).from(wrapper).save()
+        .then(() => {
+            if (exportBtn) {
+                exportBtn.innerHTML = originalText;
+                exportBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('PDF generation error:', error);
+            alert('Error generating PDF. Please try again.');
+            if (exportBtn) {
+                exportBtn.innerHTML = originalText;
+                exportBtn.disabled = false;
+            }
+        });
+}
+
+
 
     // ============================================
     // MODAL STATE MANAGEMENT
