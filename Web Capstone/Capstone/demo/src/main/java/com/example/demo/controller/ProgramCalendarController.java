@@ -134,33 +134,31 @@ public class ProgramCalendarController {
 
     @GetMapping("/upcoming")
     public ResponseEntity<List<Map<String, Object>>> getUpcomingPrograms(
-            @RequestParam(defaultValue = "60") int minutes,
+            @RequestParam(required = false) Integer days,
             @RequestParam(required = false) Long lastId) {
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDate today = now.toLocalDate();
-        LocalDate untilDate = now.plusMinutes(minutes).toLocalDate();
+        LocalDate today = LocalDate.now();
+        LocalDate untilDate = (days != null)
+                ? today.plusDays(days)
+                : today.withDayOfMonth(today.lengthOfMonth()); // default: end of current month
 
         List<Map<String, Object>> upcoming = calendarService.getAllEvents()
             .stream()
             .filter(e -> e.getEventDate() != null)
             .filter(e -> !e.getEventDate().isBefore(today) && !e.getEventDate().isAfter(untilDate))
-            .filter(e -> e.getStartTime() != null)                        // ignore events without start time
             .filter(e -> {
-                // If event is today, only include if start time is still in the future
                 if (e.getEventDate().isEqual(today)) {
-                    return e.getStartTime().isAfter(now.toLocalTime());
+                    return e.getStartTime() == null || !e.getStartTime().isBefore(LocalTime.now());
                 }
                 return true;
             })
-            .filter(e -> lastId == null || e.getId() > lastId)           // incremental fetching
+            .filter(e -> lastId == null || e.getId() > lastId)
             .sorted(Comparator.comparing(ProgramCalendar::getEventDate)
-                    .thenComparing(ProgramCalendar::getStartTime))
+                    .thenComparing(ProgramCalendar::getStartTime, Comparator.nullsLast(Comparator.naturalOrder())))
             .map(e -> {
                 Map<String, Object> item = new HashMap<>();
                 item.put("id",         e.getId());
-                // Use notes as the program name (since there is no separate name field)
-                item.put("programName", e.getNotes() != null ? e.getNotes() : "Community Program");
+                item.put("notes",      e.getNotes() != null ? e.getNotes() : "Community Program"); // matches frontend key
                 item.put("eventDate",  e.getEventDate().toString());
                 item.put("startTime",  e.getStartTime() != null ? e.getStartTime().toString() : null);
                 item.put("location",   e.getLocation() != null ? e.getLocation() : "TBD");

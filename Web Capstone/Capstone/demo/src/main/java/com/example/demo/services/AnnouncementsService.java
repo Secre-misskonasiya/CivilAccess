@@ -1,10 +1,13 @@
 package com.example.demo.services;
 
-import com.example.demo.model.Announcements;
-import com.example.demo.repository.AnnouncementsRepository;
+import java.util.Comparator;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.util.List;
+
+import com.example.demo.model.Announcements;
+import com.example.demo.repository.AnnouncementsRepository;
 
 @Service
 public class AnnouncementsService {
@@ -29,8 +32,16 @@ public class AnnouncementsService {
     }
 
     public Announcements getLatest() {
-        return repository
-            .findTopByStatusNotIgnoreCaseOrderByDatePostedDesc("ARCHIVED")
+        return repository.findAll().stream()
+            .filter(a -> !"ARCHIVED".equalsIgnoreCase(a.getStatus()))
+            .sorted(Comparator
+                .comparing(Announcements::getPriority, (p1, p2) -> {
+                    if ("HIGH".equals(p1) && !"HIGH".equals(p2)) return -1;
+                    if (!"HIGH".equals(p1) && "HIGH".equals(p2)) return 1;
+                    return 0;
+                })
+                .thenComparing(Announcements::getDatePosted, Comparator.nullsLast(Comparator.reverseOrder())))
+            .findFirst()
             .orElse(null);
     }
 
