@@ -448,7 +448,7 @@
             <span class="search-icon"><i class="bi bi-search"></i></span>
             <input type="text" id="sos-search" placeholder="Search by name, location, or SoS type...">
         </div>
-        <div class="dropdown" style="display:inline-block;">
+        <div class="dropdown" th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" style="display:inline-block;">
             <button class="filter-btn dropdown-toggle" type="button" id="typeFilterDropdown"
                     data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-funnel"></i> Filter by Type
@@ -465,7 +465,10 @@
                 <li><a class="dropdown-item" href="#" data-type="Public Safety">Public Safety</a></li>
             </ul>
         </div>
-        <button class="export-btn" onclick="exportToPDF()">Export</button>
+            <button class="export-btn" 
+                th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}"
+                onclick="exportToPDF()">Export
+            </button>
     </div>
 
     <!-- Tabs -->
@@ -509,7 +512,10 @@
                             <td><span class="status-incoming">Incoming</span></td>
                             <td>
                                 <div class="d-flex gap-2">
+                                    <!-- View - visible to all -->
                                     <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
+                                    
+                                    <!-- Process/Archive - ONLY for ADMIN, SECRETARY, SECRETARIAT STAFF -->
                                     <th:block th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
                                         <button class="resolve-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'PROCESSING\')'">Process</button>
                                         <button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button>
@@ -543,7 +549,10 @@
                             <td><span class="status-processing">Processing</span></td>
                             <td>
                                 <div class="d-flex gap-2">
+                                    <!-- View - visible to all -->
                                     <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
+                                    
+                                    <!-- Resolve/Archive - ONLY for ADMIN, SECRETARY, SECRETARIAT STAFF -->
                                     <th:block th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
                                         <button class="resolve-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'RESOLVED\')'">Resolve</button>
                                         <button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button>

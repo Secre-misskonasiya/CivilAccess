@@ -248,7 +248,7 @@
                 <option value="Disturbance">Disturbance</option>
                 <option value="Others">Others</option>
             </select>
-            <button class="add-blotter-btn" onclick="openAddBlotterModal()">
+            <button class="add-blotter-btn" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" onclick="openAddBlotterModal()">
                 <i class="bi bi-plus-lg"></i> Add Blotter
             </button>
             <button class="export-btn" onclick="exportToPDF()">Export</button>
@@ -290,7 +290,7 @@
                                             th:attr="data-id=${blotter.id}, data-complainant=${blotter.complainantName}, data-contact=${blotter.contactInfo}, data-respondent=${blotter.respondentName}, data-type=${blotter.incidentType}, data-date=${#temporals.format(blotter.incidentDate, 'yyyy-MM-dd')}, data-location=${blotter.incidentLocation}, data-narrative=${blotter.narrative}, data-remarks=${blotter.remarks}">
                                             View
                                         </button>
-                                        <button type="button" class="edit-btn" onclick="openEditModal(this)"
+                                        <button type="button" class="edit-btn" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" onclick="openEditModal(this)"
                                             th:attr="data-id=${blotter.id}, data-complainant=${blotter.complainantName}, data-contact=${blotter.contactInfo}, data-respondent=${blotter.respondentName}, data-type=${blotter.incidentType}, data-date=${#temporals.format(blotter.incidentDate, 'yyyy-MM-dd')}, data-location=${blotter.incidentLocation}, data-narrative=${blotter.narrative}, data-remarks=${blotter.remarks}">
                                             Edit
                                         </button>

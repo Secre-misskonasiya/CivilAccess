@@ -426,7 +426,7 @@
             <span class="search-icon"><i class="bi bi-search"></i></span>
             <input type="text" id="facility-search" placeholder="Search facilities by name, location, or status...">
         </div>
-        <button class="add-btn" data-bs-toggle="modal" data-bs-target="#addFacilityModal"><i class="bi bi-plus-circle"></i> Add New Facility</button>
+        <button class="add-btn" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" data-bs-toggle="modal" data-bs-target="#addFacilityModal"><i class="bi bi-plus-circle"></i> Add New Facility</button>
     </div>
 
     <div class="tabbar">
@@ -460,8 +460,8 @@
                             <td>
                                 <div class="d-flex gap-2">
                                     <button class="contact-btn" th:onclick="'viewFacility(' + ${facility.id} + ')'">View</button>
-                                    <button class="update-btn" th:onclick="'editFacility(' + ${facility.id} + ')'">Update</button>
-                                    <button class="delete-btn" th:attr="data-id=${facility.id}, data-name=${facility.facilityName}">Remove</button>
+                                    <button th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" class="update-btn" th:onclick="'editFacility(' + ${facility.id} + ')'">Update</button>
+                                    <button th:if="${currentrole == 'ADMIN'}" class="delete-btn" th:attr="data-id=${facility.id}, data-name=${facility.facilityName}">Remove</button>
                                 </div>
                             </td>
                         </tr>
@@ -498,8 +498,8 @@
                             <td>
                                 <div class="d-flex gap-2">
                                     <button class="contact-btn" th:onclick="'viewFacility(' + ${facility.id} + ')'">View</button>
-                                    <button class="update-btn" th:onclick="'editFacility(' + ${facility.id} + ')'">Update</button>
-                                    <button class="delete-btn" th:attr="data-id=${facility.id}, data-name=${facility.facilityName}">Remove</button>
+                                    <button class="update-btn" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" th:onclick="'editFacility(' + ${facility.id} + ')'">Update</button>
+                                    <button class="delete-btn" th:if="${currentrole == 'ADMIN'}" th:attr="data-id=${facility.id}, data-name=${facility.facilityName}">Remove</button>
                                 </div>
                             </td>
                         </tr>
@@ -536,8 +536,8 @@
                             <td>
                                 <div class="d-flex gap-2">
                                     <button class="contact-btn" th:onclick="'viewFacility(' + ${facility.id} + ')'">View</button>
-                                    <button class="update-btn" th:onclick="'editFacility(' + ${facility.id} + ')'">Update</button>
-                                    <button class="delete-btn" th:attr="data-id=${facility.id}, data-name=${facility.facilityName}">Remove</button>
+                                    <button class="update-btn" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" th:onclick="'editFacility(' + ${facility.id} + ')'">Update</button>
+                                    <button class="delete-btn" th:if="${currentrole == 'ADMIN'}" th:attr="data-id=${facility.id}, data-name=${facility.facilityName}">Remove</button>
                                 </div>
                             </td>
                         </tr>
@@ -574,8 +574,8 @@
                             <td>
                                 <div class="d-flex gap-2">
                                     <button class="contact-btn" th:onclick="'viewFacility(' + ${facility.id} + ')'">View</button>
-                                    <button class="update-btn" th:onclick="'editFacility(' + ${facility.id} + ')'">Update</button>
-                                    <button class="delete-btn" th:attr="data-id=${facility.id}, data-name=${facility.facilityName}">Remove</button>
+                                    <button class="update-btn" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" th:onclick="'editFacility(' + ${facility.id} + ')'">Update</button>
+                                    <button class="delete-btn" th:if="${currentrole == 'ADMIN'}" th:attr="data-id=${facility.id}, data-name=${facility.facilityName}">Remove</button>
                                 </div>
                             </td>
                         </tr>

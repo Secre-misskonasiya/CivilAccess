@@ -427,7 +427,7 @@
 
     <!-- Tabs -->
     <div class="tabbar">
-        <div class="tab" th:classappend="${currentTab == 'create' ? 'active' : ''}" onclick="window.location.href='/emergency-alerts?tab=create'">Create Alert</div>
+        <div class="tab" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" th:classappend="${currentTab == 'create' ? 'active' : ''}" onclick="window.location.href='/emergency-alerts?tab=create'">Create Alert</div>
         <div class="tab" th:classappend="${currentTab == 'current' ? 'active' : ''}" onclick="window.location.href='/emergency-alerts?tab=current'">Current Alerts</div>
         <div class="tab" th:classappend="${currentTab == 'history' ? 'active' : ''}" onclick="window.location.href='/emergency-alerts?tab=history'">Alert History</div>
     </div>
@@ -436,7 +436,7 @@
     <div class="panel">
 
         <!-- Create Alert -->
-        <div id="tab-create" class="panel-inner" th:classappend="${currentTab != 'create' ? 'd-none' : ''}">
+        <div id="tab-create"  class="panel-inner" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" th:classappend="${currentTab != 'create' ? 'd-none' : ''}">
             <div class="panel-header">Create an Alert</div>
             <div class="panel-content">
                 <div class="d-flex gap-3 mb-3">
@@ -510,7 +510,7 @@
                         <p class="alert-card-msg" th:text="${alert.message != null ? alert.message : 'No message'}">Flooding reported near Purok 3.</p>
                         <div class="d-flex justify-content-end">
                             <button class="view-btn" th:attr="onclick='viewAlert(\'' + ${alert.id} + '\')'">View</button>
-                            <button class="archive-btn" th:attr="onclick='archiveAlertWithConfirm(\'' + ${alert.id} + '\', this)'">Archive</button>
+                            <button class="archive-btn" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" th:attr="onclick='archiveAlertWithConfirm(\'' + ${alert.id} + '\', this)'">Archive</button>
                         </div>
                     </div>
                 </div>

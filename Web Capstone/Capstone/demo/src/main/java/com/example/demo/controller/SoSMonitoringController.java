@@ -52,17 +52,32 @@ public class SoSMonitoringController {
         String name = admin.getName();
         String role = admin.getRole();
 
+        // Check if archived employee
+        if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+            return "redirect:/logout";
+        }
+
+        // REDIRECT TREASURER - no access to SOS Monitoring
+        if ("TREASURER".equalsIgnoreCase(role)) {
+            return "redirect:/home"; // Change to your desired redirect URL
+        }
+
+        // Allowed roles: ADMIN, SECRETARY, SECRETARIAT STAFF, BARANGAY CAPTAIN
+        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "SECRETARIAT STAFF", "BARANGAY CAPTAIN");
+        if (!allowedRoles.contains(role)) {
+            return "redirect:/home";
+        }
+
         model.addAttribute("newAdmin", new AdminUser());
         model.addAttribute("currentUser", name);
         model.addAttribute("currentrole", role);
-
-        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "BARANGAY-CAPTAIN");
-        if (!allowedRoles.contains(role)) return "redirect:/home";
+        
+        // Add role-based flags for the view
+        model.addAttribute("canManage", canManageReports(role));
+        model.addAttribute("isCaptain", "BARANGAY CAPTAIN".equalsIgnoreCase(role));
 
         int pageSize = 10;
-            if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
-                return "redirect:/logout";
-            }
+
         // Get all counts for badges
         model.addAttribute("incomingCount",   sosReportsService.countByStatus("INCOMING"));
         model.addAttribute("processingCount", sosReportsService.countByStatus("PROCESSING"));
@@ -116,7 +131,13 @@ public class SoSMonitoringController {
     @GetMapping("/api/incoming")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getIncomingAlerts(
-            @RequestParam(required = false, defaultValue = "0") Long lastId) {
+            @RequestParam(required = false, defaultValue = "0") Long lastId,
+            Principal principal) {
+
+        // Check role - TREASURER has no access
+        if (!hasAccess(principal)) {
+            return ResponseEntity.status(403).build();
+        }
 
         List<SosReports> incoming = sosReportsService.getReportsByStatusList("INCOMING");
 
@@ -149,7 +170,13 @@ public class SoSMonitoringController {
     @GetMapping("/api/processing")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getProcessingAlerts(
-            @RequestParam(required = false, defaultValue = "0") Long lastId) {
+            @RequestParam(required = false, defaultValue = "0") Long lastId,
+            Principal principal) {
+
+        // Check role - TREASURER has no access
+        if (!hasAccess(principal)) {
+            return ResponseEntity.status(403).build();
+        }
 
         List<SosReports> processing = sosReportsService.getReportsByStatusList("PROCESSING");
 
@@ -182,7 +209,13 @@ public class SoSMonitoringController {
     @GetMapping("/api/cancelled")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getCancelledAlerts(
-            @RequestParam(required = false, defaultValue = "0") Long lastId) {
+            @RequestParam(required = false, defaultValue = "0") Long lastId,
+            Principal principal) {
+
+        // Check role - TREASURER has no access
+        if (!hasAccess(principal)) {
+            return ResponseEntity.status(403).build();
+        }
 
         List<SosReports> cancelled = sosReportsService.getReportsByStatusList("CANCELLED");
 
@@ -228,7 +261,12 @@ public class SoSMonitoringController {
 
     @GetMapping("/{id}")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> getReport(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getReport(@PathVariable Long id, Principal principal) {
+        // Check role - TREASURER has no access
+        if (!hasAccess(principal)) {
+            return ResponseEntity.status(403).build();
+        }
+
         SosReports report = sosReportsService.getReportById(id);
         if (report == null) return ResponseEntity.notFound().build();
 
@@ -250,61 +288,84 @@ public class SoSMonitoringController {
     }
 
     @PutMapping("/{id}/status")
-        @ResponseBody
-        public ResponseEntity<?> updateStatus(
-                @PathVariable Long id,
-                @RequestParam String status,
-                @RequestParam(required = false) String responderName,
-                Principal principal,
-                HttpServletRequest request) {
+    @ResponseBody
+    public ResponseEntity<?> updateStatus(
+            @PathVariable Long id,
+            @RequestParam String status,
+            @RequestParam(required = false) String responderName,
+            Principal principal,
+            HttpServletRequest request) {
 
-            SosReports report = sosReportsService.getReportById(id);
-            if (report == null) {
-                activityLogService.log(
-                    principal.getName(), "ADMIN", "UPDATED", "SOS Monitoring",
-                    "Tried to update SOS report #" + id + " but it was not found",
-                    request.getRemoteAddr(), "Failed"
-                );
-                return ResponseEntity.notFound().build();
-            }
+        // Check role - only ADMIN, SECRETARY, SECRETARIAT STAFF can manage
+        String username = principal.getName();
+        AdminUser admin = adminUserService.getAdminByEmail(username);
+        String role = admin.getRole();
 
-            AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
-
-            // Set the new status
-            report.setStatus(status);
-
-            // Set timestamps and responder based on status
-            switch (status) {
-                case "PROCESSING" -> {
-                    if (responderName != null && !responderName.isEmpty()) {
-                        report.setResponderName(responderName);
-                    }
-                }
-                case "RESOLVED" -> {
-                    report.setDateResolved(LocalDateTime.now());
-                }
-            }
-
-            // Save the report
-            sosReportsService.saveReport(report);
-
-            String sosActionLabel = switch (status) {
-                case "PROCESSING" -> "Dispatched a responder"
-                    + (responderName != null && !responderName.isEmpty() ? ": " + responderName : "");
-                case "RESOLVED"   -> "Marked the SOS alert as resolved";
-                case "CANCELLED"  -> "Cancelled the SOS alert";
-                case "ARCHIVED"   -> "Archived the SOS alert";
-                default           -> "Updated status to " + status;
-            };
-
-            activityLogService.log(
-                principal.getName(), admin.getRole(), "UPDATED", "SOS Monitoring",
-                "SOS from " + report.getReporterName() + " — " + sosActionLabel,
-                request.getRemoteAddr(), "Success"
-            );
-
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Status updated successfully");
-            return ResponseEntity.ok(response);
+        if (!canManageReports(role)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Insufficient permissions"));
         }
+
+        SosReports report = sosReportsService.getReportById(id);
+        if (report == null) {
+            activityLogService.log(
+                principal.getName(), role, "UPDATED", "SOS Monitoring",
+                "Tried to update SOS report #" + id + " but it was not found",
+                request.getRemoteAddr(), "Failed"
+            );
+            return ResponseEntity.notFound().build();
+        }
+
+        // Set the new status
+        report.setStatus(status);
+
+        // Set timestamps and responder based on status
+        switch (status) {
+            case "PROCESSING" -> {
+                if (responderName != null && !responderName.isEmpty()) {
+                    report.setResponderName(responderName);
+                }
+            }
+            case "RESOLVED" -> {
+                report.setDateResolved(LocalDateTime.now());
+            }
+        }
+
+        // Save the report
+        sosReportsService.saveReport(report);
+
+        String sosActionLabel = switch (status) {
+            case "PROCESSING" -> "Dispatched a responder"
+                + (responderName != null && !responderName.isEmpty() ? ": " + responderName : "");
+            case "RESOLVED"   -> "Marked the SOS alert as resolved";
+            case "CANCELLED"  -> "Cancelled the SOS alert";
+            case "ARCHIVED"   -> "Archived the SOS alert";
+            default           -> "Updated status to " + status;
+        };
+
+        activityLogService.log(
+            principal.getName(), role, "UPDATED", "SOS Monitoring",
+            "SOS from " + report.getReporterName() + " — " + sosActionLabel,
+            request.getRemoteAddr(), "Success"
+        );
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Status updated successfully");
+        return ResponseEntity.ok(response);
+    }
+
+    // Helper method to check if user has access (not TREASURER)
+    private boolean hasAccess(Principal principal) {
+        if (principal == null) return false;
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+        if (admin == null) return false;
+        String role = admin.getRole();
+        return !"TREASURER".equalsIgnoreCase(role);
+    }
+
+    // Helper method to check if role can manage reports
+    private boolean canManageReports(String role) {
+        return "ADMIN".equalsIgnoreCase(role) || 
+               "SECRETARY".equalsIgnoreCase(role) || 
+               "SECRETARIAT STAFF".equalsIgnoreCase(role);
+    }
 }

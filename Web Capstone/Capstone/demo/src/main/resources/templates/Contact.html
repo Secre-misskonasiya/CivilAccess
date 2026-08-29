@@ -469,7 +469,7 @@
     <div class="tabbar">
         <div class="tab" th:classappend="${currentTab == 'incoming' ? 'active' : ''}" onclick="window.location.href='/contact-help?tab=incoming'">Incoming <span class="tab-badge" th:text="${incomingCount}">0</span></div>
         <div class="tab" th:classappend="${currentTab == 'resolved' ? 'active' : ''}" onclick="window.location.href='/contact-help?tab=resolved'">Resolved <span class="tab-badge" th:text="${resolvedCount}">0</span></div>
-        <div class="tab" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/contact-help?tab=archive'">Archive <span class="tab-badge" th:text="${archivedCount}">0</span></div>
+        <div class="tab" th:if="${currentrole == 'ADMIN'}" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/contact-help?tab=archive'">Archive <span class="tab-badge" th:text="${archivedCount}">0</span></div>
     </div>
 
     <div class="panel">
@@ -503,8 +503,8 @@
                              <span class="new-msg-badge" th:style="${unreadStatus[request.id]} ? 'display: inline-block;' : 'display: none;'">NEW</span>
                             <div class="row-actions">
                                 <button class="view-btn" th:onclick="'openChatModal(' + ${request.id} + ', \'incoming\')'">View</button>
-                                <button class="resolve-btn" th:onclick="'showConfirmModal(' + ${request.id} + ', \'RESOLVED\')'">Resolve</button>
-                                <button class="archive-btn" th:onclick="'showConfirmModal(' + ${request.id} + ', \'ARCHIVED\')'">Archive</button>
+                                <button class="resolve-btn" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" th:onclick="'showConfirmModal(' + ${request.id} + ', \'RESOLVED\')'">Resolve</button>
+                                <button class="archive-btn" th:if="${currentrole == 'ADMIN'}" th:onclick="'showConfirmModal(' + ${request.id} + ', \'ARCHIVED\')'">Archive</button>
                             </div>
                         </div>
                     </div>
@@ -548,7 +548,7 @@
                             <div class="row-date" th:text="${request.resolvedAt != null ? #temporals.format(request.resolvedAt, 'MMM dd, yyyy hh:mm a') : (request.createdAt != null ? #temporals.format(request.createdAt, 'MMM dd, yyyy hh:mm a') : 'No date')}">Mar 10, 2026 03:45 PM</div>
                             <div class="row-actions">
                                 <button class="view-btn" th:onclick="'openChatModal(' + ${request.id} + ', \'resolved\')'">View</button>
-                                <button class="archive-btn" th:onclick="'showConfirmModal(' + ${request.id} + ', \'ARCHIVED\')'">Archive</button>
+                                <button class="archive-btn" th:if="${currentrole == 'ADMIN'}" th:onclick="'showConfirmModal(' + ${request.id} + ', \'ARCHIVED\')'">Archive</button>
                             </div>
                         </div>
                     </div>
@@ -563,7 +563,7 @@
         </div>
 
         <!-- Archive Panel -->
-        <div id="tab-archive" class="panel-inner" th:classappend="${currentTab != 'archive' ? 'd-none' : ''}">
+        <div id="tab-archive" class="panel-inner" th:if="${currentrole == 'ADMIN'}" th:classappend="${currentTab != 'archive' ? 'd-none' : ''}">
             <div class="panel-header">Archived Contacts</div>
             <div class="panel-content">
                 <div th:if="${not #lists.isEmpty(archivedRequests)}">
@@ -1167,7 +1167,7 @@
             <div class="row-date"><span>${escapeHtml(dateStr)}</span><span class="new-msg-badge" style="display: inline-block;">NEW</span></div>
             <div class="row-actions">
                 <button class="view-btn" onclick="openChatModal(${req.id}, 'incoming')">View</button>
-                <button class="resolve-btn" onclick="showConfirmModal(${req.id}, 'RESOLVED')">Resolve</button>
+                <button class="resolve-btn"  onclick="showConfirmModal(${req.id}, 'RESOLVED')">Resolve</button>
                 <button class="archive-btn" onclick="showConfirmModal(${req.id}, 'ARCHIVED')">Archive</button>
             </div>
         `;

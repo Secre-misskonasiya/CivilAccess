@@ -9,6 +9,10 @@
         </div>
     </div>
 
+<!-- In sidebar.html fragment -->
+<input type="hidden" id="dataCurrentRole" th:value="${currentrole}">
+<input type="hidden" id="currentUserRole" th:value="${currentrole}">
+
     <div class="header-user">
         <span th:text="${currentrole}">role</span>: <span th:text="${currentUser}">username</span>
     </div>
@@ -100,14 +104,12 @@
     </div>
 
     <!-- PROGRAMS -->
-    <button class="section-toggle" onclick="toggleSection(this, 'sec-programs')"
-        th:if="${currentrole != 'SECRETARIAT STAFF'}">
+    <button class="section-toggle" onclick="toggleSection(this, 'sec-programs')">
         <span class="section-notif-dot" id="dot-programs"></span>
         Programs
         <i class="bi bi-chevron-down section-arrow"></i>
     </button>
-    <div class="section-body" id="sec-programs"
-        th:if="${currentrole != 'SECRETARIAT STAFF'}">
+    <div class="section-body" id="sec-programs">
         <ul class="menu">
             <li onclick="window.location.href='/program-calendar'">
                 <img src="/icons/calendar.svg" class="icon"> Program Calendar

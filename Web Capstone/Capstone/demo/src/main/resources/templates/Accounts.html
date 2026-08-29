@@ -446,7 +446,7 @@
                                     
                                     <!-- Update button - Only ADMIN, SECRETARY, SECRETARIAT STAFF -->
                                     <button class="update-btn"
-                                        th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                        th:if="${currentrole == 'ADMIN'}"
                                         th:onclick="openEditModal(
                                             [[${admin.id}]],
                                             [[${admin.employeeId}]],
@@ -1235,23 +1235,41 @@
 <!-- Logout Modal -->
 <div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
 
+<!-- ═══════════════════════════════════════ -->
+<!-- FORCE PASSWORD MODAL (Inline)            -->
+<!-- ═══════════════════════════════════════ -->
+<div id="forcePasswordModal" class="modal" style="display:none; z-index: 99999;">
+    <div class="modal-content" style="width:440px; text-align:center; padding:30px; border-radius:16px;">
+        <div style="font-size:48px; margin-bottom:12px;">🔒</div>
+        <h2 style="color:#30534D; margin-bottom:8px;">Password Change Required</h2>
+        <p style="color:#555; margin-bottom:20px;">Your account status is <strong id="lockStatusLabel">New</strong>. You must change your password before accessing the system.</p>
+        <button onclick="redirectToPassword()" 
+                style="width:100%; padding:12px; background:linear-gradient(135deg,#30534D,#3d6b63); color:white; border:none; border-radius:8px; font-size:15px; font-weight:bold; cursor:pointer;">
+            Change Password
+        </button>
+    </div>
+</div>
+
 <script>
-// ─── ROLE-BASED ACCESS CONTROL ──────────────────────────────────────────────
+// ─── Force Password Lock ─────────────────────────────────────
+(function() {
+    var status = document.getElementById('accountStatus')?.value || '';
+    if (status === 'New' || status === 'Newly Updated') {
+        document.getElementById('forcePasswordModal').style.display = 'block';
+        document.getElementById('lockStatusLabel').textContent = status;
+        document.body.style.overflow = 'hidden';
+    }
+})();
+
+function redirectToPassword() {
+    window.location.href = '/user-profile';
+}
+</script>
+
+<script>
 
 function getCurrentUserRole() {
     return document.getElementById('currentUserRole')?.value || '';
-}
-
-function isAdmin() {
-    return getCurrentUserRole() === 'ADMIN';
-}
-
-function isSecretary() {
-    return getCurrentUserRole() === 'SECRETARY';
-}
-
-function isSecretariatStaff() {
-    return getCurrentUserRole() === 'SECRETARIAT STAFF';
 }
 
 function canManageAccounts() {
@@ -1262,53 +1280,6 @@ function canManageAccounts() {
 function canArchive() {
     return getCurrentUserRole() === 'ADMIN';
 }
-
-// ─── Role Restriction Enforcement ──────────────────────────────────────────
-
-(function() {
-    const userRole = getCurrentUserRole();
-    const isAdminRole = isAdmin();
-    const canManage = canManageAccounts();
-    
-    console.log('🔐 Role:', userRole);
-    console.log('🔐 Can Manage:', canManage);
-    console.log('🔐 Can Archive:', isAdminRole);
-    
-    // Disable buttons based on role
-    document.querySelectorAll('.update-btn, .verify-btn').forEach(btn => {
-        if (!canManage) {
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
-            btn.style.cursor = 'not-allowed';
-        }
-    });
-    
-    document.querySelectorAll('.delete-btn, .archive-btn').forEach(btn => {
-        if (!isAdminRole) {
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
-            btn.style.cursor = 'not-allowed';
-        }
-    });
-    
-    // Disable "Create New Account" for non-authorized
-    const createBtn = document.querySelector('.new-account-btn');
-    if (createBtn && !canManage) {
-        createBtn.disabled = true;
-        createBtn.style.opacity = '0.5';
-        createBtn.style.cursor = 'not-allowed';
-    }
-    
-    // Disable Export for non-authorized
-    const exportBtns = document.querySelectorAll('.export-btn');
-    if (!canManage) {
-        exportBtns.forEach(btn => {
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
-            btn.style.cursor = 'not-allowed';
-        });
-    }
-})();
 
 // ─── Tab switching ──────────────────────────────────────────
 function switchTab(tabName) {
@@ -1875,17 +1846,24 @@ function openVerifyModal(button) {
         alert('You do not have permission to verify residents.');
         return;
     }
+
+    // Read from the BUTTON, not the row
+    const residentId = button.getAttribute('data-id') || '';
+    const firstName = button.getAttribute('data-first-name') || '';
+    const lastName = button.getAttribute('data-last-name') || '';
+    const status = button.getAttribute('data-status') || 'UNVERIFIED';
     
+    // Get images from the ROW (they're on the <tr>)
     const row = button.closest('tr');
-    const residentId = row.getAttribute('data-id');
-    const firstName = row.getAttribute('data-first-name') || '';
-    const lastName = row.getAttribute('data-last-name') || '';
-    const status = row.getAttribute('data-status') || 'UNVERIFIED';
     const selfie = row.getAttribute('data-selfie') || '';
     const validId = row.getAttribute('data-validid') || '';
     const indigency = row.getAttribute('data-indigency') || '';
     const pwdImage = row.getAttribute('data-pwdimage') || '';
     const seniorImage = row.getAttribute('data-seniorimage') || '';
+
+    console.log('selfie:', selfie ? selfie.substring(0, 50) + '...' : 'NULL');
+    console.log('validId:', validId ? validId.substring(0, 50) + '...' : 'NULL');
+    console.log('indigency:', indigency ? indigency.substring(0, 50) + '...' : 'NULL');
 
     window.currentVerifyId = residentId;
     window.currentVerifyName = firstName + ' ' + lastName;
@@ -1894,9 +1872,18 @@ function openVerifyModal(button) {
 
     function setImage(url, container) {
         if (url && url !== 'null' && url !== '' && url !== 'undefined') {
-            container.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:180px; border-radius:8px; cursor:pointer;" onclick="enlargeImage(\'' + url + '\')">';
+            let imgSrc = url;
+            
+            // If it's a file name without a path, prepend the uploads directory
+            if (!url.startsWith('data:') && !url.startsWith('http') && !url.startsWith('/')) {
+                imgSrc = '/uploads/' + url;
+            }
+            
+            console.log('Loading image from:', imgSrc);
+            
+            container.innerHTML = '<img src="' + imgSrc + '" style="max-width:100%; max-height:180px; border-radius:8px; cursor:pointer;" onclick="enlargeImage(\'' + imgSrc + '\')" onerror="this.parentElement.innerHTML=\'<div style="padding:60px;color:#999;">Image not found</div>\'">';
         } else {
-            container.innerHTML = '<div style="padding:60px;">No document</div>';
+            container.innerHTML = '<div style="padding:60px;color:#999;">No document</div>';
         }
     }
 
@@ -1904,7 +1891,6 @@ function openVerifyModal(button) {
     setImage(validId, document.getElementById('validIdImg'));
     setImage(indigency, document.getElementById('indigencyImg'));
 
-    // Priority docs
     const hasPwd = pwdImage && pwdImage !== 'null' && pwdImage !== '';
     const hasSenior = seniorImage && seniorImage !== 'null' && seniorImage !== '';
     const prioritySection = document.getElementById('priorityDocsSection');
@@ -1913,8 +1899,6 @@ function openVerifyModal(button) {
 
     if (hasPwd || hasSenior) {
         prioritySection.style.display = 'flex';
-        prioritySection.style.gap = '20px';
-        prioritySection.style.flexWrap = 'wrap';
         if (hasPwd) {
             pwdCard.style.display = 'flex';
             pwdCard.style.flexDirection = 'column';
@@ -1933,7 +1917,6 @@ function openVerifyModal(button) {
         prioritySection.style.display = 'none';
     }
 
-    // Hide buttons if status is already VERIFIED
     const buttonsDiv = document.getElementById('verifyModalButtons');
     if (status === 'VERIFIED') {
         buttonsDiv.style.display = 'none';

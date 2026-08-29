@@ -375,7 +375,7 @@
 <title>Civil Access - Reservations</title>
 </head>
 <body>
-
+<input type="hidden" id="dataCurrentRole" th:value="${currentrole}">
 <div class="layout">
     <!-- Sidebar -->
     <div th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -405,7 +405,7 @@
                 </ul>
             </div>
             <button class="filter-btn" onclick="window.location.href='/reservations'"><i class="bi bi-funnel"></i> Reset</button>
-            <button class="create-btn" data-bs-toggle="modal" data-bs-target="#createReservationModal"><i class="bi bi-plus-circle"></i> New Reservation</button>
+            <button class="create-btn" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" data-bs-toggle="modal" data-bs-target="#createReservationModal"><i class="bi bi-plus-circle"></i> New Reservation</button>
         </div>
 
         <div class="tabbar">
@@ -413,7 +413,7 @@
             <div class="tab" th:classappend="${currentTab == 'approved' ? 'active' : ''}" onclick="window.location.href='/reservations?tab=approved'">Approved <span class="tab-badge" id="badge-approved">0</span></div>
             <div class="tab" th:classappend="${currentTab == 'inprogress' ? 'active' : ''}" onclick="window.location.href='/reservations?tab=inprogress'">In Progress <span class="tab-badge" id="badge-inprogress">0</span></div>
             <div class="tab" th:classappend="${currentTab == 'resolved' ? 'active' : ''}" onclick="window.location.href='/reservations?tab=resolved'">Resolved <span class="tab-badge" id="badge-resolved">0</span></div>
-            <div class="tab" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/reservations?tab=archive'">Archive <span class="tab-badge" id="badge-archive">0</span></div>
+            <div class="tab" th:if="${currentrole == 'ADMIN'}" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/reservations?tab=archive'">Archive <span class="tab-badge" id="badge-archive">0</span></div>
         </div>
 
         <div class="panel">

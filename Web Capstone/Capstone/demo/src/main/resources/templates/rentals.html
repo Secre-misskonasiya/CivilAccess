@@ -328,6 +328,8 @@
 <title>Civil Access - Equipment Rentals</title>
 </head>
 <body>
+    
+<input type="hidden" id="dataCurrentRole" th:value="${currentrole}">
 
 <div class="layout">
     <div th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -357,7 +359,9 @@
                 </ul>
             </div>
             <button class="filter-btn" onclick="window.location.href='/rentals'"><i class="bi bi-funnel"></i> Reset</button>
-            <button class="create-btn" data-bs-toggle="modal" data-bs-target="#createRentalModal"><i class="bi bi-plus-circle"></i> New Rental</button>
+            <button class="create-btn" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" data-bs-toggle="modal" data-bs-target="#createRentalModal">
+                <i class="bi bi-plus-circle"></i> New Rental
+            </button>
         </div>
 
         <div class="tabbar">
@@ -365,7 +369,7 @@
             <div class="tab" th:classappend="${currentTab == 'active' ? 'active' : ''}" onclick="window.location.href='/rentals?tab=active'">Active <span class="tab-badge" id="activeBadge" th:text="${activeCount}">0</span></div>
             <div class="tab" th:classappend="${currentTab == 'overdue' ? 'active' : ''}" onclick="window.location.href='/rentals?tab=overdue'">Overdue <span class="tab-badge" id="overdueBadge" th:text="${overdueCount}">0</span></div>
             <div class="tab" th:classappend="${currentTab == 'returned' ? 'active' : ''}" onclick="window.location.href='/rentals?tab=returned'">Returned <span class="tab-badge" id="returnedBadge" th:text="${returnedCount}">0</span></div>
-            <div class="tab" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/rentals?tab=archive'">Archive <span class="tab-badge" id="archiveBadge" th:text="${archiveCount}">0</span></div>
+            <div class="tab" th:if="${currentrole == 'ADMIN'}" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/rentals?tab=archive'">Archive <span class="tab-badge" id="archiveBadge" th:text="${archiveCount}">0</span></div>
         </div>
 
         <div class="panel">
@@ -562,6 +566,12 @@
     let pendingActionId = null;
     let pendingActionType = null;
 
+
+    const isAdmin = document.getElementById('dataCurrentRole')?.value === 'ADMIN';
+    const canManage = ['ADMIN', 'SECRETARY', 'SECRETARIAT STAFF'].includes(
+        document.getElementById('dataCurrentRole')?.value
+    );
+
     // Helper function to calculate days overdue correctly
     function calculateDaysOverdue(expectedReturnDate) {
         const today = new Date();
@@ -729,103 +739,99 @@
     }
 
     function renderRentals(rentals, status) {
-    const tbody   = document.getElementById(`${status}-tbody`);
-    const countEl = document.getElementById(`${status}Count`);
+        const tbody   = document.getElementById(`${status}-tbody`);
+        const countEl = document.getElementById(`${status}Count`);
 
-    if (!rentals || rentals.length === 0) {
-        const colspan = (status === 'returned' || status === 'archive') ? 8 : 7;
-        if (tbody)   tbody.innerHTML   = `<tr><td colspan="${colspan}" class="text-center text-muted">No ${status} rentals found</td></tr>`;
-        if (countEl) countEl.textContent = `0 ${status} rentals`;
-        return;
-    }
-
-    if (countEl) countEl.textContent = `${rentals.length} ${status} rentals`;
-
-    let html = '';
-
-    if (status === 'incoming') {
-        for (const r of rentals) {
-            html += `
-                <tr>
-                    <td>${escapeHtml(r.renterName)}</td>
-                    <td>${escapeHtml(r.equipmentType)}</td>
-                    <td>${r.quantity}</td>
-                    <td>${r.rentalDate || 'N/A'}</td>
-                    <td>
-                        ${r.expectedReturnDate || 'N/A'}
-                        <span class="due-date-badge" data-expected="${r.expectedReturnDate || ''}"></span>
-                    </td>
-                    <td><span class="status-badge status-incoming">INCOMING</span></td>
-                    <td>
-                        <button class="btn-sm btn-approve" onclick="openApproveConfirm(${r.id})">Approve</button>
-                        <button class="btn-sm btn-view"    onclick="viewRental(${r.id})">View</button>
-                        <button class="btn-sm btn-archive" onclick="openArchiveConfirm(${r.id})">Archive</button>
-                    </td>
-                </tr>`;
+        if (!rentals || rentals.length === 0) {
+            const colspan = (status === 'returned' || status === 'archive') ? 8 : 7;
+            if (tbody)   tbody.innerHTML   = `<tr><td colspan="${colspan}" class="text-center text-muted">No ${status} rentals found</td></tr>`;
+            if (countEl) countEl.textContent = `0 ${status} rentals`;
+            return;
         }
 
-    } else if (status === 'active') {
-        for (const r of rentals) {
-            html += `
-                <tr>
-                    <td>${escapeHtml(r.renterName)}</td>
-                    <td>${escapeHtml(r.equipmentType)}</td>
-                    <td>${r.quantity}</td>
-                    <td>${r.rentalDate || 'N/A'}</td>
-                    <td>
-                        ${r.expectedReturnDate || 'N/A'}
-                        <span class="due-date-badge" data-expected="${r.expectedReturnDate || ''}"></span>
-                    </td>
-                    <td><span class="status-badge status-active">ACTIVE</span></td>
-                    <td>
-                        <button class="btn-sm btn-return"  onclick="openReturnConfirm(${r.id})">Mark as Returned</button>
-                        <button class="btn-sm btn-view"    onclick="viewRental(${r.id})">View</button>
-                        <button class="btn-sm btn-archive" onclick="openArchiveConfirm(${r.id})">Archive</button>
-                    </td>
-                </tr>`;
-        }
+        if (countEl) countEl.textContent = `${rentals.length} ${status} rentals`;
 
-    } else if (status === 'overdue') {
-        for (const r of rentals) {
-            const days = calculateDaysOverdue(r.expectedReturnDate);
-            const badge = days <= 0
-                ? `<span class="badge bg-warning text-dark">Due Today!</span>`
-                : `<span class="badge bg-danger overdue-badge" data-expected="${r.expectedReturnDate}">${days === 1 ? '1 day overdue' : days + ' days overdue'}</span>`;
-            html += `
-                <tr>
-                    <td>${escapeHtml(r.renterName)}</td>
-                    <td>${escapeHtml(r.equipmentType)}</td>
-                    <td>${r.quantity}</td>
-                    <td>${r.rentalDate || 'N/A'}</td>
-                    <td>${r.expectedReturnDate || 'N/A'}</td>
-                    <td>${badge}</td>
-                    <td>
-                        <button class="btn-sm btn-return"  onclick="openReturnConfirm(${r.id})">Mark as Returned</button>
-                        <button class="btn-sm btn-view"    onclick="viewRental(${r.id})">View</button>
-                        <button class="btn-sm btn-archive" onclick="openArchiveConfirm(${r.id})">Archive</button>
-                    </td>
-                </tr>`;
-        }
+        let html = '';
 
-    } else if (status === 'returned') {
-        for (const r of rentals) {
-            html += `
-                <tr>
-                    <td>${escapeHtml(r.renterName)}</td>
-                    <td>${escapeHtml(r.equipmentType)}</td>
-                    <td>${r.quantity}</td>
-                    <td>${r.rentalDate || 'N/A'}</td>
-                    <td>${r.actualReturnDate || 'N/A'}</td>
-                    <td>${escapeHtml(r.processedBy) || 'N/A'}</td>
-                    <td>₱${(r.totalPrice || 0).toFixed(2)}</td>
-                    <td>
-                        <button class="btn-sm btn-view"    onclick="viewRental(${r.id})">View</button>
-                        <button class="btn-sm btn-archive" onclick="openArchiveConfirm(${r.id})">Archive</button>
-                    </td>
-                </tr>`;
-        }
-
-    } else if (status === 'archive') {
+        if (status === 'incoming') {
+            for (const r of rentals) {
+                html += `
+                    <tr>
+                        <td>${escapeHtml(r.renterName)}</td>
+                        <td>${escapeHtml(r.equipmentType)}</td>
+                        <td>${r.quantity}</td>
+                        <td>${r.rentalDate || 'N/A'}</td>
+                        <td>
+                            ${r.expectedReturnDate || 'N/A'}
+                            <span class="due-date-badge" data-expected="${r.expectedReturnDate || ''}"></span>
+                        </td>
+                        <td><span class="status-badge status-incoming">INCOMING</span></td>
+                        <td>
+                            ${canManage ? `<button class="btn-sm btn-approve" onclick="openApproveConfirm(${r.id})">Approve</button>` : ''}
+                            <button class="btn-sm btn-view" onclick="viewRental(${r.id})">View</button>
+                            ${isAdmin ? `<button class="btn-sm btn-archive" onclick="openArchiveConfirm(${r.id})">Archive</button>` : ''}
+                        </td>
+                    </tr>`;
+            }
+        } else if (status === 'active') {
+            for (const r of rentals) {
+                html += `
+                    <tr>
+                        <td>${escapeHtml(r.renterName)}</td>
+                        <td>${escapeHtml(r.equipmentType)}</td>
+                        <td>${r.quantity}</td>
+                        <td>${r.rentalDate || 'N/A'}</td>
+                        <td>
+                            ${r.expectedReturnDate || 'N/A'}
+                            <span class="due-date-badge" data-expected="${r.expectedReturnDate || ''}"></span>
+                        </td>
+                        <td><span class="status-badge status-active">ACTIVE</span></td>
+                        <td>
+                            ${canManage ? `<button class="btn-sm btn-return" onclick="openReturnConfirm(${r.id})">Mark as Returned</button>` : ''}
+                            <button class="btn-sm btn-view" onclick="viewRental(${r.id})">View</button>
+                            ${isAdmin ? `<button class="btn-sm btn-archive" onclick="openArchiveConfirm(${r.id})">Archive</button>` : ''}
+                        </td>
+                    </tr>`;
+            }
+        } else if (status === 'overdue') {
+            for (const r of rentals) {
+                const days = calculateDaysOverdue(r.expectedReturnDate);
+                const badge = days <= 0
+                    ? `<span class="badge bg-warning text-dark">Due Today!</span>`
+                    : `<span class="badge bg-danger overdue-badge" data-expected="${r.expectedReturnDate}">${days === 1 ? '1 day overdue' : days + ' days overdue'}</span>`;
+                html += `
+                    <tr>
+                        <td>${escapeHtml(r.renterName)}</td>
+                        <td>${escapeHtml(r.equipmentType)}</td>
+                        <td>${r.quantity}</td>
+                        <td>${r.rentalDate || 'N/A'}</td>
+                        <td>${r.expectedReturnDate || 'N/A'}</td>
+                        <td>${badge}</td>
+                        <td>
+                            ${canManage ? `<button class="btn-sm btn-return" onclick="openReturnConfirm(${r.id})">Mark as Returned</button>` : ''}
+                            <button class="btn-sm btn-view" onclick="viewRental(${r.id})">View</button>
+                            ${isAdmin ? `<button class="btn-sm btn-archive" onclick="openArchiveConfirm(${r.id})">Archive</button>` : ''}
+                        </td>
+                    </tr>`;
+            }
+        } else if (status === 'returned') {
+            for (const r of rentals) {
+                html += `
+                    <tr>
+                        <td>${escapeHtml(r.renterName)}</td>
+                        <td>${escapeHtml(r.equipmentType)}</td>
+                        <td>${r.quantity}</td>
+                        <td>${r.rentalDate || 'N/A'}</td>
+                        <td>${r.actualReturnDate || 'N/A'}</td>
+                        <td>${escapeHtml(r.processedBy) || 'N/A'}</td>
+                        <td>₱${(r.totalPrice || 0).toFixed(2)}</td>
+                        <td>
+                            <button class="btn-sm btn-view" onclick="viewRental(${r.id})">View</button>
+                            ${isAdmin ? `<button class="btn-sm btn-archive" onclick="openArchiveConfirm(${r.id})">Archive</button>` : ''}
+                        </td>
+                    </tr>`;
+            }
+        } else if (status === 'archive') {
             for (const r of rentals) {
                 html += `
                     <tr>
@@ -845,7 +851,7 @@
 
         if (tbody) tbody.innerHTML = html;
 
-        // ── Run badge calculations after every render ──
+        // Run badge calculations after every render
         fillDueDateBadges();
         fillOverdueBadges();
     }

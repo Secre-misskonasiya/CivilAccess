@@ -42,9 +42,16 @@ public class SafetyReportsController {
 
         String name = admin.getName();
         String role = admin.getRole();
+        
         if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
             return "redirect:/logout";
         }
+        
+        // REDIRECT TREASURER to a different page (e.g., dashboard or home)
+        if ("TREASURER".equalsIgnoreCase(role)) {
+            return "redirect:/dashboard"; // Change this to your desired redirect URL
+        }
+        
         model.addAttribute("newAdmin", new AdminUser());
         model.addAttribute("currentUser", name);
         model.addAttribute("currentrole", role);
@@ -121,10 +128,17 @@ public class SafetyReportsController {
 
     @GetMapping("/{id}")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> getReport(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getReport(@PathVariable Long id, Principal principal) {
         SafetyReports report = safetyReportService.getReportById(id);
         if (report == null) {
             return ResponseEntity.notFound().build();
+        }
+        
+        // Check if user is TREASURER - deny access
+        String username = principal.getName();
+        AdminUser admin = adminUserService.getAdminByEmail(username);
+        if ("TREASURER".equalsIgnoreCase(admin.getRole())) {
+            return ResponseEntity.status(403).build();
         }
 
         Map<String, Object> response = new HashMap<>();
@@ -149,14 +163,20 @@ public class SafetyReportsController {
         response.put("latitude", report.getLatitude() != null ? report.getLatitude() : null);
         response.put("longitude", report.getLongitude() != null ? report.getLongitude() : null);
         response.put("imageUrl", report.getImageUrl() != null ? report.getImageUrl() : null);
-        // ADDED: timeSubmitted field
         response.put("timeSubmitted", report.getTimeSubmitted() != null ? report.getTimeSubmitted().toString() : null);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/api/all")
     @ResponseBody
-    public ResponseEntity<List<Map<String, Object>>> getAllReportsForMap() {
+    public ResponseEntity<List<Map<String, Object>>> getAllReportsForMap(Principal principal) {
+        // Check if user is TREASURER - deny access to map data
+        String username = principal.getName();
+        AdminUser admin = adminUserService.getAdminByEmail(username);
+        if ("TREASURER".equalsIgnoreCase(admin.getRole())) {
+            return ResponseEntity.status(403).build();
+        }
+        
         List<SafetyReports> allReports = safetyReportService.getAllReports();
 
         List<Map<String, Object>> result = allReports.stream()
@@ -183,7 +203,14 @@ public class SafetyReportsController {
 
     @GetMapping("/api/poll")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> pollReports(@RequestParam Long lastId) {
+    public ResponseEntity<Map<String, Object>> pollReports(@RequestParam Long lastId, Principal principal) {
+        // Check if user is TREASURER - deny access
+        String username = principal.getName();
+        AdminUser admin = adminUserService.getAdminByEmail(username);
+        if ("TREASURER".equalsIgnoreCase(admin.getRole())) {
+            return ResponseEntity.status(403).build();
+        }
+        
         List<SafetyReports> allReports = safetyReportService.getAllReports();
 
         List<SafetyReports> newReports = allReports.stream()
@@ -228,13 +255,19 @@ public class SafetyReportsController {
             Principal principal,
             HttpServletRequest request) {
 
+        // Check role - only ADMIN, SECRETARY, SECRETARIAT STAFF can resolve
+        String username = principal.getName();
+        AdminUser admin = adminUserService.getAdminByEmail(username);
+        String role = admin.getRole();
+        
+        if (!canManageReports(role)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Insufficient permissions"));
+        }
+
         SafetyReports report = safetyReportService.getReportById(id);
         if (report == null) {
             return ResponseEntity.notFound().build();
         }
-
-        String username = principal.getName();
-        AdminUser admin = adminUserService.getAdminByEmail(username);
         
         String responseTime = calculateResponseTime(report);
         
@@ -263,25 +296,31 @@ public class SafetyReportsController {
             Principal principal,
             HttpServletRequest request) {
 
+        // Check role - only ADMIN, SECRETARY, SECRETARIAT STAFF can update status
+        String username = principal.getName();
+        AdminUser admin = adminUserService.getAdminByEmail(username);
+        String role = admin.getRole();
+        
+        if (!canManageReports(role)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Insufficient permissions"));
+        }
+
         SafetyReports report = safetyReportService.getReportById(id);
         if (report == null) {
             activityLogService.log(
-                principal.getName(), "ADMIN", "UPDATED", "Safety Reports",
+                principal.getName(), admin.getRole(), "UPDATED", "Safety Reports",
                 "Tried to update status of safety report #" + id + " but it was not found",
                 request.getRemoteAddr(), "Failed"
             );
             return ResponseEntity.notFound().build();
         }
 
-        String username = principal.getName();
-        AdminUser admin = adminUserService.getAdminByEmail(username);
-
         report.setStatus(status);
         report.setDateHandled(LocalDateTime.now());
         report.setHandledByName(admin.getName());
         report.setHandledByRole(admin.getRole());
 
-        // FIX: Set resolvedBy for REJECTED, CANCELLED, AND RESOLVED
+        // Set resolvedBy for REJECTED, CANCELLED, AND RESOLVED
         if ("REJECTED".equals(status) || "CANCELLED".equals(status) || "RESOLVED".equals(status)) {
             report.setResolvedBy(admin.getName());
         }
@@ -316,6 +355,15 @@ public class SafetyReportsController {
             Principal principal,
             HttpServletRequest request) {
 
+        // Check role - only ADMIN, SECRETARY, SECRETARIAT STAFF can update priority
+        String username = principal.getName();
+        AdminUser admin = adminUserService.getAdminByEmail(username);
+        String role = admin.getRole();
+        
+        if (!canManageReports(role)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Insufficient permissions"));
+        }
+
         SafetyReports report = safetyReportService.getReportById(id);
         if (report == null) {
             return ResponseEntity.notFound().build();
@@ -325,7 +373,7 @@ public class SafetyReportsController {
         safetyReportService.saveReport(report);
 
         activityLogService.log(
-            principal.getName(), "ADMIN", "UPDATED", "Safety Reports",
+            principal.getName(), admin.getRole(), "UPDATED", "Safety Reports",
             "Updated priority to " + priority + " for report: \"" + report.getTitle() + "\"",
             request.getRemoteAddr(), "Success"
         );
@@ -343,10 +391,19 @@ public class SafetyReportsController {
             Principal principal,
             HttpServletRequest request) {
 
+        // Check role - only ADMIN, SECRETARY, SECRETARIAT STAFF can add remarks
+        String username = principal.getName();
+        AdminUser admin = adminUserService.getAdminByEmail(username);
+        String role = admin.getRole();
+        
+        if (!canManageReports(role)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Insufficient permissions"));
+        }
+
         SafetyReports report = safetyReportService.getReportById(id);
         if (report == null) {
             activityLogService.log(
-                principal.getName(), "ADMIN", "UPDATED", "Safety Reports",
+                principal.getName(), admin.getRole(), "UPDATED", "Safety Reports",
                 "Tried to add remarks to safety report #" + id + " but it was not found",
                 request.getRemoteAddr(), "Failed"
             );
@@ -357,7 +414,7 @@ public class SafetyReportsController {
         safetyReportService.saveReport(report);
 
         activityLogService.log(
-                principal.getName(), "ADMIN", "UPDATED", "Safety Reports",
+                principal.getName(), admin.getRole(), "UPDATED", "Safety Reports",
                 "Added handler remarks to the report: \"" + report.getTitle() + "\"",
                 request.getRemoteAddr(), "Success"
             );
@@ -365,6 +422,13 @@ public class SafetyReportsController {
         Map<String, String> response = new HashMap<>();
         response.put("message", "Remarks added successfully");
         return ResponseEntity.ok(response);
+    }
+
+    // Helper method to check if role can manage reports
+    private boolean canManageReports(String role) {
+        return "ADMIN".equalsIgnoreCase(role) || 
+               "SECRETARY".equalsIgnoreCase(role) || 
+               "SECRETARIAT STAFF".equalsIgnoreCase(role);
     }
 
     private String calculateResponseTime(SafetyReports report) {

@@ -1,23 +1,34 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.AdminUser;
-import com.example.demo.model.EmergencyAlerts;
-import com.example.demo.services.AdminUserServices;
-import com.example.demo.services.ActivityLogService;
-import com.example.demo.services.EmergencyAlertService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
-import jakarta.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.example.demo.model.AdminUser;
+import com.example.demo.model.EmergencyAlerts;
+import com.example.demo.services.ActivityLogService;
+import com.example.demo.services.AdminUserServices;
+import com.example.demo.services.EmergencyAlertService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
 @RequestMapping("/emergency-alerts")
@@ -37,6 +48,9 @@ public class EmergencyAlertsController {
                 if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
                 return "redirect:/logout";
             }
+        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "SECRETARIAT STAFF", "BARANGAY-CAPTAIN");
+        Set<String> manageRoles = Set.of("ADMIN", "SECRETARY", "SECRETARIAT STAFF");
+
         model.addAttribute("newAdmin",     new AdminUser());
         model.addAttribute("currentUser",  admin.getName());
         model.addAttribute("currentrole",  admin.getRole());

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="lockModal">
+  <!-- 
+    Check for account status using MULTIPLE possible variable names:
+    - currentstatus (used in home page)
+    - accountStatus (used in some pages)
+    - status (fallback)
+  -->
+  <div id="forcePasswordModal" class="force-modal"
+       th:classappend="${(
+         (currentstatus != null and (currentstatus == 'New' or currentstatus == 'Newly Updated')) or
+         (accountStatus != null and (accountStatus == 'New' or accountStatus == 'Newly Updated')) or
+         (status != null and (status == 'New' or status == 'Newly Updated'))
+       ) ? 'show' : ''}"
+       th:style="${(
+         (currentstatus != null and (currentstatus == 'New' or currentstatus == 'Newly Updated')) or
+         (accountStatus != null and (accountStatus == 'New' or accountStatus == 'Newly Updated')) or
+         (status != null and (status == 'New' or status == 'Newly Updated'))
+       ) ? 'display:block !important;' : 'display:none !important;'}">
+    <div class="force-modal-content">
+      <div class="lock-icon-wrapper">
+        <i class="bi bi-lock-fill"></i>
+      </div>
+      <h2>Password Change Required</h2>
+      <p>Your account is new. For security, please set a new password before you can continue using the system.</p>
+      <a th:href="@{/user-profile}" class="force-modal-btn">Go to Profile Settings</a>
+    </div>
+  </div>
+
+  <style>
+    .force-modal {
+      display: none;
+      position: fixed;
+      z-index: 99999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(3px);
+    }
+    .force-modal.show {
+      display: block !important;
+    }
+    .force-modal-content {
+      background: white;
+      width: 420px;
+      max-width: 90%;
+      padding: 32px 36px 36px 36px;
+      border-radius: 20px;
+      text-align: center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+      animation: modalFadeIn 0.3s ease-out;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: translate(-50%, -48%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+    .lock-icon-wrapper {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, #f4c542, #f5d06a);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+      font-size: 32px;
+      color: #1a3a30;
+    }
+    .force-modal-content h2 {
+      color: #2d4a44;
+      margin-bottom: 12px;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .force-modal-content p {
+      font-size: 15px;
+      color: #555;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+    .force-modal-btn {
+      margin-top: 24px;
+      padding: 12px 32px;
+      background: #2d4a44;
+      color: white !important;
+      border: none;
+      border-radius: 40px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      display: inline-block;
+      text-decoration: none !important;
+      transition: all 0.2s ease;
+    }
+    .force-modal-btn:hover {
+      background: #1f3631;
+      transform: translateY(-1px);
+      color: white !important;
+    }
+  </style>
+</div>
+</body>
+</html>

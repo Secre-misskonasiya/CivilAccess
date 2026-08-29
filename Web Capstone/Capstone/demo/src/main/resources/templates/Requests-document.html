@@ -584,7 +584,7 @@ select {
         <div class="tab" onclick="switchTab(this, 'ready')">
             Ready <span class="tab-badge" id="badge-ready" th:text="${readyCount}">0</span>
         </div>
-        <div class="tab" onclick="switchTab(this, 'archive')">
+        <div class="tab" th:if="${currentrole == 'ADMIN'}" onclick="switchTab(this, 'archive')">
             Archive <span class="tab-badge" id="badge-archive" th:text="${archivedCount}">0</span>
         </div>
     </div>
@@ -636,9 +636,11 @@ select {
                             <td th:text="${req.documentType}"></td>
                             <td><div class="action-buttons">
                                 <button class="approve-btn" type="button"
+                                th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
                                     th:data-id="${req.id}"
                                     onclick="confirmApprove(this)">Approve</button>
                                 <button class="archive-btn" type="button"
+                                    th:if="${currentrole == 'ADMIN'}"
                                     th:data-id="${req.id}"
                                     onclick="confirmArchive(this)">Archive</button>
                             </div></td>
@@ -698,6 +700,7 @@ select {
                             <td th:text="${req.documentType}"></td>
                             <td><div class="action-buttons">
                                 <button type="button" class="process-btn"
+                                th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
                                         onclick="openDocModalFromRow(this, false)">Process</button>
                                 <button type="button" class="ready-btn" 
                                     th:data-id="${req.id}"
@@ -710,9 +713,11 @@ select {
                                     th:data-emergency-name="${req.emergencyName}"
                                     th:data-emergency-address="${req.emergencyAddress}"
                                     th:data-emergency-contact="${req.emergencyContact}"
+                                    th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
                                     onclick="markAsReady(this)">Mark Ready</button>
                                 <button class="archive-btn" type="button"
                                     th:data-id="${req.id}"
+                                    th:if="${currentrole == 'ADMIN'}"
                                     onclick="confirmArchive(this)">Archive</button>
                             </div></td>
                          </tr>
@@ -772,6 +777,7 @@ select {
                                 <button type="button" class="view-btn"
                                         onclick="openDocModalFromRow(this, true)">View</button>
                                 <button class="archive-btn" type="button"
+                                th:if="${currentrole == 'ADMIN'}"
                                     th:data-id="${req.id}"
                                     onclick="confirmArchive(this)">Archive</button>
                             </div></td>

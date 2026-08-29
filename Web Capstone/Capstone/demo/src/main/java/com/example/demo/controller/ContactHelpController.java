@@ -1,27 +1,40 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.AdminUser;
-import com.example.demo.model.ContactHelpRequest;
-import com.example.demo.model.ContactMessage;
-import com.example.demo.services.AdminUserServices;
-import com.example.demo.services.ActivityLogService;
-import com.example.demo.services.ContactHelpService;
-import com.example.demo.services.ContactMessageService;
+import java.security.Principal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.example.demo.model.AdminUser;
+import com.example.demo.model.ContactHelpRequest;
+import com.example.demo.model.ContactMessage;
+import com.example.demo.services.ActivityLogService;
+import com.example.demo.services.AdminUserServices;
+import com.example.demo.services.ContactHelpService;
+import com.example.demo.services.ContactMessageService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import jakarta.servlet.http.HttpServletRequest;
-import java.security.Principal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/contact-help")
@@ -55,7 +68,7 @@ public class ContactHelpController {
         model.addAttribute("currentUser", name);
         model.addAttribute("currentrole", role);
 
-        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "BARANGAY-CAPTAIN");
+        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "SECRETARIAT STAFF");
         if (!allowedRoles.contains(role)) return "redirect:/home";
 
         model.addAttribute("incomingCount", service.countByStatus("INCOMING"));
@@ -277,6 +290,10 @@ public class ContactHelpController {
 
         AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
                 
+        if ("ARCHIVED".equals(status) && !"ADMIN".equals(admin.getRole())) {
+            return ResponseEntity.status(403).body("Only Admin can archive requests");
+        }
+
         req.setStatus(status);
         if ("RESOLVED".equals(status) && req.getResolvedAt() == null) {
             req.setResolvedAt(LocalDateTime.now());

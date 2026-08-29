@@ -889,14 +889,14 @@
                         </div>
 
                         <div class="stat-card" id="statSOS"
-                             th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
+                             th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
                             <div class="stat-icon-wrap ic-r"><i class="bi bi-exclamation-octagon-fill"></i></div>
                             <div class="stat-label">SOS Alerts This Month</div>
                             <div class="stat-number stat-red" id="numSOS" th:text="${sosAlertsThisMonth != null ? sosAlertsThisMonth : 0}">0</div>
                         </div>
 
                         <div class="stat-card" id="statIncidents"
-                             th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
+                             th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
                             <div class="stat-icon-wrap ic-r"><i class="bi bi-shield-exclamation"></i></div>
                             <div class="stat-label">Total Incidents Reported</div>
                             <div class="stat-number stat-red" id="numIncidents" th:text="${allreports != null ? allreports : 0}">0</div>
@@ -958,7 +958,7 @@
 
                 <!-- ROW 3: Analytics -->
                 <div id="chartsSection"
-                     th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
+                     th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
                     <div class="section-label">Analytics</div>
                     <div class="charts-row">
 
@@ -1594,22 +1594,37 @@ function updateAnnouncement(announcement) {
 }
 
     function initCharts() {
-        const resolved   = parseInt(document.getElementById('dataResolved').value)   || 0;
-        const unresolved = parseInt(document.getElementById('dataUnresolved').value) || 0;
-        const pending    = parseInt(document.getElementById('dataPending').value)    || 0;
-        const allReports = parseInt(document.getElementById('dataAllReports').value) || 0;
-        const blotter    = parseInt(document.getElementById('dataBlotterPending').value)    || 0;
-        createCharts(resolved, unresolved, pending, allReports, blotter);
-    }
+        const resolved   = parseInt(document.getElementById('dataResolved')?.value || '0') || 0;
+        const unresolved = parseInt(document.getElementById('dataUnresolved')?.value || '0') || 0;
+        const pending    = parseInt(document.getElementById('dataPending')?.value || '0') || 0;
+        const allReports = parseInt(document.getElementById('dataAllReports')?.value || '0') || 0;
+        const blotter    = parseInt(document.getElementById('dataBlotterPending')?.value || '0') || 0;
+        
+            // Check if canvas elements exist before creating charts
+            if (document.getElementById('incidentDonut') && 
+                document.getElementById('rateChart') && 
+                document.getElementById('workloadChart')) {
+                createCharts(resolved, unresolved, pending, allReports, blotter);
+            }
+        }
 
-    function createCharts(resolved, unresolved, pending, allReports, blotter) {
+        function createCharts(resolved, unresolved, pending, allReports, blotter) {
+        const incidentCanvas = document.getElementById('incidentDonut');
+        const rateCanvas = document.getElementById('rateChart');
+        const workloadCanvas = document.getElementById('workloadChart');
+        
+        if (!incidentCanvas || !rateCanvas || !workloadCanvas) {
+            console.warn('Chart canvases not found - skipping chart creation');
+            return;
+        }
+        
         Chart.defaults.font.family = "'DM Sans', Arial, sans-serif";
         Chart.defaults.font.size   = 11;
         if (chartInstances.incidentDonut) chartInstances.incidentDonut.destroy();
         if (chartInstances.rateChart)     chartInstances.rateChart.destroy();
         if (chartInstances.workloadChart) chartInstances.workloadChart.destroy();
 
-        chartInstances.incidentDonut = new Chart(document.getElementById('incidentDonut'), {
+        chartInstances.incidentDonut = new Chart(incidentCanvas, {
             type: 'doughnut',
             data: {
                 labels: ['Resolved', 'Unresolved'],
@@ -1626,7 +1641,7 @@ function updateAnnouncement(announcement) {
         document.getElementById('ratePctLabel').textContent = rate + '%';
         document.getElementById('rateSubLabel').textContent = resolved + ' of ' + total + ' resolved';
 
-        chartInstances.rateChart = new Chart(document.getElementById('rateChart'), {
+        chartInstances.rateChart = new Chart(rateCanvas, {
             type: 'doughnut',
             data: {
                 labels: ['Resolved', 'Remaining'],
@@ -1638,7 +1653,7 @@ function updateAnnouncement(announcement) {
             }
         });
 
-        chartInstances.workloadChart = new Chart(document.getElementById('workloadChart'), {
+        chartInstances.workloadChart = new Chart(workloadCanvas, {
             type: 'bar',
             data: {
                 labels: ['Pending Blotter','Pending Docs', 'Total Incidents'],
@@ -1655,7 +1670,9 @@ function updateAnnouncement(announcement) {
         });
     }
 
-    function updateCharts(resolved, unresolved, blotter, pending, allReports) { createCharts(resolved, unresolved, blotter, pending, allReports); }
+    function updateCharts(resolved, unresolved, pending, allReports, blotter) {
+        createCharts(resolved, unresolved, pending, allReports, blotter);
+    }
 
     // ============================================
     // DYNAMIC CALENDAR
@@ -1778,7 +1795,7 @@ function updateAnnouncement(announcement) {
     // ============================================
     // INIT
     // ============================================
-    window.onload = function () {
+   window.onload = function () {
         const status = document.getElementById('accountStatus').value;
         if (status === 'New' || status === 'Newly Updated') {
             document.getElementById('forcePasswordModal').style.display = 'block';
@@ -1789,11 +1806,13 @@ function updateAnnouncement(announcement) {
         fetchWeather();
         setInterval(fetchWeather, 30 * 60 * 1000);
         trackModalState();
-        const role = document.getElementById('dataCurrentRole').value;
-        if (role === 'ADMIN' || role === 'BARANGAY-CAPTAIN' || role === 'SECRETARY') {
+
+        const chartsSection = document.getElementById('chartsSection');
+        if (chartsSection) {
             initCharts();
             initDemographicCharts();
         }
+
         startPolling();
     };
 

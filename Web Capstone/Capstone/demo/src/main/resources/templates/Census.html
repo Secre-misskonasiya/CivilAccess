@@ -397,7 +397,10 @@ td{padding:12px 14px !important;vertical-align:middle !important}
           <div class="filter-option" onclick="applyStatusFilter('FLAGGED','Flagged')">Flagged</div>
         </div>
       </div>
-      <button class="create-btn" onclick="openCreateModal()"><i class="bi bi-plus-circle me-1"></i>Add Census Record</button>
+      <button class="create-btn" onclick="openCreateModal()"
+          th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
+          <i class="bi bi-plus-circle me-1"></i>Add Census Record
+      </button>
     </div>
 
     <div class="summary-grid" id="censusSummaryGrid">
@@ -418,7 +421,7 @@ td{padding:12px 14px !important;vertical-align:middle !important}
         <i class="bi bi-person-check"></i> Active Records
         <span class="tab-count" id="activeCount" th:text="${activeCount}">0</span>
       </div>
-      <div class="tab" id="tab-archived-btn" onclick="switchTab('archived')">
+      <div class="tab" id="tab-archived-btn" onclick="switchTab('archived')" th:if="${currentrole == 'ADMIN'}">
         <i class="bi bi-archive"></i> Archived
         <span class="tab-count" id="archivedCount" th:text="${archivedCount}">0</span>
       </div>
@@ -473,6 +476,7 @@ td{padding:12px 14px !important;vertical-align:middle !important}
                   <td>
                     <div class="action-buttons">
                       <button class="add-member-btn"
+                      
                       th:attr="data-id=${r.id},
                               data-household=${r.householdId},
                               data-address=${r.address},
@@ -482,6 +486,7 @@ td{padding:12px 14px !important;vertical-align:middle !important}
                               data-hhcount=${r.householdMemberCount}"
                       onclick="openHouseholdModal(this)">View Household</button>
                       <button class="add-member-btn"
+                      th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
                         th:attr="data-household=${r.householdId},
                                 data-address=${r.address},
                                 data-dwelling=${r.dwellingType},
@@ -537,6 +542,7 @@ td{padding:12px 14px !important;vertical-align:middle !important}
                                       data-vacchpv=${r.vaccHpv}"
                               onclick="viewRecord(this)">View</button>
                                       <button class="edit-btn"
+                                          th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
                                 th:attr="data-id=${r.id},
                                         data-recordid=${r.recordId},
                                         data-household=${r.householdId},
@@ -586,6 +592,7 @@ td{padding:12px 14px !important;vertical-align:middle !important}
                                         data-ecrel=${r.emergencyContactRelation}"
                                 onclick="editRecord(this)">Edit</button>
                       <button class="archive-btn"
+                          th:if="${currentrole == 'ADMIN'}"
                         th:attr="data-url='/Resident-census/archive/' + ${r.id},
                                  data-name=${r.firstName + ' ' + r.lastName}"
                         onclick="triggerArchive(this)">Archive</button>
@@ -659,6 +666,7 @@ td{padding:12px 14px !important;vertical-align:middle !important}
                     <td>
                       <div class="action-buttons">
                         <button class="add-member-btn"
+                        th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
                           th:attr="data-id=${r.id},
                                   data-household=${r.householdId},
                                   data-address=${r.address},
@@ -716,6 +724,7 @@ td{padding:12px 14px !important;vertical-align:middle !important}
                                   data-ecrel=${r.emergencyContactRelation}"
                           onclick="viewRecord(this)">View</button>
                         <button class="restore-btn"
+                        th:if="${currentrole == 'ADMIN'}"
                           th:attr="data-url='/Resident-census/restore/' + ${r.id},
                                   data-name=${r.firstName + ' ' + r.lastName}"
                           onclick="triggerRestore(this)">Restore</button>
@@ -1150,6 +1159,7 @@ td{padding:12px 14px !important;vertical-align:middle !important}
     <div class="hh-modal-footer">
       <button class="hh-btn-close" onclick="closeHouseholdModal()">Close</button>
       <button class="hh-btn-add" id="hm_add_btn" style="display:none"
+              th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
               onclick="closeHouseholdModal(); addHouseholdMemberFromModal()">
         <i class="bi bi-plus-circle me-1"></i> Add Member
       </button>
@@ -2211,7 +2221,8 @@ function renderHouseholdCards(members, currentResId) {
     if (chip.querySelector('i')?.classList.contains('bi-people'))
       chip.innerHTML = `<i class="bi bi-people"></i> <strong>${members ? members.length : 0}</strong> members`;
   });
-  document.getElementById('hm_add_btn').style.display = '';
+  const addBtn = document.getElementById('hm_add_btn');
+  if (addBtn) addBtn.style.display = '';
 }
 
 function buildHHCard(m, currentResId) {

@@ -1,0 +1,2 @@
+cd Capstone/demo
+mvnw.cmd spring-boot:run

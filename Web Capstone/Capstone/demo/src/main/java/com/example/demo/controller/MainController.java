@@ -160,7 +160,7 @@ public class MainController {
         
         AdminUser currentAdmin = addCurrentAdminToModel(principal, model);
 
-        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "BARANGAY-CAPTAIN");
+        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "BARANGAY-CAPTAIN", "SECRETARIAT STAFF");
 
         if (currentAdmin == null || !allowedRoles.contains(currentAdmin.getRole())) {
             return "redirect:/home";
@@ -250,9 +250,11 @@ public class MainController {
                 String newPassword = admin.getPassword();
                 if (newPassword != null && !newPassword.isBlank()) {
                     existingAdmin.setPassword(passwordEncoder.encode(newPassword));
-                    if ("New".equals(existingAdmin.getEmpstatus()) ||
-                            "Newly Updated".equals(existingAdmin.getEmpstatus())) {
+                    
+                    if ("profile".equals(redirectTo)) {
                         existingAdmin.setEmpstatus("Working");
+                    } else {
+                        existingAdmin.setEmpstatus("Newly Updated");
                     }
                 }
 
@@ -718,43 +720,107 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                     System.err.println("Error loading census demographics: " + e.getMessage());
                 }
                 
-                model.addAttribute("residents", residentUserService.countResidents());
-                model.addAttribute("blotterCount", blotterService.countAll());
+                // Core counts
+                try {
+                    model.addAttribute("residents", residentUserService.countResidents());
+                } catch (Exception e) {
+                    model.addAttribute("residents", 0L);
+                }
+                try {
+                    model.addAttribute("blotterCount", blotterService.countAll());
+                } catch (Exception e) {
+                    model.addAttribute("blotterCount", 0L);
+                }
                 model.addAttribute("blotterPending", pendingBlotters);
-                model.addAttribute("latestAnnouncement", announcementsService.getLatest());
-                model.addAttribute("pendingDocuments", documentService.countPending());
-                model.addAttribute("budget", programBudgetService.getTotalBudget());
-                model.addAttribute("newRequestsThisMonth", documentService.countThisMonth());
+                try {
+                    model.addAttribute("latestAnnouncement", announcementsService.getLatest());
+                } catch (Exception e) {
+                    model.addAttribute("latestAnnouncement", null);
+                }
+                try {
+                    model.addAttribute("pendingDocuments", documentService.countPending());
+                } catch (Exception e) {
+                    model.addAttribute("pendingDocuments", 0L);
+                }
+                try {
+                    model.addAttribute("budget", programBudgetService.getTotalBudget());
+                } catch (Exception e) {
+                    model.addAttribute("budget", 0.0);
+                }
+                try {
+                    model.addAttribute("newRequestsThisMonth", documentService.countThisMonth());
+                } catch (Exception e) {
+                    model.addAttribute("newRequestsThisMonth", 0L);
+                }
                 
                 if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
                     return "redirect:/logout";
                 }
                 
-                boolean isPrivileged = "ADMIN".equals(role) || "BARANGAY-CAPTAIN".equals(role) || "SECRETARY".equals(role);
-
-                if (isPrivileged) {
+                // Privileged role data - ALWAYS add with safe defaults
+                try {
                     model.addAttribute("recentLogs", activityLogService.getRecentLogs(5));
+                } catch (Exception e) {
+                    model.addAttribute("recentLogs", new ArrayList<>());
+                }
+                
+                try {
                     model.addAttribute("sosAlertsThisMonth", sosService.countThisMonth());
+                } catch (Exception e) {
+                    model.addAttribute("sosAlertsThisMonth", 0L);
+                }
 
+                try {
                     Map<String, Long> safetyStats = safetyReportService.getStatusCounts();
-
+                    
                     long resolved = safetyStats.getOrDefault("resolved", 0L) + safetyStats.getOrDefault("arch-resolved", 0L);
                     long arch = safetyStats.getOrDefault("archived", 0L);
                     long inProgress = safetyStats.getOrDefault("in progress", 0L);
                     long unverified = safetyStats.getOrDefault("unverified", 0L);
                     long approved = safetyStats.getOrDefault("approved", 0L);
-
+                    
                     long allUnresolved = arch + inProgress + unverified + approved;
                     long allReports = resolved + allUnresolved;
-
+                    
                     model.addAttribute("resolvedIncidents", resolved);
                     model.addAttribute("unresolvedIncidents", allUnresolved);
                     model.addAttribute("allreports", allReports);
+                } catch (Exception e) {
+                    model.addAttribute("resolvedIncidents", 0L);
+                    model.addAttribute("unresolvedIncidents", 0L);
+                    model.addAttribute("allreports", 0L);
                 }
 
             } else {
                 model.addAttribute("currentUser", "Admin");
                 model.addAttribute("currentrole", "USER");
+                model.addAttribute("currentstatus", "Unknown");
+                model.addAttribute("currentAdminProfilePicture", "");
+                model.addAttribute("householdCount", 0);
+                model.addAttribute("childrenCount", 0);
+                model.addAttribute("adultMalesCount", 0);
+                model.addAttribute("adultFemalesCount", 0);
+                model.addAttribute("seniorsCount", 0);
+                model.addAttribute("totalResidents", 0);
+                model.addAttribute("pwdCount", 0);
+                model.addAttribute("pwdChildren", 0);
+                model.addAttribute("pwdAdultMales", 0);
+                model.addAttribute("pwdAdultFemales", 0);
+                model.addAttribute("pwdSeniors", 0);
+                model.addAttribute("seniorMaleCount", 0);
+                model.addAttribute("seniorFemaleCount", 0);
+                model.addAttribute("residents", 0L);
+                model.addAttribute("blotterCount", 0L);
+                model.addAttribute("blotterPending", 0L);
+                model.addAttribute("latestAnnouncement", null);
+                model.addAttribute("pendingDocuments", 0L);
+                model.addAttribute("budget", 0.0);
+                model.addAttribute("newRequestsThisMonth", 0L);
+                model.addAttribute("recentLogs", new ArrayList<>());
+                model.addAttribute("sosAlertsThisMonth", 0L);
+                model.addAttribute("resolvedIncidents", 0L);
+                model.addAttribute("unresolvedIncidents", 0L);
+                model.addAttribute("allreports", 0L);
             }
 
             model.addAttribute("newAdmin", new AdminUser());
@@ -1045,7 +1111,7 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
         System.out.println(admin.getRole());
         model.addAttribute("newAdmin", new AdminUser());
 
-        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "BARANGAY-CAPTAIN", "TREASURER");
+        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "BARANGAY-CAPTAIN", "TREASURER", "SECRETARIAT STAFF");
 
         if (!allowedRoles.contains(admin.getRole())) {
             return "redirect:/home";
@@ -1061,7 +1127,7 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
         AdminUser admin = addCurrentAdminToModel(principal, model);
         model.addAttribute("newAdmin", new AdminUser());
 
-        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "BARANGAY-CAPTAIN", "TREASURER");
+        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "BARANGAY-CAPTAIN", "TREASURER", "SECRETARIAT STAFF");
 
         if (!allowedRoles.contains(admin.getRole())) {
             return "redirect:/home";

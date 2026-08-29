@@ -46,7 +46,7 @@ public class FacilitiesController {
         model.addAttribute("newAdmin", new AdminUser());
         model.addAttribute("currentUser", admin.getName());
         model.addAttribute("currentrole", admin.getRole());
-        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "BARANGAY-CAPTAIN", "TREASURER");
+        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "BARANGAY-CAPTAIN", "SECRETARIAT STAFF");
         if (!allowedRoles.contains(admin.getRole())) return "redirect:/home";
 
         List<Facilities> allFacilities = facilitiesService.getAllFacilities();
@@ -153,6 +153,13 @@ public class FacilitiesController {
             Principal principal,
             HttpServletRequest request) {
 
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+        
+        // Only ADMIN can delete facilities
+        if (!"ADMIN".equals(admin.getRole())) {
+            return ResponseEntity.status(403).body(Map.of("message", "Only Admin can delete facilities"));
+        }
+
         Facilities existing = facilitiesService.getFacilityById(id);
         if (existing == null) {
             activityLogService.log(
@@ -163,16 +170,14 @@ public class FacilitiesController {
             return ResponseEntity.notFound().build();
         }
 
-        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
         String facilityName = existing.getFacilityName();
-
         facilitiesService.deleteFacility(id);
 
-            activityLogService.log(
-                principal.getName(), admin.getRole(), "DELETED", "Facilities",
-                "Removed the facility: \"" + facilityName + "\"",
-                request.getRemoteAddr(), "Success"
-            );
+        activityLogService.log(
+            principal.getName(), admin.getRole(), "DELETED", "Facilities",
+            "Removed the facility: \"" + facilityName + "\"",
+            request.getRemoteAddr(), "Success"
+        );
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "Facility deleted successfully");

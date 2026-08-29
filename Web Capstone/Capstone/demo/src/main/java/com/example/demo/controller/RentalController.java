@@ -14,6 +14,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Controller
@@ -48,6 +49,8 @@ public class RentalController {
 
         model.addAttribute("currentTab", tab);
         rentalService.updateOverdueStatus();
+
+        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "SECRETARIAT STAFF", "TREASURER", "BARANGAY-CAPTAIN");
 
         // Fetch once, reuse for both lists and counts
         List<Rental> incoming = rentalService.getIncomingRentals();

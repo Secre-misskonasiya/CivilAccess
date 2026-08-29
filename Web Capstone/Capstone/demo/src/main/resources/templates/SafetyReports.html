@@ -1147,7 +1147,14 @@
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
                             <td th:text="${report.timeSubmitted != null ? #temporals.format(report.timeSubmitted, 'h:mm a') : 'N/A'}"></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="process-btn" th:onclick="'updateStatusWithSuccess(' + ${report.id} + ', \'IN_PROGRESS\')'">Process</button><button class="cancel-btn" th:onclick="'confirmAction(' + ${report.id} + ', \'cancel\')'">Cancel</button></div></td>
+                            <td><div class="d-flex gap-2">
+                                <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
+                                <th:block th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
+                                    <button class="process-btn" th:onclick="'updateStatusWithSuccess(' + ${report.id} + ', \'IN_PROGRESS\')'">Process</button>
+                                    <button class="cancel-btn" th:onclick="'confirmAction(' + ${report.id} + ', \'cancel\')'">Cancel</button>
+                                </th:block>
+                            </div>
+                        </td>
                         </tr>
                     </tbody>
                 </table>
@@ -1171,7 +1178,13 @@
                             <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
                             <td th:text="${report.timeSubmitted != null ? #temporals.format(report.timeSubmitted, 'h:mm a') : 'N/A'}"></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="resolve-btn" th:onclick="'openResolutionModal(' + ${report.id} + ')'">Resolve</button><button class="cancel-btn" th:onclick="'confirmAction(' + ${report.id} + ', \'cancel\')'">Cancel</button></div></td>
+                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
+                                <th:block th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
+                                    <button class="resolve-btn" th:onclick="'openResolutionModal(' + ${report.id} + ')'">Resolve</button>
+                                    <button class="cancel-btn" th:onclick="'confirmAction(' + ${report.id} + ', \'cancel\')'">Cancel</button>
+                                </th:block>
+                            </div>
+                        </td>
                         </tr>
                     </tbody>
                 </table>
@@ -1196,7 +1209,11 @@
                             <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
                             <td th:text="${report.timeSubmitted != null ? #temporals.format(report.timeSubmitted, 'h:mm a') : 'N/A'}"></td>
                             <td><span th:if="${report.resolvedBy != null}" class="badge-status status-resolved" th:text="${report.resolvedBy}"></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></td>
-                            <td><div class="d-flex gap-2"><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button><button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button></div></td>
+                            <td><div class="d-flex gap-2">
+                                <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
+                                <button class="view-resolution-btn" th:onclick="'viewResolutionDetails(' + ${report.id} + ')'">View Resolution</button>
+                            </div>
+                        </td>
                         </tr>
                     </tbody>
                 </table>
@@ -1335,7 +1352,14 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-success" id="modalApproveBtn" style="display: none;" onclick="modalApproveAction()">Approve Report</button>
+                <button type="button" 
+                        class="btn btn-success" 
+                        id="modalApproveBtn" 
+                        style="display: none;"
+                        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}"
+                        onclick="modalApproveAction()">
+                    Approve Report
+                </button>
             </div>
         </div>
     </div>
