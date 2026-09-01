@@ -874,12 +874,15 @@
         if (badge) badge.textContent = reservations.length;
         if (countSpan) countSpan.textContent = `${reservations.length} ${status} reservations`;
         
+        const isAdmin = [[${currentrole == 'ADMIN'}]];
+        const canApproveResolve = [[${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}]];
+        
         let html = '';
         for (let r of reservations) {
             const statusClass = r.status === 'INCOMING' ? 'status-incoming' : 
-                               (r.status === 'APPROVED' ? 'status-approved' :
-                               (r.status === 'IN_PROGRESS' ? 'status-inprogress' :
-                               (r.status === 'RESOLVED' ? 'status-resolved' : 'status-archive')));
+                            (r.status === 'APPROVED' ? 'status-approved' :
+                            (r.status === 'IN_PROGRESS' ? 'status-inprogress' :
+                            (r.status === 'RESOLVED' ? 'status-resolved' : 'status-archive')));
             
             if (status === 'resolved') {
                 html += `
@@ -892,6 +895,7 @@
                         <td>${escapeHtml(r.processedBy) || 'N/A'}</td>
                         <td>
                             <button class="view-btn" onclick="viewReservation(${r.id})">View</button>
+                            ${isAdmin ? `<button class="archive-btn" onclick="openArchiveConfirm(${r.id})">Archive</button>` : ''}
                         </td>
                     </tr>
                 `;
@@ -919,10 +923,10 @@
                         <td>${escapeHtml(r.purpose || 'N/A')}</td>
                         <td>
                             <button class="view-btn" onclick="viewReservation(${r.id})">View</button>
-                            ${status === 'incoming' ? `<button class="approve-btn" onclick="checkApprovalConflict(${r.id})">Approve</button>` : ''}
-                            ${status === 'approved' ? `<button class="process-btn" onclick="openProcessConfirm(${r.id})">Process</button>` : ''}
-                            ${status === 'inprogress' ? `<button class="resolve-btn" onclick="openResolveConfirm(${r.id})">Resolve</button>` : ''}
-                            ${status !== 'archive' && status !== 'resolved' ? `<button class="archive-btn" onclick="openArchiveConfirm(${r.id})">Archive</button>` : ''}
+                            ${status === 'incoming' && canApproveResolve ? `<button class="approve-btn" onclick="checkApprovalConflict(${r.id})">Approve</button>` : ''}
+                            ${status === 'approved' && canApproveResolve ? `<button class="process-btn" onclick="openProcessConfirm(${r.id})">Process</button>` : ''}
+                            ${status === 'inprogress' && canApproveResolve ? `<button class="resolve-btn" onclick="openResolveConfirm(${r.id})">Resolve</button>` : ''}
+                            ${status !== 'archive' && status !== 'resolved' && isAdmin ? `<button class="archive-btn" onclick="openArchiveConfirm(${r.id})">Archive</button>` : ''}
                         </td>
                     </tr>
                 `;

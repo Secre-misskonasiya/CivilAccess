@@ -1881,7 +1881,7 @@ function openVerifyModal(button) {
             
             console.log('Loading image from:', imgSrc);
             
-            container.innerHTML = '<img src="' + imgSrc + '" style="max-width:100%; max-height:180px; border-radius:8px; cursor:pointer;" onclick="enlargeImage(\'' + imgSrc + '\')" onerror="this.parentElement.innerHTML=\'<div style="padding:60px;color:#999;">Image not found</div>\'">';
+            container.innerHTML = '<img src="' + imgSrc + '" style="max-width:100%; max-height:180px; border-radius:8px; cursor:pointer;" onclick="enlargeImage(\'' + imgSrc + '\')">';
         } else {
             container.innerHTML = '<div style="padding:60px;color:#999;">No document</div>';
         }
