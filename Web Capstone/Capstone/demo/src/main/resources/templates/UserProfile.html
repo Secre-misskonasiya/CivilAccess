@@ -115,6 +115,44 @@
     .toast-msg.error { background: #c0392b; }
     .toast-msg.success { background: #27ae60; }
     @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* Success / Error toast-style modals (same pattern as the rentals page) */
+    .success-toast-modal .modal-content {
+        background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+        padding: 0;
+    }
+    .success-icon { font-size: 48px; margin-bottom: 12px; }
+
+    .error-toast-modal .modal-content {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+        padding: 0;
+    }
+    .error-icon { font-size: 48px; margin-bottom: 12px; }
+
+    /* The generic .modal-footer rule above (margin-top/padding-top/border-top)
+       is meant for the hand-rolled password modal, but Bootstrap's toast
+       modals share the same class name and were inheriting that spacing,
+       leaving a large gap above the OK button. Reset it here. */
+    .success-toast-modal .modal-body,
+    .error-toast-modal .modal-body {
+        padding-bottom: 8px;
+    }
+    .success-toast-modal .modal-body h5,
+    .error-toast-modal .modal-body h5 {
+        margin-bottom: 0;
+    }
+    .success-toast-modal .modal-footer,
+    .error-toast-modal .modal-footer {
+        margin-top: 0;
+        padding-top: 4px;
+        border-top: none;
+    }
 </style>
 </head>
 <body>
@@ -315,8 +353,38 @@
     </div>
 </div>
 
-<div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
+<!-- Success Modal (same pattern as the rentals page) -->
+<div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <h5 id="successMessage">Success!</h5>
+            </div>
+            <div class="modal-footer justify-content-center border-0 pb-4">
+                <button type="button" class="btn btn-light" id="successOkBtn" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
 
+<!-- Error Modal (same pattern, red variant) -->
+<div class="modal fade error-toast-modal" id="errorModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="error-icon"><i class="bi bi-x-circle-fill"></i></div>
+                <h5 id="errorMessage">Something went wrong</h5>
+            </div>
+            <div class="modal-footer justify-content-center border-0 pb-4">
+                <button type="button" class="btn btn-light" id="errorOkBtn" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
+<script src="/js/sidebar.js"></script>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
@@ -336,6 +404,21 @@
     let supabaseClient = null;
     let currentImageUrl = null;
     let otpVerified = false;
+
+    // ── Success / Error toast modal helpers (mirrors the rentals page) ──
+    function showSuccessModal(message) {
+        document.getElementById('successMessage').innerHTML = message;
+        const el = document.getElementById('successModal');
+        const instance = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
+        instance.show();
+    }
+
+    function showErrorModal(message) {
+        document.getElementById('errorMessage').innerHTML = message;
+        const el = document.getElementById('errorModal');
+        const instance = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
+        instance.show();
+    }
 
     function initSupabase() {
         if (typeof supabase !== 'undefined' && supabase.createClient) {
@@ -463,6 +546,7 @@
                 // Clear the broken file input
                 event.target.value = '';
                 currentImageUrl = null;
+                showErrorModal('Image upload failed. Please try again.');
             });
     }
 
@@ -556,6 +640,10 @@
         });
     }
     function prepareProfileSubmit(event) {
+        // We take over the submission ourselves (fetch) so we can show the
+        // success/error modal instead of relying on a full-page redirect.
+        event.preventDefault();
+
         const fullname = document.getElementById('fullname').value.trim();
         const parts = fullname.split(/\s+/);
         document.getElementById('hiddenFirstName').value = parts[0] || '';
@@ -577,15 +665,42 @@
             document.getElementById('profilePictureUrlHidden').value = currentImageUrl;
         }
 
-        return true;
+        const form = document.getElementById('profileForm');
+        const formData = new FormData(form);
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn.disabled = true;
+
+        fetch(form.action, { method: 'POST', body: formData })
+            .then(response => {
+                if (response.ok) {
+                    // Refresh the page (so all th:text-bound fields reflect the
+                    // save) only after the user dismisses the success modal —
+                    // never automatically.
+                    const successEl = document.getElementById('successModal');
+                    successEl.addEventListener('hidden.bs.modal', function onHide() {
+                        successEl.removeEventListener('hidden.bs.modal', onHide);
+                        window.location.reload();
+                    });
+                    showSuccessModal('Profile updated successfully!');
+                } else {
+                    showErrorModal('Failed to update profile. Please try again.');
+                    saveBtn.disabled = false;
+                }
+            })
+            .catch(() => {
+                showErrorModal('An error occurred while saving your profile.');
+                saveBtn.disabled = false;
+            });
+
+        return false;
     }
 
     function sendOtp() {
         const email = document.getElementById('otpEmail').value.trim();
-        if (!email) { alert('Enter email'); return; }
+        if (!email) { showErrorModal('Please enter your email first.'); return; }
         fetch('/send-otp?email=' + encodeURIComponent(email), { method: 'POST' })
-            .then(r => r.text()).then(msg => alert(msg))
-            .catch(() => alert('Failed to send OTP.'));
+            .then(r => r.text()).then(msg => showSuccessModal(msg))
+            .catch(() => showErrorModal('Failed to send OTP.'));
     }
 
     function verifyOtp() {
@@ -636,8 +751,12 @@
     function updatePasswordModalButton() { document.getElementById('changePasswordBtn').disabled = !(otpVerified && document.getElementById('newPassword')?.classList.contains('valid') && document.getElementById('confirmPassword')?.classList.contains('valid')); }
 
     function preparePasswordSubmit(event) {
-        if (!otpVerified) { event.preventDefault(); alert('Verify OTP first'); return; }
-        if (!document.getElementById('newPassword').classList.contains('valid') || !document.getElementById('confirmPassword').classList.contains('valid')) { event.preventDefault(); alert('Invalid password'); return; }
+        // Take over the submission with fetch so we can show the success/error
+        // modal instead of relying on a full-page redirect.
+        event.preventDefault();
+
+        if (!otpVerified) { showErrorModal('Please verify your OTP first.'); return false; }
+        if (!document.getElementById('newPassword').classList.contains('valid') || !document.getElementById('confirmPassword').classList.contains('valid')) { showErrorModal('Please enter a valid password.'); return false; }
         document.getElementById('pwdHiddenPassword').value = document.getElementById('newPassword').value;
         const parts = document.getElementById('fullname').value.trim().split(/\s+/);
         document.getElementById('pwdHiddenFirstName').value = parts[0] || '';
@@ -645,6 +764,28 @@
         document.getElementById('pwdHiddenUsername').value = document.getElementById('username').value.trim();
         document.getElementById('pwdHiddenEmail').value = document.getElementById('email').value.trim();
         document.getElementById('pwdHiddenPhoneNumber').value = document.getElementById('phone').value.trim();
+
+        const form = document.getElementById('passwordChangeForm');
+        const formData = new FormData(form);
+        const btn = document.getElementById('changePasswordBtn');
+        btn.disabled = true;
+
+        fetch(form.action, { method: 'POST', body: formData })
+            .then(response => {
+                if (response.ok) {
+                    closePasswordModal();
+                    showSuccessModal('Password changed successfully!');
+                } else {
+                    showErrorModal('Failed to change password. Please try again.');
+                    btn.disabled = false;
+                }
+            })
+            .catch(() => {
+                showErrorModal('An error occurred while changing your password.');
+                btn.disabled = false;
+            });
+
+        return false;
     }
 
         function togglePwd(inputId) { 
