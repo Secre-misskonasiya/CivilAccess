@@ -567,7 +567,7 @@
                 <h5 id="successMessage">Success!</h5>
             </div>
             <div class="modal-footer justify-content-center border-0 pb-4">
-                <button type="button" class="btn btn-light" id="successOkBtn">OK</button>
+                <button type="button" class="btn btn-light" id="successOkBtn" data-bs-dismiss="modal">OK</button>
             </div>
         </div>
     </div>
@@ -659,6 +659,11 @@
     let pendingActionId = null;
     let pendingActionType = null;
     let currentCourtFilter = 'all';
+
+    // Tracks the last rendered data (as JSON) per tab, so polling only
+    // touches the DOM when something actually changed instead of
+    // re-rendering the table (and flickering) every 5 seconds.
+    let lastRenderSnapshot = {};
 
     document.addEventListener('DOMContentLoaded', function() {
         // Get current tab from URL
@@ -854,8 +859,18 @@
     function loadReservations(status) {
         fetch(`/reservations/api/${status}`)
             .then(response => response.json())
-            .then(data => renderReservations(data, status))
+            .then(data => renderReservationsIfChanged(data, status))
             .catch(error => console.error('Error loading reservations:', error));
+    }
+
+    // Only touches the table DOM when the data for that tab actually
+    // differs from what's already rendered — avoids the constant
+    // flicker/redraw that came from re-rendering on every poll tick.
+    function renderReservationsIfChanged(reservations, status) {
+        const snapshot = JSON.stringify(reservations || []);
+        if (lastRenderSnapshot[status] === snapshot) return;
+        lastRenderSnapshot[status] = snapshot;
+        renderReservations(reservations, status);
     }
 
     function renderReservations(reservations, status) {
@@ -1241,11 +1256,11 @@
         });
     }
 
+    // Success toast — closes only when the user clicks OK (no timer).
     function showSuccess(message) {
         document.getElementById('successMessage').innerHTML = message;
         const successModal = new bootstrap.Modal(document.getElementById('successModal'));
         successModal.show();
-        setTimeout(() => successModal.hide(), 2000);
     }
 
     // Dedicated error toast — same look/feel as showSuccess but styled red,
@@ -1266,7 +1281,7 @@
                 .then(data => {
                     const activeTab = currentTab;
                     if (data[activeTab]) {
-                        renderReservations(data[activeTab], activeTab);
+                        renderReservationsIfChanged(data[activeTab], activeTab);
                     }
                     if (data.counts) {
                         document.getElementById('badge-incoming').textContent = data.counts.incoming || 0;
