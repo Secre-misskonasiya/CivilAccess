@@ -33,8 +33,9 @@
         align-items: center;
         gap: 10px;
         background-color: #f5f5f5;
+        flex-wrap: wrap;
     }
-    .search-input-wrap { flex: 1; position: relative; }
+    .search-input-wrap { flex: 1; position: relative; min-width: 200px; }
     .search-input-wrap input {
         width: 100%;
         padding: 9px 14px 9px 38px;
@@ -68,6 +69,7 @@
         font-size: 14px;
         cursor: pointer;
         color: #444;
+        min-width: 200px;
     }
     .export-btn {
         padding: 9px 20px;
@@ -86,6 +88,7 @@
         border-bottom: 1px solid #e0e0e0;
         padding: 0 20px;
         gap: 4px;
+        flex-wrap: wrap;
     }
     .tab {
         padding: 12px 18px;
@@ -95,11 +98,20 @@
         display: flex;
         align-items: center;
         gap: 6px;
+        border-bottom: 3px solid transparent;
     }
     .tab.active {
         background-color: #2d4a44;
         color: white;
         border-radius: 6px 6px 0 0;
+        font-weight: bold;
+    }
+    .tab-badge {
+        background-color: #FED734;
+        color: #2d4a44;
+        border-radius: 10px;
+        padding: 1px 7px;
+        font-size: 12px;
         font-weight: bold;
     }
 
@@ -122,7 +134,7 @@
         font-weight: bold;
         font-size: 15px;
     }
-    .panel-content { overflow-x: auto; }
+    .panel-content { overflow-x: auto; padding: 16px 20px; }
 
     th {
         background-color: #eaf2f0 !important;
@@ -138,7 +150,7 @@
         vertical-align: middle !important;
     }
 
-    .action-buttons { display: inline-flex; gap: 6px; align-items: center; }
+    .action-buttons { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
     .approve-btn { background-color: #44C375; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
     .approve-btn:hover { background-color: #2ea05e; }
     .process-btn { background-color: #3498db; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
@@ -210,6 +222,7 @@
         align-items: center;
         gap: 10px;
         background: #f9f9f9;
+        flex-wrap: wrap;
     }
 
     /* Document Template */
@@ -278,8 +291,8 @@
         pointer-events: none !important;
         color: #333 !important;
     }
-    .doc-row { display: flex; gap: 20px; }
-    .doc-row .doc-field { flex: 1; }
+    .doc-row { display: flex; gap: 20px; flex-wrap: wrap; }
+    .doc-row .doc-field { flex: 1; min-width: 150px; }
 
     .btn-print {
         padding: 9px 20px; border: none; border-radius: 6px;
@@ -398,9 +411,7 @@
         margin-right: 5px;
     }
 
-
-
-        /* Hide dropdown arrows, spinners, and placeholder text in readonly mode */
+    /* Hide dropdown arrows, spinners, and placeholder text in readonly mode */
     .doc-template input[readonly]::-webkit-calendar-picker-indicator,
     .doc-template select[readonly]::-webkit-calendar-picker-indicator,
     .doc-template input[readonly]::-webkit-inner-spin-button,
@@ -423,47 +434,42 @@
         visibility: hidden;
     }
     
-    /* Hide select dropdown arrow for readonly */
     .doc-template select[readonly] {
         -webkit-appearance: none;
         appearance: none;
         background-image: none;
     }
     
-    /* For Firefox */
     .doc-template input[readonly]::-moz-placeholder {
         color: transparent;
         visibility: hidden;
     }
     
-    /* Ensure readonly inputs show NO hint text */
     .doc-template input[readonly]:placeholder-shown {
         color: #333;
     }
-
 
     @keyframes spin {
         to { transform: rotate(360deg); }
     }
 
-
     .btn-save-document {
-    padding: 9px 20px;
-    border: none;
-    border-radius: 6px;
-    background: #44C375;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    color: white;
-}
-.btn-save-document:hover {
-    background: #2ea05e;
-}
-.btn-save-document:disabled {
-    background: #a0d4b0;
-    cursor: not-allowed;
-}
+        padding: 9px 20px;
+        border: none;
+        border-radius: 6px;
+        background: #44C375;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        color: white;
+    }
+    .btn-save-document:hover {
+        background: #2ea05e;
+    }
+    .btn-save-document:disabled {
+        background: #a0d4b0;
+        cursor: not-allowed;
+    }
 
     /* Success Toast Modal */
     .success-toast-modal .modal-content {
@@ -492,29 +498,68 @@
         margin-bottom: 12px;
     }
 
+    /* Error Toast Modal */
+    .error-toast-modal .modal-content {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+    }
+    .error-toast-modal .modal-header {
+        background: transparent;
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .error-toast-modal .modal-body {
+        text-align: center;
+        padding: 20px;
+    }
+    .error-toast-modal .modal-footer {
+        border-top: none;
+        justify-content: center;
+        padding-top: 0;
+        background: transparent;
+    }
+    .error-icon {
+        font-size: 60px;
+        margin-bottom: 12px;
+    }
 
-    /* Ensure confirm/success modals appear above all custom overlays */
-#successModal,
-[id^="dynamicConfirmModal_"] {
-    z-index: 9000 !important;
-}
+    /* Ensure confirm/success/error modals appear above all custom overlays */
+    #successModal,
+    #errorModal,
+    [id^="dynamicConfirmModal_"] {
+        z-index: 9000 !important;
+    }
 
-.modal-backdrop {
-    z-index: 8999 !important;
-}
+    .modal-backdrop {
+        z-index: 8999 !important;
+    }
 
+    select {
+        -webkit-appearance: none;
+        appearance: none;
+        background-image: none;
+    }
 
-select {
-    -webkit-appearance: none;
-    appearance: none;
-    background-image: none;
-}
+    .sortable-th:hover { background-color: #d6e6e1 !important; cursor: pointer; }
+    .sortable-th .sort-icon { font-size: 11px; opacity: 0.6; }
 
-.sortable-th:hover { background-color: #d6e6e1 !important; }
-.sortable-th .sort-icon { font-size: 11px; opacity: 0.6; }
-.sortable-th.sort-asc .sort-icon::after { content: ''; }
-.sortable-th.sort-desc .sort-icon::after { content: ''; }
-
+    /* Responsive table */
+    @media (max-width: 768px) {
+        .search-bar-area {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .search-input-wrap { min-width: 100%; }
+        .filter-select { min-width: 100%; }
+        .doc-modal-box { width: 100%; margin: 10px; }
+        .doc-row { flex-direction: column; }
+        .doc-modal-footer { flex-direction: column; align-items: stretch; }
+        .doc-modal-footer button { width: 100%; }
+        .action-buttons { flex-wrap: wrap; }
+        .action-buttons button { font-size: 11px; padding: 4px 8px; }
+    }
 </style>
 
 <meta charset="UTF-8">
@@ -535,7 +580,6 @@ select {
 <div class="toast-container" id="toastContainer"></div>
 <div class="layout">
 
-
 <!-- Success Modal -->
 <div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -546,7 +590,23 @@ select {
                 <h5 id="successMessage">Success!</h5>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">OK</button>
+                <button type="button" class="btn btn-light" id="successOkBtn">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade error-toast-modal" id="errorModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0"></div>
+            <div class="modal-body">
+                <div class="error-icon"><i class="bi bi-x-circle-fill"></i></div>
+                <h5 id="errorMessage">Error!</h5>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" id="errorOkBtn" data-bs-dismiss="modal">OK</button>
             </div>
         </div>
     </div>
@@ -646,7 +706,7 @@ select {
                             </div></td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(incomingRequests)}">
-                            <td colspan="5" style="text-align:center; color:#999;">No incoming requests</td>
+                            <td colspan="7" style="text-align:center; color:#999;">No incoming requests</td>
                         </tr>
                     </tbody>
                 </table>
@@ -722,7 +782,7 @@ select {
                             </div></td>
                          </tr>
                         <tr th:if="${#lists.isEmpty(processingRequests)}">
-                            <td colspan="5" style="text-align:center; color:#999;">No processing requests</td>
+                            <td colspan="7" style="text-align:center; color:#999;">No processing requests</td>
                         </tr>
                     </tbody>
                 </table>
@@ -783,7 +843,7 @@ select {
                             </div></td>
                          </tr>
                         <tr th:if="${#lists.isEmpty(readyRequests)}">
-                            <td colspan="5" style="text-align:center; color:#999;">No ready requests</td>
+                            <td colspan="7" style="text-align:center; color:#999;">No ready requests</td>
                         </tr>
                     </tbody>
                 </table>
@@ -829,7 +889,7 @@ select {
                             </div></td>
                          </tr>
                         <tr th:if="${#lists.isEmpty(archivedRequests)}">
-                            <td colspan="5" style="text-align:center; color:#999;">No archived requests</td>
+                            <td colspan="7" style="text-align:center; color:#999;">No archived requests</td>
                         </tr>
                     </tbody>
                 </table>
@@ -934,6 +994,7 @@ select {
   let currentDocId = null;
   let currentDocType = null;
   let currentIsReadOnly = false;
+  let pollSuppressed = false;
 
   function initSupabase() {
     if (typeof supabase !== 'undefined' && supabase.createClient) {
@@ -948,11 +1009,39 @@ select {
   supabaseScript.onload = initSupabase;
   document.head.appendChild(supabaseScript);
 
-  // ─── Confirmation & Success Modal helpers (matching system-settings) ────────
+  // ─── Confirmation & Success/Error Modal helpers ────────────────────────────
   function showSuccess(message) {
     document.getElementById('successMessage').innerHTML = message;
-    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+    const successModalEl = document.getElementById('successModal');
+    const successModal = new bootstrap.Modal(successModalEl);
+    
+    const okButton = document.getElementById('successOkBtn');
+    const newOkButton = okButton.cloneNode(true);
+    okButton.parentNode.replaceChild(newOkButton, okButton);
+    
+    newOkButton.addEventListener('click', function() {
+      window.location.reload();
+    });
+    
+    successModalEl.addEventListener('hidden.bs.modal', function onHidden() {
+      window.location.reload();
+      successModalEl.removeEventListener('hidden.bs.modal', onHidden);
+    }, { once: true });
+    
     successModal.show();
+  }
+
+  function showError(message) {
+    document.getElementById('errorMessage').innerHTML = message;
+    const errorModalEl = document.getElementById('errorModal');
+    const errorModal = new bootstrap.Modal(errorModalEl);
+
+    errorModalEl.addEventListener('hidden.bs.modal', function onHidden() {
+      pollSuppressed = false;
+      errorModalEl.removeEventListener('hidden.bs.modal', onHidden);
+    }, { once: true });
+
+    errorModal.show();
   }
 
   function showConfirm(message, title, onConfirm) {
@@ -994,11 +1083,18 @@ select {
       `Approve the request from <strong>${name || 'this resident'}</strong>?`,
       'Confirm Approve',
       function() {
-        const form = document.createElement('form');
-        form.method = 'post';
-        form.action = `/requests-document/${id}/process`;
-        document.body.appendChild(form);
-        form.submit();
+        pollSuppressed = true;
+        fetch(`/requests-document/${id}/process`, { method: 'POST' })
+          .then(response => {
+            if (response.ok) {
+              showSuccess('Request approved successfully!');
+            } else {
+              showError('Failed to approve the request. Please try again.');
+            }
+          })
+          .catch(error => {
+            showError('Error approving request: ' + error.message);
+          });
       }
     );
   }
@@ -1012,16 +1108,23 @@ select {
       `Archive the request from <strong>${name || 'this resident'}</strong>? This action cannot be undone easily.`,
       'Confirm Archive',
       function() {
-        const form = document.createElement('form');
-        form.method = 'post';
-        form.action = `/requests-document/${id}/archive`;
-        document.body.appendChild(form);
-        form.submit();
+        pollSuppressed = true;
+        fetch(`/requests-document/${id}/archive`, { method: 'POST' })
+          .then(response => {
+            if (response.ok) {
+              showSuccess('Request archived successfully!');
+            } else {
+              showError('Failed to archive the request. Please try again.');
+            }
+          })
+          .catch(error => {
+            showError('Error archiving request: ' + error.message);
+          });
       }
     );
   }
 
-  // Tab switching
+  // ─── Tab switching with filter reset ──────────────────────────────────────
   function switchTab(el, tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
@@ -1032,44 +1135,70 @@ select {
     applyFilters();
   }
 
+  // ─── Apply Filters (fixed to work with all tabs) ──────────────────────────
   function applyFilters() {
-    const searchValue = document.getElementById('request-search').value.toLowerCase();
+    const searchValue = document.getElementById('request-search').value.toLowerCase().trim();
     const filterType = document.getElementById('filter-type').value;
     const activePanel = document.querySelector('.panel-inner:not(.d-none)');
     if (!activePanel) return;
+    
     const rows = activePanel.querySelectorAll('tbody tr');
     let visibleCount = 0;
+    
     rows.forEach(row => {
-      if (row.querySelector('td[colspan]')) { row.style.display = ''; return; }
-      const name = row.cells[0]?.textContent.toLowerCase() || '';
-      const phone = row.cells[1]?.textContent.toLowerCase() || '';
-      const documentType = row.cells[3]?.textContent.toLowerCase() || '';
-      const searchText = `${name} ${phone} ${documentType}`;
-      let matchesSearch = searchValue === '' || searchText.includes(searchValue);
+      // Skip "no data" row
+      if (row.querySelector('td[colspan]')) {
+        row.style.display = '';
+        return;
+      }
+      
+      // Get all cell text
+      const allText = row.textContent.toLowerCase();
+      
+      // Check search match
+      let matchesSearch = searchValue === '' || allText.includes(searchValue);
+      
+      // Check type filter
       let matchesFilter = filterType === 'all';
       if (!matchesFilter && filterType !== 'all') {
         const filterValue = filterType.toLowerCase().replace(/_/g, ' ');
-        matchesFilter = documentType.includes(filterValue) || documentType.includes(filterType.toLowerCase());
+        // Get the request type from the 6th column (index 5)
+        const typeCell = row.querySelectorAll('td')[5];
+        const typeText = typeCell ? typeCell.textContent.toLowerCase() : '';
+        matchesFilter = typeText.includes(filterValue) || typeText.includes(filterType.toLowerCase());
       }
-      if (matchesSearch && matchesFilter) { row.style.display = ''; visibleCount++; }
-      else row.style.display = 'none';
+      
+      if (matchesSearch && matchesFilter) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
     });
+    
+    // Update or hide "no data" row
     const noDataRow = activePanel.querySelector('tbody tr td[colspan]')?.parentElement;
     if (noDataRow) {
+      const td = noDataRow.querySelector('td');
       if (visibleCount === 0 && searchValue !== '') {
         noDataRow.style.display = '';
-        const td = noDataRow.querySelector('td');
         if (td) td.textContent = 'No matching requests found';
       } else if (visibleCount === 0 && filterType !== 'all') {
         noDataRow.style.display = '';
-        const td = noDataRow.querySelector('td');
         if (td) td.textContent = `No ${filterType.replace(/_/g, ' ')} requests found`;
-      } else { noDataRow.style.display = 'none'; }
+      } else if (visibleCount === 0) {
+        noDataRow.style.display = '';
+        if (td) td.textContent = 'No requests found';
+      } else {
+        noDataRow.style.display = 'none';
+      }
     }
   }
 
+  // ─── Event listeners for filter ──────────────────────────────────────────
   const searchInput = document.getElementById('request-search');
-  if (searchInput) searchInput.addEventListener('keyup', applyFilters);
+  if (searchInput) searchInput.addEventListener('input', applyFilters);
+  
   const filterSelect = document.getElementById('filter-type');
   if (filterSelect) filterSelect.addEventListener('change', applyFilters);
 
@@ -1188,11 +1317,9 @@ select {
         else if (labelText.includes('contact no')) addParam('contactNumber', value);
       });
       
-      // Build full name from all parts (first, middle, last)
       const fullName = [firstName, middleName, lastName].filter(p => p && p.trim()).join(' ');
       if (fullName) addParam('fullName', fullName);
       
-      // Get emergency section fields
       const emergencySection = area.querySelector('[style*="e74c3c"]');
       if (emergencySection) {
         const emergencyInputs = emergencySection.querySelectorAll('.doc-field input:not([readonly])');
@@ -1366,19 +1493,15 @@ select {
       civilHtml += `</select>`;
       
       return `<div class="doc-template ${wm}" style="font-family:'Times New Roman',serif; width:210mm; min-height:297mm; margin:0 auto; padding:30px 55px 50px 55px; box-sizing:border-box; background:white; color:#000; position:relative; overflow:hidden;">
-        <!-- Watermark seal in center of page -->
         <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:320px; height:320px; pointer-events:none; z-index:0;">
           <img src="/images/sansebastianlogo.png" style="width:100%; height:100%; object-fit:contain; opacity:0.08;" alt="San Sebastian Seal" onerror="this.style.display='none'"/>
         </div>
-        <!-- Header: 3 logos + title block -->
         <div style="display:flex; align-items:center; gap:0; margin-bottom:6px; position:relative; z-index:1;">
-          <!-- Logos -->
           <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
             <img src="/images/sansebastianlogo.png" style="width:68px;height:68px;object-fit:contain;" alt="San Sebastian Logo" onerror="this.style.display='none'"/>
             <img src="/images/bayanngkawitlogo.png" style="width:68px;height:68px;object-fit:contain;" alt="Bayan ng Kawit Logo" onerror="this.style.display='none'"/>
             <img src="/images/Bagong_Pilipinas_logo.png" style="width:68px;height:68px;object-fit:contain;" alt="Bagong Pilipinas Logo" onerror="this.style.display='none'"/>
           </div>
-          <!-- Title block -->
           <div style="flex:1; text-align:right; font-size:12px; line-height:1.6; font-family:Arial,sans-serif; font-weight:bold; text-transform:uppercase;">
             <div>Republic of the Philippines</div>
             <div>Province of Cavite</div>
@@ -1387,14 +1510,12 @@ select {
             <div style="font-size:10px; font-weight:normal; text-transform:none;">CELLPHONE NO.: 0945-577-9766</div>
           </div>
         </div>
-        <!-- Philippine flag color bar -->
         <div style="display:flex; height:6px; margin-bottom:2px; position:relative; z-index:1;">
           <div style="flex:1; background:#0038A8;"></div>
           <div style="flex:1; background:#CE1126;"></div>
         </div>
         <div style="height:4px; background:#FCD116; position:relative; z-index:1;"></div>
         <div style="height:40px;"></div>
-        <!-- Document title -->
         <div style="text-align:center; margin-bottom:28px; position:relative; z-index:1;">
           <span style="font-size:22px; font-weight:bold; text-decoration:underline; letter-spacing:1px; font-family:'Times New Roman',serif;">BARANGAY INDIGENCY</span>
         </div>
@@ -1441,11 +1562,9 @@ select {
       civilHtml += `</select>`;
       
       return `<div class="doc-template ${wm}" style="font-family:'Times New Roman',serif; width:210mm; min-height:297mm; margin:0 auto; padding:30px 55px 50px 55px; box-sizing:border-box; background:white; color:#000; position:relative; overflow:hidden;">
-        <!-- Watermark seal -->
         <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:320px; height:320px; pointer-events:none; z-index:0;">
           <img src="/images/sansebastianlogo.png" style="width:100%; height:100%; object-fit:contain; opacity:0.08;" alt="San Sebastian Seal" onerror="this.style.display='none'"/>
         </div>
-        <!-- Header: 3 logos + title block -->
         <div style="display:flex; align-items:center; gap:0; margin-bottom:6px; position:relative; z-index:1;">
           <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
             <img src="/images/sansebastianlogo.png" style="width:68px;height:68px;object-fit:contain;" alt="San Sebastian Logo" onerror="this.style.display='none'"/>
@@ -1460,14 +1579,12 @@ select {
             <div style="font-size:10px; font-weight:normal; text-transform:none;">CELLPHONE NO.: 0945-577-9766</div>
           </div>
         </div>
-        <!-- Philippine flag color bar -->
         <div style="display:flex; height:6px; margin-bottom:2px; position:relative; z-index:1;">
           <div style="flex:1; background:#0038A8;"></div>
           <div style="flex:1; background:#CE1126;"></div>
         </div>
         <div style="height:4px; background:#FCD116; position:relative; z-index:1;"></div>
         <div style="height:40px;"></div>
-        <!-- Document title -->
         <div style="text-align:center; margin-bottom:28px; position:relative; z-index:1;">
           <span style="font-size:22px; font-weight:bold; text-decoration:underline; letter-spacing:1px; font-family:'Times New Roman',serif;">BARANGAY CLEARANCE</span>
         </div>
@@ -1490,7 +1607,6 @@ select {
           <input type="text" value="${docIssuedMonthYear}" ${ro} placeholder="Month, Year" style="width:130px;display:inline;border:none;border-bottom:1px solid #000;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/>
           at <strong>Brgy. San Sebastian Kawit, Cavite.</strong>
         </p>
-        <!-- Signature row: applicant left, captain right -->
         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:70px; position:relative; z-index:1;">
           <div style="text-align:left;">
             <div style="border-top:1.5px solid #000; padding-top:5px; min-width:200px; margin-bottom:4px;"></div>
@@ -1516,12 +1632,9 @@ select {
       const hasPhoto  = isValidUrl(photoUrl);
 
       return `<div class="doc-template ${wm}" style="font-family:Arial,sans-serif; width:340px; margin:0 auto; border-radius:12px; overflow:hidden; box-shadow:0 4px 18px rgba(0,0,0,0.18);">
-        <!-- TOP BANNER: blue gradient with logos and title -->
         <div style="background:linear-gradient(135deg,#1a3a8c 0%,#2255b8 60%,#1a6eb5 100%); padding:10px 12px 8px 12px; position:relative; overflow:hidden;">
-          <!-- Decorative ribbon shapes -->
           <div style="position:absolute;top:0;right:0;width:120px;height:100%;background:linear-gradient(135deg,rgba(206,17,38,0.7),rgba(206,17,38,0.3));clip-path:polygon(40% 0,100% 0,100% 100%,0% 100%);"></div>
           <div style="position:absolute;top:0;right:0;width:80px;height:100%;background:linear-gradient(135deg,rgba(255,255,255,0.15),rgba(255,255,255,0.05));clip-path:polygon(60% 0,100% 0,100% 100%,20% 100%);"></div>
-          <!-- Logos row -->
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;position:relative;z-index:2;">
             <img src="/images/sansebastianlogo.png" style="width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4));" onerror="this.style.display='none'"/>
             <img src="/images/kawit.jpg" style="width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4));" onerror="this.style.display='none'"/>
@@ -1535,20 +1648,15 @@ select {
             </div>
             <img src="/images/brgy.png" style="width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4));" onerror="this.style.display='none'"/>
           </div>
-          <!-- Flag color strip -->
           <div style="display:flex;height:4px;border-radius:2px;overflow:hidden;margin-top:4px;position:relative;z-index:2;">
             <div style="flex:1;background:#0038A8;"></div>
             <div style="flex:1;background:#CE1126;"></div>
             <div style="flex:2;background:#FCD116;"></div>
           </div>
         </div>
-        <!-- CARD BODY: white area with photo + details -->
         <div style="background:#fff;padding:10px 12px;">
-          <!-- Control No -->
           <div style="font-size:8px;font-weight:bold;color:#333;margin-bottom:8px;letter-spacing:0.5px;">CONTROL NO: <input type="text" value="${docOrNumber}" ${ro} style="border:none;border-bottom:1px solid #aaa;font-size:8px;width:80px;padding:0 2px;font-family:Arial,sans-serif;background:transparent;font-weight:bold;"/></div>
-          <!-- Photo + Info row -->
           <div style="display:flex;gap:10px;align-items:flex-start;">
-            <!-- Photo -->
             <div style="flex-shrink:0;width:72px;height:88px;border:1.5px solid #aaa;background:#f0f0f0;display:flex;align-items:center;justify-content:center;overflow:hidden;">
               ${hasPhoto ? `<img src="${escapeHtml(photoUrl)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
               <div style="text-align:center;color:#bbb;display:${hasPhoto ? 'none' : 'flex'};flex-direction:column;align-items:center;">
@@ -1556,7 +1664,6 @@ select {
                 <div style="font-size:8px;">Photo</div>
               </div>
             </div>
-            <!-- Info -->
             <div style="flex:1;font-size:9px;color:#111;line-height:1.9;">
               <div style="font-size:11px;font-weight:bold;color:#111;margin-bottom:4px;border-bottom:1px solid #ddd;padding-bottom:2px;">${safeFullName}</div>
               <div><strong>ADDRESS:</strong> <input type="text" value="${safeAddress}" ${ro} style="border:none;border-bottom:1px solid #ccc;font-size:9px;width:160px;padding:0 2px;font-family:Arial,sans-serif;background:transparent;"/></div>
@@ -1564,7 +1671,6 @@ select {
               <div><strong>CONTACT NO:</strong> <input type="text" value="${safeContactNumber}" ${ro} style="border:none;border-bottom:1px solid #ccc;font-size:9px;width:110px;padding:0 2px;font-family:Arial,sans-serif;background:transparent;"/></div>
             </div>
           </div>
-          <!-- Signature row -->
           <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px;">
             <div style="text-align:center;">
               <div style="width:120px;border-bottom:1px solid #333;min-height:28px;"></div>
@@ -1579,7 +1685,6 @@ select {
             </div>
           </div>
         </div>
-        <!-- BOTTOM BANNER -->
         <div style="background:linear-gradient(90deg,#1a3a8c,#2255b8); padding:6px; text-align:center;">
           <div style="font-size:10px;font-weight:bold;color:#fff;letter-spacing:2px;text-transform:uppercase;">BARANGAY IDENTIFICATION CARD</div>
         </div>
@@ -1636,6 +1741,7 @@ select {
     const originalText = button.innerHTML;
     button.innerHTML = '<span class="loading-spinner"></span> Saving...';
     button.disabled = true;
+    pollSuppressed = true;
 
     try {
       const canvas = await html2canvas(element, { scale: 3, backgroundColor: '#ffffff', logging: false, useCORS: true, allowTaint: false });
@@ -1648,12 +1754,17 @@ select {
         body: `documentUrl=${encodeURIComponent(uploadedUrl)}`
       });
       const result = await response.json();
-      if (result.success) { hiddenContainer.innerHTML = ''; location.reload(); }
-      else throw new Error(result.message || 'Failed to save document');
+      if (result.success) {
+        hiddenContainer.innerHTML = '';
+        showSuccess('Request marked as ready!');
+      } else {
+        throw new Error(result.message || 'Failed to save document');
+      }
     } catch (error) {
       console.error('Error:', error);
-      showConfirm(`Error saving document: ${error.message}`, 'Error', function() {});
+      showError(`Error saving document: ${error.message}`);
       hiddenContainer.innerHTML = '';
+      pollSuppressed = false;
     } finally {
       button.innerHTML = originalText;
       button.disabled = false;
@@ -1754,19 +1865,15 @@ select {
       civilHtml += `</select>`;
       
       html = `<div class="doc-template ${wm}" style="font-family:'Times New Roman',serif; width:210mm; min-height:297mm; margin:0 auto; padding:30px 55px 50px 55px; box-sizing:border-box; background:white; color:#000; position:relative; overflow:hidden;">
-        <!-- Watermark seal in center of page -->
         <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:320px; height:320px; pointer-events:none; z-index:0;">
           <img src="/images/sansebastianlogo.png" style="width:100%; height:100%; object-fit:contain; opacity:0.08;" alt="San Sebastian Seal" onerror="this.style.display='none'"/>
         </div>
-        <!-- Header: 3 logos + title block -->
         <div style="display:flex; align-items:center; gap:0; margin-bottom:6px; position:relative; z-index:1;">
-          <!-- Logos -->
           <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
             <img src="/images/sansebastianlogo.png" style="width:68px;height:68px;object-fit:contain;" alt="San Sebastian Logo" onerror="this.style.display='none'"/>
             <img src="/images/bayanngkawitlogo.png" style="width:68px;height:68px;object-fit:contain;" alt="Bayan ng Kawit Logo" onerror="this.style.display='none'"/>
             <img src="/images/Bagong_Pilipinas_logo.png" style="width:68px;height:68px;object-fit:contain;" alt="Bagong Pilipinas Logo" onerror="this.style.display='none'"/>
           </div>
-          <!-- Title block -->
           <div style="flex:1; text-align:right; font-size:12px; line-height:1.6; font-family:Arial,sans-serif; font-weight:bold; text-transform:uppercase;">
             <div>Republic of the Philippines</div>
             <div>Province of Cavite</div>
@@ -1775,14 +1882,12 @@ select {
             <div style="font-size:10px; font-weight:normal; text-transform:none;">CELLPHONE NO.: 0945-577-9766</div>
           </div>
         </div>
-        <!-- Philippine flag color bar -->
         <div style="display:flex; height:6px; margin-bottom:2px; position:relative; z-index:1;">
           <div style="flex:1; background:#0038A8;"></div>
           <div style="flex:1; background:#CE1126;"></div>
         </div>
         <div style="height:4px; background:#FCD116; position:relative; z-index:1;"></div>
         <div style="height:40px;"></div>
-        <!-- Document title -->
         <div style="text-align:center; margin-bottom:28px; position:relative; z-index:1;">
           <span style="font-size:22px; font-weight:bold; text-decoration:underline; letter-spacing:1px; font-family:'Times New Roman',serif;">BARANGAY INDIGENCY</span>
         </div>
@@ -1829,11 +1934,9 @@ select {
       civilHtml += `</select>`;
       
       html = `<div class="doc-template ${wm}" style="font-family:'Times New Roman',serif; width:210mm; min-height:297mm; margin:0 auto; padding:30px 55px 50px 55px; box-sizing:border-box; background:white; color:#000; position:relative; overflow:hidden;">
-        <!-- Watermark seal -->
         <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:320px; height:320px; pointer-events:none; z-index:0;">
           <img src="/images/sansebastianlogo.png" style="width:100%; height:100%; object-fit:contain; opacity:0.08;" alt="San Sebastian Seal" onerror="this.style.display='none'"/>
         </div>
-        <!-- Header: 3 logos + title block -->
         <div style="display:flex; align-items:center; gap:0; margin-bottom:6px; position:relative; z-index:1;">
           <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
             <img src="/images/sansebastianlogo.png" style="width:68px;height:68px;object-fit:contain;" alt="San Sebastian Logo" onerror="this.style.display='none'"/>
@@ -1848,14 +1951,12 @@ select {
             <div style="font-size:10px; font-weight:normal; text-transform:none;">CELLPHONE NO.: 0945-577-9766</div>
           </div>
         </div>
-        <!-- Philippine flag color bar -->
         <div style="display:flex; height:6px; margin-bottom:2px; position:relative; z-index:1;">
           <div style="flex:1; background:#0038A8;"></div>
           <div style="flex:1; background:#CE1126;"></div>
         </div>
         <div style="height:4px; background:#FCD116; position:relative; z-index:1;"></div>
         <div style="height:40px;"></div>
-        <!-- Document title -->
         <div style="text-align:center; margin-bottom:28px; position:relative; z-index:1;">
           <span style="font-size:22px; font-weight:bold; text-decoration:underline; letter-spacing:1px; font-family:'Times New Roman',serif;">BARANGAY CLEARANCE</span>
         </div>
@@ -1878,7 +1979,6 @@ select {
           <input type="text" value="${docIssuedMonthYear}" ${ro} placeholder="Month, Year" style="width:130px;display:inline;border:none;border-bottom:1px solid #000;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/>
           at <strong>Brgy. San Sebastian Kawit, Cavite.</strong>
         </p>
-        <!-- Signature row: applicant left, captain right -->
         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:70px; position:relative; z-index:1;">
           <div style="text-align:left;">
             <div style="border-top:1.5px solid #000; padding-top:5px; min-width:200px; margin-bottom:4px;"></div>
@@ -1904,7 +2004,6 @@ select {
       const hasPhoto  = isValidUrl(photoUrl);
 
       html = `<div class="doc-template ${wm}" style="font-family:Arial,sans-serif; width:480px; margin:0 auto; border-radius:10px; overflow:hidden; box-shadow:0 4px 18px rgba(0,0,0,0.18);">
-        <!-- TOP BANNER -->
         <div style="background:linear-gradient(135deg,#1a3a8c 0%,#2255b8 60%,#1a6eb5 100%); padding:8px 14px 6px 14px; position:relative; overflow:hidden;">
           <div style="position:absolute;top:0;right:0;width:160px;height:100%;background:linear-gradient(135deg,rgba(206,17,38,0.7),rgba(206,17,38,0.3));clip-path:polygon(40% 0,100% 0,100% 100%,0% 100%);"></div>
           <div style="position:absolute;top:0;right:0;width:100px;height:100%;background:linear-gradient(135deg,rgba(255,255,255,0.15),rgba(255,255,255,0.05));clip-path:polygon(60% 0,100% 0,100% 100%,20% 100%);"></div>
@@ -1926,7 +2025,6 @@ select {
             <div style="flex:2;background:#FCD116;"></div>
           </div>
         </div>
-        <!-- CARD BODY -->
         <div style="background:#fff;padding:8px 14px;">
           <div style="font-size:8px;font-weight:bold;color:#333;margin-bottom:6px;letter-spacing:0.5px;">CONTROL NO: <input type="text" value="${docOrNumber}" ${ro} style="border:none;border-bottom:1px solid #aaa;font-size:8px;width:90px;padding:0 2px;font-family:Arial,sans-serif;background:transparent;font-weight:bold;"/></div>
           <div style="display:flex;gap:12px;align-items:flex-start;">
@@ -1957,7 +2055,6 @@ select {
             </div>
           </div>
         </div>
-        <!-- BOTTOM BANNER -->
         <div style="background:linear-gradient(90deg,#1a3a8c,#2255b8); padding:5px; text-align:center;">
           <div style="font-size:10px;font-weight:bold;color:#fff;letter-spacing:2px;text-transform:uppercase;">BARANGAY IDENTIFICATION CARD</div>
         </div>
@@ -2084,7 +2181,6 @@ select {
     // Columns that need to wrap instead of clip
     const wideColumns = ['Name', 'Request Type', 'Date/TimeStamp Created'];
 
-    // Page header — same layout as Program Calendar / Accounts export
     let tableHtml = `
     <div style="position:relative;text-align:center;padding-bottom:12px;margin-bottom:20px;border-bottom:3px solid #2d4a44;">
         <div style="position:absolute;left:-30px;top:-25px;display:flex;align-items:center;gap:5px;">
@@ -2180,6 +2276,7 @@ select {
   (function() {
     let lastSnapshot = '';
     function isModalOpen() {
+      if (pollSuppressed) return true;
       if (document.getElementById('docModalOverlay')?.style.display === 'block') return true;
       if (document.getElementById('viewFileModalOverlay')?.style.display === 'block') return true;
       const logoutModal = document.getElementById('logoutModal');
@@ -2190,6 +2287,8 @@ select {
       }
       var successModal = document.getElementById('successModal');
       if (successModal && successModal.classList.contains('show')) return true;
+      var errorModal = document.getElementById('errorModal');
+      if (errorModal && errorModal.classList.contains('show')) return true;
       return false;
     }
     function poll() {
@@ -2225,11 +2324,9 @@ function sortByDate(th) {
     const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('td[colspan]'));
     const noDataRow = tbody.querySelector('tr td[colspan]')?.parentElement;
 
-    // Toggle direction
     const currentDir = th.getAttribute('data-sort-dir') || 'none';
     const newDir = currentDir === 'asc' ? 'desc' : 'asc';
 
-    // Reset icons on all sortable headers in this table
     table.querySelectorAll('.sortable-th').forEach(h => {
         h.removeAttribute('data-sort-dir');
         const icon = h.querySelector('.sort-icon');
@@ -2247,7 +2344,7 @@ function sortByDate(th) {
     });
 
     rows.forEach(row => tbody.appendChild(row));
-    if (noDataRow) tbody.appendChild(noDataRow); // keep "no data" row last
+    if (noDataRow) tbody.appendChild(noDataRow);
 }
 
 </script>
