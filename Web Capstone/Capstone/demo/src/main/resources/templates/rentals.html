@@ -365,11 +365,11 @@
         </div>
 
         <div class="tabbar">
-            <div class="tab" th:classappend="${currentTab == 'incoming' ? 'active' : ''}" onclick="window.location.href='/rentals?tab=incoming'">Incoming <span class="tab-badge" id="incomingBadge" th:text="${incomingCount}">0</span></div>
-            <div class="tab" th:classappend="${currentTab == 'active' ? 'active' : ''}" onclick="window.location.href='/rentals?tab=active'">Active <span class="tab-badge" id="activeBadge" th:text="${activeCount}">0</span></div>
-            <div class="tab" th:classappend="${currentTab == 'overdue' ? 'active' : ''}" onclick="window.location.href='/rentals?tab=overdue'">Overdue <span class="tab-badge" id="overdueBadge" th:text="${overdueCount}">0</span></div>
-            <div class="tab" th:classappend="${currentTab == 'returned' ? 'active' : ''}" onclick="window.location.href='/rentals?tab=returned'">Returned <span class="tab-badge" id="returnedBadge" th:text="${returnedCount}">0</span></div>
-            <div class="tab" th:if="${currentrole == 'ADMIN'}" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/rentals?tab=archive'">Archive <span class="tab-badge" id="archiveBadge" th:text="${archiveCount}">0</span></div>
+            <div class="tab" th:classappend="${currentTab == 'incoming' ? 'active' : ''}" data-tab="incoming">Incoming <span class="tab-badge" id="incomingBadge" th:text="${incomingCount}">0</span></div>
+            <div class="tab" th:classappend="${currentTab == 'active' ? 'active' : ''}" data-tab="active">Active <span class="tab-badge" id="activeBadge" th:text="${activeCount}">0</span></div>
+            <div class="tab" th:classappend="${currentTab == 'overdue' ? 'active' : ''}" data-tab="overdue">Overdue <span class="tab-badge" id="overdueBadge" th:text="${overdueCount}">0</span></div>
+            <div class="tab" th:classappend="${currentTab == 'returned' ? 'active' : ''}" data-tab="returned">Returned <span class="tab-badge" id="returnedBadge" th:text="${returnedCount}">0</span></div>
+            <div class="tab" th:if="${currentrole == 'ADMIN'}" th:classappend="${currentTab == 'archive' ? 'active' : ''}" data-tab="archive">Archive <span class="tab-badge" id="archiveBadge" th:text="${archiveCount}">0</span></div>
         </div>
 
         <div class="panel">
@@ -566,6 +566,10 @@
     let pendingActionId = null;
     let pendingActionType = null;
 
+    // Holds a callback that should run only once the user dismisses
+    // the success modal via the OK button - NOT immediately after
+    // the server responds.
+    let pendingRefreshCallback = null;
 
     const isAdmin = document.getElementById('dataCurrentRole')?.value === 'ADMIN';
     const canManage = ['ADMIN', 'SECRETARY', 'SECRETARIAT STAFF'].includes(
@@ -653,8 +657,7 @@
         // Highlight the active tab on page load
         const tabs = document.querySelectorAll('.tab');
         tabs.forEach(tab => {
-            const tabValue = tab.getAttribute('onclick');
-            if (tabValue && tabValue.includes(`tab=${currentTab}`)) {
+            if (tab.getAttribute('data-tab') === currentTab) {
                 tab.classList.add('active');
             } else {
                 tab.classList.remove('active');
@@ -693,23 +696,19 @@
         const tabs = document.querySelectorAll('.tab');
         tabs.forEach(tab => {
             tab.addEventListener('click', function(e) {
-                const href = this.getAttribute('onclick');
-                if (href) {
-                    const match = href.match(/\/rentals\?tab=(\w+)/);
-                    if (match) {
-                        e.preventDefault();
-                        currentTab = match[1];
-                        window.history.pushState({}, '', `/rentals?tab=${currentTab}`);
-                        tabs.forEach(t => t.classList.remove('active'));
-                        this.classList.add('active');
-                        
-                        document.querySelectorAll('.panel-inner').forEach(panel => {
-                            panel.classList.add('d-none');
-                        });
-                        document.getElementById(`tab-${currentTab}`).classList.remove('d-none');
-                        
-                        loadRentals(currentTab);
-                    }
+                const tabName = this.getAttribute('data-tab');
+                if (tabName) {
+                    currentTab = tabName;
+                    window.history.pushState({}, '', `/rentals?tab=${currentTab}`);
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    document.querySelectorAll('.panel-inner').forEach(panel => {
+                        panel.classList.add('d-none');
+                    });
+                    document.getElementById(`tab-${currentTab}`).classList.remove('d-none');
+                    
+                    loadRentals(currentTab);
                 }
             });
         });
@@ -854,6 +853,13 @@
         // Run badge calculations after every render
         fillDueDateBadges();
         fillOverdueBadges();
+
+        // Re-apply whatever search/equipment filter is currently active.
+        // Without this, a background poll or tab reload would rebuild the
+        // tbody with every row visible again, wiping out an in-progress
+        // search or equipment filter selection.
+        const searchInput = document.getElementById('rental-search');
+        filterRentals(searchInput ? searchInput.value : '');
     }
 
     function escapeHtml(text) {
@@ -943,9 +949,10 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showSuccess('Rental approved successfully!');
-                loadRentals(currentTab);
-                updateAllCounts();
+                showSuccess('Rental approved successfully!', function() {
+                    loadRentals(currentTab);
+                    updateAllCounts();
+                });
             } else {
                 showSuccess('Error: ' + (data.error || 'Unknown error'));
             }
@@ -961,9 +968,10 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showSuccess('Equipment returned successfully!');
-                loadRentals(currentTab);
-                updateAllCounts();
+                showSuccess('Equipment returned successfully!', function() {
+                    loadRentals(currentTab);
+                    updateAllCounts();
+                });
             } else {
                 showSuccess('Error: ' + (data.error || 'Unknown error'));
             }
@@ -982,9 +990,10 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showSuccess('Rental archived successfully!');
-                loadRentals(currentTab);
-                updateAllCounts();
+                showSuccess('Rental archived successfully!', function() {
+                    loadRentals(currentTab);
+                    updateAllCounts();
+                });
             } else {
                 showSuccess('Error: ' + (data.error || 'Unknown error'));
             }
@@ -1019,11 +1028,12 @@
             if (data.success) {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('createRentalModal'));
                 if (modal) modal.hide();
-                showSuccess('Rental request created successfully!');
                 document.getElementById('rentalForm').reset();
                 updateRentalTotal();
-                loadRentals(currentTab);
-                updateAllCounts();
+                showSuccess('Rental request created successfully!', function() {
+                    loadRentals(currentTab);
+                    updateAllCounts();
+                });
             } else {
                 showSuccess('Error: ' + (data.error || 'Unknown error'));
             }
@@ -1099,12 +1109,33 @@
             .catch(error => console.error('Error loading counts:', error));
     }
 
-    function showSuccess(message) {
+    // showSuccess now optionally accepts a callback. That callback is
+    // stashed on pendingRefreshCallback and only executed once the
+    // user actually dismisses the modal by clicking OK - never
+    // automatically. There is intentionally no auto-hide timer.
+    function showSuccess(message, onDismissCallback) {
         document.getElementById('successMessage').innerHTML = message;
+        pendingRefreshCallback = typeof onDismissCallback === 'function' ? onDismissCallback : null;
         const successModal = new bootstrap.Modal(document.getElementById('successModal'));
         successModal.show();
-        setTimeout(() => successModal.hide(), 2000);
     }
+
+    // Clicking OK closes the modal; the actual refresh runs in the
+    // 'hidden.bs.modal' handler below so it fires however the modal
+    // gets closed (OK click, backdrop, or Esc) but never before then.
+    document.getElementById('successOkBtn').addEventListener('click', function() {
+        const successModalEl = document.getElementById('successModal');
+        const modalInstance = bootstrap.Modal.getInstance(successModalEl) || new bootstrap.Modal(successModalEl);
+        modalInstance.hide();
+    });
+
+    document.getElementById('successModal').addEventListener('hidden.bs.modal', function() {
+        if (pendingRefreshCallback) {
+            const cb = pendingRefreshCallback;
+            pendingRefreshCallback = null;
+            cb();
+        }
+    });
 
     function startPolling() {
         if (pollingInterval) clearInterval(pollingInterval);

@@ -1628,7 +1628,7 @@
     }
 
     // ============================================
-    // FILTER AND SEARCH
+    // FILTER AND SEARCH - FIXED (case-insensitive)
     // ============================================
     function applyTypeFilter() {
         const activePanel = document.querySelector('.panel-inner:not(.d-none)');
@@ -1640,27 +1640,28 @@
         }
 
         const rows = activePanel.querySelectorAll('tbody tr');
+        const searchValue = document.getElementById('report-search').value.toLowerCase();
+        
         rows.forEach(row => {
+            if (row.querySelector('td[colspan]')) {
+                row.style.display = '';
+                return;
+            }
+            
             const typeCell = row.querySelector('.type-cell');
             let matchType = true;
             if (currentTypeFilter !== 'all') {
                 const typeText = typeCell ? typeCell.innerText.trim() : '';
-                matchType = typeText === currentTypeFilter;
+                matchType = typeText.toUpperCase() === currentTypeFilter.toUpperCase();
             }
-            row.style.display = matchType ? '' : 'none';
+            
+            const text = row.textContent.toLowerCase();
+            const matchesSearch = text.includes(searchValue);
+            
+            row.style.display = (matchesSearch && matchType) ? '' : 'none';
         });
     }
-    
-    document.querySelectorAll('#typeFilterMenu .dropdown-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            currentTypeFilter = this.getAttribute('data-type');
-            const buttonText = currentTypeFilter === 'all' ? 'Filter by Type' : currentTypeFilter;
-            document.getElementById('typeFilterDropdown').innerHTML = `<i class="bi bi-funnel"></i> ${buttonText}`;
-            applyTypeFilter();
-        });
-    });
-    
+
     document.getElementById('report-search').addEventListener('keyup', function() {
         const searchValue = this.value.toLowerCase();
         mapSearchValue = searchValue;
@@ -1675,16 +1676,35 @@
 
         const rows = activePanel.querySelectorAll('tbody tr');
         rows.forEach(row => {
+            if (row.querySelector('td[colspan]')) {
+                row.style.display = '';
+                return;
+            }
+            
             const text = row.textContent.toLowerCase();
             const matchesSearch = text.includes(searchValue);
+            
             let matchesType = true;
             if (currentTypeFilter !== 'all') {
                 const typeCell = row.querySelector('.type-cell');
                 const typeText = typeCell ? typeCell.innerText.trim() : '';
-                matchesType = typeText === currentTypeFilter;
+                matchesType = typeText.toUpperCase() === currentTypeFilter.toUpperCase();
             }
+            
             row.style.display = (matchesSearch && matchesType) ? '' : 'none';
         });
+    });
+
+    // Type filter dropdown - Event delegation
+    document.getElementById('typeFilterMenu').addEventListener('click', function(e) {
+        const item = e.target.closest('.dropdown-item');
+        if (!item) return;
+        e.preventDefault();
+        currentTypeFilter = item.getAttribute('data-type');
+        const buttonText = currentTypeFilter === 'all' ? 'Filter by Type' : currentTypeFilter;
+        const dropdownBtn = document.getElementById('typeFilterDropdown');
+        dropdownBtn.innerHTML = `<i class="bi bi-funnel"></i> ${buttonText}`;
+        applyTypeFilter();
     });
 
     // ============================================
@@ -1747,7 +1767,6 @@
                 const priorityClass = data.priority === 'HIGH' ? 'priority-high' : data.priority === 'MEDIUM' ? 'priority-medium' : 'priority-low';
                 const statusColor = getStatusColor(data.status);
 
-                // Format time submitted - using data.timeSubmitted (camelCase from API)
                 let timeSubmittedDisplay = 'N/A';
                 if (data.timeSubmitted) {
                     try {
@@ -1971,7 +1990,6 @@
             document.getElementById('viewInfoPriority').innerHTML = `<span class="badge-priority ${priorityClass}">${data.priority || 'LOW'}</span>`;
             document.getElementById('viewInfoReporter').textContent = data.reporterName || 'N/A';
             document.getElementById('viewInfoDate').textContent = data.dateSubmitted || 'N/A';
-            // FIXED: Use data.resolvedBy (camelCase from API)
             document.getElementById('viewInfoResolvedBy').textContent = data.resolvedBy || 'N/A';
             document.getElementById('viewInfoResolvedOn').textContent = data.dateHandled ? new Date(data.dateHandled).toLocaleString() : 'N/A';
             document.getElementById('viewResponseTime').textContent = data.resolutionResponseTime || 'N/A';
@@ -2020,7 +2038,6 @@ function exportToPDF() {
     const activePanel = document.querySelector('.panel-inner:not(.d-none)');
     if (!activePanel) return;
 
-    // If on Incident Map tab, export summary instead
     if (activePanel.id === 'tab-incidentmap') {
         exportMapSummaryPDF();
         return;
@@ -2031,7 +2048,6 @@ function exportToPDF() {
 
     const title = activePanel.querySelector('.panel-header').innerText.trim();
 
-    // Columns to exclude: Actions (buttons) and Resolved By/Status columns with badges are kept as text
     const excludedHeaders = ['Actions', ''];
 
     const headerCellsAll = table.querySelectorAll('thead th');
@@ -2049,7 +2065,7 @@ function exportToPDF() {
     const bodyRows = table.querySelectorAll('tbody tr');
     bodyRows.forEach(tr => {
         if (tr.style.display === 'none') return;
-        if (tr.querySelector('td[colspan]')) return; // skip "no records" row
+        if (tr.querySelector('td[colspan]')) return;
         const cells = tr.querySelectorAll('td');
         const rowData = [];
         includedIndexes.forEach(i => {
@@ -2151,12 +2167,10 @@ function exportToPDF() {
         });
 }
 
-// Export summary table for Incident Map tab - Portrait orientation
 function exportMapSummaryPDF() {
     const data = allReportsData || [];
     const title = 'Incident Map Summary';
 
-    // Build summary data
     const byType = {};
     data.forEach(r => {
         const t = r.type || 'Unknown';
@@ -2170,11 +2184,9 @@ function exportMapSummaryPDF() {
     const byStatus = {};
     data.forEach(r => { byStatus[r.status || 'UNKNOWN'] = (byStatus[r.status || 'UNKNOWN'] || 0) + 1; });
 
-    // Build table rows
     let tableRows = '';
     let rowCount = 0;
 
-    // Priority section
     const priorityColors = { HIGH: '#e74c3c', MEDIUM: '#e67e22', LOW: '#27ae60' };
     Object.entries(byPriority).forEach(([p, c]) => {
         const bg = rowCount % 2 === 0 ? 'white' : '#f5faf8';
@@ -2190,7 +2202,6 @@ function exportMapSummaryPDF() {
         rowCount++;
     });
 
-    // Status section
     Object.entries(byStatus).forEach(([s, c]) => {
         const bg = rowCount % 2 === 0 ? 'white' : '#f5faf8';
         tableRows += `
@@ -2205,7 +2216,6 @@ function exportMapSummaryPDF() {
         rowCount++;
     });
 
-    // Type section
     sortedTypes.forEach(([t, c]) => {
         const bg = rowCount % 2 === 0 ? 'white' : '#f5faf8';
         tableRows += `
@@ -2217,7 +2227,6 @@ function exportMapSummaryPDF() {
         rowCount++;
     });
 
-    // Total row
     tableRows += `
         <tr style="background-color:#eaf2f0 !important;font-weight:bold;">
             <td style="border:1px solid #ddd;padding:7px 8px;font-size:12px !important;">TOTAL REPORTS</td>
@@ -2824,7 +2833,7 @@ function exportMapSummaryPDF() {
 
     function reportMatchesFilters(report) {
         if (currentTypeFilter !== 'all') {
-            if ((report.type || '') !== currentTypeFilter) return false;
+            if ((report.type || '').toUpperCase() !== currentTypeFilter.toUpperCase()) return false;
         }
         if (mapSearchValue) {
             const haystack = [report.title, report.location, report.reporterName, report.type, report.description]

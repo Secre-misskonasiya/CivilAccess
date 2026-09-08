@@ -504,7 +504,7 @@
             <h5 id="sysErrorMessage">An error occurred.</h5>
         </div>
         <div class="sys-modal-footer">
-            <button class="sys-btn-ok" onclick="document.getElementById('sysErrorOverlay').classList.remove('show')">OK</button>
+            <button class="sys-btn-ok" onclick="closeSysError()">OK</button>
         </div>
     </div>
 </div>
@@ -527,6 +527,10 @@
 <input type="hidden" id="accountStatus" th:value="${currentstatus}">
 
 <script>
+    // Prevents the background poller from reloading the page while an
+    // edit/add action is in flight or its result modal is still showing.
+    let pollSuppressed = false;
+
     // Search and filter
     function applyFilters() {
         const searchValue = document.getElementById('request-search').value.toLowerCase();
@@ -714,6 +718,7 @@
             const submitBtn = document.querySelector('#editModal .btn-submit');
             submitBtn.textContent = 'Saving...';
             submitBtn.disabled = true;
+            pollSuppressed = true;
             
             fetch('/requests-blotter/' + id + '/update', {
                 method: 'POST',
@@ -723,7 +728,6 @@
                 if (response.ok) {
                     closeEditModal();
                     showSuccess('Blotter record updated successfully!');
-                    setTimeout(() => location.reload(), 1500);
                 } else {
                     showError('Failed to update blotter record. Please try again.');
                 }
@@ -784,6 +788,7 @@
             const submitBtn = document.querySelector('#addModal .btn-submit');
             submitBtn.textContent = 'Submitting...';
             submitBtn.disabled = true;
+            pollSuppressed = true;
             
             fetch('/requests-blotter/submit', {
                 method: 'POST',
@@ -793,7 +798,6 @@
                 if (response.ok) {
                     closeAddModal();
                     showSuccess('Blotter record created successfully!');
-                    setTimeout(() => location.reload(), 1500);
                 } else {
                     showError('Failed to create blotter record. Please try again.');
                 }
@@ -927,21 +931,25 @@
             });
     }
 
-    // Success Modal
+    // Success Modal - only reloads the page once the user clicks OK (no timer)
     function showSuccess(message) {
         document.getElementById('successMessage').innerHTML = message;
-        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-        
-        const modalElement = document.getElementById('successModal');
-        const okButton = modalElement.querySelector('#successOkBtn');
-        
+        const successModalEl = document.getElementById('successModal');
+        const successModal = new bootstrap.Modal(successModalEl);
+
+        const okButton = document.getElementById('successOkBtn');
         const newOkButton = okButton.cloneNode(true);
         okButton.parentNode.replaceChild(newOkButton, okButton);
-        
+
         newOkButton.addEventListener('click', function() {
-            successModal.hide();
+            window.location.reload();
         });
-        
+
+        successModalEl.addEventListener('hidden.bs.modal', function onHidden() {
+            window.location.reload();
+            successModalEl.removeEventListener('hidden.bs.modal', onHidden);
+        }, { once: true });
+
         successModal.show();
     }
 
@@ -949,6 +957,12 @@
     function showError(message) {
         document.getElementById('sysErrorMessage').innerHTML = message;
         document.getElementById('sysErrorOverlay').classList.add('show');
+    }
+
+    // Dismiss error modal and resume polling (no data changed, so no reload needed)
+    function closeSysError() {
+        document.getElementById('sysErrorOverlay').classList.remove('show');
+        pollSuppressed = false;
     }
 
     // Force password change
@@ -970,6 +984,7 @@
 (function() {
     var lastSnapshot = '';
     function isModalOpen() {
+        if (pollSuppressed) return true;
         var modals = ['viewModal', 'editModal', 'addModal'];
         return modals.some(function(id) {
             var el = document.getElementById(id);
