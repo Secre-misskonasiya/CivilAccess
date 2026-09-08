@@ -589,18 +589,32 @@ function pollAssistanceDot() {
 }
 
 function openPendingRequestsModal() {
+    var modalEl = document.getElementById('pendingRequestsModal');
+    
+    // Check if modal already has an instance
+    var existingModal = bootstrap.Modal.getInstance(modalEl);
+    
     fetch('/system-logs/api/pending')
         .then(function(response) { return response.json(); })
         .then(function(requests) {
             renderPendingRequestsList(requests);
-            var modalEl = document.getElementById('pendingRequestsModal');
-            var modal = new bootstrap.Modal(modalEl);
-            modal.show();
+            
+            if (existingModal) {
+                // If modal is already open, just update the content
+                if (!modalEl.classList.contains('show')) {
+                    existingModal.show();
+                }
+            } else {
+                // Create new instance only if one doesn't exist
+                var modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            }
         })
         .catch(function(error) {
             console.error("Error loading pending requests:", error);
         });
 }
+
 
 function renderPendingRequestsList(requests) {
     var container = document.getElementById('pendingRequestsList');
@@ -632,12 +646,24 @@ function resolveRequest(id) {
         .then(function(response) { return response.json(); })
         .then(function(data) {
             if (data.success) {
-                openPendingRequestsModal(); // refresh the list
+                // Don't reopen the modal, just refresh the list and badge
+                fetchPendingRequestsForCurrentModal();
                 pollAssistanceDot();
             }
         })
         .catch(function(error) {
             console.error("Error resolving request:", error);
+        });
+}
+
+function fetchPendingRequestsForCurrentModal() {
+    fetch('/system-logs/api/pending')
+        .then(function(response) { return response.json(); })
+        .then(function(requests) {
+            renderPendingRequestsList(requests);
+        })
+        .catch(function(error) {
+            console.error("Error refreshing pending requests:", error);
         });
 }
 

@@ -121,17 +121,17 @@
     </div>
 
     <!-- SYSTEM -->
-    <button class="section-toggle" onclick="toggleSection(this, 'sec-system')" th:if="${currentrole == 'ADMIN'}">
+    <button class="section-toggle" onclick="toggleSection(this, 'sec-system')" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
         <span class="section-notif-dot" id="dot-system"></span>
         System
         <i class="bi bi-chevron-down section-arrow"></i>
     </button>
-    <div class="section-body" id="sec-system" th:if="${currentrole == 'ADMIN'}">
+    <div class="section-body" id="sec-system" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
         <ul class="menu">
-            <li onclick="window.location.href='/Activity-logs'">
+            <li onclick="window.location.href='/Activity-logs'" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
                 <img src="/icons/monitor.svg" class="icon"> Activity Logs
             </li>
-            <li onclick="window.location.href='/system-settings'">
+            <li onclick="window.location.href='/system-settings'" th:if="${currentrole == 'ADMIN'}">
                 <img src="/icons/settings.svg" class="icon"> System Settings
             </li>
         </ul>
@@ -142,11 +142,6 @@
     <div class="logout-item" onclick="openLogoutModal()">
         <img src="/icons/logout.svg" class="icon"> Logout
     </div>
-
-    <!-- Request Admin Assistance button -->
-<div th:if="${currentrole == 'ADMIN'}" class="logout-item" onclick="openAssistanceModal()">
-    <img src="/icons/help.svg" class="icon"> Request Admin Assistance
-</div>
 
 <!-- Request Admin Assistance Modal -->
 <div th:if="${currentrole != 'ADMIN'}" class="modal fade" id="assistanceModal" tabindex="-1">

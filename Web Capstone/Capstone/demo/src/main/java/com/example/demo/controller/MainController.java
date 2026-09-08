@@ -1154,7 +1154,7 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
 
         AdminUser currentAdmin = addCurrentAdminToModel(principal, model);
 
-        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "BARANGAY-CAPTAIN");
+        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "SECRETARIAT STAFF");
 
         if (currentAdmin == null || !allowedRoles.contains(currentAdmin.getRole())) {
             return "redirect:/home";
