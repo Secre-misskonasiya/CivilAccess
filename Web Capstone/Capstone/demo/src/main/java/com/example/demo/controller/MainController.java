@@ -52,6 +52,7 @@ import com.example.demo.services.RentalService;
 import com.example.demo.services.ResidentUserService;
 import com.example.demo.services.SafetyReportService;
 import com.example.demo.services.SosReportsService;
+import com.example.demo.services.SystemLogsService;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -76,6 +77,7 @@ public class MainController {
     @Autowired private CensusRecordRepository censusRecordRepository;
     @Autowired private RentalService rentalService;
     @Autowired private CensusRecordService censusRecordService;
+    @Autowired private SystemLogsService systemLogsService;
 
 
     @Autowired(required = false)
@@ -425,30 +427,28 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
         return "redirect:/account";
     }
 
-    @GetMapping("/residents/restore/{id}")
-    public String restoreResident(@PathVariable UUID id, Principal principal, HttpServletRequest request) {
+    @PostMapping("/residents/restore/{id}")
+    @ResponseBody
+    public ResponseEntity<?> restoreResident(@PathVariable UUID id, Principal principal, HttpServletRequest request) {
         AdminUser currentAdmin = adminUserService.getAdminByEmail(principal.getName());
         ResidentUser resident = residentUserService.getResidentById(id);
-        
-        if (resident != null) {
-            resident.setStatus("ACTIVE");
-            resident.setAccount_status("VERIFIED");
-            residentUserService.saveResident(resident);
-            
-            activityLogService.log(
-                currentAdmin.getName(), 
-                currentAdmin.getRole(), 
-                "RESTORED", 
-                "Accounts",
-                "Restored the resident account of " + resident.getFirstName() + " " + resident.getLastName(),
-                request.getRemoteAddr(), 
-                "Success"
-            );
-            
-            lastAccountsModificationTime = System.currentTimeMillis();
+
+        if (resident == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("success", false, "message", "Resident not found"));
         }
-        
-        return "redirect:/account?tab=resarchives";
+
+        resident.setStatus("ACTIVE");
+        // consider NOT overwriting account_status here — see point 3 above
+        residentUserService.saveResident(resident);
+
+        activityLogService.log(
+            currentAdmin.getName(), currentAdmin.getRole(), "RESTORED", "Accounts",
+            "Restored the resident account of " + resident.getFirstName() + " " + resident.getLastName(),
+            request.getRemoteAddr(), "Success"
+        );
+
+        lastAccountsModificationTime = System.currentTimeMillis();
+        return ResponseEntity.ok(Map.of("success", true));
     }
 
 // =========================================================
@@ -1288,4 +1288,68 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
             }
 
         }
+
+            // =========================================================
+            // ADMIN ASSISTANCE REQUESTS
+            // =========================================================
+
+            @PostMapping("/system-logs/request-assistance")
+            @ResponseBody
+            public ResponseEntity<Map<String, Object>> requestAssistance(
+                    @RequestParam String message,
+                    Principal principal) {
+
+                Map<String, Object> response = new HashMap<>();
+
+                if (message == null || message.isBlank()) {
+                    response.put("success", false);
+                    response.put("message", "Message cannot be empty.");
+                    return ResponseEntity.badRequest().body(response);
+                }
+
+                AdminUser currentAdmin = adminUserService.getAdminByEmail(principal.getName());
+                if (currentAdmin == null) {
+                    response.put("success", false);
+                    response.put("message", "Could not identify requester.");
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+                }
+
+                systemLogsService.saveAssistanceRequest(
+                    currentAdmin.getId(),
+                    currentAdmin.getName(),
+                    currentAdmin.getRole(),
+                    message.trim()
+                );
+
+                response.put("success", true);
+                return ResponseEntity.ok(response);
+            }
+
+            @GetMapping("/system-logs/api/pending")
+            @ResponseBody
+            public ResponseEntity<List<Map<String, Object>>> getPendingAssistanceRequests() {
+                List<Map<String, Object>> pending = systemLogsService.getPendingAssistanceRequests()
+                    .stream()
+                    .map(log -> {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("id", log.getId());
+                        map.put("requesterName", log.getRequesterName());
+                        map.put("requesterRole", log.getRequesterRole());
+                        map.put("description", log.getDescription());
+                        map.put("timestamp", log.getTimestamp() != null ? log.getTimestamp().toString() : "");
+                        return map;
+                    })
+                    .collect(Collectors.toList());
+
+                return ResponseEntity.ok(pending);
+            }
+
+            @PostMapping("/system-logs/resolve/{id}")
+            @ResponseBody
+            public ResponseEntity<Map<String, Object>> resolveAssistanceRequest(@PathVariable Long id) {
+                Map<String, Object> response = new HashMap<>();
+                systemLogsService.resolveAssistanceRequest(id);
+                response.put("success", true);
+                return ResponseEntity.ok(response);
+            }
 }

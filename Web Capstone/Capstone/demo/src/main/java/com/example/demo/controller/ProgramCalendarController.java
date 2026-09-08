@@ -378,6 +378,10 @@ public class ProgramCalendarController {
             else if (budgetObj instanceof String s) { try { program.setProgram_budget(Integer.parseInt(s)); } catch (NumberFormatException e) { program.setProgram_budget(0); } }
             else                                    program.setProgram_budget(0);
 
+            // ADD THESE LINES - Save notes and budget breakdown
+            program.setNotes((String) programData.getOrDefault("notes", ""));
+            program.setBudgetBreakdown((String) programData.getOrDefault("budgetBreakdown", ""));
+
             if (program.getProgramId() == null) program.setProgramId(1L);
 
             SuggestedProgram saved = suggestedProgramService.saveManualEntry(program);
@@ -430,6 +434,10 @@ public class ProgramCalendarController {
                 else if (budgetObj instanceof Double)   program.setProgram_budget(((Double) budgetObj).intValue());
                 else if (budgetObj instanceof String s) { try { program.setProgram_budget(Integer.parseInt(s)); } catch (NumberFormatException e) { program.setProgram_budget(0); } }
                 else                                    program.setProgram_budget(0);
+
+                // ADD THESE LINES - Save notes and budget breakdown
+                program.setNotes((String) programData.getOrDefault("notes", ""));
+                program.setBudgetBreakdown((String) programData.getOrDefault("budgetBreakdown", ""));
 
                 if (program.getProgramId() == null) program.setProgramId(1L);
 
@@ -549,6 +557,26 @@ public class ProgramCalendarController {
         }
 
         if (event.getProgramId() == null) event.setProgramId(1L);
+        
+        // Check if this event already exists (to prevent duplicates)
+        List<ProgramCalendar> existingEvents = calendarService.getAllEvents();
+        boolean isDuplicate = existingEvents.stream().anyMatch(e -> 
+            e.getEventDate() != null && 
+            e.getEventDate().equals(event.getEventDate()) &&
+            e.getStartTime() != null && 
+            e.getStartTime().equals(event.getStartTime()) &&
+            e.getLocation() != null && 
+            e.getLocation().equals(event.getLocation()) &&
+            e.getNotes() != null && 
+            e.getNotes().equals(event.getNotes())
+        );
+        
+        if (isDuplicate) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "This event already exists in the calendar."
+            ));
+        }
+        
         ProgramCalendar saved = calendarService.saveEvent(event);
 
         activityLogService.log(
@@ -559,7 +587,7 @@ public class ProgramCalendarController {
 
         return ResponseEntity.ok(saved);
     }
-
+    
     @GetMapping("/all")
     public List<ProgramCalendar> getAllEvents() {
         return calendarService.getAllEvents();

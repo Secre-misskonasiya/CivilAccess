@@ -66,11 +66,17 @@
     .delete-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .restore-btn { background-color: #27ae60; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
     .restore-btn:hover { background-color: #1e8449; }
-    .verify-btn { background-color: #44C375; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
-    .verify-btn:hover { background-color: #2ea05e; }
-    .verify-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .verify-btn.verified { background-color: #95a5a6; cursor: default; }
-    .verify-btn.verified:hover { background-color: #95a5a6; }
+    /* Default = gray (docs incomplete / missing) */
+    .verify-btn { background-color: #95a5a6; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
+    .verify-btn:hover { background-color: #7f8c8d; }
+
+    /* Docs complete, still unverified = green */
+    .verify-btn.docs-complete { background-color: #44C375; }
+    .verify-btn.docs-complete:hover { background-color: #2ea05e; }
+
+    /* Already verified = blue */
+    .verify-btn.verified { background-color: #3498db; cursor: default; }
+    .verify-btn.verified:hover { background-color: #3498db; }
     .table-footer { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid #e0e0e0; font-size: 13px; color: #888; flex-wrap: wrap; gap: 10px; }
     .page-item.active .page-link { background-color: #2d4a44; border-color: #2d4a44; }
     .page-link { color: #2d4a44; }
@@ -361,9 +367,9 @@
     <div class="tabbar">
         <div class="tab active" onclick="switchTab('employee')">Employee</div>
         <div class="tab" onclick="switchTab('residents')">Residents</div>
-        <!-- Archives tabs - Only ADMIN can view -->
-        <div class="tab" th:if="${currentrole == 'ADMIN'}" onclick="switchTab('archives')">Archives</div>
-        <div class="tab" th:if="${currentrole == 'ADMIN'}" onclick="switchTab('resarchives')">Residents Archives</div>
+        <!-- Archives tabs - Only ADMIN SECRETARY SECRETARIAT STAFF can view -->
+        <div class="tab" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" onclick="switchTab('archives')">Archives</div>
+        <div class="tab" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" onclick="switchTab('resarchives')">Residents Archives</div>
     </div>
 
     <!-- ═══════════════════════════════════════════ -->
@@ -466,6 +472,12 @@
                                         th:data-url="'/delete-admin/' + ${admin.id}"
                                         th:data-email="${admin.email}"
                                         onclick="triggerAdminDelete(this)">Archive</button>
+
+                                    <button type="button" class="delete-btn"
+                                    th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARY'}"
+                                    th:data-url="'/delete-admin/' + ${admin.id}"
+                                        th:data-email="${admin.email}"
+                                        onclick="openAssistanceModal()">Archive</button>
                                 </div>
                             </td>
                         </tr>
@@ -586,13 +598,17 @@
                                     
                                     <!-- Verify button - Only ADMIN, SECRETARY, SECRETARIAT STAFF -->
                                     <button class="verify-btn"
-                                        th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
-                                        th:classappend="${res.account_status == 'VERIFIED' ? 'verified' : ''}"
-                                        th:attr="data-id=${res.id},
-                                                data-first-name=${res.firstName},
-                                                data-last-name=${res.lastName},
-                                                data-status=${res.account_status}"
-                                        onclick="openVerifyModal(this)">Verify</button>
+                                    th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                    th:classappend="${res.account_status == 'VERIFIED' ? 'verified' : 
+                                                    ((res.selfie != null and res.selfie != '' and 
+                                                        res.validId != null and res.validId != '' and 
+                                                        res.barangayIndigency != null and res.barangayIndigency != '') 
+                                                        ? 'docs-complete' : '')}"
+                                    th:attr="data-id=${res.id},
+                                            data-first-name=${res.firstName},
+                                            data-last-name=${res.lastName},
+                                            data-status=${res.account_status}"
+                                    onclick="openVerifyModal(this)">Verify</button>
                                     
                                     <!-- Edit button - Only ADMIN, SECRETARY, SECRETARIAT STAFF -->
                                     <button class="update-btn"
@@ -615,6 +631,13 @@
                                         th:data-email="${res.email}"
                                         th:data-fullname="${res.firstName + ' ' + res.lastName}"
                                         onclick="triggerResidentDelete(this)">Archive</button>
+                                        
+                                    <button type="button" class="delete-btn"
+                                        th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARY'}"
+                                        th:data-url="'/residents/delete/' + ${res.id}"
+                                        th:data-email="${res.email}"
+                                        th:data-fullname="${res.firstName + ' ' + res.lastName}"
+                                        onclick="openAssistanceModal()">Archive</button>    
                                 </div>
                             </td>
                         </tr>
@@ -706,6 +729,13 @@
                                         th:onclick="restoreEmployee([[${admin.id}]])">
                                         <i class="bi bi-arrow-counterclockwise"></i> Restore
                                     </button>
+
+                                    <button class="restore-btn"
+                                        th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                        th:onclick="openAssistanceModal()">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -722,7 +752,7 @@
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════ -->
 <!-- RESIDENTS ARCHIVES PANEL                    -->
 <!-- ═══════════════════════════════════════════ -->
 <div class="panel" id="residents-archived-panel" style="display:none;">
@@ -766,7 +796,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="res : ${archivedResidents}">
+                    <tr th:each="res : ${archivedResidents}"
+                        th:attr="data-id=${res.id},
+                                 data-resident-id=${res.residentId},
+                                 data-first-name=${res.firstName},
+                                 data-last-name=${res.lastName},
+                                 data-gender=${res.gender},
+                                 data-birth=${res.birthDate},
+                                 data-phone=${res.mobileNumber},
+                                 data-address=${res.address},
+                                 data-email=${res.email},
+                                 data-avatar=${res.avatar_url}">
                         <td th:text="${res.residentId}"></td>
                         <td th:text="${res.firstName}"></td>
                         <td th:text="${res.lastName}"></td>
@@ -777,10 +817,25 @@
                         <td th:text="${res.status}"></td>
                         <td>
                             <div class="action-buttons">
+                                <!-- View button - ALL roles can view -->
+                                <button class="view-btn"
+                                    th:attr="data-id=${res.id},
+                                            data-resident-id=${res.residentId},
+                                            data-first-name=${res.firstName},
+                                            data-last-name=${res.lastName},
+                                            data-gender=${res.gender},
+                                            data-birth=${res.birthDate},
+                                            data-phone=${res.mobileNumber},
+                                            data-address=${res.address},
+                                            data-email=${res.email},
+                                            data-status=${res.status},
+                                            data-avatar=${res.avatar_url}"
+                                    onclick="openResidentViewModal(this)">View</button>
+                                
                                 <!-- Restore button - ONLY ADMIN -->
                                 <button class="restore-btn"
-                                    th:if="${currentrole == 'ADMIN'}"
-                                    th:onclick="restoreResident([[${res.id}]], '[[${res.firstName}]] [[${res.lastName}]]')">
+                                    th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                    th:onclick="openAssistanceModal()">
                                     <i class="bi bi-arrow-counterclockwise"></i> Restore
                                 </button>
                             </div>
@@ -1225,10 +1280,15 @@
 <!-- ═══════════════════════════════════════════ -->
 <!-- IMAGE ENLARGE MODAL                         -->
 <!-- ═══════════════════════════════════════════ -->
-<div id="imageEnlargeModal" class="modal" style="z-index: 10000; background-color: rgba(0,0,0,0.9);">
-    <div class="modal-content" style="width:auto; max-width:90%; max-height:90%; margin:2% auto; padding:0; background:transparent; box-shadow:none; text-align:center;">
-        <span class="close-btn" onclick="document.getElementById('imageEnlargeModal').style.display='none'" style="position:absolute; top:10px; right:25px; color:white; font-size:40px; background:rgba(0,0,0,0.5); width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10001;">&times;</span>
-        <img id="enlargedImage" src="" style="max-width:90%; max-height:85vh; object-fit:contain; border-radius:8px;">
+<div id="imageEnlargeModal" class="modal" style="z-index: 10000; background-color: rgba(0,0,0,0.95);">
+    <span class="close-btn" onclick="closeImageEnlarge()"
+        style="position:fixed; top:20px; right:30px; color:white; font-size:32px;
+               background:rgba(255,255,255,0.1); width:44px; height:44px; border-radius:50%;
+               display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10001;">&times;</span>
+    <div style="position:fixed; inset:0; display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;">
+        <img id="enlargedImage" src=""
+             style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; cursor:zoom-out;"
+             onclick="closeImageEnlarge()">
     </div>
 </div>
 
@@ -1974,13 +2034,25 @@ document.addEventListener('DOMContentLoaded', function() {
 function enlargeImage(src) {
     document.getElementById('enlargedImage').src = src;
     document.getElementById('imageEnlargeModal').style.display = 'block';
+    document.body.style.overflow = 'hidden'; // prevent background scroll
+}
+
+function closeImageEnlarge() {
+    document.getElementById('imageEnlargeModal').style.display = 'none';
+    document.getElementById('enlargedImage').src = '';
+    document.body.style.overflow = '';
 }
 
 document.getElementById('imageEnlargeModal').onclick = function(e) {
-    if (e.target === this) {
-        this.style.display = 'none';
-    }
+    if (e.target === this) closeImageEnlarge();
 };
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const m = document.getElementById('imageEnlargeModal');
+        if (m && m.style.display === 'block') closeImageEnlarge();
+    }
+});
 
 // ─── Resident Modal ─────────────────────────────────────────
 function openEditResidentModal(id, resId, fName, lName, gender, bDate, phone, email, addr) {
@@ -2462,7 +2534,7 @@ console.log("=== POLLING SCRIPT STARTED ===");
 
 // ─── Pagination ──────────────────────────────────────────────
 (function() {
-    const PAGE_SIZE = 10;
+    const PAGE_SIZE = 7;
 
     function initPagination(tableId, footerId) {
         const tbody = document.querySelector('#' + tableId + ' tbody');

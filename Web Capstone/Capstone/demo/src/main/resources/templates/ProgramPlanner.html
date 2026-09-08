@@ -1250,11 +1250,21 @@
   }
 
   function formatMessageWithLineBreaks(message) {
-    if (!message) return '';
-    let escaped = escapeHtml(message);
-    escaped = escaped.replace(/\n/g, '<br>');
-    escaped = escaped.replace(/\n\s*\n/g, '<br><br>');
-    return escaped;
+      if (!message) return '';
+      
+      // First, escape HTML to prevent XSS
+      let escaped = escapeHtml(message);
+      
+      // Convert URLs to clickable links
+      escaped = escaped.replace(
+          /(https?:\/\/[^\s<]+)/g, 
+          '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:#2d7a5f;text-decoration:underline;">$1</a>'
+      );
+      
+      // Convert line breaks to <br>
+      escaped = escaped.replace(/\n/g, '<br>');
+      
+      return escaped;
   }
 
   function formatUserMessage(message) {
@@ -1363,35 +1373,38 @@
             </div>`;
         }
 
-        // ── Single program ─────────────────────────────────────────────────────
-        if (data.pending) {
-          _currentAIPendingList = null;
-          const aiNotes = data.pending.notes || data.message || '';
+        // In the sendMessage function, update the single program section
+            if (data.pending) {
+                _currentAIPendingList = null;
+                const aiNotes = data.pending.notes || data.message || '';
+                const budgetBreakdown = data.pending.budgetBreakdown || ''; // ADD THIS LINE
 
-          _currentAIGeneratedProgram = {
-              programName:    data.pending.programName    || '',
-              programDate:    data.pending.programDate    || '',
-              program_place:  data.pending.program_place  || '',
-              programTime:    data.pending.programTime    || '',
-              programEndTime: data.pending.programendTime || '',
-              program_budget: data.pending.program_budget || 0,
-              notes:          aiNotes
-          };
+                _currentAIGeneratedProgram = {
+                    programName:    data.pending.programName    || '',
+                    programDate:    data.pending.programDate    || '',
+                    program_place:  data.pending.program_place  || '',
+                    programTime:    data.pending.programTime    || '',
+                    programEndTime: data.pending.programendTime || '',
+                    program_budget: data.pending.program_budget || 0,
+                    budgetBreakdown: budgetBreakdown,  // ADD THIS LINE
+                    notes:          aiNotes
+                };
 
-          setCreateButtonEnabled(true);
+                setCreateButtonEnabled(true);
 
-          chatHTML += `
-            <div class="chat-bubble ai mt-2">
-              <strong style="color:#2d4a44;"><i class="bi bi-clipboard-data"></i> Program Suggestion Ready</strong><br><br>
-              <i class="bi bi-tag"></i> <b>Name:</b> ${escapeHtml(data.pending.programName)}<br>
-              <i class="bi bi-calendar3"></i> <b>Date:</b> ${escapeHtml(data.pending.programDate || 'TBD')}<br>
-              <i class="bi bi-clock"></i> <b>Time:</b> ${formatTime(data.pending.programTime)}<br>
-              <i class="bi bi-geo-alt"></i> <b>Location:</b> ${escapeHtml(data.pending.program_place)}<br>
-              <i class="bi bi-cash-coin"></i> <b>Est. Budget:</b> &#8369;${(data.pending.program_budget || 0).toLocaleString()}
-              ${aiNotes ? `<div class="ai-notes-block"><strong><i class="bi bi-journal-text"></i> Notes</strong>${escapeHtml(aiNotes)}</div>` : ''}
-              <br><small style="color:#888;">Click the <strong>Create</strong> button to save this program.</small>
-            </div>`;
-        }
+                chatHTML += `
+                    <div class="chat-bubble ai mt-2">
+                        <strong style="color:#2d4a44;"><i class="bi bi-clipboard-data"></i> Program Suggestion Ready</strong><br><br>
+                        <i class="bi bi-tag"></i> <b>Name:</b> ${escapeHtml(data.pending.programName)}<br>
+                        <i class="bi bi-calendar3"></i> <b>Date:</b> ${escapeHtml(data.pending.programDate || 'TBD')}<br>
+                        <i class="bi bi-clock"></i> <b>Time:</b> ${formatTime(data.pending.programTime)}<br>
+                        <i class="bi bi-geo-alt"></i> <b>Location:</b> ${escapeHtml(data.pending.program_place)}<br>
+                        <i class="bi bi-cash-coin"></i> <b>Est. Budget:</b> ₱${(data.pending.program_budget || 0).toLocaleString()}
+                        ${budgetBreakdown ? `<div class="ai-notes-block"><strong><i class="bi bi-receipt"></i> Budget Breakdown</strong>${formatMessageWithLineBreaks(budgetBreakdown)}</div>` : ''}
+                        ${aiNotes ? `<div class="ai-notes-block"><strong><i class="bi bi-journal-text"></i> Notes</strong>${formatMessageWithLineBreaks(aiNotes)}</div>` : ''}
+                        <br><small style="color:#888;">Click the <strong>Create</strong> button to save this program.</small>
+                    </div>`;
+            }
 
         if (data.event) {
           chatHTML += `
@@ -1426,24 +1439,29 @@
   }
 
   function openAICreateModal() {
-    // ── Multi-program: open the selection picker modal ─────────────────────────
-    if (_currentAIPendingList && _currentAIPendingList.length > 0) {
-      openSelectProgramsModal(_currentAIPendingList);
-      return;
-    }
-    // ── Single program: open the existing AI create modal ──────────────────────
-    if (!_currentAIGeneratedProgram) {
-      alert('No program data available. Please ask the AI to suggest a program first.');
-      return;
-    }
-    document.getElementById('ai-program-name-display').value      = _currentAIGeneratedProgram.programName    || '';
-    document.getElementById('ai-program-date-display').value      = _currentAIGeneratedProgram.programDate    || '';
-    document.getElementById('ai-program-location-display').value  = _currentAIGeneratedProgram.program_place  || '';
-    document.getElementById('ai-program-starttime-display').value = _currentAIGeneratedProgram.programTime    || '';
-    document.getElementById('ai-program-endtime-display').value   = _currentAIGeneratedProgram.programEndTime || '';
-    document.getElementById('ai-program-budget-display').value    = _currentAIGeneratedProgram.program_budget || 0;
-    document.getElementById('ai-program-notes-display').value     = _currentAIGeneratedProgram.notes          || '';
-    openModal('aiCreateProgramModal');
+      if (_currentAIPendingList && _currentAIPendingList.length > 0) {
+          openSelectProgramsModal(_currentAIPendingList);
+          return;
+      }
+      if (!_currentAIGeneratedProgram) {
+          alert('No program data available. Please ask the AI to suggest a program first.');
+          return;
+      }
+      document.getElementById('ai-program-name-display').value      = _currentAIGeneratedProgram.programName    || '';
+      document.getElementById('ai-program-date-display').value      = _currentAIGeneratedProgram.programDate    || '';
+      document.getElementById('ai-program-location-display').value  = _currentAIGeneratedProgram.program_place  || '';
+      document.getElementById('ai-program-starttime-display').value = _currentAIGeneratedProgram.programTime    || '';
+      document.getElementById('ai-program-endtime-display').value   = _currentAIGeneratedProgram.programEndTime || '';
+      document.getElementById('ai-program-budget-display').value    = _currentAIGeneratedProgram.program_budget || 0;
+      
+      // ADD THIS - populate budget breakdown
+      const budgetBreakdownField = document.getElementById('ai-program-budget-breakdown');
+      if (budgetBreakdownField) {
+          budgetBreakdownField.value = _currentAIGeneratedProgram.budgetBreakdown || '';
+      }
+      
+      document.getElementById('ai-program-notes-display').value     = _currentAIGeneratedProgram.notes          || '';
+      openModal('aiCreateProgramModal');
   }
 
   // ── Select Programs Modal helpers ──────────────────────────────────────────
@@ -1508,64 +1526,75 @@
   }
 
   async function saveSelectedPrograms() {
-    const checkboxes = document.querySelectorAll('.program-select-cb');
-    const selected = [];
-    checkboxes.forEach(cb => {
-      if (cb.checked) selected.push(_currentAIPendingList[parseInt(cb.dataset.index)]);
-    });
-    if (selected.length === 0) { alert('Please select at least one program.'); return; }
-
-    try {
-      const response = await fetch('/api/calendar/suggested/bulk', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selected)
+      const checkboxes = document.querySelectorAll('.program-select-cb');
+      const selected = [];
+      checkboxes.forEach(cb => {
+          if (cb.checked) {
+              const program = _currentAIPendingList[parseInt(cb.dataset.index)];
+              // Ensure budgetBreakdown is included
+              selected.push({
+                  ...program,
+                  budgetBreakdown: program.budgetBreakdown || ''
+              });
+          }
       });
-      if (response.ok) {
-        const result = await response.json();
-        closeSelectProgramsModal();
-        showSuccess(`${result.saved} program(s) saved to Suggested Programs!`);
-        setCreateButtonEnabled(false);
-        _currentAIPendingList = null;
-        loadSuggestedPrograms();
-      } else {
-        alert('Failed to save programs: ' + await response.text());
+      if (selected.length === 0) { alert('Please select at least one program.'); return; }
+
+      try {
+          const response = await fetch('/api/calendar/suggested/bulk', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(selected)
+          });
+          if (response.ok) {
+              const result = await response.json();
+              closeSelectProgramsModal();
+              showSuccess(`${result.saved} program(s) saved to Suggested Programs!`);
+              setCreateButtonEnabled(false);
+              _currentAIPendingList = null;
+              loadSuggestedPrograms();
+          } else {
+              alert('Failed to save programs: ' + await response.text());
+          }
+      } catch (error) {
+          console.error('Bulk save error:', error);
+          alert('Error saving programs. Please try again.');
       }
-    } catch (error) {
-      console.error('Bulk save error:', error);
-      alert('Error saving programs. Please try again.');
-    }
   }
 
   function closeAICreateModal() { closeModal('aiCreateProgramModal'); }
 
   async function saveAIGeneratedProgram() {
-    const programData = {
-      programName:    document.getElementById('ai-program-name-display').value,
-      programDate:    document.getElementById('ai-program-date-display').value,
-      program_place:  document.getElementById('ai-program-location-display').value,
-      programTime:    document.getElementById('ai-program-starttime-display').value,
-      programendTime: document.getElementById('ai-program-endtime-display').value,
-      program_budget: parseFloat(document.getElementById('ai-program-budget-display').value) || 0,
-      notes:          document.getElementById('ai-program-notes-display').value
-    };
-    if (!programData.programName) { alert('Program name is required.'); return; }
-    try {
-      const response = await fetch('/api/calendar/suggested', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(programData)
-      });
-      if (response.ok) {
-        showSuccess('Program saved successfully!');
-        closeAICreateModal();
-        setCreateButtonEnabled(false);
-        _currentAIGeneratedProgram = null;
-        loadSuggestedPrograms();
-      } else {
-        alert('Failed to save program: ' + await response.text());
+      const programData = {
+          programName:    document.getElementById('ai-program-name-display').value,
+          programDate:    document.getElementById('ai-program-date-display').value,
+          program_place:  document.getElementById('ai-program-location-display').value,
+          programTime:    document.getElementById('ai-program-starttime-display').value,
+          programendTime: document.getElementById('ai-program-endtime-display').value,
+          program_budget: parseFloat(document.getElementById('ai-program-budget-display').value) || 0,
+          budgetBreakdown: document.getElementById('ai-program-budget-breakdown')?.value || '',  // ADD THIS
+          notes:          document.getElementById('ai-program-notes-display').value
+      };
+      if (!programData.programName) { alert('Program name is required.'); return; }
+      try {
+          const response = await fetch('/api/calendar/suggested', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(programData)
+          });
+          if (response.ok) {
+              showSuccess('Program saved successfully!');
+              closeAICreateModal();
+              setCreateButtonEnabled(false);
+              _currentAIGeneratedProgram = null;
+              loadSuggestedPrograms();
+          } else {
+              alert('Failed to save program: ' + await response.text());
+          }
+      } catch (error) { 
+          console.error('Error saving program:', error); 
+          alert('Error saving program. Please try again.'); 
       }
-    } catch (error) { console.error('Error saving program:', error); alert('Error saving program. Please try again.'); }
   }
 
   async function loadChatHistory() {
@@ -1587,112 +1616,198 @@
     } catch (error) { console.error('History load error:', error); }
   }
 
-  async function loadSuggestedPrograms() {
+async function loadSuggestedPrograms() {
     try {
-      const response = await fetch('/api/calendar/suggested');
-      if (response.ok) renderPrograms(await response.json());
-    } catch (error) { console.error('Failed to load programs:', error); }
-  }
-
-  function renderPrograms(programs) {
-    const list = document.getElementById('suggested-programs-list');
-    if (!programs || programs.length === 0) {
-      list.innerHTML = `<div class="empty-programs"><i class="bi bi-calendar2-x" style="font-size:24px;display:block;margin-bottom:8px;"></i>No programs yet. Ask AI!</div>`;
-      return;
+        const response = await fetch('/api/calendar/suggested');
+        if (response.ok) {
+            const programs = await response.json();
+            renderPrograms(programs);
+        } else {
+            console.error('Failed to load programs:', response.status);
+        }
+    } catch (error) { 
+        console.error('Failed to load programs:', error); 
     }
+}
+// Store programs globally for easy access
+let _savedPrograms = [];
+
+function renderPrograms(programs) {
+    const list = document.getElementById('suggested-programs-list');
+    _savedPrograms = programs || [];  // Store globally
+    
+    if (!programs || programs.length === 0) {
+        list.innerHTML = `<div class="empty-programs"><i class="bi bi-calendar2-x" style="font-size:24px;display:block;margin-bottom:8px;"></i>No programs yet. Ask AI!</div>`;
+        return;
+    }
+    
     list.innerHTML = programs.map((p, index) => `
-      <div class="program-item" data-event='${JSON.stringify({
-        id: p.id, programName: p.programName, programDate: p.programDate,
-        program_place: p.program_place, programTime: p.programTime,
-        programendTime: p.programendTime,
-        program_budget: p.program_budget !== undefined ? p.program_budget : 0,
-        notes: p.notes || ''
-      })}'>
-        <div class="circle-id">${index + 1}</div>
-        <div class="program-info">
-          <div class="program-name">${escapeHtml(p.programName || 'Community Program')}</div>
-          <div class="program-time">
-            <i class="bi bi-clock"></i> ${formatTime(p.programTime)} &nbsp;|&nbsp;
-            <i class="bi bi-calendar3"></i> ${escapeHtml(p.programDate || 'TBD')} &nbsp;|&nbsp;
-            <i class="bi bi-geo-alt"></i> ${escapeHtml(p.program_place || 'TBD')} &nbsp;|&nbsp;
-            <i class="bi bi-cash-coin"></i> &#8369;${(p.program_budget || 0).toLocaleString()}
-          </div>
-        </div>
-        <button class="view-blue-btn" onclick="viewProgram(${index})">View</button>
-        <button class="remove-red-btn" onclick="removeProgram(${p.id}, this)"><i class="bi bi-trash"></i></button>
-      </div>`).join('');
-  }
+        <div class="program-item">
+            <div class="circle-id">${index + 1}</div>
+            <div class="program-info">
+                <div class="program-name">${escapeHtml(p.programName || 'Community Program')}</div>
+                <div class="program-time">
+                    <i class="bi bi-clock"></i> ${formatTime(p.programTime)} &nbsp;|&nbsp;
+                    <i class="bi bi-calendar3"></i> ${escapeHtml(p.programDate || 'TBD')} &nbsp;|&nbsp;
+                    <i class="bi bi-geo-alt"></i> ${escapeHtml(p.program_place || 'TBD')} &nbsp;|&nbsp;
+                    <i class="bi bi-cash-coin"></i> ₱${(p.program_budget || 0).toLocaleString()}
+                </div>
+            </div>
+            <button class="view-blue-btn" onclick="viewProgram(${index})">View</button>
+            <button class="remove-red-btn" onclick="removeProgram(${p.id}, this)"><i class="bi bi-trash"></i></button>
+        </div>`).join('');
+}
 
   function viewProgram(index) {
-    const programItem = document.querySelectorAll('.program-item')[index];
-    if (!programItem) return;
-    const p = JSON.parse(programItem.getAttribute('data-event'));
-    _currentViewedProgramId = p.id;
-    _currentViewedProgram = p;
+      // Use the global _savedPrograms array instead of parsing data attributes
+      const p = _savedPrograms[index];
+      
+      if (!p) {
+          console.error('Program not found at index:', index);
+          alert('Error loading program details.');
+          return;
+      }
+      
+      _currentViewedProgramId = p.id;
+      _currentViewedProgram = p;
 
-    document.getElementById('view-program-name').value     = p.programName    || '';
-    document.getElementById('view-program-date').value     = p.programDate    || '';
-    document.getElementById('view-program-location').value = p.program_place  || '';
-    document.getElementById('view-program-start').value    = p.programTime    || '';
-    document.getElementById('view-program-end').value      = p.programendTime || '';
-    document.getElementById('view-program-budget').value   = p.program_budget || 0;
-    document.getElementById('view-program-notes').value    = p.notes          || '';
+      document.getElementById('view-program-name').value = p.programName || '';
+      document.getElementById('view-program-date').value = p.programDate || '';
+      document.getElementById('view-program-location').value = p.program_place || '';
+      document.getElementById('view-program-start').value = p.programTime || '';
+      document.getElementById('view-program-end').value = p.programendTime || '';
+      document.getElementById('view-program-budget').value = p.program_budget || 0;
+      
+      // Display notes
+      const notesTextarea = document.getElementById('view-program-notes');
+      if (notesTextarea) {
+          notesTextarea.value = p.notes || '';
+      }
+      
+      // Display budget breakdown if available
+      const budgetBreakdownSection = document.getElementById('budget-breakdown-display');
+      const budgetBreakdownContent = document.getElementById('budget-breakdown-content');
+      
+      if (budgetBreakdownSection && budgetBreakdownContent) {
+          if (p.budgetBreakdown && p.budgetBreakdown.trim() !== '') {
+              budgetBreakdownContent.innerHTML = formatMessageWithLineBreaks(p.budgetBreakdown);
+              budgetBreakdownSection.style.display = 'block';
+          } else {
+              budgetBreakdownSection.style.display = 'none';
+          }
+      }
 
-    openModal('viewProgramModal');
+      openModal('viewProgramModal');
   }
 
-  async function addToCalendarFromView() {
-    if (!_currentViewedProgram) { alert('No program selected.'); return; }
+  let _isAddingToCalendar = false;
 
-    const name     = document.getElementById('view-program-name').value.trim();
-    const date     = document.getElementById('view-program-date').value;
+async function addToCalendarFromView() {
+    // Prevent double submission
+    if (_isAddingToCalendar) {
+        console.log('Already adding to calendar, ignoring duplicate click');
+        return;
+    }
+    
+    if (!_currentViewedProgram) { 
+        alert('No program selected.'); 
+        return; 
+    }
+
+    const name = document.getElementById('view-program-name').value.trim();
+    const date = document.getElementById('view-program-date').value;
     const location = document.getElementById('view-program-location').value.trim();
-    const start    = document.getElementById('view-program-start').value;
-    const end      = document.getElementById('view-program-end').value;
-    const budget   = parseFloat(document.getElementById('view-program-budget').value) || 0;
-    const notes    = document.getElementById('view-program-notes').value.trim();
+    const start = document.getElementById('view-program-start').value;
+    const end = document.getElementById('view-program-end').value;
+    const budget = parseFloat(document.getElementById('view-program-budget').value) || 0;
+    const notes = document.getElementById('view-program-notes').value.trim();
 
-    const today = new Date(); today.setHours(0,0,0,0);
-    const eventDate = new Date(date); eventDate.setHours(0,0,0,0);
-    if (eventDate < today) { alert('Cannot add events on past dates. Please select a future or today\'s date.'); return; }
+    const today = new Date(); 
+    today.setHours(0,0,0,0);
+    const eventDate = new Date(date); 
+    eventDate.setHours(0,0,0,0);
+    
+    if (eventDate < today) { 
+        alert('Cannot add events on past dates. Please select a future or today\'s date.'); 
+        return; 
+    }
+
+    // Set flag to prevent duplicates
+    _isAddingToCalendar = true;
+    
+    // Disable the button
+    const addBtn = document.querySelector('#viewProgramModal .btn-save');
+    if (addBtn) {
+        addBtn.disabled = true;
+        addBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Adding...';
+    }
 
     const eventData = {
-      notes: notes || name, eventDate: date, startTime: start, endTime: end,
-      location: location, program_budget: budget, programId: 1
+        notes: name,
+        description: notes,  // Include notes as description
+        eventDate: date, 
+        startTime: start, 
+        endTime: end,
+        location: location, 
+        program_budget: budget, 
+        programId: 1
     };
 
     try {
-      const response = await fetch('/api/calendar/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(eventData)
-      });
-      const responseText = await response.text();
-      if (response.ok) {
-        if (_currentViewedProgramId) {
-          const del = await fetch(`/api/calendar/suggested/${_currentViewedProgramId}`, { method: 'DELETE' });
-          if (del.ok) {
-            // Mark as ADDED in the activity log
-            await fetch(`/api/calendar/suggested/${_currentViewedProgramId}/mark-added`, { method: 'PATCH' });
-            showSuccess('Program successfully added to calendar and removed from suggestions!');
-            closeViewModal();
-            loadSuggestedPrograms();
-          } else {
-            showSuccess('Program added to calendar but failed to remove from suggestions.');
-          }
-        } else {
-          showSuccess('Program successfully added to calendar!');
-          closeViewModal();
+        // Step 1: Add to calendar ONCE
+        const response = await fetch('/api/calendar/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData)
+        });
+        
+        const responseText = await response.text();
+        
+        if (!response.ok) {
+            alert('Failed to add to calendar: ' + responseText);
+            return;
         }
-      } else { alert('Failed to add to calendar: ' + responseText); }
-    } catch (error) { console.error('Error:', error); alert('Error adding program. Please try again.'); }
-  }
+        
+        // Step 2: Mark as added (soft delete from suggestions)
+        if (_currentViewedProgramId) {
+            try {
+                await fetch(`/api/calendar/suggested/${_currentViewedProgramId}/mark-added`, { 
+                    method: 'PATCH' 
+                });
+            } catch (markError) {
+                console.error('Failed to mark as added:', markError);
+            }
+        }
+        
+        showSuccess('Program successfully added to calendar!');
+        closeViewModal();
+        loadSuggestedPrograms();
+        
+    } catch (error) { 
+        console.error('Error:', error); 
+        alert('Error adding program. Please try again.'); 
+    } finally {
+        _isAddingToCalendar = false;
+        if (addBtn) {
+            addBtn.disabled = false;
+            addBtn.innerHTML = '<i class="bi bi-calendar-plus"></i> Add to Calendar';
+        }
+    }
+}
 
-  function closeViewModal() {
+function closeViewModal() {
     closeModal('viewProgramModal');
     _currentViewedProgram = null;
     _currentViewedProgramId = null;
-  }
+    _isAddingToCalendar = false;  // Reset flag
+    
+    // Re-enable the button if it was disabled
+    const addBtn = document.querySelector('#viewProgramModal .btn-save');
+    if (addBtn) {
+        addBtn.disabled = false;
+        addBtn.innerHTML = '<i class="bi bi-calendar-plus"></i> Add to Calendar';
+    }
+}
 
   async function removeProgram(id, btn) {
     showConfirm('Are you sure you want to remove this program?', 'Confirm Remove', async function() {

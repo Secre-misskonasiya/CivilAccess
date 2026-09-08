@@ -257,7 +257,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Start sidebar notification badge polling immediately, then every 15 s
     pollSidebarCounts();
+    pollAssistanceDot();     
     setInterval(pollSidebarCounts, 15000);
+    setInterval(pollAssistanceDot, 15000);
 });
 
 // ─── Sidebar notification badges ──────────────────────────────────────────────
@@ -489,6 +491,8 @@ window.SidebarBadges = {
         return `${h}:${mins.padStart(2, '0')} ${ampm}`;
     }
 
+
+
     // ---- Start on page load ----
     window.addEventListener('DOMContentLoaded', () => {
         requestBrowserNotification();
@@ -496,3 +500,157 @@ window.SidebarBadges = {
         setInterval(pollUpcomingPrograms, POLL_INTERVAL);
     });
 })();
+
+// ─── Admin Assistance Requests ─────────────────────────────────────────────
+
+function openAssistanceModal() {
+    var modalEl = document.getElementById('assistanceModal');
+    var modal = new bootstrap.Modal(modalEl);
+    
+    // Auto-fill template when modal opens
+    modalEl.addEventListener('shown.bs.modal', function() {
+        var textarea = document.getElementById('assistanceMessage');
+        if (textarea && textarea.value === '') {
+            textarea.value = "Choose one Archive|Restore \nModule: \nData description: (Name|Date)";
+        }
+    });
+    
+    modal.show();
+}
+
+function sendAssistanceRequest() {
+    var messageBox = document.getElementById('assistanceMessage');
+    var message = messageBox.value.trim();
+
+    if (message === "") {
+        alert("Please type a message before sending.");
+        return;
+    }
+
+    var formData = new URLSearchParams();
+    formData.append('message', message);
+
+    fetch('/system-logs/request-assistance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.success) {
+            alert("Your request has been sent to the admin.");
+            messageBox.value = "";
+            var modalEl = document.getElementById('assistanceModal');
+            var modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+        } else {
+            alert(data.message || "Something went wrong.");
+        }
+    })
+    .catch(function(error) {
+        console.error("Error sending assistance request:", error);
+        alert("Something went wrong sending your request.");
+    });
+}
+
+function pollAssistanceDot() {
+    var dot = document.getElementById('dot-assistance');
+    if (!dot) return; // not admin, dot doesn't exist on this page
+
+    fetch('/system-logs/api/pending?t=' + Date.now())
+        .then(function(response) { return response.json(); })
+        .then(function(requests) {
+            if (requests.length > 0) {
+                // Update the badge with the count
+                dot.textContent = requests.length > 99 ? '99+' : requests.length;
+                dot.classList.add('visible');
+                
+                // Make sure the badge is styled as a notification badge
+                dot.style.display = 'inline-block';
+                dot.style.backgroundColor = '#e74c3c';
+                dot.style.color = 'white';
+                dot.style.fontSize = '10px';
+                dot.style.fontWeight = '700';
+                dot.style.padding = '1px 6px';
+                dot.style.borderRadius = '10px';
+                dot.style.minWidth = '18px';
+                dot.style.textAlign = 'center';
+                dot.style.lineHeight = '16px';
+            } else {
+                // Hide and clear the badge when no requests
+                dot.textContent = '';
+                dot.classList.remove('visible');
+                dot.style.display = 'none';
+            }
+        })
+        .catch(function() {
+            // Non-critical — fail silently, same convention as pollSidebarCounts
+        });
+}
+
+function openPendingRequestsModal() {
+    fetch('/system-logs/api/pending')
+        .then(function(response) { return response.json(); })
+        .then(function(requests) {
+            renderPendingRequestsList(requests);
+            var modalEl = document.getElementById('pendingRequestsModal');
+            var modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        })
+        .catch(function(error) {
+            console.error("Error loading pending requests:", error);
+        });
+}
+
+function renderPendingRequestsList(requests) {
+    var container = document.getElementById('pendingRequestsList');
+    container.innerHTML = "";
+
+    if (requests.length === 0) {
+        container.innerHTML = "<p>No pending requests.</p>";
+        return;
+    }
+
+    for (var i = 0; i < requests.length; i++) {
+        var req = requests[i];
+        var card = document.createElement('div');
+        card.className = "assistance-request-card";
+
+        card.innerHTML =
+            "<strong>" + req.requesterName + "</strong>" +
+            " (" + req.requesterRole + ")" +
+            "<br><span>" + req.description + "</span>" +
+            "<br><small>" + req.timestamp + "</small>" +
+            "<br><button class='btn btn-sm btn-success mt-2' onclick='resolveRequest(" + req.id + ")'>Mark Resolved</button>";
+
+        container.appendChild(card);
+    }
+}
+
+function resolveRequest(id) {
+    fetch('/system-logs/resolve/' + id, { method: 'POST' })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                openPendingRequestsModal(); // refresh the list
+                pollAssistanceDot();
+            }
+        })
+        .catch(function(error) {
+            console.error("Error resolving request:", error);
+        });
+}
+
+// Add this to your sidebar.js or a new script
+document.addEventListener('DOMContentLoaded', function() {
+    // Move modals from sidebar to body to avoid CSS conflicts
+    const assistanceModal = document.getElementById('assistanceModal');
+    const pendingModal = document.getElementById('pendingRequestsModal');
+    
+    if (assistanceModal) {
+        document.body.appendChild(assistanceModal);
+    }
+    if (pendingModal) {
+        document.body.appendChild(pendingModal);
+    }
+});

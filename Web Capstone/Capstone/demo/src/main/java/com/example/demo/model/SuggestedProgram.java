@@ -1,8 +1,14 @@
 package com.example.demo.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "suggested_programs")
@@ -32,6 +38,15 @@ public class SuggestedProgram {
 
     @Column(name = "program_id")
     private Long programId;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "budget_breakdown", columnDefinition = "TEXT")
+    private String budgetBreakdown;
 
     /**
      * Lifecycle status of this suggested program.
@@ -73,6 +88,15 @@ public class SuggestedProgram {
 
     public int getProgram_budget() { return program_budget; }
     public void setProgram_budget(int program_budget) { this.program_budget = program_budget; }
+
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public String getBudgetBreakdown() { return budgetBreakdown; }
+    public void setBudgetBreakdown(String budgetBreakdown) { this.budgetBreakdown = budgetBreakdown; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

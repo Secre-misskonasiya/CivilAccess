@@ -63,6 +63,87 @@ public class GeminiService {
                       or adjust programs so the total stays within budget.
 
                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    DETAILED BUDGET BREAKDOWN RULES (WITH LINKS)
+                    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    
+                    When suggesting any program, ALWAYS provide a detailed budget breakdown with itemized costs.
+                    Include SEARCH LINKS where users can find and purchase these items online.
+
+                    FOR EACH ITEM, PROVIDE:
+                    1. Item name and description
+                    2. Quantity needed
+                    3. Estimated unit price
+                    4. Search link (Shopee/Lazada search URL)
+                    5. Subtotal
+
+                    LINK FORMAT:
+                    Use these search URL formats:
+                    - Shopee: https://shopee.ph/search?keyword=[item+name]
+                    - Lazada: https://www.lazada.com.ph/catalog/?q=[item+name]
+                    
+                    Example: For "folding table rental", use:
+                    • Shopee: https://shopee.ph/search?keyword=folding+table
+                    • Lazada: https://www.lazada.com.ph/catalog/?q=folding+table
+
+                    BUDGET COMPONENTS:
+                    1. FOOD & REFRESHMENTS - Include specific items with quantities and unit costs
+                    2. MATERIALS & SUPPLIES - Equipment, printing, decorations
+                    3. HONORARIUM/SPEAKERS - Guest speakers, trainers, facilitators
+                    4. MEDICAL SUPPLIES (if applicable) - For health-related programs
+                    5. PRIZES/AWARDS (if applicable) - For competitions or recognition
+                    6. CONTINGENCY FUND - Usually 5-10% of total
+                    7. MISCELLANEOUS - Transportation, communication, etc.
+
+                    BUDGET DATA ACCURACY RULES:
+                    - Base all prices on the most recent information available to you, not memorized estimates.
+                    - If you are not confident a price reflects current market rates, say so explicitly
+                      (e.g., "approximate, based on typical current rates") rather than stating it as exact.
+                    - Prefer round, conservative estimates over precise-looking numbers you're unsure of —
+                      a wrong number that looks exact is worse than an honest range.
+                      
+                    EXAMPLE BUDGET BREAKDOWN WITH LINKS:
+                    
+                    📋 DETAILED BUDGET BREAKDOWN:
+                    
+                    **1. Food & Refreshments:**
+                    • Rice (25kg sack) - ₱1,250
+                      🔗 Shopee: https://shopee.ph/search?keyword=rice+25kg+sack
+                    • Chicken (10kg) - ₱1,800
+                      🔗 Shopee: https://shopee.ph/search?keyword=fresh+chicken+whole
+                    • Vegetables & Spices - ₱750
+                      🔗 Local palengke (wet market)
+                    • Bottled Water (5 packs x 24) - ₱750
+                      🔗 Lazada: https://www.lazada.com.ph/catalog/?q=bottled+water+350ml+pack
+                    • Packed Snacks (100 pcs) - ₱2,500
+                      🔗 Shopee: https://shopee.ph/search?keyword=packed+snacks+wholesale
+                    Subtotal: ₱7,050
+
+                    **2. Materials & Supplies:**
+                    • Tarpaulin (8x4 ft) - ₱600
+                      🔗 Shopee: https://shopee.ph/search?keyword=tarpaulin+printing+8x4
+                    • Program printing (500 pcs) - ₱1,200
+                      🔗 Local print shop
+                    • Decorations bundle - ₱1,500
+                      🔗 Lazada: https://www.lazada.com.ph/catalog/?q=party+decorations+set
+                    • Tables & Chairs rental - ₱2,000
+                      🔗 Search: https://shopee.ph/search?keyword=folding+table+chair+rental
+                    Subtotal: ₱5,300
+
+                    **3. Honorarium:**
+                    • Guest Speaker (1) - ₱3,000
+                    • Facilitators (2) - ₱4,000
+                    Subtotal: ₱7,000
+
+                    **4. Contingency (10%):**
+                    • Emergency fund - ₱1,935
+                    Subtotal: ₱1,935
+
+                    **TOTAL ESTIMATED COST: ₱21,285**
+                    
+                    *Prices are estimates based on current Philippine market rates.*
+                    *Links provided are search links to find actual products.*
+
+                    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                     SINGLE-PROGRAM CALENDAR RULES
                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                     1. If the user greets you or asks a general question, respond naturally and politely.
@@ -72,7 +153,7 @@ public class GeminiService {
                     4. If the requested date is in the PAST, DO NOT output JSON. Politely explain and suggest alternatives.
                     5. ONLY when ALL details are confirmed AND the date is valid, output ONE JSON object on its own
                        line at the very end, like:
-                       {"notes":"Community Clean-up Drive","eventDate":"2026-04-25","startTime":"08:00","endTime":"11:00","location":"Barangay Hall","program_budget":5000}
+                       {"notes":"Community Clean-up Drive","eventDate":"2026-04-25","startTime":"08:00","endTime":"11:00","location":"Barangay Hall","program_budget":5000,"budgetBreakdown":"1. Cleaning Supplies: ₱2,000 [Shopee: https://shopee.ph/search?keyword=cleaning+supplies]\\n2. Refreshments: ₱1,500 [Local market]\\n3. Transportation: ₱500\\n4. Contingency (10%): ₱400\\nTotal: ₱4,400"}
 
                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                     MULTI-PROGRAM / ANNUAL PLAN RULES
@@ -83,41 +164,11 @@ public class GeminiService {
                        you MUST output a JSON ARRAY containing all the programs.
 
                     7. Each item in the array must include:
-                       {"notes":"...","eventDate":"YYYY-MM-DD","startTime":"HH:mm","endTime":"HH:mm","location":"...","program_budget":0}
+                       {"notes":"...","eventDate":"YYYY-MM-DD","startTime":"HH:mm","endTime":"HH:mm","location":"...","program_budget":0,"budgetBreakdown":"..."}
 
-                    8. Output the JSON ARRAY on its own line at the very end of your response, like:
-                       [{"notes":"Fiesta","eventDate":"2026-06-15","startTime":"08:00","endTime":"17:00","location":"Covered Court","program_budget":15000},{"notes":"Health Fair","eventDate":"2026-08-10","startTime":"08:00","endTime":"12:00","location":"Barangay Hall","program_budget":5000}]
-
-                    9. ALL dates in the array MUST be on or after today's date. Skip or adjust any month
-                       that has already passed this year.
-
-                    10. For annual plans, aim for 6–12 well-spread events across the remaining months of the year
-                        unless the user specifies a different count. Choose meaningful local events such as:
-                        • Barangay Fiesta / Foundation Day
-                        • Health & Medical Mission
-                        • Environmental / Clean-up Drive
-                        • Sports Fest / Palarong Barangay
-                        • Senior Citizens Day
-                        • Women's Month Activity
-                        • Children's Month / Nutrition Month
-                        • Christmas Party / Year-end Celebration
-                        • Livelihood / Skills Training
-                        • Disaster Preparedness Drill
-                        Adapt to what the user asks for and what fits the available budget.
-
-                    11. Summarize the annual plan in friendly bullet points BEFORE the JSON array.
-                        Show the total estimated cost and confirm it is within budget.
-
-                    EXAMPLE MULTI-PROGRAM RESPONSE FORMAT:
-                    Here is your annual program plan for Barangay San Sebastian:
-
-                    • June 15 — Barangay Fiesta at Covered Court (₱15,000)
-                    • August 10 — Medical Mission at Barangay Hall (₱5,000)
-                    • October 5 — Sports Fest at Covered Court (₱8,000)
-
-                    Total Estimated Cost: ₱28,000 — within your available budget.
-
-                    [{"notes":"Barangay Fiesta","eventDate":"2026-06-15","startTime":"08:00","endTime":"17:00","location":"Covered Court","program_budget":15000},{"notes":"Medical Mission","eventDate":"2026-08-10","startTime":"08:00","endTime":"12:00","location":"Barangay Hall","program_budget":5000},{"notes":"Sports Fest","eventDate":"2026-10-05","startTime":"07:00","endTime":"17:00","location":"Covered Court","program_budget":8000}]
+                    8. Output the JSON ARRAY on its own line at the very end of your response.
+                    9. ALL dates in the array MUST be on or after today's date.
+                    10. For annual plans, aim for 6–12 well-spread events across the remaining months.
 
                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                     BUDGET ITEM RULES
@@ -133,6 +184,8 @@ public class GeminiService {
                     - Never suggest or save an amount that exceeds the current available budget.
                     - The program_budget field is REQUIRED in every JSON object.
                     - When outputting an array, output the ENTIRE array on a SINGLE line.
+                    - Include budgetBreakdown in every program JSON with itemized costs and links.
+                    - ALWAYS provide Shopee/Lazada search links for items that can be purchased online.
                     """)
                 .user(userPrompt)
                 .call()

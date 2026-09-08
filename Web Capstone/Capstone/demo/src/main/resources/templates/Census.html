@@ -1181,6 +1181,19 @@ td{padding:12px 14px !important;vertical-align:middle !important}
   </div>
 </div>
 
+<!-- ══════════════════ IMAGE ENLARGE MODAL — FULL SCREEN ══════════════════ -->
+<div id="imageEnlargeModal" class="modal" style="z-index: 10000; background-color: rgba(0,0,0,0.95);">
+    <span class="close-x" onclick="closeImageEnlarge()"
+        style="position:fixed; top:20px; right:30px; color:white; font-size:32px;
+               background:rgba(255,255,255,0.1); width:44px; height:44px; border-radius:50%;
+               display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10001;">&times;</span>
+    <div style="position:fixed; inset:0; display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;">
+        <img id="enlargedImage" src=""
+             style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; cursor:zoom-out;"
+             onclick="closeImageEnlarge()">
+    </div>
+</div>
+
 <!-- DUPLICATE DETECTION MODAL -->
 <div id="duplicateModal" style="display:none;position:fixed;z-index:3000;inset:0;
      background:rgba(0,0,0,.6);overflow-y:auto;padding:40px 16px;">
@@ -1341,9 +1354,19 @@ function applySearch() {
       const status = (row.getAttribute('data-status')  || '').toUpperCase();
       const matchQ  = !q || name.includes(q) || addr.includes(q) || rid.includes(q);
       const matchSt = !activeStatusFilter || status === activeStatusFilter;
-      row.style.display = (matchQ && matchSt) ? '' : 'none';
+      // FIX: mark search/filter matches on a data attribute instead of setting
+      // style.display directly. Pagination also toggles style.display to show/hide
+      // a page's worth of rows, so the two features were fighting over the same flag —
+      // pagination couldn't tell "hidden because filtered out" from "hidden because
+      // it's on another page", which broke page counts after any search.
+      row.dataset.searchMatch = (matchQ && matchSt) ? 'true' : 'false';
     });
   });
+  // Tell pagination to recompute against the new filtered set and jump back to page 1.
+  if (window.CensusPagination) {
+    window.CensusPagination.refresh('active-table');
+    window.CensusPagination.refresh('archived-table');
+  }
 }
 
 let currentStep = 0;
@@ -1760,58 +1783,84 @@ function showToast(msg, type = '') {
 }
 
 (function() {
-  const PAGE_SIZE = 10;
+  const PAGE_SIZE = 7;
+  const state = {}; // tableId -> { page }
+
+  // FIX: "eligible" rows are those NOT excluded by search/status filtering.
+  // This reads the data-search-match attribute set by applySearch(), which is
+  // separate from style.display — the flag pagination itself controls below.
+  function eligibleRows(tbody) {
+    return Array.from(tbody.querySelectorAll('tr:not(.empty-row)'))
+      .filter(r => r.dataset.searchMatch !== 'false');
+  }
+
+  function render(tableId, footerId) {
+    const tbody  = document.querySelector('#' + tableId + ' tbody');
+    const footer = document.getElementById(footerId);
+    if (!tbody || !footer) return;
+    if (!state[tableId]) state[tableId] = { page: 1 };
+    const s = state[tableId];
+
+    const all   = eligibleRows(tbody);
+    const total = all.length;
+    const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    if (s.page > pages) s.page = pages;
+    if (s.page < 1) s.page = 1;
+    const start = (s.page - 1) * PAGE_SIZE;
+    const end   = start + PAGE_SIZE;
+
+    Array.from(tbody.querySelectorAll('tr:not(.empty-row)')).forEach(r => {
+      // Rows filtered out by search/status stay hidden regardless of page.
+      if (r.dataset.searchMatch === 'false') { r.style.display = 'none'; return; }
+      const idx = all.indexOf(r);
+      r.style.display = (idx >= start && idx < end) ? '' : 'none';
+    });
+
+    let html = '<ul class="pagination pagination-sm mb-0">';
+    if (s.page > 1)   html += `<li class="page-item"><a class="page-link" href="#" data-a="prev"><i class="bi bi-arrow-left"></i> Prev</a></li>`;
+    for (let p = 1; p <= pages; p++)
+      html += `<li class="page-item${p === s.page ? ' active' : ''}"><a class="page-link" href="#" data-a="goto" data-p="${p}">${p}</a></li>`;
+    if (s.page < pages) html += `<li class="page-item"><a class="page-link" href="#" data-a="next">Next <i class="bi bi-arrow-right"></i></a></li>`;
+    html += '</ul>';
+
+    footer.innerHTML = `<span>Showing ${total === 0 ? 0 : start + 1}–${Math.min(end, total)} of ${total}</span><nav>${html}</nav>`;
+  }
 
   function initPagination(tableId, footerId) {
     const tbody  = document.querySelector('#' + tableId + ' tbody');
     const footer = document.getElementById(footerId);
     if (!tbody || !footer) return;
-    let page = 1;
-
-    function visibleRows() {
-      return Array.from(tbody.querySelectorAll('tr:not(.empty-row)')).filter(r => r.style.display !== 'none');
-    }
-
-    function render() {
-      const all   = visibleRows();
-      const total = all.length;
-      const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-      if (page > pages) page = pages;
-      const start = (page - 1) * PAGE_SIZE;
-      const end   = start + PAGE_SIZE;
-
-      Array.from(tbody.querySelectorAll('tr:not(.empty-row)')).forEach(r => {
-        if (r.style.display === 'none') return;
-        const idx = all.indexOf(r);
-        r.style.display = (idx >= start && idx < end) ? '' : 'none';
-      });
-
-      let html = '<ul class="pagination pagination-sm mb-0">';
-      if (page > 1)   html += `<li class="page-item"><a class="page-link" href="#" data-a="prev"><i class="bi bi-arrow-left"></i> Prev</a></li>`;
-      for (let p = 1; p <= pages; p++)
-        html += `<li class="page-item${p === page ? ' active' : ''}"><a class="page-link" href="#" data-a="goto" data-p="${p}">${p}</a></li>`;
-      if (page < pages) html += `<li class="page-item"><a class="page-link" href="#" data-a="next">Next <i class="bi bi-arrow-right"></i></a></li>`;
-      html += '</ul>';
-
-      footer.innerHTML = `<span>Showing ${total === 0 ? 0 : start + 1}–${Math.min(end, total)} of ${total}</span><nav>${html}</nav>`;
-    }
+    state[tableId] = { page: 1 };
 
     footer.addEventListener('click', e => {
       e.preventDefault();
       const a = e.target.closest('a[data-a]');
       if (!a) return;
-      const all = visibleRows(); const pages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
-      if (a.dataset.a === 'prev' && page > 1)          page--;
-      else if (a.dataset.a === 'next' && page < pages) page++;
-      else if (a.dataset.a === 'goto')                 page = +a.dataset.p;
-      render();
+      const all = eligibleRows(tbody);
+      const pages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+      const s = state[tableId];
+      if (a.dataset.a === 'prev' && s.page > 1)          s.page--;
+      else if (a.dataset.a === 'next' && s.page < pages) s.page++;
+      else if (a.dataset.a === 'goto')                   s.page = +a.dataset.p;
+      render(tableId, footerId);
     });
 
-    new MutationObserver(() => { page = 1; render(); })
-      .observe(tbody, { attributes: true, attributeFilter: ['style'], subtree: true });
-
-    render();
+    render(tableId, footerId);
   }
+
+  // FIX: explicit refresh hook, called by applySearch(), replaces the old
+  // MutationObserver that watched `style` on the very rows pagination itself
+  // rewrites. That observer fired on every render(), reset page back to 1,
+  // and re-derived "total rows" from whatever happened to be visible at that
+  // instant — which is why Next either did nothing or landed on a broken page.
+  window.CensusPagination = {
+    refresh(tableId) {
+      const footerId = tableId === 'active-table' ? 'footer-active' : 'footer-archived';
+      if (!state[tableId]) state[tableId] = { page: 1 };
+      else state[tableId].page = 1; // filters changed → back to page 1
+      render(tableId, footerId);
+    }
+  };
 
   document.addEventListener('DOMContentLoaded', () => {
     initPagination('active-table',   'footer-active');
@@ -2251,7 +2300,9 @@ function buildHHCard(m, currentResId) {
     : (m.occupation || '—');
   const photoIcon  = isStudent ? 'bi-person-badge' : 'bi-file-earmark-person';
   const photoLabel = isStudent ? 'School ID' : "Gov't ID";
-  const photoHtml  = m.governmentIdUrl ? `<img src="${m.governmentIdUrl}" alt="ID">` : `<i class="bi ${photoIcon}"></i>`;
+  const photoHtml  = m.governmentIdUrl
+      ? `<img src="${m.governmentIdUrl}" alt="ID" style="cursor:pointer" onclick="enlargeImage('${m.governmentIdUrl.replace(/'/g, "\\'")}')">`
+      : `<i class="bi ${photoIcon}"></i>`;
   const phDisp     = m.philhealthId
     ? `<span class="hh-id-value mono">${m.philhealthId}</span>`
     : `<span class="hh-id-value muted">${m.philhealthCategory || 'Not enrolled'}</span>`;
@@ -2822,6 +2873,31 @@ function buildHouseholdSummary(members) {
   if (!parts.length) return '';
   return `<div class="hh-summary-strip">${parts.join('<span class="sep">·</span>')}</div>`;
 }
+
+function enlargeImage(src) {
+    if (!src) return;
+    document.getElementById('enlargedImage').src = src;
+    document.getElementById('imageEnlargeModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeImageEnlarge() {
+    document.getElementById('imageEnlargeModal').style.display = 'none';
+    document.getElementById('enlargedImage').src = '';
+    document.body.style.overflow = '';
+}
+
+document.getElementById('imageEnlargeModal').onclick = function(e) {
+    if (e.target === this) closeImageEnlarge();
+};
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const m = document.getElementById('imageEnlargeModal');
+        if (m && m.style.display === 'block') closeImageEnlarge();
+    }
+});
+
 
 document.addEventListener('DOMContentLoaded', renderCensusSummary);
 

@@ -314,6 +314,12 @@
                                            onclick="return confirm('Archive this income record? It will be moved to the Archive tab and removed from active totals.')">
                                             <i class="bi bi-archive"></i> Archive
                                         </a>
+                                        <a th:if="${currentrole == 'TREASURER'}"
+                                           class="action-btn"
+                                           style="background:#fff3cd; color:#856404;"
+                                           onclick="openAssistanceModal()">
+                                            <i class="bi bi-archive"></i> Archive
+                                        </a>
                                     </td>
                                 </tr>
                             </tbody>
@@ -399,6 +405,13 @@
                                            class="action-btn"
                                            style="background:#fff3cd; color:#856404;"
                                            onclick="return confirm('Archive this expense? It will be moved to the Archive tab.')">
+                                            <i class="bi bi-archive"></i> Archive
+                                        </a>
+
+                                        <a th:if="${currentrole == 'TREASURER'}"
+                                           class="action-btn"
+                                           style="background:#fff3cd; color:#856404;"
+                                           onclick="openAssistanceModal()">
                                             <i class="bi bi-archive"></i> Archive
                                         </a>
                                     </td>
@@ -510,7 +523,7 @@
                                     <th>Type</th>
                                     <th>Amount</th>
                                     <th>Archived On</th>
-                                    <th th:if="${currentrole == 'ADMIN'}">Actions</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="archivedIncomeTableBody">
@@ -530,6 +543,11 @@
                                         <a th:href="@{|/finance/income/unarchive/${inc.id}|}"
                                            class="action-btn approve"
                                            onclick="return confirm('Restore this income record to active?')">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                        </a>
+                                        <a th:if="${currentrole == 'TREASURER'}"
+                                           class="action-btn approve"
+                                           onclick="openAssistanceModal()">
                                             <i class="bi bi-arrow-counterclockwise"></i> Restore
                                         </a>
                                     </td>
@@ -586,6 +604,11 @@
                                         <a th:href="@{|/finance/expenses/unarchive/${exp.id}|}"
                                            class="action-btn approve"
                                            onclick="return confirm('Restore this expense record to active?')">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                        </a>
+                                        <a th:if="${currentrole == 'TREASURER'}"
+                                           class="action-btn approve"
+                                           onclick="openAssistanceModal()">
                                             <i class="bi bi-arrow-counterclockwise"></i> Restore
                                         </a>
                                     </td>

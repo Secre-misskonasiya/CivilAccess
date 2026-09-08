@@ -489,6 +489,105 @@
         color: #888;
         flex-shrink: 0;
     }
+
+    .event-notes-box {
+    background-color: #f0faf5;
+    border-left: 3px solid #2d7a5f;
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #333;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    }
+    .event-notes-box strong {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #2d7a5f;
+        margin-bottom: 6px;
+    }
+
+    .modal-content.wide-two-col {
+    max-width: 820px;
+    display: flex;
+    padding: 0;
+    overflow: hidden;
+    }
+    .viewevents-col-left {
+        flex: 1.1;
+        padding: 20px 22px;
+        max-height: 78vh;
+        overflow-y: auto;
+        border-right: 1px solid #e8e8e8;
+    }
+    .viewevents-col-right {
+        width: 818px;
+        min-width: 300px;
+        padding: 20px 22px;
+        background-color: #f8fdf9;
+        max-height: 78vh;
+        overflow-y: auto;
+    }
+
+    .notes-panel-current-event {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #e8f5f0;
+    color: #2d7a5f;
+    border: 1px solid #b8ddd0;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 14px;
+    width: fit-content;
+    max-width: 100%;
+    }
+    .notes-panel-current-event span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .notes-panel-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: bold;
+        color: #2d7a5f;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #b8ddd0;
+    }
+    .notes-panel-body {
+        font-size: 13.5px;
+        color: #333;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    .notes-panel-empty {
+        color: #aaa;
+        font-size: 13px;
+        font-style: italic;
+        text-align: center;
+        margin-top: 30px;
+    }
+    .event-card.selected {
+        border-color: #44C375;
+        background-color: #f0faf5;
+    }
+
     .no-events {
         text-align: center;
         color: #aaa;
@@ -1130,21 +1229,30 @@
 
 <!-- View Events Modal -->
 <div id="viewEventsModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="bi bi-calendar-date"></i> Events for <span id="viewEventsDate">-</span></h3>
-            <button class="close-modal" onclick="closeViewEventsModal()">&times;</button>
+    <div class="modal-content wide-two-col">
+        <div class="viewevents-col-left">
+            <div class="modal-header">
+                <h3><i class="bi bi-calendar-date"></i> Events for <span id="viewEventsDate">-</span></h3>
+                <button class="close-modal" onclick="closeViewEventsModal()">&times;</button>
+            </div>
+            <div id="viewEventsList">
+                <div class="no-events">Loading...</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-green" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" onclick="openAddEventModalWithDate()">
+                    <i class="bi bi-plus-circle"></i> Add Event on this Day
+                </button>
+                <button class="btn-cancel" onclick="closeViewEventsModal()">Close</button>
+            </div>
         </div>
-        <div id="viewEventsList">
-            <div class="no-events">Loading...</div>
-        </div>
-        <div class="modal-buttons">
-            <button class="btn-green" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" onclick="openAddEventModalWithDate()">
-                <i class="bi bi-plus-circle"></i> Add Event on this Day
-            </button>
-            <button class="btn-cancel" onclick="closeViewEventsModal()">
-                Close
-            </button>
+        <div class="viewevents-col-right">
+            <div class="notes-panel-header">
+                <i class="bi bi-journal-text"></i> Notes
+            </div>
+            <div id="viewEventsNotesEventTag"></div>
+            <div id="viewEventsNotesPanel">
+                <div class="notes-panel-empty">Select an event to view its notes.</div>
+            </div>
         </div>
     </div>
 </div>
@@ -1166,6 +1274,7 @@
   let allEvents = [];
   let currentSelectedDate = null;
   let _pendingConfirmAction = null;
+    let _dayEventsForNotes = [];
 
   let currentDate = new Date();
   currentDate.setDate(1);
@@ -1434,24 +1543,30 @@
   }
 
   function showEventsForDay(dateKey) {
-    currentSelectedDate = dateKey;
-    const events = dbEvents[dateKey] || [];
-    
-    document.getElementById('viewEventsDate').textContent = formatDateLong(dateKey);
-    
-    const container = document.getElementById('viewEventsList');
-    
-    if (events.length === 0) {
-        container.innerHTML = `
-            <div class="no-events">
-                <i class="bi bi-calendar-x" style="font-size: 48px; display: block; margin-bottom: 10px;"></i>
-                No events scheduled for this day.
-            </div>`;
-    } else {
+        currentSelectedDate = dateKey;
+        const events = dbEvents[dateKey] || [];
+
+        document.getElementById('viewEventsDate').textContent = formatDateLong(dateKey);
+
+        const container = document.getElementById('viewEventsList');
+        const notesPanel = document.getElementById('viewEventsNotesPanel');
+
+        if (events.length === 0) {
+            container.innerHTML = `
+                <div class="no-events">
+                    <i class="bi bi-calendar-x" style="font-size: 48px; display: block; margin-bottom: 10px;"></i>
+                    No events scheduled for this day.
+                </div>`;
+            notesPanel.innerHTML = `<div class="notes-panel-empty">No events selected.</div>`;
+            _dayEventsForNotes = [];
+            document.getElementById('viewEventsModal').style.display = 'block';
+            return;
+        }
+
         container.innerHTML = events.map((e, index) => {
             const budgetValue = e.program_budget !== undefined && e.program_budget !== null ? e.program_budget : 0;
             return `
-            <div class="event-card">
+            <div class="event-card${index === 0 ? ' selected' : ''}" id="event-card-${index}" onclick="selectEventCard(${index})" style="cursor:pointer;">
                 <div class="event-title">
                     <i class="bi bi-calendar-check"></i> ${escapeHtml(e.notes || 'Community Program')}
                 </div>
@@ -1465,16 +1580,43 @@
                     <i class="bi bi-cash"></i> &#8369;${budgetValue.toLocaleString()}
                 </div>
                 ${isAdmin ? `<div class="event-detail" style="margin-top: 10px;">
-                    <button class="btn-red" onclick="deleteEvent(${e.id}, '${dateKey}')" style="padding: 4px 12px;">
+                    <button class="btn-red" onclick="event.stopPropagation(); deleteEvent(${e.id}, '${dateKey}')" style="padding: 4px 12px;">
                         <i class="bi bi-trash"></i> Delete
                     </button>
                 </div>` : ''}
             </div>
         `}).join('');
+
+        _dayEventsForNotes = events;
+        selectEventCard(0);
+        document.getElementById('viewEventsModal').style.display = 'block';
     }
-    
-    document.getElementById('viewEventsModal').style.display = 'block';
-  }
+
+    function selectEventCard(index) {
+        document.querySelectorAll('#viewEventsList .event-card').forEach((el, i) => {
+            el.classList.toggle('selected', i === index);
+        });
+
+        const e = _dayEventsForNotes && _dayEventsForNotes[index];
+        const notesPanel = document.getElementById('viewEventsNotesPanel');
+        const eventTag = document.getElementById('viewEventsNotesEventTag');
+
+        if (e) {
+            eventTag.innerHTML = `
+                <div class="notes-panel-current-event">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>${escapeHtml(e.notes || 'Community Program')}</span>
+                </div>`;
+        } else {
+            eventTag.innerHTML = '';
+        }
+
+        if (e && e.description) {
+            notesPanel.innerHTML = `<div class="notes-panel-body">${escapeHtml(e.description).replace(/\n/g, '<br>')}</div>`;
+        } else {
+            notesPanel.innerHTML = `<div class="notes-panel-empty">No notes for this event.</div>`;
+        }
+    }
 
   async function deleteEvent(eventId, dateKey) {
     showConfirm('Are you sure you want to delete this event?', 'Confirm Delete', async function() {
@@ -1609,6 +1751,7 @@
 
     const eventData = {
         notes: eventName,
+        description: notes,   // ← add this line
         eventDate: eventDate,
         startTime: startTime,
         endTime: endTime,

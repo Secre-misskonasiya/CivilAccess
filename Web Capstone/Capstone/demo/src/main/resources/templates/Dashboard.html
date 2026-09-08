@@ -451,6 +451,10 @@
     .stat-red   { color: var(--red);  }
     .stat-green { color: var(--teal); }
 
+    .assistance-notif{
+        background-color:#24443f
+    }
+
     /* ══════════════════════════════════════
        CHART CARDS
     ══════════════════════════════════════ */
@@ -830,7 +834,8 @@
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                                     <strong id="announceTitle" th:text="${latestAnnouncement.title}" style="font-size:13px; color:#24443f; font-weight:600;"></strong>
                                     <span id="announceOriginalDate" style="font-size:10px; color:#9aa4a2; white-space:nowrap; margin-left:8px;"
-                                        th:text="${latestAnnouncement.datePosted != null ? #temporals.format(latestAnnouncement.datePosted, 'MMM dd, yyyy') : ''}"></span>
+                                    th:attr="data-date=${latestAnnouncement.datePosted}"
+                                    th:text="${latestAnnouncement.datePosted != null ? #temporals.format(latestAnnouncement.datePosted, 'MMM dd, yyyy') : ''}"></span>
                                 </div>
                                 <p id="announceContent" th:text="${latestAnnouncement.content}" style="font-size:12px; color:#6b7675; margin:0; line-height:1.6;"></p>
                             </div>
@@ -856,7 +861,29 @@
                     </div>
 
                 </div><!-- /row-top -->
+                <!-- Only visible to ADMIN -->
+                <div th:if="${currentrole == 'ADMIN'}" class="assistance-notif" onclick="openPendingRequestsModal()">
+                    <img src="/icons/help.svg" class="icon">
+                    Admin Assistance Requests
+                    <span id="dot-assistance" class="badge bg-danger"></span>
+                </div>
 
+                <!-- Pending Requests Modal -->
+                <div th:if="${currentrole == 'ADMIN'}" class="modal fade" id="pendingRequestsModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Pending Assistance Requests</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div id="pendingRequestsList">
+                                    <!-- Filled in by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- ROW 2: Stat cards -->
                 <div>
                     <div class="section-label">Overview</div>
@@ -1795,7 +1822,7 @@ function updateAnnouncement(announcement) {
     // ============================================
     // INIT
     // ============================================
-   window.onload = function () {
+    window.onload = function () {
         const status = document.getElementById('accountStatus').value;
         if (status === 'New' || status === 'Newly Updated') {
             document.getElementById('forcePasswordModal').style.display = 'block';
@@ -1806,6 +1833,10 @@ function updateAnnouncement(announcement) {
         fetchWeather();
         setInterval(fetchWeather, 30 * 60 * 1000);
         trackModalState();
+
+        // NEW: populate the relative-time badge on load, then keep it fresh
+        updateAnnouncementRelativeDate();
+        setInterval(updateAnnouncementRelativeDate, 60 * 1000);
 
         const chartsSection = document.getElementById('chartsSection');
         if (chartsSection) {

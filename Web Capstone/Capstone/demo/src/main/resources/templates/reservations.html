@@ -874,8 +874,9 @@
         if (badge) badge.textContent = reservations.length;
         if (countSpan) countSpan.textContent = `${reservations.length} ${status} reservations`;
         
-        const isAdmin = [[${currentrole == 'ADMIN'}]];
-        const canApproveResolve = [[${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}]];
+        // Fix: These lines need proper Thymeleaf syntax
+        const isAdmin = /*[[${currentrole == 'ADMIN'}]]*/ false;
+        const canApproveResolve = /*[[${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}]]*/ false;
         
         let html = '';
         for (let r of reservations) {

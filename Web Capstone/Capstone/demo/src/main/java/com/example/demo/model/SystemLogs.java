@@ -1,7 +1,13 @@
 package com.example.demo.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "system_logs")
@@ -11,7 +17,7 @@ public class SystemLogs {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId; 
+    private Long userId;
     private String action;
     private String module;
 
@@ -19,6 +25,13 @@ public class SystemLogs {
     private String description;
 
     private LocalDateTime timestamp;
+
+    // NEW — who made the request, stored directly like ActivityLogService does
+    private String requesterName;
+    private String requesterRole;
+
+    // NEW — "PENDING" or "RESOLVED"
+    private String status;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -37,4 +50,13 @@ public class SystemLogs {
 
     public LocalDateTime getTimestamp() { return timestamp; }
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+
+    public String getRequesterName() { return requesterName; }
+    public void setRequesterName(String requesterName) { this.requesterName = requesterName; }
+
+    public String getRequesterRole() { return requesterRole; }
+    public void setRequesterRole(String requesterRole) { this.requesterRole = requesterRole; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }

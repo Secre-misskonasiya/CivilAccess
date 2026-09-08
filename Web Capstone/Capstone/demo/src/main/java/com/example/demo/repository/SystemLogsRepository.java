@@ -1,9 +1,14 @@
 package com.example.demo.repository;
 
-import com.example.demo.model.SystemLogs;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import java.util.List;
 
-@Repository
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.example.demo.model.SystemLogs;
+
 public interface SystemLogsRepository extends JpaRepository<SystemLogs, Long> {
+
+    List<SystemLogs> findByModuleAndStatusOrderByTimestampDesc(String module, String status);
+
+    long countByModuleAndStatus(String module, String status);
 }
