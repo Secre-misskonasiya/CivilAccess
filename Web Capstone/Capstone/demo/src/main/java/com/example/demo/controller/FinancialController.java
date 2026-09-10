@@ -1,26 +1,38 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.BarangayIncome;
-import com.example.demo.model.BarangayExpense;
-import com.example.demo.model.ProgramBudget;
-import com.example.demo.model.AdminUser;
-import com.example.demo.model.BudgetAdjustmentLog;
-import com.example.demo.services.AdminUserServices;
-import com.example.demo.services.BarangayIncomeService;
-import com.example.demo.services.BarangayExpenseService;
-import com.example.demo.services.ProgramBudgetService;
-import com.example.demo.services.BudgetAdjustmentLogService;
+import java.security.Principal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.demo.model.AdminUser;
+import com.example.demo.model.BarangayExpense;
+import com.example.demo.model.BarangayIncome;
+import com.example.demo.model.BudgetAdjustmentLog;
+import com.example.demo.model.ProgramBudget;
+import com.example.demo.services.AdminUserServices;
+import com.example.demo.services.BarangayExpenseService;
+import com.example.demo.services.BarangayIncomeService;
+import com.example.demo.services.BudgetAdjustmentLogService;
+import com.example.demo.services.ProgramBudgetService;
+
 import jakarta.servlet.http.HttpSession;
-import java.security.Principal;
-import java.time.LocalDate;
-import java.util.*;
 
 @Controller
 @RequestMapping("/finance")
@@ -328,20 +340,20 @@ public class FinancialController {
         return "redirect:/finance#expenses";
     }
 
-    // ========== ARCHIVE / UNARCHIVE — TREASURER ONLY ==========
+    // ========== ARCHIVE / UNARCHIVE — ADMIN ONLY ==========
 
-    private boolean isTreasurer(Principal principal) {
+    private boolean isAdmin(Principal principal) {
         if (principal == null) return false;
         AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
-        return admin != null && "TREASURER".equalsIgnoreCase(admin.getRole());
+        return admin != null && "ADMIN".equalsIgnoreCase(admin.getRole());
     }
 
     @GetMapping("/income/archive/{id}")
     public String archiveIncome(@PathVariable Long id,
                                 Principal principal,
                                 RedirectAttributes redirectAttributes) {
-        if (!isTreasurer(principal)) {
-            redirectAttributes.addFlashAttribute("error", "Only the Treasurer can archive records.");
+        if (!isAdmin(principal)) {
+            redirectAttributes.addFlashAttribute("error", "Only an Admin can archive records.");
             return "redirect:/finance#income";
         }
         try {
@@ -358,8 +370,8 @@ public class FinancialController {
     public String unarchiveIncome(@PathVariable Long id,
                                   Principal principal,
                                   RedirectAttributes redirectAttributes) {
-        if (!isTreasurer(principal)) {
-            redirectAttributes.addFlashAttribute("error", "Only the Treasurer can restore archived records.");
+        if (!isAdmin(principal)) {
+            redirectAttributes.addFlashAttribute("error", "Only an Admin can restore archived records.");
             return "redirect:/finance#archive";
         }
         try {
@@ -375,13 +387,14 @@ public class FinancialController {
     public String archiveExpense(@PathVariable Long id,
                                  Principal principal,
                                  RedirectAttributes redirectAttributes) {
-        if (!isTreasurer(principal)) {
-            redirectAttributes.addFlashAttribute("error", "Only the Treasurer can archive records.");
+        if (!isAdmin(principal)) {
+            redirectAttributes.addFlashAttribute("error", "Only an Admin can archive records.");
             return "redirect:/finance#expenses";
         }
         try {
             AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
             expenseService.archiveExpense(id, admin.getId());
+            System.out.println("User Role:"+admin.getRole());
             redirectAttributes.addFlashAttribute("success", "Expense record archived successfully.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error archiving expense: " + e.getMessage());
@@ -393,8 +406,8 @@ public class FinancialController {
     public String unarchiveExpense(@PathVariable Long id,
                                    Principal principal,
                                    RedirectAttributes redirectAttributes) {
-        if (!isTreasurer(principal)) {
-            redirectAttributes.addFlashAttribute("error", "Only the Treasurer can restore archived records.");
+        if (!isAdmin(principal)) {
+            redirectAttributes.addFlashAttribute("error", "Only an Admin can restore archived records.");
             return "redirect:/finance#archive";
         }
         try {

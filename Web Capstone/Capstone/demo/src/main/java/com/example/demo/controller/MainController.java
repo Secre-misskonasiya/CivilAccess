@@ -1150,7 +1150,7 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
             Model model,
             Principal principal,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size) {
+            @RequestParam(defaultValue = "300") int size) {
 
         AdminUser currentAdmin = addCurrentAdminToModel(principal, model);
 
