@@ -261,8 +261,13 @@ public class MainController {
                 }
 
                 adminUserService.saveAdmin(existingAdmin);
+
+                AdminUser actingAdmin = adminUserService.getAdminByEmail(principal.getName());
+                String actorName = actingAdmin != null ? actingAdmin.getName() : principal.getName();
+                String actorRole = actingAdmin != null ? actingAdmin.getRole() : "ADMIN";
+
                 activityLogService.log(
-                    existingAdmin.getName(), "ADMIN", "UPDATED", "Accounts",
+                    actorName, actorRole, "UPDATED", "Accounts",
                     truncate("Updated account details for " + existingAdmin.getName() + " (" + existingAdmin.getRole() + ")"),
                     request.getRemoteAddr(), "Success"
                 );
@@ -1297,7 +1302,8 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
             @ResponseBody
             public ResponseEntity<Map<String, Object>> requestAssistance(
                     @RequestParam String message,
-                    Principal principal) {
+                    Principal principal,
+                    HttpServletRequest request) {   // <-- added
 
                 Map<String, Object> response = new HashMap<>();
 
@@ -1319,6 +1325,13 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                     currentAdmin.getName(),
                     currentAdmin.getRole(),
                     message.trim()
+                );
+
+                // NEW: log the request itself (covers archive / removal / restore asks)
+                activityLogService.log(
+                    currentAdmin.getName(), currentAdmin.getRole(), "REQUESTED", "Accounts",
+                    truncate("Requested admin assistance — " + message.trim()),
+                    request.getRemoteAddr(), "Success"
                 );
 
                 response.put("success", true);
@@ -1346,9 +1359,31 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
 
             @PostMapping("/system-logs/resolve/{id}")
             @ResponseBody
-            public ResponseEntity<Map<String, Object>> resolveAssistanceRequest(@PathVariable Long id) {
+            public ResponseEntity<Map<String, Object>> resolveAssistanceRequest(
+                    @PathVariable Long id,
+                    Principal principal,          // <-- added
+                    HttpServletRequest request) { // <-- added
+
                 Map<String, Object> response = new HashMap<>();
+                AdminUser currentAdmin = adminUserService.getAdminByEmail(principal.getName());
+
+                // Grab the request's details before it's marked resolved, for a readable log line
+                String requestSummary = systemLogsService.getPendingAssistanceRequests().stream()
+                        .filter(log -> log.getId().equals(id))
+                        .findFirst()
+                        .map(log -> log.getRequesterName() + " (" + log.getRequesterRole() + "): " + log.getDescription())
+                        .orElse("request #" + id);
+
                 systemLogsService.resolveAssistanceRequest(id);
+
+                if (currentAdmin != null) {
+                    activityLogService.log(
+                        currentAdmin.getName(), currentAdmin.getRole(), "RESOLVED", "Accounts",
+                        truncate("Resolved assistance request — " + requestSummary),
+                        request.getRemoteAddr(), "Success"
+                    );
+                }
+
                 response.put("success", true);
                 return ResponseEntity.ok(response);
             }
