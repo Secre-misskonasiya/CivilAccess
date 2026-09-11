@@ -2627,6 +2627,62 @@ console.log("=== POLLING SCRIPT STARTED ===");
     });
 })();
 
+// ─── Protected accounts: hide Edit/Update & Archive buttons ──
+// The following email addresses have their Edit (Update for employees) and
+// Archive buttons hidden on both the Employee and Resident tables.
+(function () {
+    const PROTECTED_EMAILS = [
+        'shamellemserrano@gmail.com',
+        'cymieussilvestre@gmail.com',
+        'gabbygstb@gmail.com',
+        'pogitravis353@gmail.com',
+        'jonathanripo27@gmail.com',
+        'depechemode19y@gmail.com'
+    ].map(e => e.toLowerCase());
+
+    function isProtected(email) {
+        return !!email && PROTECTED_EMAILS.indexOf(email.trim().toLowerCase()) !== -1;
+    }
+
+    function hideProtectedButtons() {
+        // Employee table
+        document.querySelectorAll('#employee-table tbody tr').forEach(function (row) {
+            const viewBtn = row.querySelector('.view-btn[data-email]');
+            if (!viewBtn) return;
+            const email = viewBtn.getAttribute('data-email');
+            if (isProtected(email)) {
+                row.querySelectorAll('.update-btn, .delete-btn').forEach(function (btn) {
+                    btn.style.display = 'none';
+                });
+            }
+        });
+
+        // Residents table
+        document.querySelectorAll('#resident-table tbody tr').forEach(function (row) {
+            let email = row.getAttribute('data-email');
+            if (!email) {
+                const viewBtn = row.querySelector('.view-btn[data-email]');
+                if (viewBtn) email = viewBtn.getAttribute('data-email');
+            }
+            if (isProtected(email)) {
+                row.querySelectorAll('.update-btn, .delete-btn').forEach(function (btn) {
+                    btn.style.display = 'none';
+                });
+            }
+        });
+    }
+
+    // Run on DOMContentLoaded (main path)
+    document.addEventListener('DOMContentLoaded', hideProtectedButtons);
+
+    // Safety net: run once more after everything settles (in case rows are
+    // rendered late by the pagination / polling scripts).
+    window.addEventListener('load', function () {
+        hideProtectedButtons();
+        setTimeout(hideProtectedButtons, 500);
+    });
+})();
+
 // ─── Thymeleaf inline script data ───────────────────────────
 </script>
 <script th:inline="javascript">

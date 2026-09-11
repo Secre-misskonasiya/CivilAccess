@@ -687,42 +687,6 @@
     .notification-bell .badge:empty { display: none; }
 
     /* ══════════════════════════════════════
-       FORCE MODAL
-    ══════════════════════════════════════ */
-    .force-modal {
-        display: none;
-        position: fixed; z-index: 9999;
-        left: 0; top: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.55);
-        backdrop-filter: blur(2px);
-    }
-    .force-modal-content {
-        background: white;
-        width: 440px;
-        padding: 44px;
-        border-radius: var(--radius-lg);
-        text-align: center;
-        margin: 18% auto;
-        box-shadow: var(--shadow-lg);
-    }
-    .force-modal-content h2 { color: var(--green-900); margin-bottom: 12px; font-size: 22px; font-weight: 700; }
-    .force-modal-content p { font-size: 15px; color: var(--gray-500); }
-    .force-modal-content button {
-        margin-top: 22px;
-        padding: 13px 32px;
-        background: var(--green-700);
-        color: white;
-        border: none;
-        border-radius: var(--radius-sm);
-        cursor: pointer;
-        font-size: 15px;
-        font-weight: 600;
-        font-family: var(--font);
-        transition: background 0.2s;
-    }
-    .force-modal-content button:hover { background: var(--green-900); }
-
-    /* ══════════════════════════════════════
        RESPONSIVE
     ══════════════════════════════════════ */
     @media (max-width: 1280px) {
@@ -1332,16 +1296,6 @@
             isModalOpen = false;
             if (pendingUpdates) { pendingUpdates = false; pollDashboard(true); }
         });
-        const forceModal = document.getElementById('forcePasswordModal');
-        if (forceModal) {
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    isModalOpen = (mutation.target.style.display === 'block');
-                    if (!isModalOpen && pendingUpdates) { pendingUpdates = false; pollDashboard(true); }
-                });
-            });
-            observer.observe(forceModal, { attributes: true, attributeFilter: ['style'] });
-        }
     }
 
     async function pollDashboard(forceUpdate = false) {
@@ -1817,24 +1771,18 @@ function updateAnnouncement(announcement) {
         if (!str) return '';
         return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
-    function redirectToPassword() { window.location.href = '/user-profile'; }
 
     // ============================================
     // INIT
     // ============================================
     window.onload = function () {
-        const status = document.getElementById('accountStatus').value;
-        if (status === 'New' || status === 'Newly Updated') {
-            document.getElementById('forcePasswordModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        }
         initCalendar();
         loadUpcomingPrograms();
         fetchWeather();
         setInterval(fetchWeather, 30 * 60 * 1000);
         trackModalState();
 
-        // NEW: populate the relative-time badge on load, then keep it fresh
+        // populate the relative-time badge on load, then keep it fresh
         updateAnnouncementRelativeDate();
         setInterval(updateAnnouncementRelativeDate, 60 * 1000);
 
