@@ -42,16 +42,16 @@
     </button>
     <div class="section-body" id="sec-management">
         <ul class="menu">
-            <li th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF' || currentrole == 'BARANGAY-CAPTAIN'}" onclick="window.location.href='/account'">
+            <li th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" onclick="window.location.href='/account'">
                 <img src="/icons/accounts.svg" class="icon"> Accounts
             </li>
             <li onclick="window.location.href='/user-profile'">
                 <img src="/icons/user.svg" class="icon"> User Profile
             </li>
-            <li onclick="window.location.href='/Resident-census'">
+            <li th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" onclick="window.location.href='/Resident-census'">
                 <img src="/icons/user.svg" class="icon"> Resident Census
             </li>
-            <li onclick="window.location.href='/finance'">
+            <li th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF' || currentrole == 'TREASURER'}" onclick="window.location.href='/finance'">
                 <img src="/icons/cash.svg" class="icon"> Expenditures
             </li>
         </ul>
@@ -78,7 +78,7 @@
             <li th:if="${currentrole != 'TREASURER' && currentrole != 'BARANGAY-CAPTAIN'}" onclick="window.location.href='/contact-help'">
                 <img src="/icons/help.svg" class="icon"> Contact Help
             </li>
-            <li th:if="${currentrole != 'TREASURER'}" onclick="window.location.href='/facilities'">
+            <li th:if="${currentrole != 'TREASURER' && currentrole != 'BARANGAY-CAPTAIN'}" onclick="window.location.href='/facilities'">
                 <img src="/icons/facilities.svg" class="icon"> Facilities &amp; Hotlines
             </li>
         </ul>
@@ -86,13 +86,13 @@
 
     <!-- COMMUNITY SAFETY -->
     <button class="section-toggle" onclick="toggleSection(this, 'sec-safety')"
-        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF' || currentrole == 'BARANGAY-CAPTAIN'}">
+        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
         <span class="section-notif-dot" id="dot-safety"></span>
         Community Safety
         <i class="bi bi-chevron-down section-arrow"></i>
     </button>
     <div class="section-body" id="sec-safety"
-        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF' || currentrole == 'BARANGAY-CAPTAIN'}">
+        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
         <ul class="menu">
             <li onclick="window.location.href='/safety-reports'">
                 <img src="/icons/safety.svg" class="icon"> Reports &amp; Alerts
@@ -114,21 +114,21 @@
             <li onclick="window.location.href='/program-calendar'">
                 <img src="/icons/calendar.svg" class="icon"> Program Calendar
             </li>
-            <li onclick="window.location.href='/program-planner'">
+            <li th:if="${currentrole != 'BARANGAY-CAPTAIN'}" onclick="window.location.href='/program-planner'">
                 <img src="/icons/planner.svg" class="icon"> AI Program Planner
             </li>
         </ul>
     </div>
 
     <!-- SYSTEM -->
-    <button class="section-toggle" onclick="toggleSection(this, 'sec-system')" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
+    <button class="section-toggle" onclick="toggleSection(this, 'sec-system')" th:if="${currentrole == 'ADMIN'}">
         <span class="section-notif-dot" id="dot-system"></span>
         System
         <i class="bi bi-chevron-down section-arrow"></i>
     </button>
-    <div class="section-body" id="sec-system" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
+    <div class="section-body" id="sec-system" th:if="${currentrole == 'ADMIN'}">
         <ul class="menu">
-            <li onclick="window.location.href='/Activity-logs'" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
+            <li onclick="window.location.href='/Activity-logs'" th:if="${currentrole == 'ADMIN'}">
                 <img src="/icons/monitor.svg" class="icon"> Activity Logs
             </li>
             <li onclick="window.location.href='/system-settings'" th:if="${currentrole == 'ADMIN'}">
@@ -142,27 +142,6 @@
     <div class="logout-item" onclick="openLogoutModal()">
         <img src="/icons/logout.svg" class="icon"> Logout
     </div>
-
-<!-- Request Admin Assistance Modal -->
-<div th:if="${currentrole != 'ADMIN'}" class="modal fade" id="assistanceModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Request Admin Assistance</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <label for="assistanceMessage" class="form-label">Describe what you need help with</label>
-                <textarea id="assistanceMessage" class="form-control" rows="6"></textarea>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="sendAssistanceRequest()">Send</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 
 
 

@@ -518,7 +518,8 @@
                                     <!-- Process/Archive - ONLY for ADMIN, SECRETARY, SECRETARIAT STAFF -->
                                     <th:block th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
                                         <button class="resolve-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'PROCESSING\')'">Process</button>
-                                        <button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button>
+                                        <button class="archive-btn"
+        th:onclick="${(currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF') ? ('updateStatusWithConfirm(' + report.id + ', \'ARCHIVED\')') : 'openAssistanceModal()'}">Archive</button>
                                     </th:block>
                                 </div>
                             </td>
@@ -555,7 +556,8 @@
                                     <!-- Resolve/Archive - ONLY for ADMIN, SECRETARY, SECRETARIAT STAFF -->
                                     <th:block th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
                                         <button class="resolve-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'RESOLVED\')'">Resolve</button>
-                                        <button class="archive-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button>
+                                        <button class="archive-btn"
+        th:onclick="${(currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF') ? ('updateStatusWithConfirm(' + report.id + ', \'ARCHIVED\')') : 'openAssistanceModal()'}">Archive</button>
                                     </th:block>
                                 </div>
                             </td>
@@ -587,7 +589,8 @@
                             <td>
                                 <div class="d-flex gap-2">
                                     <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
-                                    <button class="archive-btn" th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button>
+                                    <button class="archive-btn"
+        th:onclick="${(currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF') ? ('updateStatusWithConfirm(' + report.id + ', \'ARCHIVED\')') : 'openAssistanceModal()'}">Archive</button>
                                 </div>
                             </td>
                         </tr>
@@ -644,7 +647,8 @@
                             <td>
                                 <div class="d-flex gap-2">
                                     <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
-                                    <button class="archive-btn" th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'ARCHIVED\')'">Archive</button>
+                                    <button class="archive-btn"
+        th:onclick="${(currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF') ? ('updateStatusWithConfirm(' + report.id + ', \'ARCHIVED\')') : 'openAssistanceModal()'}">Archive</button>
                                 </div>
                             </td>
                         </tr>
@@ -755,6 +759,11 @@ function updateStatusWithConfirm(id, status) {
             title = 'Confirm Archive';
             message = 'Are you sure you want to archive this SoS alert?';
             break;
+        case 'INCOMING':
+            actionText = 'restore';
+            title = 'Confirm Restore';
+            message = 'Are you sure you want to restore this SoS alert back to Incoming?';
+            break;
         default:
             actionText = 'update';
             title = 'Confirm Update';
@@ -781,6 +790,7 @@ function updateStatusWithConfirm(id, status) {
                 case 'PROCESSING': successMsg = 'SoS alert moved to Processing!'; break;
                 case 'RESOLVED': successMsg = 'SoS alert marked as Resolved!'; break;
                 case 'ARCHIVED': successMsg = 'SoS alert archived successfully!'; break;
+                case 'INCOMING': successMsg = 'SoS alert restored to Incoming!'; break;
                 default: successMsg = 'Status updated successfully!';
             }
             showSuccess(successMsg);
@@ -989,19 +999,31 @@ async function pollCancelled() {
 // =================================================================
 // POLLING ROW BUILDERS — plain JS, no Thymeleaf syntax.
 // These run entirely in the browser, so th:if / th:onclick / ${...}
-// mean nothing here. Buttons always render; the backend endpoint is
-// the actual enforcement point for who's allowed to act on them.
+// mean nothing here. Role-gating is done manually via the hidden
+// #currentUserRole field. The backend endpoint is still the actual
+// enforcement point for who's allowed to act on these rows.
 // =================================================================
+function isPrivilegedRole() {
+    const role = document.getElementById('currentUserRole')?.value;
+    return role === 'ADMIN' || role === 'SECRETARY' || role === 'SECRETARIAT STAFF';
+}
+
+function archiveBtnHtml(id) {
+    return isPrivilegedRole()
+        ? `<button class="archive-btn" onclick="updateStatusWithConfirm(${id},'ARCHIVED')">Archive</button>`
+        : `<button class="archive-btn" onclick="openAssistanceModal()">Archive</button>`;
+}
+
 function buildIncomingRow(r) {
-    return `<td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-incoming">Incoming</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatusWithConfirm(${r.id},'PROCESSING')">Process</button><button class="archive-btn" onclick="updateStatusWithConfirm(${r.id},'ARCHIVED')">Archive</button></div></td>`;
+    return `<td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-incoming">Incoming</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatusWithConfirm(${r.id},'PROCESSING')">Process</button>${archiveBtnHtml(r.id)}</div></td>`;
 }
 
 function buildProcessingRow(r) {
-    return `<td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-processing">Processing</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatusWithConfirm(${r.id},'RESOLVED')">Resolve</button><button class="archive-btn" onclick="updateStatusWithConfirm(${r.id},'ARCHIVED')">Archive</button></div></td>`;
+    return `<td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-processing">Processing</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatusWithConfirm(${r.id},'RESOLVED')">Resolve</button>${archiveBtnHtml(r.id)}</div></td>`;
 }
 
 function buildCancelledRow(r) {
-    return `<td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-cancelled">Cancelled</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="archive-btn" onclick="updateStatusWithConfirm(${r.id},'ARCHIVED')">Archive</button></div></td>`;
+    return `<td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-cancelled">Cancelled</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button>${archiveBtnHtml(r.id)}</div></td>`;
 }
 
 // =================================================================

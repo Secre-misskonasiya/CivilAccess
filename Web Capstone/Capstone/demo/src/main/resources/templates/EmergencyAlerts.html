@@ -510,7 +510,10 @@
                         <p class="alert-card-msg" th:text="${alert.message != null ? alert.message : 'No message'}">Flooding reported near Purok 3.</p>
                         <div class="d-flex justify-content-end">
                             <button class="view-btn" th:attr="onclick='viewAlert(\'' + ${alert.id} + '\')'">View</button>
-                            <button class="archive-btn" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" th:attr="onclick='archiveAlertWithConfirm(\'' + ${alert.id} + '\', this)'">Archive</button>
+                            <button class="archive-btn" th:if="${currentrole == 'ADMIN'}" th:attr="onclick='archiveAlertWithConfirm(\'' + ${alert.id} + '\', this)'">Archive</button>
+                            <button class="archive-btn"
+                            th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                            onclick="openAssistanceModal()">Archive</button>
                         </div>
                     </div>
                 </div>

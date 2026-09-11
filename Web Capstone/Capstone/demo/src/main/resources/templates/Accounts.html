@@ -452,7 +452,7 @@
                                     
                                     <!-- Update button - Only ADMIN, SECRETARY, SECRETARIAT STAFF -->
                                     <button class="update-btn"
-                                        th:if="${currentrole == 'ADMIN'}"
+                                        th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
                                         th:onclick="openEditModal(
                                             [[${admin.id}]],
                                             [[${admin.employeeId}]],
@@ -474,7 +474,7 @@
                                         onclick="triggerAdminDelete(this)">Archive</button>
 
                                     <button type="button" class="delete-btn"
-                                    th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARY'}"
+                                    th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
                                     th:data-url="'/delete-admin/' + ${admin.id}"
                                         th:data-email="${admin.email}"
                                         onclick="openAssistanceModal()">Archive</button>
@@ -633,7 +633,7 @@
                                         onclick="triggerResidentDelete(this)">Archive</button>
                                         
                                     <button type="button" class="delete-btn"
-                                        th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARY'}"
+                                        th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
                                         th:data-url="'/residents/delete/' + ${res.id}"
                                         th:data-email="${res.email}"
                                         th:data-fullname="${res.firstName + ' ' + res.lastName}"
@@ -833,6 +833,12 @@
                                     onclick="openResidentViewModal(this)">View</button>
                                 
                                 <!-- Restore button - ONLY ADMIN -->
+                                <button class="restore-btn"
+                                    th:if="${currentrole == 'ADMIN'}"
+                                    th:onclick="restoreResident([[${res.id}]], '[[${res.firstName}]] [[${res.lastName}]]')">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                </button>
+
                                 <button class="restore-btn"
                                     th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
                                     th:onclick="openAssistanceModal()">

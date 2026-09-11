@@ -596,6 +596,11 @@ td{padding:12px 14px !important;vertical-align:middle !important}
                         th:attr="data-url='/Resident-census/archive/' + ${r.id},
                                  data-name=${r.firstName + ' ' + r.lastName}"
                         onclick="triggerArchive(this)">Archive</button>
+
+                      <button class="archive-btn"
+                      th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                      onclick="openAssistanceModal()">Archive</button>
+                        
                     </div>
                   </td>
                 </tr>
@@ -728,6 +733,10 @@ td{padding:12px 14px !important;vertical-align:middle !important}
                           th:attr="data-url='/Resident-census/restore/' + ${r.id},
                                   data-name=${r.firstName + ' ' + r.lastName}"
                           onclick="triggerRestore(this)">Restore</button>
+                          
+                        <button class="restore-btn"
+                        th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                        onclick="openAssistanceModal()">Restore</button>
                       </div>
                     </td>
                   </tr>

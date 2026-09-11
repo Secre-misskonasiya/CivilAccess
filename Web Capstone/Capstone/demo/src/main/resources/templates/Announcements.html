@@ -662,6 +662,7 @@
                       <button class="view-btn" th:attr="onclick='viewAnnouncement(' + ${announcement.id} + ')'">View</button>
                       <button class="edit-btn" th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" th:attr="onclick='editAnnouncement(' + ${announcement.id} + ')'">Edit</button>
                       <button class="archive-btn" th:if="${currentrole == 'ADMIN'}" th:attr="onclick='archiveAnnouncementWithConfirm(' + ${announcement.id} + ')'">Archive</button>
+                      <button class="archive-btn" th:if="${currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" th:attr="onclick='openAssistanceModal()'">Archive</button>
                   </div>
 
                 </div>
@@ -715,6 +716,7 @@
                   <div class="row-actions">
                     <button class="view-btn" th:attr="onclick='viewAnnouncement(' + ${announcement.id} + ')'">View</button>
                     <button class="restore-btn" th:if="${currentrole == 'ADMIN'}" th:attr="onclick='restoreAnnouncementWithConfirm(' + ${announcement.id} + ')'">Restore</button>
+                    <button class="restore-btn" th:if="${currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" th:attr="onclick='openAssistanceModal()'">Restore</button>
                   </div>
 
                 </div>
@@ -1026,24 +1028,25 @@
       const dateStr = a.datePosted ? new Date(a.datePosted).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'N/A';
       
       row.innerHTML = `
-        <div class="row-pin">
-          <i class="bi bi-pin-angle-fill pin-icon ${isHigh ? 'active' : ''}"
-             onclick="togglePin(this, ${a.id})"
-             title="${isHigh ? 'Unpin' : 'Pin'}"></i>
-        </div>
-        <div class="row-badge">
-          <span class="card-category ${isHigh ? 'high' : ''}">${escapeHtml(a.priority || 'NORMAL')}</span>
-        </div>
-        <div class="row-title">${escapeHtml(a.title || 'N/A')}</div>
-        <div class="row-sep">—</div>
-        <div class="row-snippet">${escapeHtml(a.content || '')}</div>
-        <div class="row-date">${dateStr}</div>
-        <div class="row-actions">
-            <button class="view-btn" th:attr="onclick='viewAnnouncement(' + ${announcement.id} + ')'">View</button>
-            <button class="edit-btn" th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" th:attr="onclick='editAnnouncement(' + ${announcement.id} + ')'">Edit</button>
-            <button class="archive-btn" th:if="${currentrole == 'ADMIN'}" th:attr="onclick='archiveAnnouncementWithConfirm(' + ${announcement.id} + ')'">Archive</button>
-        </div>
-      `;
+      <div class="row-pin">
+        <i class="bi bi-pin-angle-fill pin-icon ${isHigh ? 'active' : ''}"
+          onclick="togglePin(this, ${a.id})"
+          title="${isHigh ? 'Unpin' : 'Pin'}"></i>
+      </div>
+      <div class="row-badge">
+        <span class="card-category ${isHigh ? 'high' : ''}">${escapeHtml(a.priority || 'NORMAL')}</span>
+      </div>
+      <div class="row-title">${escapeHtml(a.title || 'N/A')}</div>
+      <div class="row-sep">—</div>
+      <div class="row-snippet">${escapeHtml(a.content || '')}</div>
+      <div class="row-date">${dateStr}</div>
+      <div class="row-actions">
+        <button class="view-btn" onclick="viewAnnouncement(${a.id})">View</button>
+        ${canEditAnnouncements() ? `<button class="edit-btn" onclick="editAnnouncement(${a.id})">Edit</button>` : ''}
+        ${canArchiveAnnouncements() ? `<button class="archive-btn" onclick="archiveAnnouncementWithConfirm(${a.id})">Archive</button>` : ''}
+        ${canRequestArchive() ? `<button class="archive-btn" onclick="openAssistanceModal('archive', ${a.id})">Archive</button>` : ''}
+      </div>
+    `;
       container.appendChild(row);
     });
     
@@ -1054,7 +1057,7 @@
     filterAndSortAnnouncements();
   }
 
-  function rebuildArchivedList(announcements) {
+    function rebuildArchivedList(announcements) {
     const grid = document.getElementById('archivedGrid');
     if (!grid) return;
     
@@ -1077,7 +1080,8 @@
         <div class="row-date">${dateStr}</div>
         <div class="row-actions">
           <button class="view-btn" onclick="viewAnnouncement(${a.id})">View</button>
-          <button class="restore-btn" th:if="${currentrole == 'ADMIN'}" th:attr="onclick='restoreAnnouncementWithConfirm(' + ${announcement.id} + ')'">Restore</button>
+          ${canArchiveAnnouncements() ? `<button class="restore-btn" onclick="restoreAnnouncementWithConfirm(${a.id})">Restore</button>` : ''}
+          ${canRequestArchive() ? `<button class="restore-btn" onclick="openAssistanceModal()">Restore</button>` : ''}
         </div>
       `;
       container.appendChild(row);

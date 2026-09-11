@@ -413,7 +413,7 @@
             <div class="tab" th:classappend="${currentTab == 'approved' ? 'active' : ''}" onclick="window.location.href='/reservations?tab=approved'">Approved <span class="tab-badge" id="badge-approved">0</span></div>
             <div class="tab" th:classappend="${currentTab == 'inprogress' ? 'active' : ''}" onclick="window.location.href='/reservations?tab=inprogress'">In Progress <span class="tab-badge" id="badge-inprogress">0</span></div>
             <div class="tab" th:classappend="${currentTab == 'resolved' ? 'active' : ''}" onclick="window.location.href='/reservations?tab=resolved'">Resolved <span class="tab-badge" id="badge-resolved">0</span></div>
-            <div class="tab" th:if="${currentrole == 'ADMIN'}" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/reservations?tab=archive'">Archive <span class="tab-badge" id="badge-archive">0</span></div>
+            <div class="tab" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/reservations?tab=archive'">Archive <span class="tab-badge" id="badge-archive">0</span></div>
         </div>
 
         <div class="panel">
@@ -891,7 +891,7 @@
         
         // Fix: These lines need proper Thymeleaf syntax
         const isAdmin = /*[[${currentrole == 'ADMIN'}]]*/ false;
-        const canApproveResolve = /*[[${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}]]*/ false;
+        const canApproveResolve = /*[[${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF' or currentrole == 'TREASURER' or currentrole == 'BARANGAY-CAPTAIN'}]]*/ false;
         
         let html = '';
         for (let r of reservations) {
@@ -912,6 +912,7 @@
                         <td>
                             <button class="view-btn" onclick="viewReservation(${r.id})">View</button>
                             ${isAdmin ? `<button class="archive-btn" onclick="openArchiveConfirm(${r.id})">Archive</button>` : ''}
+                            ${!isAdmin && canManage ? `<button class="archive-btn" onclick="openAssistanceModal()">Archive</button>` : ''}
                         </td>
                     </tr>
                 `;
@@ -943,6 +944,7 @@
                             ${status === 'approved' && canApproveResolve ? `<button class="process-btn" onclick="openProcessConfirm(${r.id})">Process</button>` : ''}
                             ${status === 'inprogress' && canApproveResolve ? `<button class="resolve-btn" onclick="openResolveConfirm(${r.id})">Resolve</button>` : ''}
                             ${status !== 'archive' && status !== 'resolved' && isAdmin ? `<button class="archive-btn" onclick="openArchiveConfirm(${r.id})">Archive</button>` : ''}
+                            ${status !== 'archive' && status !== 'resolved' && !isAdmin && canManage ? `<button class="archive-btn" onclick="openAssistanceModal()">Archive</button>` : ''}
                         </td>
                     </tr>
                 `;

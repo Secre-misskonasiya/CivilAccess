@@ -703,6 +703,9 @@
                                     th:if="${currentrole == 'ADMIN'}"
                                     th:data-id="${req.id}"
                                     onclick="confirmArchive(this)">Archive</button>
+                                <button class="archive-btn" type="button"
+                                  th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                  onclick="openAssistanceModal()">Archive</button>
                             </div></td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(incomingRequests)}">
@@ -779,6 +782,9 @@
                                     th:data-id="${req.id}"
                                     th:if="${currentrole == 'ADMIN'}"
                                     onclick="confirmArchive(this)">Archive</button>
+                                <button class="archive-btn" type="button"
+                                 th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                  onclick="openAssistanceModal()">Archive</button>   
                             </div></td>
                          </tr>
                         <tr th:if="${#lists.isEmpty(processingRequests)}">
