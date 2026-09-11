@@ -438,6 +438,27 @@ function openPendingRequestsModal() {
         });
 }
 
+function formatRequestTime(timestamp) {
+    if (!timestamp) return '—';
+    try {
+        const date = typeof timestamp === 'number' ? new Date(timestamp) : new Date(timestamp);
+        if (isNaN(date.getTime())) return String(timestamp);
+
+        const months = ['Jan','Feb','Mar','Apr','May','Jun',
+                        'Jul','Aug','Sep','Oct','Nov','Dec'];
+        const mm   = months[date.getMonth()];
+        const dd   = String(date.getDate()).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        let h      = date.getHours();
+        const mins = String(date.getMinutes()).padStart(2, '0');
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+
+        return `${mm} ${dd}, ${yyyy} · ${h}:${mins} ${ampm}`;
+    } catch (e) {
+        return String(timestamp);
+    }
+}
 
 function renderPendingRequestsList(requests) {
     var container = document.getElementById('pendingRequestsList');
@@ -457,7 +478,7 @@ function renderPendingRequestsList(requests) {
             "<strong>" + req.requesterName + "</strong>" +
             " (" + req.requesterRole + ")" +
             "<br><span>" + req.description + "</span>" +
-            "<br><small>" + req.timestamp + "</small>" +
+            "<br><small><i class='bi bi-clock'></i> " + formatRequestTime(req.timestamp) + "</small>" +
             "<br><button class='btn btn-sm btn-success mt-2' onclick='resolveRequest(" + req.id + ")'>Mark Resolved</button>";
 
         container.appendChild(card);
