@@ -248,42 +248,7 @@
         color: white !important;
         border-color: #30534D !important;
     }
-    /* ══════════════════════════════════════
-       FORCE MODAL
-    ══════════════════════════════════════ */
-    .force-modal {
-        display: none;
-        position: fixed; z-index: 9999;
-        left: 0; top: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.55);
-        backdrop-filter: blur(2px);
-    }
-    .force-modal-content {
-        background: white;
-        width: 440px;
-        padding: 44px;
-        border-radius: var(--radius-lg);
-        text-align: center;
-        margin: 18% auto;
-        box-shadow: var(--shadow-lg);
-    }
-    .force-modal-content h2 { color: var(--green-900); margin-bottom: 12px; font-size: 22px; font-weight: 700; }
-    .force-modal-content p { font-size: 15px; color: var(--gray-500); }
-    .force-modal-content button {
-        margin-top: 22px;
-        padding: 13px 32px;
-        background: var(--green-700);
-        color: white;
-        border: none;
-        border-radius: var(--radius-sm);
-        cursor: pointer;
-        font-size: 15px;
-        font-weight: 600;
-        font-family: var(--font);
-        transition: background 0.2s;
-    }
-    .force-modal-content button:hover { background: var(--green-900); }
-    
+
     /* Success Toast Modal */
     .success-toast-modal .modal-content {
         background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
@@ -310,18 +275,22 @@
         font-size: 48px;
         margin-bottom: 12px;
     }
+
+    /*
+       NOTE: z-index for #confirmActionModal and .success-toast-modal is set
+       here (fixed values, scoped by id/class). The BACKDROP z-index for
+       these two is now set dynamically in JS (see fixBackdropZIndex below)
+       instead of a blanket ".modal-backdrop ~ .modal-backdrop" CSS rule.
+       That old rule bumped the z-index of *any* second backdrop in the
+       DOM (including a stray leftover one), which could land above the
+       Add/Edit Facility modal's own dialog and make it look like the
+       screen was just "greyed out" with no form visible.
+    */
     #confirmActionModal {
         z-index: 10500 !important;
     }
-    #confirmActionModal + .modal-backdrop,
-    .modal-backdrop ~ .modal-backdrop {
-        z-index: 10400 !important;
-    }
     .success-toast-modal {
         z-index: 10600 !important;
-    }
-    .success-toast-modal + .modal-backdrop {
-        z-index: 10590 !important;
     }
 
     /* Error Modal - matches System Settings style */
@@ -947,8 +916,62 @@ function updateFacilityWithConfirm() {
     );
 }
 
-// Handle delete buttons with data attributes
+// ============================================
+// BACKDROP / GREY-OUT FIX
+// ============================================
+//
+// Root cause of the "grey out" bug: the old CSS used
+//   .modal-backdrop ~ .modal-backdrop { z-index: 10400 !important; }
+// which bumped the z-index of ANY second backdrop in the DOM, not just
+// the one belonging to the confirm/success modals. If a stray backdrop
+// was ever left behind (e.g. from a modal that didn't close cleanly),
+// the very next modal you opened (like Add New Facility) would create
+// its backdrop as the "2nd" one, get jumped above the modal dialog's
+// own z-index, and cover the form completely — leaving just a grey/
+// blurred screen with no visible content.
+//
+// Fix: (1) set backdrop z-index dynamically, scoped only to the modal
+// that's actually being shown, right after it opens; (2) whenever a
+// modal finishes closing and no modal is left open, force-remove any
+// leftover backdrops so they can never accumulate.
+
+function fixBackdropZIndex(modalId, zIndex) {
+    const modalEl = document.getElementById(modalId);
+    if (!modalEl) return;
+    modalEl.addEventListener('shown.bs.modal', function() {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        const topBackdrop = backdrops[backdrops.length - 1];
+        if (topBackdrop) {
+            topBackdrop.style.zIndex = zIndex;
+        }
+    });
+}
+
+// Only the modals that intentionally stack on top of another modal
+// need a bumped backdrop z-index.
+fixBackdropZIndex('confirmActionModal', 10450);
+fixBackdropZIndex('successModal', 10550);
+
+function cleanupOrphanBackdrops() {
+    if (!document.querySelector('.modal.show')) {
+        document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('padding-right');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Clean up anything left over from a previous page state (e.g. bfcache restore).
+    cleanupOrphanBackdrops();
+
+    // After ANY modal fully closes, if nothing else is open, wipe every
+    // backdrop. This guarantees the next "Add New Facility" click always
+    // starts from a clean slate and can't inherit a stale, mis-stacked backdrop.
+    document.querySelectorAll('.modal').forEach(function(modalEl) {
+        modalEl.addEventListener('hidden.bs.modal', cleanupOrphanBackdrops);
+    });
+
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const id = this.getAttribute('data-id');
@@ -956,6 +979,14 @@ document.addEventListener('DOMContentLoaded', function() {
             deleteFacilityWithConfirm(id, name);
         });
     });
+});
+
+// Also clean up when a page is restored from the browser back/forward
+// cache, since 'DOMContentLoaded' does not fire again in that case.
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        cleanupOrphanBackdrops();
+    }
 });
 
 // ============================================
@@ -1075,25 +1106,13 @@ function editFacility(id) {
             new bootstrap.Modal(document.getElementById('editFacilityModal')).show();
         });
 }
-
-window.onload = function() {
-    const status = document.getElementById('accountStatus').value;
-    if (status === 'New' || status === 'Newly Updated') {
-        document.getElementById('forcePasswordModal').style.display = 'block';
-        document.body.style.overflow = 'hidden';
-    }
-};
-
-function redirectToPassword() {
-    window.location.href = '/user-profile';
-}
 </script>
 <script>
 (function() {
     var lastSnapshot = '';
     
     function isModalOpen() {
-        var modalIds = ['viewFacilityModal','addFacilityModal','editFacilityModal','confirmActionModal','successModal','forcePasswordModal','logoutModal'];
+        var modalIds = ['viewFacilityModal','addFacilityModal','editFacilityModal','confirmActionModal','successModal','logoutModal'];
         for (var i = 0; i < modalIds.length; i++) {
             var m = document.getElementById(modalIds[i]);
             if (m && m.classList.contains('show')) return true;

@@ -243,8 +243,15 @@ public class MainController {
                 }
                 existingAdmin.setBirthDate(admin.getBirthDate());
 
-                // Handle profile picture URL from Supabase
-                if (profilePictureUrl != null && !profilePictureUrl.isBlank()) {
+                // Handle profile picture: a freshly uploaded file always wins.
+                // Fall back to a Supabase-style URL if one was supplied instead.
+                // If neither is present, leave existingAdmin's current picture untouched.
+                if (file != null && !file.isEmpty()) {
+                    String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
+                    String dataUri = "data:" + file.getContentType() + ";base64," + base64Image;
+                    existingAdmin.setProfilePicture(dataUri);
+                    System.out.println("Saved uploaded profile picture (" + file.getContentType() + ", " + file.getSize() + " bytes)");
+                } else if (profilePictureUrl != null && !profilePictureUrl.isBlank()) {
                     existingAdmin.setProfilePicture(profilePictureUrl);
                     System.out.println("Saving profile picture URL: " + profilePictureUrl);
                 }
@@ -283,6 +290,16 @@ public class MainController {
                 if (adminUserService.existsByUsername(admin.getUsername())) {
                     redirectAttributes.addFlashAttribute("error", "Username already taken.");
                     return errorRedirect;
+                }
+
+                // Handle profile picture for a brand-new account, same rule as the edit path.
+                if (file != null && !file.isEmpty()) {
+                    String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
+                    String dataUri = "data:" + file.getContentType() + ";base64," + base64Image;
+                    admin.setProfilePicture(dataUri);
+                    System.out.println("Saved uploaded profile picture (" + file.getContentType() + ", " + file.getSize() + " bytes)");
+                } else if (profilePictureUrl != null && !profilePictureUrl.isBlank()) {
+                    admin.setProfilePicture(profilePictureUrl);
                 }
 
                 admin.setPassword(passwordEncoder.encode(admin.getPassword()));

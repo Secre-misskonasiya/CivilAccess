@@ -464,7 +464,8 @@
                                             [[${admin.gender}]],
                                             [[${#temporals.format(admin.birthDate, 'yyyy-MM-dd')}]],
                                             [[${admin.phoneNumber}]],
-                                            [[${admin.address}]])">Update</button>
+                                            [[${admin.address}]],
+                                            [[${admin.profilePicture}]])">Update</button>
                                     
                                     <!-- Archive button - ONLY ADMIN -->
                                     <button type="button" class="delete-btn"
@@ -879,13 +880,42 @@
             <div class="modal-form-body">
                 <div class="modal-profile-row">
                     <div class="profile-upload-area" style="position:relative;">
-                        <div style="width:80px;height:80px;border-radius:50%;background:#eaf2f0;display:flex;align-items:center;justify-content:center;">
-                            <svg width="36" height="36" viewBox="0 0 24 24" fill="#30534D" opacity="0.5"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    <!-- Clickable avatar circle -->
+                    <label for="profilePicture" style="cursor:pointer;display:block;">
+                        <div style="width:80px;height:80px;border-radius:50%;background:#eaf2f0;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2px dashed #b9d4cf;">
+                            <img id="profilePreviewImg" src="" alt=""
+                                style="width:100%;height:100%;object-fit:cover;display:none;border-radius:50%;">
+                            <svg id="profilePreviewSvg" width="36" height="36" viewBox="0 0 24 24" fill="#30534D" opacity="0.5">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                            </svg>
                         </div>
-                        <label for="profilePicture" style="cursor:pointer;color:#30534D;font-size:11px;font-weight:600;text-decoration:underline;text-align:center;">Upload Photo</label>
-                        <input type="file" id="profilePicture" name="profilePicture" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
-                        <small id="fileError" style="color:#e74c3c;display:none;font-size:10px;text-align:center;">Max 2MB</small>
-                    </div>
+                    </label>
+
+                    <label for="profilePicture"
+                        style="cursor:pointer;color:#30534D;font-size:11px;font-weight:600;text-decoration:underline;text-align:center;">
+                        Upload Photo
+                    </label>
+
+                    <input type="file" id="profilePicture" name="profilePicture"
+                        accept="image/png,image/jpeg,image/jpg,image/webp"
+                        style="display:none;" onchange="handleImageUpload(event)">
+
+                    <!-- Tells the server the user explicitly removed the existing
+                         photo. Reset to 'false' whenever the modal is (re)opened
+                         or a new file is chosen; set to 'true' only when the
+                         Remove photo button is clicked. -->
+                    <input type="hidden" id="removePhotoFlag" name="removeProfilePicture" value="false">
+
+                    <small id="fileName"
+                        style="color:#30534D;font-size:10px;text-align:center;max-width:110px;word-break:break-all;"></small>
+                    <small id="fileError"
+                        style="color:#e74c3c;display:none;font-size:10px;text-align:center;">Max 2MB</small>
+
+                    <button type="button" id="removePhotoBtn" onclick="removeProfilePhoto()"
+                            style="display:none;background:none;border:none;color:#e74c3c;font-size:11px;cursor:pointer;text-decoration:underline;">
+                        Remove photo
+                    </button>
+                </div>
                     <div class="employee-id-area">
                         <label class="field-label" style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:5px;">Employee ID</label>
                         <input type="text" th:field="*{employeeId}" id="edit-employeeId" placeholder="e.g., 2026-0001" readonly
@@ -1654,6 +1684,8 @@ function openModal() {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
+    resetProfilePreview();
+    document.getElementById('removePhotoFlag').value = 'false';
     resetFormStyles();
     modal.style.display = "block";
 }
@@ -1666,6 +1698,8 @@ function closeModal() {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
+    resetProfilePreview();
+    document.getElementById('removePhotoFlag').value = 'false';
     resetFormStyles();
     const pic = document.getElementById('profilePicture');
     if (pic) pic.value = '';
@@ -1678,7 +1712,7 @@ function resetFormStyles() {
     if (fe) fe.style.display = 'none';
 }
 
-function openEditModal(id, employee, fName, lName, username, email, role, gender, birth, phone, address) {
+function openEditModal(id, employee, fName, lName, username, email, role, gender, birth, phone, address, picture) {
     if (!canManageAccounts()) {
         alert('You do not have permission to edit accounts.');
         return;
@@ -1745,6 +1779,17 @@ function openEditModal(id, employee, fName, lName, username, email, role, gender
     regenBtn.onclick = enablePasswordRegen;
     
     resetFormStyles();
+    resetProfilePreview();
+    document.getElementById('removePhotoFlag').value = 'false';
+    if (picture && picture !== 'null' && picture.trim() !== '') {
+        const previewImg = document.getElementById('profilePreviewImg');
+        const previewSvg = document.getElementById('profilePreviewSvg');
+        previewImg.src = picture;
+        previewImg.style.display = 'block';
+        previewSvg.style.display = 'none';
+        const removeBtn = document.getElementById('removePhotoBtn');
+        if (removeBtn) removeBtn.style.display = 'inline-block';
+    }
     modal.style.display = "block";
 }
 
@@ -1821,16 +1866,90 @@ function sendPasswordEmail(email, password) {
         });
 }
 
-// ─── Image upload ───────────────────────────────────────────
 function handleImageUpload(event) {
-    const file = event.target.files[0];
-    const fileError = document.getElementById('fileError');
-    if (file && file.size > 2000 * 1024) {
+    const file       = event.target.files[0];
+    const fileError  = document.getElementById('fileError');
+    const fileNameEl = document.getElementById('fileName');
+    const removeBtn  = document.getElementById('removePhotoBtn');
+    const previewImg = document.getElementById('profilePreviewImg');
+    const previewSvg = document.getElementById('profilePreviewSvg');
+
+    if (!file) return;
+    fileError.style.display = 'none';
+
+    if (!/^image\/(png|jpe?g|webp)$/i.test(file.type)) {
+        fileError.textContent = 'Only PNG/JPG/WEBP allowed';
         fileError.style.display = 'block';
         event.target.value = '';
         return;
     }
-    if (fileError) fileError.style.display = 'none';
+    if (file.size > 2 * 1024 * 1024) {
+        fileError.textContent = 'Max 2MB';
+        fileError.style.display = 'block';
+        event.target.value = '';
+        return;
+    }
+
+    // Downscale to max 512×512 and re-encode as JPEG (~50–100 KB).
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+            const MAX = 512;
+            let w = img.width, h = img.height;
+            if (w > h && w > MAX) { h = h * MAX / w; w = MAX; }
+            else if (h > MAX)     { w = w * MAX / h; h = MAX; }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+            canvas.toBlob(function (blob) {
+                const resized = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+
+                // Replace the file input's contents with the resized blob
+                const dt = new DataTransfer();
+                dt.items.add(resized);
+                event.target.files = dt.files;
+
+                previewImg.src = canvas.toDataURL('image/jpeg', 0.85);
+                previewImg.style.display = 'block';
+                previewSvg.style.display = 'none';
+                if (fileNameEl) fileNameEl.textContent = 'avatar.jpg';
+                if (removeBtn)  removeBtn.style.display = 'inline-block';
+
+                const removeFlag = document.getElementById('removePhotoFlag');
+                if (removeFlag) removeFlag.value = 'false';
+            }, 'image/jpeg', 0.85);
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function resetProfilePreview() {
+    const pic         = document.getElementById('profilePicture');
+    const previewImg  = document.getElementById('profilePreviewImg');
+    const previewSvg  = document.getElementById('profilePreviewSvg');
+    const fileNameEl  = document.getElementById('fileName');
+    const removeBtn   = document.getElementById('removePhotoBtn');
+    const fileError   = document.getElementById('fileError');
+
+    if (pic)         pic.value = '';
+    if (previewImg) { previewImg.src = ''; previewImg.style.display = 'none'; }
+    if (previewSvg)  previewSvg.style.display = 'block';
+    if (fileNameEl)  fileNameEl.textContent = '';
+    if (removeBtn)   removeBtn.style.display = 'none';
+    if (fileError)   fileError.style.display = 'none';
+}
+
+// Called when the user clicks "Remove photo" on an existing picture.
+// Clears the preview AND tells the server (via the hidden flag) to
+// actually delete the stored picture on save.
+function removeProfilePhoto() {
+    resetProfilePreview();
+    const removeFlag = document.getElementById('removePhotoFlag');
+    if (removeFlag) removeFlag.value = 'true';
 }
 
 // ─── View modal (Employee) ─────────────────────────────────
