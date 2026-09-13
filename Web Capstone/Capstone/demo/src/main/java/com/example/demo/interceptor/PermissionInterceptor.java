@@ -1,16 +1,18 @@
 package com.example.demo.interceptor;
 
-import com.example.demo.model.AdminUser;
-import com.example.demo.repository.AdminUserRepository;
-import com.example.demo.services.SystemSettingsService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.security.Principal;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.security.Principal;
-import java.util.Map;
+import com.example.demo.model.AdminUser;
+import com.example.demo.repository.AdminUserRepository;
+import com.example.demo.services.SystemSettingsService;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class PermissionInterceptor implements HandlerInterceptor {
@@ -40,7 +42,7 @@ public class PermissionInterceptor implements HandlerInterceptor {
         String section = PATH_TO_SECTION.get(path);
         if (section == null) return true; // not a restricted page
 
-        AdminUser admin = adminUserRepository.findByEmail(principal.getName()).orElse(null);
+        AdminUser admin = adminUserRepository.findByEmailIgnoreCase(principal.getName()).orElse(null);
         if (admin == null) return true;
 
         String role = admin.getRole(); // e.g. "SECRETARY", "TREASURER", "BARANGAY-CAPTAIN"

@@ -1,12 +1,14 @@
 package com.example.demo.services;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Service;
+
 import com.example.demo.dto.AdminUserDTO;
 import com.example.demo.model.AdminUser;
 import com.example.demo.repository.AdminUserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import java.util.List;
-import org.springframework.lang.NonNull;
 
 @Service
 public class AdminUserServices {
@@ -43,7 +45,7 @@ public class AdminUserServices {
     }
 
     public boolean existsByEmail(String email) {
-        return adminUserRepository.existsByEmail(email);
+        return adminUserRepository.existsByEmailIgnoreCase(email);
     }
 
     public boolean existsByUsername(String username) {
@@ -64,6 +66,6 @@ public class AdminUserServices {
     }
     
     public AdminUser getAdminByEmail(String email) { 
-        return adminUserRepository.findByEmail(email).orElse(null); 
+        return adminUserRepository.findByEmailIgnoreCase(email).orElse(null); 
     }
 }

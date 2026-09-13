@@ -1,19 +1,28 @@
 package com.example.demo.controller;
 
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.client.RestTemplate;
+
 import com.example.demo.model.AdminUser;
 import com.example.demo.model.ResidentUser;
 import com.example.demo.repository.AdminUserRepository;
 import com.example.demo.repository.ResidentUserRepository;
-import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class ResidentAuthController {
@@ -70,7 +79,7 @@ public class ResidentAuthController {
         }
         
         // If not found in residents or password wrong, check admin_users
-        Optional<AdminUser> adminOpt = adminUserRepository.findByEmail(normalizedEmail);
+        Optional<AdminUser> adminOpt = adminUserRepository.findByEmailIgnoreCase(normalizedEmail);
         
         if (adminOpt.isPresent()) {
             AdminUser admin = adminOpt.get();
@@ -122,7 +131,7 @@ public class ResidentAuthController {
         }
         
         // If resident login failed, try admin user
-        Optional<AdminUser> adminOpt = adminUserRepository.findByEmail(normalizedEmail);
+        Optional<AdminUser> adminOpt = adminUserRepository.findByEmailIgnoreCase(normalizedEmail);
         
         if (adminOpt.isPresent()) {
             AdminUser admin = adminOpt.get();
@@ -192,7 +201,7 @@ public class ResidentAuthController {
         String normalizedEmail = email != null ? email.trim().toLowerCase() : "";
         
         Optional<ResidentUser> residentOpt = residentUserRepository.findByEmail(normalizedEmail);
-        Optional<AdminUser> adminOpt = adminUserRepository.findByEmail(normalizedEmail);
+        Optional<AdminUser> adminOpt = adminUserRepository.findByEmailIgnoreCase(normalizedEmail);
         
         if (residentOpt.isEmpty() && adminOpt.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "Email not found."));
