@@ -972,28 +972,27 @@ async function pollCancelled() {
         const data = await res.json();
         const badge = document.getElementById('badge-cancelled');
         if (badge && data.count != null) badge.textContent = data.count;
-        if (data.newCancelled && data.newCancelled.length > 0) {
-            lastSeenCancelledId = Math.max(lastSeenCancelledId, ...data.newCancelled.map(r => r.id));
-            const tbody = document.getElementById('cancelled-tbody');
-            const empty = document.getElementById('cancelled-empty');
-            data.newCancelled.forEach(r => {
-                const procRow = document.querySelector('#processing-tbody [data-id="' + r.id + '"]');
-                if (procRow) procRow.remove();
-                const incRow = document.querySelector('#incoming-tbody [data-id="' + r.id + '"]');
-                if (incRow) incRow.remove();
-                if (tbody && !tbody.querySelector('[data-id="' + r.id + '"]')) {
-                    if (empty) empty.style.display = 'none';
-                    const tr = document.createElement('tr');
-                    tr.className = 'new-cancelled-row';
-                    tr.setAttribute('data-id', r.id);
-                    tr.innerHTML = buildCancelledRow(r);
-                    tbody.prepend(tr);
-                }
-            });
-        }
-        if (data.reports && data.reports.length > 0) {
-            lastSeenCancelledId = Math.max(lastSeenCancelledId, ...data.reports.map(r => r.id));
-        }
+
+        const incoming = data.newCancelled || data.reports || [];
+        if (!incoming.length) return;
+
+        const tbody = document.getElementById('cancelled-tbody');
+        const empty = document.getElementById('cancelled-empty');
+        incoming.forEach(r => {
+            // remove from other tabs if present
+            document.querySelector(`#processing-tbody [data-id="${r.id}"]`)?.remove();
+            document.querySelector(`#incoming-tbody [data-id="${r.id}"]`)?.remove();
+            if (tbody && !tbody.querySelector(`[data-id="${r.id}"]`)) {
+                if (empty) empty.style.display = 'none';
+                const tr = document.createElement('tr');
+                tr.className = 'new-cancelled-row';
+                tr.setAttribute('data-id', r.id);
+                tr.innerHTML = buildCancelledRow(r);
+                tbody.prepend(tr);
+            }
+        });
+        // advance ONLY after successfully rendering
+        lastSeenCancelledId = Math.max(lastSeenCancelledId, ...incoming.map(r => r.id));
     } catch (_) {}
 }
 
