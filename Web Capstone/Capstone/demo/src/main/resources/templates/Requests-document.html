@@ -578,6 +578,7 @@
 <body>
 <script src="/js/notif.js"></script>
 <div class="toast-container" id="toastContainer"></div>
+<input type="hidden" id="currentUserName" th:value="${currentUser}">
 <div class="layout">
 
 <!-- Success Modal -->
@@ -2149,6 +2150,7 @@
 
     // ─── Export table to PDF ───────────────────────────────────────────────────
   function exportToPDF() {
+    const exportedBy = document.getElementById('currentUserName')?.value || 'Unknown User';
     const activePanel = document.querySelector('.panel-inner:not(.d-none)');
     if (!activePanel) return;
 
@@ -2195,6 +2197,7 @@
         </div>
         <div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">${title}</div>
         <div style="font-size:13px;color:#555;">${new Date().toLocaleString()}</div>
+        <div style="font-size:11px;color:#888;margin-top:2px;">Exported by: <strong style="color:#2d4a44;">${exportedBy}</strong></div>
     </div>`;
 
     tableHtml += `

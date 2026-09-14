@@ -302,6 +302,7 @@
 <!-- Hidden inputs for status and role -->
 <input type="hidden" id="accountStatus" th:value="${currentstatus}">
 <input type="hidden" id="currentUserRole" th:value="${currentrole}">
+<input type="hidden" id="currentUserName" th:value="${currentUser}">
 
 <script src="/js/notif.js"></script>
 <div class="toast-container" id="toastContainer"></div>
@@ -2375,15 +2376,18 @@ function exportToPDF(panelId) {
     const wideColumns = ['Address', 'Priority'];
 
     // Page header — identical markup/colors to Program Calendar's exportToPDF
-    let tableHtml = `
-    <div style="position:relative;text-align:center;padding-bottom:12px;margin-bottom:20px;border-bottom:3px solid #2d4a44;">
-        <div style="position:absolute;left:-30px;top:-25px;display:flex;align-items:center;gap:5px;">
-            <img src="/images/seal1.png" alt="Barangay Seal" style="width:16px;height:16px;object-fit:contain;">
-            <span style="font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#888;white-space:nowrap;">CivilAccess Web System</span>
-        </div>
-        <div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">${title}</div>
-        <div style="font-size:13px;color:#555;">${new Date().toLocaleString()}</div>
-    </div>`;
+    const exportedBy = document.getElementById('currentUserName')?.value || 'Unknown User';
+
+let tableHtml = `
+<div style="position:relative;text-align:center;padding-bottom:12px;margin-bottom:20px;border-bottom:3px solid #2d4a44;">
+    <div style="position:absolute;left:-30px;top:-25px;display:flex;align-items:center;gap:5px;">
+        <img src="/images/seal1.png" alt="Barangay Seal" style="width:16px;height:16px;object-fit:contain;">
+        <span style="font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#888;white-space:nowrap;">CivilAccess Web System</span>
+    </div>
+    <div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">${title}</div>
+    <div style="font-size:13px;color:#555;">${new Date().toLocaleString()}</div>
+    <div style="font-size:11px;color:#888;margin-top:2px;">Exported by: <strong style="color:#2d4a44;">${exportedBy}</strong></div>
+</div>`;
 
     // Section title — identical markup to calendar's "Upcoming Events" label
     tableHtml += `

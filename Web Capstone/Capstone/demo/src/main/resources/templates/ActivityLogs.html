@@ -328,6 +328,7 @@
 <div class="toast-container" id="toastContainer"></div>
 <div class="layout">
 <input type="hidden" id="accountStatus" th:value="${currentstatus}">
+<input type="hidden" id="currentUserName" th:value="${currentUser}">
       <div id="forcePasswordModal" class="force-modal">
     <div class="force-modal-content">
         <h2>First Login Detected</h2>
@@ -619,6 +620,7 @@
     // ── Export PDF ────────────────────────────────────────────
   
     function exportToPDF() {
+    const exportedBy = document.getElementById('currentUserName')?.value || 'Unknown User';
     const panel = document.querySelector('.panel-inner:not(.d-none)');
     if (!panel) return;
     const table = panel.querySelector('table');
@@ -674,7 +676,7 @@
     const wideColumns = ['User', 'Details'];
 
     // Page header — same layout as Blotter Records export
-    let tableHtml = `
+     let tableHtml = `
     <div style="position:relative;text-align:center;padding-bottom:12px;margin-bottom:20px;border-bottom:3px solid #2d4a44;">
         <div style="position:absolute;left:-30px;top:-25px;display:flex;align-items:center;gap:5px;">
             <img src="/images/seal1.png" alt="Barangay Seal" style="width:16px;height:16px;object-fit:contain;">
@@ -682,6 +684,7 @@
         </div>
         <div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">${title}</div>
         <div style="font-size:13px;color:#555;">${new Date().toLocaleString()}</div>
+        <div style="font-size:11px;color:#888;margin-top:2px;">Exported by: <strong style="color:#2d4a44;">${exportedBy}</strong></div>
     </div>`;
 
     tableHtml += `
