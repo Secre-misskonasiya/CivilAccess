@@ -302,6 +302,7 @@
 <!-- Hidden inputs for status and role -->
 <input type="hidden" id="accountStatus" th:value="${currentstatus}">
 <input type="hidden" id="currentUserRole" th:value="${currentrole}">
+<input type="hidden" id="currentUserName" th:value="${currentUser}">
 
 <script src="/js/notif.js"></script>
 <div class="toast-container" id="toastContainer"></div>
@@ -2382,6 +2383,7 @@ function exportToPDF(panelId) {
             <span style="font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#888;white-space:nowrap;">CivilAccess Web System</span>
         </div>
         <div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">${title}</div>
+        
         <div style="font-size:13px;color:#555;">${new Date().toLocaleString()}</div>
     </div>`;
 
