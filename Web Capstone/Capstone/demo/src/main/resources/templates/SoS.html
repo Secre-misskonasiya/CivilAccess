@@ -400,8 +400,6 @@
 <link rel="stylesheet" th:href="@{/css/sidebar.css}">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -474,19 +472,19 @@
 
     <!-- Tabs -->
     <div class="tabbar">
-        <div class="tab" th:classappend="${currentTab == 'incoming'   ? 'active' : ''}" onclick="window.location.href='/sos-monitoring?tab=incoming'">
+        <div class="tab" data-tab="incoming" th:classappend="${currentTab == 'incoming' ? 'active' : ''}">
             Incoming   <span class="tab-badge" id="badge-incoming"    th:text="${incomingCount}">0</span>
         </div>
-        <div class="tab" th:classappend="${currentTab == 'processing' ? 'active' : ''}" onclick="window.location.href='/sos-monitoring?tab=processing'">
+        <div class="tab" data-tab="processing" th:classappend="${currentTab == 'processing' ? 'active' : ''}">
             Processing <span class="tab-badge" id="badge-processing"  th:text="${processingCount}">0</span>
         </div>
-        <div class="tab" th:classappend="${currentTab == 'resolved'   ? 'active' : ''}" onclick="window.location.href='/sos-monitoring?tab=resolved'">
+        <div class="tab" data-tab="resolved" th:classappend="${currentTab == 'resolved' ? 'active' : ''}">
             Resolved   <span class="tab-badge"                        th:text="${resolvedCount}">0</span>
         </div>
-        <div class="tab" th:classappend="${currentTab == 'archive'    ? 'active' : ''}" onclick="window.location.href='/sos-monitoring?tab=archive'">
+        <div class="tab" data-tab="archive" th:classappend="${currentTab == 'archive' ? 'active' : ''}">
             Archive    <span class="tab-badge"                        th:text="${archivedCount}">0</span>
         </div>
-        <div class="tab" th:classappend="${currentTab == 'cancelled'  ? 'active' : ''}" onclick="window.location.href='/sos-monitoring?tab=cancelled'">
+        <div class="tab" data-tab="cancelled" th:classappend="${currentTab == 'cancelled' ? 'active' : ''}">
             Cancelled  <span class="tab-badge" id="badge-cancelled"   th:text="${cancelledCount}">0</span>
         </div>
     </div>
@@ -529,6 +527,9 @@
                         </tr>
                     </tbody>
                 </table>
+                <div class="table-footer">
+                    <span id="incomingCount">Showing <span th:text="${incomingReports != null ? #lists.size(incomingReports) : 0}">0</span> incoming alert(s)</span>
+                </div>
                 <div class="text-center p-4" id="incoming-empty" th:if="${#lists.isEmpty(incomingReports)}"><p class="text-muted">No incoming SoS alerts</p></div>
             </div>
         </div>
@@ -569,6 +570,9 @@
                         </tr>
                     </tbody>
                 </table>
+                <div class="table-footer">
+                    <span id="processingCount">Showing <span th:text="${processingReports != null ? #lists.size(processingReports) : 0}">0</span> processing alert(s)</span>
+                </div>
                 <div class="text-center p-4" id="processing-empty" th:if="${processingReports == null or #lists.isEmpty(processingReports)}"><p class="text-muted">No processing SoS alerts</p></div>
             </div>
         </div>
@@ -603,7 +607,10 @@
                         </tr>
                     </tbody>
                 </table>
-                <div class="text-center p-4" th:if="${#lists.isEmpty(resolvedReports)}"><p class="text-muted">No resolved SoS alerts</p></div>
+                <div class="table-footer">
+                    <span id="resolvedCount">Showing <span th:text="${resolvedReports != null ? #lists.size(resolvedReports) : 0}">0</span> resolved alert(s)</span>
+                </div>
+                <div class="text-center p-4" id="resolved-empty" th:if="${#lists.isEmpty(resolvedReports)}"><p class="text-muted">No resolved SoS alerts</p></div>
             </div>
         </div>
 
@@ -629,7 +636,10 @@
                         </tr>
                     </tbody>
                 </table>
-                <div class="text-center p-4" th:if="${#lists.isEmpty(archivedReports)}"><p class="text-muted">No archived SoS alerts</p></div>
+                <div class="table-footer">
+                    <span id="archiveCount">Showing <span th:text="${archivedReports != null ? #lists.size(archivedReports) : 0}">0</span> archived alert(s)</span>
+                </div>
+                <div class="text-center p-4" id="archive-empty" th:if="${#lists.isEmpty(archivedReports)}"><p class="text-muted">No archived SoS alerts</p></div>
             </div>
         </div>
 
@@ -663,6 +673,9 @@
                         </tr>
                     </tbody>
                 </table>
+                <div class="table-footer">
+                    <span id="cancelledCount">Showing <span th:text="${cancelledReports != null ? #lists.size(cancelledReports) : 0}">0</span> cancelled alert(s)</span>
+                </div>
                 <div class="text-center p-4" id="cancelled-empty" th:if="${cancelledReports == null or #lists.isEmpty(cancelledReports)}"><p class="text-muted">No cancelled SoS alerts</p></div>
             </div>
         </div>
@@ -826,6 +839,7 @@ function updateStatusWithConfirm(id, status) {
                 const emptyDiv = document.querySelector(`#${tbody.id}-empty`);
                 if (emptyDiv) emptyDiv.style.display = 'block';
             }
+            applyFilters();
         } else {
             alert('Error updating status');
         }
@@ -945,6 +959,7 @@ async function pollIncoming() {
                 tr.innerHTML = buildIncomingRow(r);
                 tbody.prepend(tr);
             });
+            applyFilters();
         }
     } catch (_) {}
 }
@@ -969,6 +984,7 @@ async function pollProcessing() {
                     tbody.prepend(tr);
                 }
             });
+            applyFilters();
         }
     } catch (_) {}
 }
@@ -998,6 +1014,7 @@ async function pollCancelled() {
                     tbody.prepend(tr);
                 }
             });
+            applyFilters();
         }
         if (data.reports && data.reports.length > 0) {
             lastSeenCancelledId = Math.max(lastSeenCancelledId, ...data.reports.map(r => r.id));
@@ -1200,18 +1217,48 @@ function escapeHtml(text) {
 let currentTypeFilter = 'all';
 
 function applyFilters() {
-    const val = document.getElementById('sos-search').value.toLowerCase();
+    const val = (document.getElementById('sos-search').value || '').toLowerCase().trim();
     const activePanel = document.querySelector('.panel-inner:not(.d-none)');
     if (!activePanel) return;
-    activePanel.querySelectorAll('tbody tr').forEach(row => {
-        const matchSearch = row.textContent.toLowerCase().includes(val);
+
+    let visibleCount = 0;
+    const rows = activePanel.querySelectorAll('tbody tr');
+
+    rows.forEach(row => {
+        // Skip the "no data" placeholder rows
+        if (row.querySelector('td[colspan]')) return;
+
+        const matchSearch = !val || row.textContent.toLowerCase().includes(val);
+
         let matchType = true;
         if (currentTypeFilter !== 'all') {
             const span = row.querySelector('.badge-sos');
-            matchType = span ? span.innerText.trim() === currentTypeFilter : false;
+            matchType = span ? span.textContent.trim() === currentTypeFilter : false;
         }
-        row.style.display = (matchSearch && matchType) ? '' : 'none';
+
+        const show = matchSearch && matchType;
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
     });
+
+    // Toggle the empty-state message for the current tab
+    const tabId = activePanel.id.replace('tab-', '');       // "cancelled", "incoming", ...
+    const emptyDiv = document.getElementById(tabId + '-empty');
+    if (emptyDiv) {
+        // Only show the empty-state if there are literally zero real rows,
+        // OR the filter hides everything.
+        const hasAnyRealRow = Array.from(rows).some(r => !r.querySelector('td[colspan]'));
+        emptyDiv.style.display = (!hasAnyRealRow || visibleCount === 0) ? 'block' : 'none';
+    }
+
+    // Update the footer count if present
+    const countSpan = document.getElementById(tabId + 'Count');
+    if (countSpan) {
+        const total = Array.from(rows).filter(r => !r.querySelector('td[colspan]')).length;
+        countSpan.textContent = (val || currentTypeFilter !== 'all')
+            ? `Showing ${visibleCount} of ${total} alert(s)`
+            : `Showing ${total} alert(s)`;
+    }
 }
 
 document.querySelectorAll('#typeFilterMenu .dropdown-item').forEach(item => {
@@ -1224,6 +1271,24 @@ document.querySelectorAll('#typeFilterMenu .dropdown-item').forEach(item => {
 });
 
 document.getElementById('sos-search').addEventListener('keyup', applyFilters);
+
+// =================================================================
+// TAB SWITCHING — client-side, so the search / type filter survives
+// =================================================================
+document.querySelectorAll('.tabbar .tab').forEach(tab => {
+    tab.addEventListener('click', function () {
+        const target = this.dataset.tab;
+        if (!target) return;
+
+        document.querySelectorAll('.tabbar .tab').forEach(t => t.classList.toggle('active', t === this));
+        document.querySelectorAll('.panel-inner').forEach(p => p.classList.add('d-none'));
+        const panel = document.getElementById('tab-' + target);
+        if (panel) panel.classList.remove('d-none');
+
+        history.replaceState({}, '', '/sos-monitoring?tab=' + target);
+        applyFilters();
+    });
+});
 
 // export to pdf
 
