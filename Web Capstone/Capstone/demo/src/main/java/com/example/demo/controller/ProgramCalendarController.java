@@ -1,25 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.ProgramCalendar;
-import com.example.demo.model.ProgramBudget;
-import com.example.demo.model.SuggestedProgram;
-import com.example.demo.services.ProgramCalendarService;
-import com.example.demo.services.ProgramBudgetService;
-import com.example.demo.services.SuggestedProgramService;
-import com.example.demo.services.ChatHistoryServiceAI;
-import com.example.demo.services.GeminiService;
-import com.example.demo.services.ActivityLogService;
-import com.example.demo.services.CensusRecordService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-
-import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -28,7 +9,36 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.demo.model.ProgramBudget;
+import com.example.demo.model.ProgramCalendar;
+import com.example.demo.model.SuggestedProgram;
+import com.example.demo.services.ActivityLogService;
+import com.example.demo.services.CensusRecordService;
+import com.example.demo.services.ChatHistoryServiceAI;
+import com.example.demo.services.GeminiService;
+import com.example.demo.services.ProgramBudgetService;
+import com.example.demo.services.ProgramCalendarService;
+import com.example.demo.services.SuggestedProgramService;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/calendar")
@@ -67,7 +77,7 @@ public class ProgramCalendarController {
 
     @GetMapping("/budget/current")
     public ResponseEntity<Map<String, Object>> getCurrentBudget() {
-        Double total = budgetService.getTotalBudget();
+        Double total = budgetService.getTotalRemainingBudget();
         Map<String, Object> response = new HashMap<>();
         response.put("totalBudget", total != null ? total : 0.0);
         return ResponseEntity.ok(response);
@@ -212,7 +222,7 @@ public class ProgramCalendarController {
                 System.err.println("Error getting conversation history: " + e.getMessage());
             }
 
-            Double totalBudget = budgetService.getTotalBudget();
+            Double totalBudget = budgetService.getTotalRemainingBudget();
             if (totalBudget == null) totalBudget = 0.0;
 
             LocalDate today = LocalDate.now();
