@@ -1,17 +1,5 @@
 package com.example.demo.services;
 
-import com.example.demo.dto.CensusRecordDTO;
-import com.example.demo.dto.CensusView;
-import com.example.demo.model.CensusRecord;
-import com.example.demo.repository.CensusRecordRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -20,6 +8,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Service;
+
+import com.example.demo.dto.CensusRecordDTO;
+import com.example.demo.dto.CensusView;
+import com.example.demo.model.CensusRecord;
+import com.example.demo.repository.CensusRecordRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class CensusRecordService {
@@ -122,7 +124,17 @@ public class CensusRecordService {
 
     // ── Business logic ────────────────────────────────────────────
 
+    /**
+     * Computes census status from record data.
+     *
+     * FLAGGED is the one manual/sticky exception: if the incoming record already
+     * carries FLAGGED (i.e. staff explicitly flagged it via the UI, or it was
+     * already flagged and this save didn't touch that), it stays FLAGGED
+     * regardless of field completeness. Everything else (COMPLETE / INCOMPLETE /
+     * PENDING) is fully derived — the client cannot override it.
+     */
     private String deriveStatus(CensusRecord r) {
+        if ("FLAGGED".equalsIgnoreCase(r.getCensusStatus()))     return "FLAGGED";
         if ("flagged".equalsIgnoreCase(r.getAccountStatus()))    return "FLAGGED";
         if ("unverified".equalsIgnoreCase(r.getAccountStatus())) return "INCOMPLETE";
 

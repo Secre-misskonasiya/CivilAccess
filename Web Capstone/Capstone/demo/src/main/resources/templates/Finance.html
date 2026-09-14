@@ -189,7 +189,7 @@
     </style>
 </head>
 <body>
-
+<input type="hidden" id="currentUserName" th:value="${currentUser}">
 <div class="layout">
     <div th:replace="~{fragments/sidebar :: sidebar}"></div>
     <div class="toast-wrap" id="toastWrap"></div>
