@@ -1990,6 +1990,7 @@
   }
 
   async function exportToPDF() {
+     const exportedBy = document.getElementById('currentUserName')?.value || 'Unknown User';
     const format = document.getElementById('exportFormat').value;
 
     const year = currentDate.getFullYear();
@@ -2103,6 +2104,7 @@
         <div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">Program Calendar</div>
         <div style="font-size:13px;color:#555;">${currentMonthYear}</div>
         <div style="font-size:9px;color:#aaa;margin-top:6px;">Generated on: ${new Date().toLocaleString()}</div>
+        <div style="font-size:9px;color:#aaa;margin-top:2px;">Exported by: <strong style="color:#666;">${exportedBy}</strong></div>
     </div>`;
 
     if (format === 'both') {
