@@ -1090,8 +1090,8 @@
     grid.innerHTML = container.innerHTML;
     lastKnownArchivedIds = new Set(announcements.map(a => a.id));
     
-    // Re-apply sorting using EXISTING function
-    sortArchivedAnnouncements();
+    // Re-apply sorting AND filtering using EXISTING functions
+    applyArchivedFilters();
   }
 
   // ============================================
@@ -1400,6 +1400,60 @@
     }
     return false;
   }
+
+  // ============================================
+  //  NEW: shared helpers so search + priority
+  //  filter work on BOTH tabs
+  // ============================================
+  function isArchivedTabActive() {
+    const activeTab = document.querySelector('.tab.active');
+    if (activeTab) return activeTab.textContent.trim().toLowerCase().includes('archived');
+    const archivedPane = document.getElementById('tab-archived');
+    return !!archivedPane && !archivedPane.classList.contains('d-none');
+  }
+
+  function applyFiltersForActiveTab() {
+    if (isArchivedTabActive()) {
+      applyArchivedFilters();
+    } else {
+      filterAndSortAnnouncements();
+    }
+  }
+
+  // Filters + sorts the ARCHIVED list (search term AND priority dropdown)
+  // and keeps the archived footer count in sync with what's visible.
+  function applyArchivedFilters() {
+    const grid = document.getElementById('archivedGrid');
+    if (!grid) return;
+
+    // 1) sort newest-first first
+    sortArchivedAnnouncements();
+
+    const searchInput = document.getElementById('announcement-search');
+    const searchValue = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    const rows = Array.from(grid.querySelectorAll('.announcement-row'));
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      const highPriority = isHighPriority(row);
+      const matchesSearch = !searchValue || row.textContent.toLowerCase().includes(searchValue);
+
+      let matchesPriority = true;
+      if (currentPriorityFilter === 'high') matchesPriority = highPriority;
+      else if (currentPriorityFilter === 'normal') matchesPriority = !highPriority;
+
+      const show = matchesSearch && matchesPriority;
+      row.style.display = show ? '' : 'none';
+      if (show) visibleCount++;
+    });
+
+    const footer = document.getElementById('archivedFooter');
+    if (footer && footer.querySelector('span')) {
+      footer.querySelector('span').textContent =
+        `Showing ${visibleCount} of ${rows.length} archived announcements`;
+    }
+  }
   
   function filterAndSortAnnouncements() {
     const grid = document.getElementById('announcementsGrid');
@@ -1445,7 +1499,8 @@
   
   function onPriorityFilterChange(value) {
     currentPriorityFilter = value;
-    filterAndSortAnnouncements();
+    // FIX: apply to whichever tab is currently open (was only the active list)
+    applyFiltersForActiveTab();
   }
 
   function togglePin(el, id) {
@@ -1548,20 +1603,13 @@
     return div.innerHTML;
   }
 
+  // ============================================
+  // SEARCH - now routes to whichever tab is open
+  // ============================================
   const searchInput = document.getElementById('announcement-search');
   if (searchInput) {
     searchInput.addEventListener('keyup', function() {
-      const activeTab = document.querySelector('.tab.active')?.textContent.includes('Archived') ? 'archived' : 'announcements';
-      if (activeTab === 'announcements') {
-        filterAndSortAnnouncements();
-      } else {
-        const searchValue = this.value.toLowerCase();
-        const archivedRows = document.querySelectorAll('#tab-archived .announcement-row');
-        archivedRows.forEach(row => {
-          row.style.display = row.textContent.toLowerCase().includes(searchValue) ? '' : 'none';
-        });
-        sortArchivedAnnouncements();
-      }
+      applyFiltersForActiveTab();
     });
   }
   
@@ -1624,17 +1672,16 @@
       dropdownContainer.appendChild(filterBtn);
       dropdownContainer.appendChild(dropdownMenu);
       resetBtn.parentNode.replaceChild(dropdownContainer, resetBtn);
-      setTimeout(() => { filterAndSortAnnouncements(); }, 100);
+      setTimeout(() => { applyFiltersForActiveTab(); }, 100);
     }
     
-    sortArchivedAnnouncements();
+    // FIX: apply archived filter on load too
+    applyFiltersForActiveTab();
     
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', function() {
         setTimeout(() => {
-          if (document.querySelector('.tab.active')?.textContent.includes('Archived')) {
-            sortArchivedAnnouncements();
-          }
+          applyFiltersForActiveTab();
         }, 100);
       });
     });

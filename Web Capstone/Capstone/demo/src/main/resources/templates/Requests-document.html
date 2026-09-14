@@ -671,6 +671,7 @@
                                      data-type=${req.documentType},
                                      data-purpose=${req.purposeOfRequest},
                                      data-photo=${req.photo2x2Url},
+                                     data-residency=${req.residencyProofUrl},
                                      data-id=${req.id},
                                      data-timestamp=${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
                                      data-address=${req.address},
@@ -736,6 +737,7 @@
                                      data-type=${req.documentType},
                                      data-purpose=${req.purposeOfRequest},
                                      data-photo=${req.photo2x2Url},
+                                     data-residency=${req.residencyProofUrl},
                                      data-id=${req.id},
                                      data-timestamp=${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
                                      data-address=${req.address},
@@ -815,6 +817,7 @@
                                      data-type=${req.documentType},
                                      data-purpose=${req.purposeOfRequest},
                                      data-photo=${req.photo2x2Url},
+                                     data-residency=${req.residencyProofUrl},
                                      data-id=${req.id},
                                      data-timestamp=${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
                                      data-address=${req.address},
@@ -876,6 +879,7 @@
                                      data-type=${req.documentType},
                                      data-purpose=${req.purposeOfRequest},
                                      data-photo=${req.photo2x2Url},
+                                     data-residency=${req.residencyProofUrl},
                                      data-id=${req.id},
                                      data-timestamp=${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
                                      data-address=${req.address},
@@ -947,6 +951,12 @@
                     <h4><i class="bi bi-card-text" style="margin-right:5px;"></i>Valid ID</h4>
                     <div class="vf-doc-img-wrap" id="vf-validid-wrap">
                         <span style="color:#aaa; font-size:13px;">No ID uploaded</span>
+                    </div>
+                </div>
+                <div class="vf-doc-card">
+                    <h4><i class="bi bi-house-door" style="margin-right:5px;"></i>Residency Proof</h4>
+                    <div class="vf-doc-img-wrap" id="vf-residency-wrap">
+                        <span style="color:#aaa; font-size:13px;">No proof uploaded</span>
                     </div>
                 </div>
             </div>
@@ -1223,32 +1233,40 @@
 
   // ─── View File Modal ───────────────────────────────────────────────────────
   function openViewFileModal(row) {
-    const name    = row.getAttribute('data-name')    || '—';
-    const validId = row.getAttribute('data-validid') || '';
-    const photo   = row.getAttribute('data-photo')   || '';
-    const type    = row.getAttribute('data-type')    || '';
-    const purpose = row.getAttribute('data-purpose') || '—';
+      const name      = row.getAttribute('data-name')      || '—';
+      const validId   = row.getAttribute('data-validid')   || '';
+      const photo     = row.getAttribute('data-photo')     || '';
+      const residency = row.getAttribute('data-residency') || '';
+      const type      = row.getAttribute('data-type')      || '';
+      const purpose   = row.getAttribute('data-purpose')   || '—';
 
-    document.getElementById('vf-name').textContent = name;
-    document.getElementById('vf-doctype').textContent = type.replace(/_/g, ' ').toUpperCase();
-    document.getElementById('vf-purpose-label').textContent = 'Purpose:';
-    document.getElementById('vf-purpose-text').textContent = purpose;
+      document.getElementById('vf-name').textContent = name;
+      document.getElementById('vf-doctype').textContent = type.replace(/_/g, ' ').toUpperCase();
+      document.getElementById('vf-purpose-label').textContent = 'Purpose:';
+      document.getElementById('vf-purpose-text').textContent = purpose;
 
-    const photoWrap = document.getElementById('vf-photo-wrap');
-    if (isValidUrl(photo)) {
-      photoWrap.innerHTML = `<img src="${escapeHtml(photo)}" alt="2x2 Photo" onclick="enlargeImg('${escapeHtml(photo)}')">`;
-    } else {
-      photoWrap.innerHTML = '<span style="color:#aaa; font-size:13px;">No 2x2 photo uploaded</span>';
-    }
+      const photoWrap = document.getElementById('vf-photo-wrap');
+      if (isValidUrl(photo)) {
+          photoWrap.innerHTML = `<img src="${escapeHtml(photo)}" alt="2x2 Photo" onclick="enlargeImg('${escapeHtml(photo)}')">`;
+      } else {
+          photoWrap.innerHTML = '<span style="color:#aaa; font-size:13px;">No 2x2 photo uploaded</span>';
+      }
 
-    const idWrap = document.getElementById('vf-validid-wrap');
-    if (isValidUrl(validId)) {
-      idWrap.innerHTML = `<img src="${escapeHtml(validId)}" alt="Valid ID" onclick="enlargeImg('${escapeHtml(validId)}')">`;
-    } else {
-      idWrap.innerHTML = '<span style="color:#aaa; font-size:13px;">No ID uploaded</span>';
-    }
+      const idWrap = document.getElementById('vf-validid-wrap');
+      if (isValidUrl(validId)) {
+          idWrap.innerHTML = `<img src="${escapeHtml(validId)}" alt="Valid ID" onclick="enlargeImg('${escapeHtml(validId)}')">`;
+      } else {
+          idWrap.innerHTML = '<span style="color:#aaa; font-size:13px;">No ID uploaded</span>';
+      }
 
-    document.getElementById('viewFileModalOverlay').style.display = 'block';
+      const residencyWrap = document.getElementById('vf-residency-wrap');
+      if (isValidUrl(residency)) {
+          residencyWrap.innerHTML = `<img src="${escapeHtml(residency)}" alt="Residency Proof" onclick="enlargeImg('${escapeHtml(residency)}')">`;
+      } else {
+          residencyWrap.innerHTML = '<span style="color:#aaa; font-size:13px;">No residency proof uploaded</span>';
+      }
+
+      document.getElementById('viewFileModalOverlay').style.display = 'block';
   }
 
   function closeViewFileModal() {
