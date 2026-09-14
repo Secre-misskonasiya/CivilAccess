@@ -409,7 +409,6 @@
 </head>
 <body>
     <input type="hidden" id="currentUserName" th:value="${currentUser}">
-    
     <script src="/js/notif.js"></script>
 <div class="toast-container" id="toastContainer"></div>
 <div id="sos-toast">🚨 New SoS Alert received!</div>
@@ -438,7 +437,6 @@
 
 <!-- Role hidden field, used by JS for role-aware behavior -->
 <input type="hidden" id="currentUserRole" th:value="${currentrole}">
-<input type="hidden" id="currentUserName" th:value="${currentUser}">
 
 <div class="content">
 
@@ -521,8 +519,10 @@
                                     <!-- Process/Archive - ONLY for ADMIN, SECRETARY, SECRETARIAT STAFF -->
                                     <th:block th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
                                         <button class="resolve-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'PROCESSING\')'">Process</button>
-                                        <button class="archive-btn"
-        th:onclick="${(currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF') ? ('updateStatusWithConfirm(' + report.id + ', \'ARCHIVED\')') : 'openAssistanceModal()'}">Archive</button>
+                                        <button class="archive-btn" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                            th:onclick="|updateStatusWithConfirm(${report.id}, 'ARCHIVED')|">Archive</button>
+                                    <button class="archive-btn" th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                            onclick="openAssistanceModal()">Archive</button>
                                     </th:block>
                                 </div>
                             </td>
@@ -559,9 +559,11 @@
                                     <!-- Resolve/Archive - ONLY for ADMIN, SECRETARY, SECRETARIAT STAFF -->
                                     <th:block th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
                                         <button class="resolve-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'RESOLVED\')'">Resolve</button>
-                                        <button class="archive-btn"
-        th:onclick="${(currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF') ? ('updateStatusWithConfirm(' + report.id + ', \'ARCHIVED\')') : 'openAssistanceModal()'}">Archive</button>
-                                    </th:block>
+                                        <button class="archive-btn" th:if="${currentrole == 'ADMIN'}"
+                                                th:onclick="|updateStatusWithConfirm(${report.id}, 'ARCHIVED')|">Archive</button>
+                                        <button class="archive-btn" th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                                onclick="openAssistanceModal()">Archive</button>
+                                        </th:block>
                                 </div>
                             </td>
                         </tr>
@@ -592,9 +594,11 @@
                             <td>
                                 <div class="d-flex gap-2">
                                     <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
-                                    <button class="archive-btn"
-        th:onclick="${(currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF') ? ('updateStatusWithConfirm(' + report.id + ', \'ARCHIVED\')') : 'openAssistanceModal()'}">Archive</button>
-                                </div>
+                                    <button class="archive-btn" th:if="${currentrole == 'ADMIN'}"
+                                        th:onclick="|updateStatusWithConfirm(${report.id}, 'ARCHIVED')|">Archive</button>
+                                <button class="archive-btn" th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                        onclick="openAssistanceModal()">Archive</button>
+                                 </div>
                             </td>
                         </tr>
                     </tbody>
@@ -650,9 +654,11 @@
                             <td>
                                 <div class="d-flex gap-2">
                                     <button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button>
-                                    <button class="archive-btn"
-        th:onclick="${(currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF') ? ('updateStatusWithConfirm(' + report.id + ', \'ARCHIVED\')') : 'openAssistanceModal()'}">Archive</button>
-                                </div>
+                                    <button class="archive-btn" th:if="${currentrole == 'ADMIN'}"
+                                            th:onclick="|updateStatusWithConfirm(${report.id}, 'ARCHIVED')|">Archive</button>
+                                    <button class="archive-btn" th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                            onclick="openAssistanceModal()">Archive</button> 
+                                    </div>
                             </td>
                         </tr>
                     </tbody>
@@ -974,27 +980,28 @@ async function pollCancelled() {
         const data = await res.json();
         const badge = document.getElementById('badge-cancelled');
         if (badge && data.count != null) badge.textContent = data.count;
-
-        const incoming = data.newCancelled || data.reports || [];
-        if (!incoming.length) return;
-
-        const tbody = document.getElementById('cancelled-tbody');
-        const empty = document.getElementById('cancelled-empty');
-        incoming.forEach(r => {
-            // remove from other tabs if present
-            document.querySelector(`#processing-tbody [data-id="${r.id}"]`)?.remove();
-            document.querySelector(`#incoming-tbody [data-id="${r.id}"]`)?.remove();
-            if (tbody && !tbody.querySelector(`[data-id="${r.id}"]`)) {
-                if (empty) empty.style.display = 'none';
-                const tr = document.createElement('tr');
-                tr.className = 'new-cancelled-row';
-                tr.setAttribute('data-id', r.id);
-                tr.innerHTML = buildCancelledRow(r);
-                tbody.prepend(tr);
-            }
-        });
-        // advance ONLY after successfully rendering
-        lastSeenCancelledId = Math.max(lastSeenCancelledId, ...incoming.map(r => r.id));
+        if (data.newCancelled && data.newCancelled.length > 0) {
+            lastSeenCancelledId = Math.max(lastSeenCancelledId, ...data.newCancelled.map(r => r.id));
+            const tbody = document.getElementById('cancelled-tbody');
+            const empty = document.getElementById('cancelled-empty');
+            data.newCancelled.forEach(r => {
+                const procRow = document.querySelector('#processing-tbody [data-id="' + r.id + '"]');
+                if (procRow) procRow.remove();
+                const incRow = document.querySelector('#incoming-tbody [data-id="' + r.id + '"]');
+                if (incRow) incRow.remove();
+                if (tbody && !tbody.querySelector('[data-id="' + r.id + '"]')) {
+                    if (empty) empty.style.display = 'none';
+                    const tr = document.createElement('tr');
+                    tr.className = 'new-cancelled-row';
+                    tr.setAttribute('data-id', r.id);
+                    tr.innerHTML = buildCancelledRow(r);
+                    tbody.prepend(tr);
+                }
+            });
+        }
+        if (data.reports && data.reports.length > 0) {
+            lastSeenCancelledId = Math.max(lastSeenCancelledId, ...data.reports.map(r => r.id));
+        }
     } catch (_) {}
 }
 
@@ -1017,15 +1024,33 @@ function archiveBtnHtml(id) {
 }
 
 function buildIncomingRow(r) {
-    return `<td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-incoming">Incoming</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatusWithConfirm(${r.id},'PROCESSING')">Process</button>${archiveBtnHtml(r.id)}</div></td>`;
+    return `<td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td>
+            <td>${escapeHtml(r.phoneNumber) || 'N/A'}</td>
+            <td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td>
+            <td>${r.dateReported ? new Date(r.dateReported).toLocaleString() : 'N/A'}</td>
+            <td>${escapeHtml(r.location) || 'N/A'}</td>
+            <td><span class="status-incoming">Incoming</span></td>
+            <td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatusWithConfirm(${r.id},'PROCESSING')">Process</button>${archiveBtnHtml(r.id)}</div></td>`;
 }
 
 function buildProcessingRow(r) {
-    return `<td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-processing">Processing</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatusWithConfirm(${r.id},'RESOLVED')">Resolve</button>${archiveBtnHtml(r.id)}</div></td>`;
+    return `<td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td>
+            <td>${escapeHtml(r.phoneNumber) || 'N/A'}</td>
+            <td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td>
+            <td>${r.dateReported ? new Date(r.dateReported).toLocaleString() : 'N/A'}</td>
+            <td>${escapeHtml(r.location) || 'N/A'}</td>
+            <td><span class="status-processing">Processing</span></td>
+            <td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatusWithConfirm(${r.id},'RESOLVED')">Resolve</button>${archiveBtnHtml(r.id)}</div></td>`;
 }
 
 function buildCancelledRow(r) {
-    return `<td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td><td>${escapeHtml(r.phoneNumber) || 'N/A'}</td><td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td><td>${escapeHtml(r.location) || 'N/A'}</td><td><span class="status-cancelled">Cancelled</span></td><td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button>${archiveBtnHtml(r.id)}</div></td>`;
+    return `<td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td>
+            <td>${escapeHtml(r.phoneNumber) || 'N/A'}</td>
+            <td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td>
+            <td>${r.dateReported ? new Date(r.dateReported).toLocaleString() : 'N/A'}</td>
+            <td>${escapeHtml(r.location) || 'N/A'}</td>
+            <td><span class="status-cancelled">Cancelled</span></td>
+            <td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button>${archiveBtnHtml(r.id)}</div></td>`;
 }
 
 // =================================================================
@@ -1204,7 +1229,6 @@ document.getElementById('sos-search').addEventListener('keyup', applyFilters);
 
 
 function exportToPDF() {
-    const exportedBy = document.getElementById('currentUserName')?.value || 'Unknown User';
     const activePanel = document.querySelector('.panel-inner:not(.d-none)');
     if (!activePanel) return;
     const table = activePanel.querySelector('table');
@@ -1263,7 +1287,6 @@ function exportToPDF() {
         </div>
         <div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">${title}</div>
         <div style="font-size:13px;color:#555;">${new Date().toLocaleString()}</div>
-        <div style="font-size:11px;color:#888;margin-top:2px;">Exported by: <strong style="color:#2d4a44;">${exportedBy}</strong></div>
     </div>`;
 
     tableHtml += `
