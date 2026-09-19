@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap">
+    <meta name="description" content="Brgy. San Sebastian dashboard: residents, incident reports, document requests, and upcoming programs at a glance.">
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-
+   
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -706,13 +710,38 @@
         .weather-body-landscape { grid-template-columns: 1fr; }
         .weather-current-side { border-right: none; border-bottom: 1px solid var(--gray-100); }
     }
+
+    /* ── Accessibility: contrast fixes ── */
+    .section-label,
+    .stat-label,
+    .chart-sub,
+    .rate-sub,
+    .calendar-day-name,
+    .program-time,
+    .activity-by,
+    .activity-time-label,
+    .no-programs,
+    .announcement-content,
+    .weather-loading,
+    .weather-error,
+    .weather-attribution,
+    .forecast-chip-day { color: #5a6564; }
+
+    .calendar-day.other-month { color: #6b7675; }
+    .forecast-chip-precip     { color: #2471a3; }
+    .stat-green,
+    .rate-pct                 { color: #1e8449; }
+    .assistance-notif         { color: #fff; }
+
+    .weather-location,
+    .weather-meta-row { color: #4a5655; }
+
     </style>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-    <meta charset="UTF-8">
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
 </head>
@@ -758,7 +787,7 @@
             <span th:text="${currentUser}">Current User</span>
             <div class="user-avatar" onclick="window.location.href='/user-profile'" style="cursor:pointer; overflow:hidden; padding:0;">
                 <img th:if="${currentAdminProfilePicture != null and !#strings.isEmpty(currentAdminProfilePicture)}"
-                    th:src="${currentAdminProfilePicture}" alt="Profile"
+                    th:src="${currentAdminProfilePicture}" alt="Profile" width="44" height="44" decoding="async"
                     style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;">
                 <span th:unless="${currentAdminProfilePicture != null and !#strings.isEmpty(currentAdminProfilePicture)}"
                     th:text="${currentUser != null and !#strings.isEmpty(currentUser) ? #strings.substring(currentUser, 0, 1) : 'A'}">
@@ -768,7 +797,7 @@
     </div>
 
     <!-- Dashboard Panel -->
-    <div class="panel">
+    <div class="panel" role="main">
         <div class="dashboard-outer">
 
             <!-- ═══════════ LEFT COLUMN ═══════════ -->
@@ -792,7 +821,7 @@
                             style="overflow:hidden;">
                             <img id="announceImage"
                                 th:if="${latestAnnouncement.image != null and !#strings.isEmpty(latestAnnouncement.image)}"
-                                th:src="${latestAnnouncement.image}" alt="Announcement image"
+                                th:src="${latestAnnouncement.image}" alt="Announcement image" width="640" height="360" fetchpriority="high" decoding="async"
                                 style="width:100%; max-height:180px; object-fit:cover; display:block;">
                             <div style="width:100%; padding:12px 14px;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
@@ -827,7 +856,7 @@
                 </div><!-- /row-top -->
                 <!-- Only visible to ADMIN -->
                 <div th:if="${currentrole == 'ADMIN'}" class="assistance-notif" onclick="openPendingRequestsModal()">
-                    <img src="/icons/help.svg" class="icon">
+                    <img src="/icons/help.svg" class="icon" alt="Assistance requests icon">
                     Admin Assistance Requests
                     <span id="dot-assistance" class="badge bg-danger"></span>
                 </div>
@@ -990,7 +1019,7 @@
                             <div class="chart-sub">Male vs. Female seniors (60+)</div>
                             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; align-items:center;">
                                 <div style="position:relative; height:140px;">
-                                    <canvas id="seniorGenderDonut"></canvas>
+                                    <canvas id="seniorGenderDonut" role="img" aria-label="Donut chart showing senior citizen gender breakdown"></canvas>
                                 </div>
                                 <div>
                                     <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
@@ -1010,7 +1039,7 @@
                             <div class="chart-title">PWD Distribution by Category</div>
                             <div class="chart-sub">How PWDs are spread across age groups</div>
                             <div style="position:relative; height:180px;">
-                                <canvas id="pwdBreakdownChart"></canvas>
+                                <canvas id="pwdBreakdownChart" role="img" aria-label="Bar chart showing PWD distribution by category"></canvas>
                             </div>
                         </div>
                     </div>
@@ -1028,8 +1057,8 @@
                             <i class="bi bi-calendar3"></i> Loading...
                         </div>
                         <div class="calendar-nav">
-                            <button onclick="changeMonth(-1)"><i class="bi bi-chevron-left"></i></button>
-                            <button onclick="changeMonth(1)"><i class="bi bi-chevron-right"></i></button>
+                            <button onclick="changeMonth(-1)" aria-label="Previous month"><i class="bi bi-chevron-left"></i></button>
+                            <button onclick="changeMonth(1)" aria-label="Next month"><i class="bi bi-chevron-right"></i></button>
                         </div>
                     </div>
                     <div class="calendar-grid" id="calendarGrid">
@@ -1172,7 +1201,7 @@
                 <div class="forecast-chip">
                     <div class="forecast-chip-day">${day.dayName}</div>
                     <div class="forecast-chip-icon"><i class="bi ${getWeatherIcon(day.weatherCode)}"></i></div>
-                    <div class="forecast-chip-temps">${day.maxTemp}°<br><span style="color:#9aa4a2;font-weight:400;">${day.minTemp}°</span></div>
+                    <div class="forecast-chip-temps">${day.maxTemp}°<br>  <span style="color:#5a6564;font-weight:400;">${day.minTemp}°</span></div>
                     <div class="forecast-chip-precip"><i class="bi bi-droplet-fill"></i>${day.precipProb}%</div>
                 </div>`;
         });

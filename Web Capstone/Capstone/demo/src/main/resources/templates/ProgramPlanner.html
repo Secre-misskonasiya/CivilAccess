@@ -750,6 +750,7 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Brgy. San Sebastian Program Planner: AI-Assisted Program Planner">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" th:href="@{/css/sidebar.css}">
@@ -794,7 +795,7 @@
       <div class="top-header-tab">AI-Assisted Recommendation and Planner</div>
     </div>
 
-    <div class="panel">
+    <div class="panel" role="main">
 
       <!-- Chatbot -->
       <div class="ai-chatbot-container">
@@ -819,7 +820,7 @@
         </div>
 
         <div class="chat-input-area">
-          <textarea class="chat-input" id="chat-input" placeholder="Ask the AI for program recommendations..." rows="1"></textarea>
+          <textarea class="chat-input" id="chat-input" placeholder="Ask the AI for program recommendations..." rows="1" aria-label="Message the AI assistant"></textarea>
           <button class="chat-send-btn" onclick="sendMessage()">
             <i class="bi bi-send"></i> Send
           </button>
@@ -1220,7 +1221,7 @@
                 <div class="modal-content" style="border-radius: 16px;">
                     <div class="modal-header" style="background: linear-gradient(135deg, #30534D, #3d6b63);">
                         <h5 class="modal-title" style="color: white;">${title}</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body" style="padding: 24px; font-size: 16px;">${message}</div>
                     <div class="modal-footer" style="border-top: none; padding: 16px 24px;">
@@ -1654,7 +1655,7 @@ function renderPrograms(programs) {
                 </div>
             </div>
             <button class="view-blue-btn" onclick="viewProgram(${index})">View</button>
-            <button class="remove-red-btn" onclick="removeProgram(${p.id}, this)"><i class="bi bi-trash"></i></button>
+            <button class="remove-red-btn" onclick="removeProgram(${p.id}, this)" aria-label="Remove program"><i class="bi bi-trash"></i></button>
         </div>`).join('');
 }
 

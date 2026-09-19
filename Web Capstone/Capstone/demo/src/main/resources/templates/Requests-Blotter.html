@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brgy. San Sebastian Blotter: Manage Blotter Records">
     <title>Blotter Records</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -221,6 +222,7 @@
             transition: background 0.2s;
         }
         .sys-btn-ok:hover { background: rgba(255,255,255,0.35); }
+
     </style>
 </head>
 <body>
@@ -239,7 +241,7 @@
                 <span class="search-icon"><i class="bi bi-search"></i></span>
                 <input type="text" id="request-search" placeholder="Search by complainant, respondent, incident type, or location...">
             </div>
-            <select id="filter-type" class="filter-select">
+            <select id="filter-type" class="filter-select" aria-label="Filter by incident type">
                 <option value="all">All Incident Types</option>
                 <option value="Theft">Theft</option>
                 <option value="Physical Injury">Physical Injury</option>
@@ -254,7 +256,7 @@
             <button class="export-btn" onclick="exportToPDF()">Export</button>
         </div>
 
-        <div class="panel">
+        <div class="panel" role="main">
             <div class="panel-inner">
                 <div class="panel-header">
                     <i class="bi bi-journal-bookmark-fill me-2"></i> All Blotter Records
@@ -362,7 +364,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Incident Type *</label>
-                        <select id="edit-type" name="incidentType">
+                        <select id="edit-type" name="incidentType" aria-label="Incident type">
                             <option value="">Select type</option>
                             <option value="Theft">Theft</option>
                             <option value="Physical Injury">Physical Injury</option>
@@ -436,7 +438,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Incident Type *</label>
-                        <select id="add-type" name="incidentType">
+                        <select id="add-type" name="incidentType" aria-label="Incident type">
                             <option value="">Select type</option>
                             <option value="Theft">Theft</option>
                             <option value="Physical Injury">Physical Injury</option>

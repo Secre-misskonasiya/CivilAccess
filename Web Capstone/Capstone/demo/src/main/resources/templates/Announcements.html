@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-
+<meta name="description" content="Barangay San Sebastian announcements: manage community announcements.">
 <style>
     /* ... ALL EXISTING STYLES KEPT EXACTLY THE SAME ... */
     body { margin: 0; font-family: Arial, sans-serif; }
@@ -567,6 +567,27 @@
 .force-modal-content button:active {
     transform: translateY(0);
 }
+
+
+/* ── Accessibility: contrast fixes ── */
+.row-snippet,
+.row-date,
+.table-footer,
+.list-header-badge,
+.list-header-title,
+.list-header-snippet,
+.list-header-date { color: #5f5f5f; }
+
+.row-sep { color: #6b6b6b; }
+
+.card-category.high,
+.view-post-badge.high { color: #7a5a00; }
+
+.create-announcement-btn { background-color: #1e8449; }
+.create-announcement-btn:hover { background-color: #196f3d; }
+
+
+
 </style>
 
 <meta charset="UTF-8">
@@ -598,7 +619,7 @@
     <div class="search-bar-area">
       <div class="search-input-wrap">
         <span class="search-icon"><i class="bi bi-search"></i></span>
-        <input type="text" id="announcement-search" placeholder="Search announcements...">
+        <input type="text" id="announcement-search" placeholder="Search announcements..." aria-label="Search announcements">
       </div>
       <button class="filter-btn" onclick="window.location.href='/announcements'"><i class="bi bi-funnel"></i> Reset</button>
       <button class="create-announcement-btn" data-bs-toggle="modal" data-bs-target="#createAnnouncementModal"
@@ -614,7 +635,7 @@
     </div>
 
     <!-- Panel -->
-    <div class="panel">
+    <div class="panel" role="main">
       <div class="panel-inner">
 
         <!-- Announcements Tab -->

@@ -5,7 +5,7 @@
 
     <div class="header">
         <div class="header-title">
-            <img src="/images/seal.png" class="brgy"/> Barangay San Sebastian
+            <img src="/images/seal.png" class="brgy" alt=""/> Barangay San Sebastian
         </div>
     </div>
 
@@ -26,10 +26,10 @@
     <div class="section-body" id="sec-main">
         <ul class="menu">
             <li onclick="window.location.href='/home'">
-                <img src="/icons/dashboard.svg" class="icon"> Dashboard
+                <img src="/icons/dashboard.svg" class="icon" alt=""> Dashboard
             </li>
             <li onclick="window.location.href='/announcements'">
-                <img src="/icons/announcements.svg" class="icon"> Announcements
+                <img src="/icons/announcements.svg" class="icon" alt=""> Announcements
             </li>
         </ul>
     </div>
@@ -43,16 +43,16 @@
     <div class="section-body" id="sec-management">
         <ul class="menu">
             <li th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" onclick="window.location.href='/account'">
-                <img src="/icons/accounts.svg" class="icon"> Accounts
+                <img src="/icons/accounts.svg" class="icon" alt=""> Accounts
             </li>
             <li onclick="window.location.href='/user-profile'">
-                <img src="/icons/user.svg" class="icon"> User Profile
+                <img src="/icons/user.svg" class="icon" alt=""> User Profile
             </li>
             <li th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" onclick="window.location.href='/Resident-census'">
-                <img src="/icons/user.svg" class="icon"> Resident Census
+                <img src="/icons/user.svg" class="icon" alt=""> Resident Census
             </li>
             <li th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF' || currentrole == 'TREASURER'}" onclick="window.location.href='/finance'">
-                <img src="/icons/cash.svg" class="icon"> Expenditures
+                <img src="/icons/cash.svg" class="icon" alt=""> Expenditures
             </li>
         </ul>
     </div>
@@ -64,9 +64,9 @@
         <i class="bi bi-chevron-down section-arrow"></i>
     </button>
     <div class="section-body" id="sec-resident">
-        <ul class="menu">
+        <ul class="menu" role="presentation">
             <li onclick="toggleSubMenu(this, 'sub-requests')">
-                <img src="/icons/requests.svg" class="icon"> Requests
+                <img src="/icons/requests.svg" class="icon" alt=""> Requests
                 <i class="bi bi-chevron-down dropdown-arrow"></i>
             </li>
             <ul class="sub-menu" id="sub-requests">
@@ -76,10 +76,10 @@
                 <li onclick="window.location.href='/rentals'">Rentals</li>
             </ul>
             <li th:if="${currentrole != 'TREASURER' && currentrole != 'BARANGAY-CAPTAIN'}" onclick="window.location.href='/contact-help'">
-                <img src="/icons/help.svg" class="icon"> Contact Help
+                <img src="/icons/help.svg" class="icon" alt=""> Contact Help
             </li>
             <li th:if="${currentrole != 'TREASURER' && currentrole != 'BARANGAY-CAPTAIN'}" onclick="window.location.href='/facilities'">
-                <img src="/icons/facilities.svg" class="icon"> Facilities &amp; Hotlines
+                <img src="/icons/facilities.svg" class="icon" alt=""> Facilities &amp; Hotlines
             </li>
         </ul>
     </div>
@@ -95,10 +95,10 @@
         th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
         <ul class="menu">
             <li onclick="window.location.href='/safety-reports'">
-                <img src="/icons/safety.svg" class="icon"> Reports &amp; Alerts
+                <img src="/icons/safety.svg" class="icon" alt=""> Reports &amp; Alerts
             </li>
             <li onclick="window.location.href='/sos-monitoring'">
-                <img src="/icons/sos.svg" class="icon"> SOS Monitoring
+                <img src="/icons/sos.svg" class="icon" alt="">SOS Monitoring
             </li>
         </ul>
     </div>
@@ -112,10 +112,10 @@
     <div class="section-body" id="sec-programs">
         <ul class="menu">
             <li onclick="window.location.href='/program-calendar'">
-                <img src="/icons/calendar.svg" class="icon"> Program Calendar
+                <img src="/icons/calendar.svg" class="icon" alt=""> Program Calendar
             </li>
             <li th:if="${currentrole != 'BARANGAY-CAPTAIN'}" onclick="window.location.href='/program-planner'">
-                <img src="/icons/planner.svg" class="icon"> AI Program Planner
+                <img src="/icons/planner.svg" class="icon" alt=""> AI Program Planner
             </li>
         </ul>
     </div>
@@ -129,10 +129,10 @@
     <div class="section-body" id="sec-system" th:if="${currentrole == 'ADMIN'}">
         <ul class="menu">
             <li onclick="window.location.href='/Activity-logs'" th:if="${currentrole == 'ADMIN'}">
-                <img src="/icons/monitor.svg" class="icon"> Activity Logs
+                <img src="/icons/monitor.svg" class="icon" alt=""> Activity Logs
             </li>
             <li onclick="window.location.href='/system-settings'" th:if="${currentrole == 'ADMIN'}">
-                <img src="/icons/settings.svg" class="icon"> System Settings
+                <img src="/icons/settings.svg" class="icon" alt=""> System Settings
             </li>
         </ul>
     </div>
@@ -140,7 +140,7 @@
     <!-- LOGOUT -->
     <hr class="sidebar-divider">
     <div class="logout-item" onclick="openLogoutModal()">
-        <img src="/icons/logout.svg" class="icon"> Logout
+        <img src="/icons/logout.svg" class="icon" alt=""> Logout
     </div>
 
 <!-- Assistance Request Modal (any role can open) -->
@@ -149,7 +149,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title"><i class="bi bi-life-preserver"></i> Request Admin Assistance</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <label for="assistanceMessage">Describe what you need help with:</label>
@@ -169,7 +169,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title"><i class="bi bi-inbox"></i> Pending Assistance Requests</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" id="pendingRequestsList">
         <p>Loading...</p>
