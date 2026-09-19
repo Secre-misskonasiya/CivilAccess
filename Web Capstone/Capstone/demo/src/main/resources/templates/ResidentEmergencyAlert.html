@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Brgy. San Sebastian Resident Emergency Alerts: View Emergency Alerts provided by the Barangay">
   <title>Emergency Alerts – CivilAccess</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -241,6 +242,10 @@
   overflow-x: hidden;
 }
 
+/* ── Accessibility: contrast fixes ── */
+.nav-sub { color: rgba(255,255,255,.8); }
+.weather-loc, .day-date, .empty-state { color: #5f6368; }
+
   </style>
 </head>
 <body>
@@ -330,7 +335,7 @@
   <div class="modal-box">
     <div class="modal-top">
       <h2>Alert Details</h2>
-      <button class="modal-x" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+      <button class="modal-x" onclick="closeModal()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
     </div>
     <div id="modalContent"></div>
   </div>
@@ -341,6 +346,16 @@
 </div>
 
 <script src="/js/sidebar2.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('button').forEach(function (b) {
+    var named = b.textContent.trim() || b.getAttribute('aria-label') ||
+                b.getAttribute('aria-labelledby') || b.title;
+    if (!named) b.setAttribute('aria-label', 'Toggle menu');
+  });
+});
+</script>
 
 
 <script>

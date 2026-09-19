@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Brgy. San Sebastian Facilities and Hotlines: View Facilities and Emergency Hotlines">
   <title>Facilities – CivilAccess</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -507,7 +508,7 @@
   <div class="modal-box">
     <div class="modal-top">
       <h2>Facility Details</h2>
-      <button class="modal-x" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+      <button class="modal-x" aria-label="Close" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
     </div>
     <div id="modalContent"></div>
   </div>
@@ -773,6 +774,22 @@
 </script>
 
 <script th:src="@{/js/sidebar2.js}"></script>
+
+<script>
+  // Accessibility: give icon-only buttons an accessible name (no visual change)
+  document.querySelectorAll('button').forEach(btn => {
+    const hasName = btn.textContent.trim() ||
+                    btn.getAttribute('aria-label') ||
+                    btn.getAttribute('aria-labelledby') ||
+                    btn.getAttribute('title');
+    if (hasName) return;
+
+    const hint = (btn.id + ' ' + btn.className).toLowerCase();
+    if (hint.includes('close'))                              btn.setAttribute('aria-label', 'Close');
+    else if (hint.includes('toggle') || hint.includes('menu')) btn.setAttribute('aria-label', 'Toggle navigation menu');
+    else                                                     btn.setAttribute('aria-label', 'Button');
+  });
+</script>
 
 </body>
 </html>

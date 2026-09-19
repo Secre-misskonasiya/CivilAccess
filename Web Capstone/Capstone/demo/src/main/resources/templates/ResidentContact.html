@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Brgy. San Sebastian Chat Assistance: Contact Barangay Officials">
   <title>Support Staff – CivilAccess</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -547,7 +548,7 @@
             </div>
           </div>
           <div class="form-body">
-            <label class="form-label">Type of Concern</label>
+            <label class="form-label" for="formType">Type of Concern</label>
             <select class="form-select" id="formType">
               <option>General Inquiry</option>
               <option>Health Services</option>
@@ -556,7 +557,7 @@
               <option>Other</option>
             </select>
 
-            <label class="form-label" style="margin-top:20px">Describe your concern</label>
+            <label class="form-label" for="formMessage" style="margin-top:20px">Describe your concern</label>
             <textarea class="form-textarea" id="formMessage" placeholder="Write your message to barangay staff here…"></textarea>
 
             <button class="submit-btn" id="submitBtn" onclick="submitRequest()">
@@ -592,8 +593,8 @@
           </div>
 
           <div class="chat-input-wrap" id="chatInputWrap">
-            <textarea id="chatInput" rows="1" placeholder="Write a message…" onkeydown="handleKey(event)"></textarea>
-            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+           <textarea id="chatInput" rows="1" placeholder="Write a message…" onkeydown="handleKey(event)" aria-label="Write a message"></textarea>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Send message">
               <i class="bi bi-send-fill"></i>
             </button>
           </div>
@@ -654,6 +655,16 @@
 </div><!-- /layout -->
 
 <script src="/js/sidebar2.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('button').forEach(function (b) {
+    var named = b.textContent.trim() || b.getAttribute('aria-label') ||
+                b.getAttribute('aria-labelledby') || b.title;
+    if (!named) b.setAttribute('aria-label', 'Toggle menu');
+  });
+});
+</script>
 
 <script>
   // ── State ──────────────────────────────────────────────────

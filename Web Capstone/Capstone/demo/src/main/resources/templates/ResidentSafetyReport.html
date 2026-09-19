@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Brgy. San Sebastian Resident Safety Report: View Safety Reports">
   <title>Safety Reports – CivilAccess</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -330,7 +331,21 @@
   overflow-x: hidden;
 }
 
+/* ── Accessibility: contrast fixes ── */
+.nav-sub { color: rgba(255,255,255,.8); }
+.post-dt, .foot-left, .m-foot-left, .empty, .photo-indicator { color: #5f6368; }
 
+.view-btn { padding: 6px 10px; margin: -2px 0; }
+
+
+.badge-status-approved   { color: #1565c0; }
+.badge-status-inprogress { color: #256650; }
+.badge-status-resolved   { color: #1e7a46; }
+.badge-status-archived   { color: #666; }
+.priority-high   { color: #c0392b; }
+.priority-medium { color: #b35900; }
+.priority-low    { color: #1e7a46; }
+.resolved-badge  { background-color: #1e8449; }
 
   </style>
 </head>
@@ -371,7 +386,7 @@
   <div class="toolbar">
     <div class="search-wrap">
       <i class="bi bi-search"></i>
-      <input class="search-input" id="searchInput" type="text" placeholder="Search reports by title, type, or location...">
+      <input class="search-input" id="searchInput" type="text" placeholder="Search reports by title, type, or location..." aria-label="Search safety reports">
     </div>
 
     <div class="chips">
@@ -470,7 +485,7 @@
   <div class="modal-box" id="modalBox">
     <div class="modal-top">
       <h2>Safety Report</h2>
-      <button class="modal-x" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+      <button class="modal-x" onclick="closeModal()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
     </div>
     <div id="modalContent"></div>
   </div>

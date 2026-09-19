@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brgy. San Sebastian Barangay Services: Rent Assets, Reserve Court, and Request Documents">
     <title>My Requests – CivilAccess</title>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Lato&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -354,7 +355,7 @@
 <div th:replace="~{fragments/sidebar2 :: logoutModal}"></div>
 <div th:replace="~{fragments/sidebar2 :: mobileToggle}"></div>
 
-    <div class="content">
+    <div class="content" role="main">
         <nav class="topnav">
             <a class="nav-brand" href="#">
                 <div class="nav-icon"><i class="bi bi-building-fill"></i></div>
@@ -959,5 +960,17 @@
 </script>
 
 <script src="/js/sidebar2.js"></script>
+
+<script>
+  document.querySelectorAll('button').forEach(btn => {
+    if (btn.textContent.trim() || btn.getAttribute('aria-label') ||
+        btn.getAttribute('aria-labelledby') || btn.getAttribute('title')) return;
+    const hint = (btn.id + ' ' + btn.className).toLowerCase();
+    btn.setAttribute('aria-label',
+      hint.includes('close') ? 'Close' :
+      (hint.includes('toggle') || hint.includes('menu')) ? 'Toggle navigation menu' : 'Button');
+  });
+</script>
+
 </body>
 </html>
