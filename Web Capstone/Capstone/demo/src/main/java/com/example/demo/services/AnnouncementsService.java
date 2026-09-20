@@ -31,6 +31,7 @@ public class AnnouncementsService {
         repository.deleteById(id);
     }
 
+    
     public Announcements getLatest() {
         return repository.findAll().stream()
             .filter(a -> !"ARCHIVED".equalsIgnoreCase(a.getStatus()))
@@ -47,5 +48,9 @@ public class AnnouncementsService {
 
     public long countActive() {
         return repository.countByStatusNotIgnoreCase("ARCHIVED");
+    }
+
+    public Announcements getById(Long id) {
+        return repository.findById(id).orElse(null);
     }
 }

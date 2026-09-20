@@ -2,10 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://cdn.jsdelivr.net">
-<link rel="preconnect" href="https://cdnjs.cloudflare.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap">
     <meta name="description" content="Brgy. San Sebastian dashboard: residents, incident reports, document requests, and upcoming programs at a glance.">
     <style>
    
@@ -59,15 +59,9 @@
         -webkit-font-smoothing: antialiased;
     }
 
-    /* ══════════════════════════════════════
-       LAYOUT SHELL
-    ══════════════════════════════════════ */
     .layout { display: flex; height: 100vh; overflow: hidden; }
     .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 
-    /* ══════════════════════════════════════
-       TOP BAR
-    ══════════════════════════════════════ */
     .top-bar {
         background: var(--surface);
         padding: 0 32px;
@@ -109,9 +103,6 @@
     }
     .user-avatar:hover { box-shadow: 0 0 0 3px var(--gold-dim); transform: scale(1.04); }
 
-    /* ══════════════════════════════════════
-       PANEL (scroll area)
-    ══════════════════════════════════════ */
     .panel {
         padding: 24px 28px;
         background: var(--gray-100);
@@ -121,9 +112,6 @@
         min-width: 0;
     }
 
-    /* ══════════════════════════════════════
-       DASHBOARD GRID
-    ══════════════════════════════════════ */
     .dashboard-outer {
         display: grid;
         grid-template-columns: 1fr 320px;
@@ -133,9 +121,6 @@
     .col-left  { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
     .col-right { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 
-    /* ══════════════════════════════════════
-       ROW TOP: Announcement + Weather
-    ══════════════════════════════════════ */
     .row-top {
         display: grid;
         grid-template-columns: 2fr 3fr;
@@ -144,9 +129,6 @@
         min-height: 300px;
     }
 
-    /* ══════════════════════════════════════
-       SECTION LABEL
-    ══════════════════════════════════════ */
     .section-label {
         font-size: 11px;
         font-weight: 700;
@@ -156,9 +138,6 @@
         margin-bottom: 12px;
     }
 
-    /* ══════════════════════════════════════
-       CARD BASE
-    ══════════════════════════════════════ */
     .card-base {
         background: var(--surface);
         border-radius: var(--radius-md);
@@ -184,9 +163,6 @@
     }
     .card-header-title i { color: var(--green-700); font-size: 15px; }
 
-    /* ══════════════════════════════════════
-       ANNOUNCEMENT
-    ══════════════════════════════════════ */
     .announcements-box {
         background: var(--surface);
         border-radius: var(--radius-md);
@@ -227,6 +203,8 @@
         padding: 4px 10px;
         border-radius: 20px;
         letter-spacing: 0.05em;
+        min-width: 56px;
+        text-align: center;
     }
     .announcement-content {
         flex: 1;
@@ -248,10 +226,8 @@
         overflow: hidden;
         padding: 0;
     }
+    #announceImage { aspect-ratio: 16 / 9; }
 
-    /* ══════════════════════════════════════
-       WEATHER
-    ══════════════════════════════════════ */
     .weather-box {
         background: var(--surface);
         border-radius: var(--radius-md);
@@ -261,6 +237,7 @@
         display: flex;
         flex-direction: column;
         height: 100%;
+        min-height: 300px;
     }
     .weather-header {
         padding: 15px 18px;
@@ -379,10 +356,8 @@
         color: var(--gray-400);
         font-size: 14px;
     }
+    #weatherContent { min-height: 260px; }
 
-    /* ══════════════════════════════════════
-       STAT CARDS
-    ══════════════════════════════════════ */
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -411,14 +386,15 @@
     }
     .stat-card:hover {
         transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
     }
     .stat-card:hover::before { background: var(--green-700); }
-    .stat-card.updating { animation: pulse 0.5s ease-in-out; }
+    .stat-card.updating {
+        animation: pulse 0.5s ease-in-out;
+        will-change: transform;
+    }
     @keyframes pulse {
-        0%   { transform: scale(1); }
-        50%  { transform: scale(1.015); box-shadow: var(--shadow-md); }
-        100% { transform: scale(1); }
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.015); }
     }
     .stat-icon-wrap {
         width: 40px; height: 40px;
@@ -459,9 +435,6 @@
         background-color:#24443f
     }
 
-    /* ══════════════════════════════════════
-       CHART CARDS
-    ══════════════════════════════════════ */
     .chart-card {
         background: var(--surface);
         border-radius: var(--radius-md);
@@ -497,9 +470,6 @@
     }
     .rate-sub { font-size: 12px; color: var(--gray-400); }
 
-    /* ══════════════════════════════════════
-       SIDEBAR WIDGETS
-    ══════════════════════════════════════ */
     .widget-box {
         background: var(--surface);
         border-radius: var(--radius-md);
@@ -525,9 +495,6 @@
     }
     .widget-title i { color: var(--green-700); font-size: 15px; }
 
-    /* ══════════════════════════════════════
-       CALENDAR
-    ══════════════════════════════════════ */
     .calendar-nav { display: flex; align-items: center; gap: 4px; }
     .calendar-nav button {
         background: none;
@@ -594,9 +561,6 @@
     }
     .calendar-day.today.has-event::after { background: var(--gold); }
 
-    /* ══════════════════════════════════════
-       PROGRAMS
-    ══════════════════════════════════════ */
     .program-item {
         display: flex;
         align-items: center;
@@ -638,9 +602,6 @@
     .program-time i { font-size: 11px; }
     .no-programs { color: var(--gray-300); font-style: italic; padding: 18px; font-size: 14px; }
 
-    /* ══════════════════════════════════════
-       ACTIVITY
-    ══════════════════════════════════════ */
     .activity-item {
         display: flex;
         align-items: flex-start;
@@ -666,9 +627,6 @@
     .activity-by { font-size: 12px; color: var(--gray-400); font-weight: 500; }
     .activity-time-label { font-size: 11px; color: var(--gray-300); margin-top: 2px; font-family: var(--font-mono); }
 
-    /* ══════════════════════════════════════
-       NOTIFICATION BELL
-    ══════════════════════════════════════ */
     .notification-bell {
         position: relative;
         cursor: pointer;
@@ -682,17 +640,15 @@
     .notification-bell:hover { color: var(--green-700); background: var(--green-50); }
     .notification-bell .badge {
         position: absolute;
-        top: 2px; right: 2px;
+        top: 4px; right: 4px;
         background: var(--red);
         width: 9px; height: 9px;
         border-radius: 50%;
-        padding: 0; min-width: 9px; font-size: 0;
+        padding: 0; min-width: 0; font-size: 0;
+        display: none;
     }
-    .notification-bell .badge:empty { display: none; }
+    .notification-bell .badge.on { display: block; }
 
-    /* ══════════════════════════════════════
-       RESPONSIVE
-    ══════════════════════════════════════ */
     @media (max-width: 1280px) {
         .dashboard-outer { grid-template-columns: 1fr; }
         .stats-grid { grid-template-columns: repeat(3, 1fr); }
@@ -711,7 +667,6 @@
         .weather-current-side { border-right: none; border-bottom: 1px solid var(--gray-100); }
     }
 
-    /* ── Accessibility: contrast fixes ── */
     .section-label,
     .stat-label,
     .chart-sub,
@@ -736,17 +691,39 @@
     .weather-location,
     .weather-meta-row { color: #4a5655; }
 
+    .card-header-title,
+    .widget-title,
+    .chart-title,
+    .welcome-text,
+    .stat-number,
+    .program-name,
+    .activity-detail,
+    .forecast-chip-temps { color: #1a1f1e; }
+
+    .forecast-chip-temps span { color: #4a5655; }
+
+    .calendar-day:not(.other-month) { color: #1a1f1e; }
+    .calendar-day.today { color: #ffffff; background: #24443f; }
+
     </style>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" media="print" onload="this.media='all'">
+    <noscript>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    </noscript>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" media="print" onload="this.media='all'">
+    <noscript>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    </noscript>
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" defer></script>
+    <script th:src="@{/js/notif.js}" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
 </head>
 <body>
-    <script src="/js/notif.js"></script>
+    
 <div class="toast-container" id="toastContainer"></div>
 <div class="layout">
 
@@ -760,7 +737,6 @@
 <input type="hidden" id="dataBlotterPending"     th:value="${blotterPending != null ? blotterPending : 0}">
 <input type="hidden" id="dataAllReports"  th:value="${allreports != null ? allreports : 0}">
 
-<!-- Hidden inputs for demographic chart data -->
 <input type="hidden" id="dataSeniorMale" th:value="${seniorMaleCount != null ? seniorMaleCount : 0}">
 <input type="hidden" id="dataSeniorFemale" th:value="${seniorFemaleCount != null ? seniorFemaleCount : 0}">
 <input type="hidden" id="dataPwdChildren" th:value="${pwdChildren != null ? pwdChildren : 0}">
@@ -768,13 +744,10 @@
 <input type="hidden" id="dataPwdAdultFemales" th:value="${pwdAdultFemales != null ? pwdAdultFemales : 0}">
 <input type="hidden" id="dataPwdSeniors" th:value="${pwdSeniors != null ? pwdSeniors : 0}">
 
-<!-- Sidebar -->
 <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
-<!-- Main content -->
 <div class="content">
 
-    <!-- Top Bar -->
     <div class="top-bar">
         <div class="welcome-text">
             Welcome back, <span th:text="${currentrole}">Role</span>
@@ -782,31 +755,27 @@
         <div class="user-info">
             <div class="notification-bell" onclick="openNotificationModal()" title="Notifications">
                 <i class="bi bi-bell-fill"></i>
-                <span class="badge" id="notifBadge" style="display:none;">0</span>
+                <span class="badge" id="notifBadge" aria-hidden="true"></span>
             </div>
             <span th:text="${currentUser}">Current User</span>
             <div class="user-avatar" onclick="window.location.href='/user-profile'" style="cursor:pointer; overflow:hidden; padding:0;">
-                <img th:if="${currentAdminProfilePicture != null and !#strings.isEmpty(currentAdminProfilePicture)}"
-                    th:src="${currentAdminProfilePicture}" alt="Profile" width="44" height="44" decoding="async"
+                <img th:if="${currentAdminId != null and currentAdminProfilePicture != null and !#strings.isEmpty(currentAdminProfilePicture)}"
+                    th:src="@{'/media/avatar/' + ${currentAdminId}}" alt="Profile" width="44" height="44" decoding="async"
                     style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;">
-                <span th:unless="${currentAdminProfilePicture != null and !#strings.isEmpty(currentAdminProfilePicture)}"
+                <span th:unless="${currentAdminId != null and currentAdminProfilePicture != null and !#strings.isEmpty(currentAdminProfilePicture)}"
                     th:text="${currentUser != null and !#strings.isEmpty(currentUser) ? #strings.substring(currentUser, 0, 1) : 'A'}">
                 </span>
             </div>
         </div>
     </div>
 
-    <!-- Dashboard Panel -->
     <div class="panel" role="main">
         <div class="dashboard-outer">
 
-            <!-- ═══════════ LEFT COLUMN ═══════════ -->
             <div class="col-left">
 
-                <!-- ROW 1: Announcement + Weather -->
                 <div class="row-top">
 
-                    <!-- Announcement -->
                     <div class="announcements-box" id="announcementBox">
                         <div class="announce-header">
                             <div class="announce-header-title">
@@ -820,17 +789,18 @@
                             th:if="${latestAnnouncement != null}"
                             style="overflow:hidden;">
                             <img id="announceImage"
-                                th:if="${latestAnnouncement.image != null and !#strings.isEmpty(latestAnnouncement.image)}"
-                                th:src="${latestAnnouncement.image}" alt="Announcement image" width="640" height="360" fetchpriority="high" decoding="async"
+                                th:if="${latestAnnouncement.image != null and !#strings.isEmpty(latestAnnouncement.image) and latestAnnouncement.id != null}"
+                                th:src="@{'/media/announcement/' + ${latestAnnouncement.id}}"
+                                alt="Announcement image" width="640" height="360" loading="lazy" decoding="async"
                                 style="width:100%; max-height:180px; object-fit:cover; display:block;">
                             <div style="width:100%; padding:12px 14px;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                                     <strong id="announceTitle" th:text="${latestAnnouncement.title}" style="font-size:13px; color:#24443f; font-weight:600;"></strong>
-                                    <span id="announceOriginalDate" style="font-size:10px; color:#9aa4a2; white-space:nowrap; margin-left:8px;"
+                                    <span id="announceOriginalDate" style="font-size:10px; color:#5a6564; white-space:nowrap; margin-left:8px;"
                                     th:attr="data-date=${latestAnnouncement.datePosted}"
                                     th:text="${latestAnnouncement.datePosted != null ? #temporals.format(latestAnnouncement.datePosted, 'MMM dd, yyyy') : ''}"></span>
                                 </div>
-                                <p id="announceContent" th:text="${latestAnnouncement.content}" style="font-size:12px; color:#6b7675; margin:0; line-height:1.6;"></p>
+                                <p id="announceContent" th:text="${latestAnnouncement.content}" style="font-size:12px; color:#4a5655; margin:0; line-height:1.6;"></p>
                             </div>
                         </div>
                         <div class="announcement-content" id="noAnnouncement" th:if="${latestAnnouncement == null}">
@@ -838,7 +808,6 @@
                         </div>
                     </div>
 
-                    <!-- Weather — landscape -->
                     <div class="weather-box">
                         <div class="weather-header">
                             <div class="weather-header-title">
@@ -853,31 +822,28 @@
                         </div>
                     </div>
 
-                </div><!-- /row-top -->
-                <!-- Only visible to ADMIN -->
+                </div>
+
                 <div th:if="${currentrole == 'ADMIN'}" class="assistance-notif" onclick="openPendingRequestsModal()">
-                    <img src="/icons/help.svg" class="icon" alt="Assistance requests icon">
+                    <img src="/icons/help.svg" class="icon" width="20" height="20" alt="Assistance requests icon">
                     Admin Assistance Requests
                     <span id="dot-assistance" class="badge bg-danger"></span>
                 </div>
 
-                <!-- Pending Requests Modal -->
                 <div th:if="${currentrole == 'ADMIN'}" class="modal fade" id="pendingRequestsModal" tabindex="-1">
                     <div class="modal-dialog modal-lg">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title">Pending Assistance Requests</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
-                                <div id="pendingRequestsList">
-                                    <!-- Filled in by JS -->
-                                </div>
+                                <div id="pendingRequestsList"></div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- ROW 2: Stat cards -->
+
                 <div>
                     <div class="section-label">Overview</div>
                     <div class="stats-grid" id="statsGrid">
@@ -928,7 +894,6 @@
                         <div class="stat-number" th:text="${blotterCount}">0</div>
                         </div>
 
-                        <!-- Total Residents (sum of first 4 cards) -->
                         <div class="stat-card" id="statTotal">
                             <div class="stat-icon-wrap ic-b"><i class="bi bi-people-fill"></i></div>
                             <div class="stat-label">Total Barangay Residents included in Census</div>
@@ -976,7 +941,6 @@
                     </div>
                 </div>
 
-                <!-- ROW 3: Analytics -->
                 <div id="chartsSection"
                      th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
                     <div class="section-label">Analytics</div>
@@ -1013,7 +977,6 @@
                                 <canvas id="workloadChart" role="img" aria-label="Horizontal bar chart of pending workload items"></canvas>
                             </div>
                         </div>
-                        <!-- Senior Gender Breakdown Chart -->
                         <div class="chart-card" id="seniorGenderChart" style="margin-top:20px;">
                             <div class="chart-title">Senior Citizen Gender Breakdown</div>
                             <div class="chart-sub">Male vs. Female seniors (60+)</div>
@@ -1034,7 +997,6 @@
                             </div>
                         </div>
 
-                        <!-- PWD Breakdown by Category -->
                         <div class="chart-card" style="margin-top:20px;">
                             <div class="chart-title">PWD Distribution by Category</div>
                             <div class="chart-sub">How PWDs are spread across age groups</div>
@@ -1045,12 +1007,10 @@
                     </div>
                 </div>
 
-            </div><!-- /col-left -->
+            </div>
 
-            <!-- ═══════════ RIGHT COLUMN ═══════════ -->
             <div class="col-right">
 
-                <!-- Calendar -->
                 <div class="widget-box">
                     <div class="widget-header">
                         <div class="widget-title" id="calendarTitle">
@@ -1072,7 +1032,6 @@
                     </div>
                 </div>
 
-                <!-- Upcoming Programs -->
                 <div class="widget-box">
                     <div class="widget-header">
                         <div class="widget-title">
@@ -1084,7 +1043,6 @@
                     </div>
                 </div>
 
-                <!-- Latest Activity -->
                 <div class="widget-box" id="activityBox"
                      th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
                     <div class="widget-header">
@@ -1113,14 +1071,13 @@
                     </div>
                 </div>
 
-            </div><!-- /col-right -->
+            </div>
 
-        </div><!-- /dashboard-outer -->
-    </div><!-- /panel -->
-</div><!-- /content -->
-</div><!-- /layout -->
+        </div>
+    </div>
+</div>
+</div>
 
-<!-- Notification Modal -->
 <div id="notificationModal" style="display:none; position:fixed; z-index:10000; top:0; left:0; width:100%; height:100%;" onclick="closeNotificationModal()">
     <div style="position:absolute; top:64px; right:180px; background:white; border-radius:12px; width:400px; max-width:90vw; max-height:60vh; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.2); border:1px solid #e0e0e0;" onclick="event.stopPropagation()">
         <div style="position:absolute; top:-8px; right:24px; width:16px; height:16px; background:white; transform:rotate(45deg); border-left:1px solid #e0e0e0; border-top:1px solid #e0e0e0;"></div>
@@ -1134,15 +1091,12 @@
     </div>
 </div>
 
-<!-- Logout Modal -->
 <div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
 
 <script>
 
-    // ============================================
-    // WEATHER WIDGET — landscape
-    // ============================================
     let weatherData = { current: null, daily: [] };
+    let weatherInterval = null;
 
     async function fetchWeather() {
         const weatherContent = document.getElementById('weatherContent');
@@ -1201,7 +1155,7 @@
                 <div class="forecast-chip">
                     <div class="forecast-chip-day">${day.dayName}</div>
                     <div class="forecast-chip-icon"><i class="bi ${getWeatherIcon(day.weatherCode)}"></i></div>
-                    <div class="forecast-chip-temps">${day.maxTemp}°<br>  <span style="color:#5a6564;font-weight:400;">${day.minTemp}°</span></div>
+                    <div class="forecast-chip-temps">${day.maxTemp}°<br>  <span style="color:#4a5655;font-weight:400;">${day.minTemp}°</span></div>
                     <div class="forecast-chip-precip"><i class="bi bi-droplet-fill"></i>${day.precipProb}%</div>
                 </div>`;
         });
@@ -1225,9 +1179,100 @@
             </div>`;
     }
 
-    // ============================================
-    // NOTIFICATION MODAL
-    // ============================================
+    function openPendingRequestsModal() {
+        const el = document.getElementById('pendingRequestsModal');
+        if (!el) return;
+
+        if (window.bootstrap && window.bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(el).show();
+        } else {
+            el.style.display = 'block';
+            el.classList.add('show');
+            el.removeAttribute('aria-hidden');
+            el.setAttribute('aria-modal', 'true');
+            document.body.classList.add('modal-open');
+            let bd = document.getElementById('__pendingBackdrop');
+            if (!bd) {
+                bd = document.createElement('div');
+                bd.id = '__pendingBackdrop';
+                bd.className = 'modal-backdrop fade show';
+                bd.addEventListener('click', closePendingRequestsModal);
+                document.body.appendChild(bd);
+            }
+            el.querySelectorAll('[data-bs-dismiss="modal"]').forEach(btn => {
+                btn.onclick = closePendingRequestsModal;
+            });
+        }
+        loadPendingRequests();
+    }
+
+    function closePendingRequestsModal() {
+        const el = document.getElementById('pendingRequestsModal');
+        if (!el) return;
+        if (window.bootstrap && window.bootstrap.Modal) {
+            const inst = bootstrap.Modal.getInstance(el);
+            if (inst) inst.hide();
+        } else {
+            el.style.display = 'none';
+            el.classList.remove('show');
+            document.body.classList.remove('modal-open');
+            const bd = document.getElementById('__pendingBackdrop');
+            if (bd) bd.remove();
+        }
+    }
+
+    function loadPendingRequests() {
+        const list = document.getElementById('pendingRequestsList');
+        if (!list) return;
+        list.innerHTML = '<div style="text-align:center;padding:24px;color:#5a6564;">Loading…</div>';
+
+        fetch('/system-logs/api/pending')
+            .then(r => r.ok ? r.json() : Promise.reject(r.status))
+            .then(data => {
+                if (!Array.isArray(data) || data.length === 0) {
+                    list.innerHTML = '<div style="text-align:center;padding:24px;color:#5a6564;">No pending requests</div>';
+                    return;
+                }
+                list.innerHTML = data.map(r => `
+                    <div style="padding:12px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;gap:12px;">
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-weight:600;font-size:13px;color:#1a1f1e;">
+                                ${esc(r.requesterName)}
+                                <span style="color:#5a6564;font-weight:400;">(${esc(r.requesterRole)})</span>
+                            </div>
+                            <div style="font-size:12px;color:#4a5655;margin-top:4px;">${esc(r.description)}</div>
+                            <div style="font-size:11px;color:#5a6564;margin-top:4px;">${esc(r.timestamp)}</div>
+                        </div>
+                        <button class="btn btn-sm btn-success align-self-start"
+                                onclick="resolveAssistanceRequest(${r.id})">Resolve</button>
+                    </div>
+                `).join('');
+            })
+            .catch(err => {
+                console.error('Failed to load pending requests', err);
+                list.innerHTML = '<div style="text-align:center;padding:24px;color:#e74c3c;">Could not load requests</div>';
+            });
+    }
+
+    function resolveAssistanceRequest(id) {
+        fetch('/system-logs/resolve/' + id, { method: 'POST' })
+            .then(r => r.json())
+            .then(() => {
+                loadPendingRequests();
+                pollNotifications();
+                fetch('/system-logs/api/pending')
+                    .then(res => res.json())
+                    .then(pending => {
+                        const dot = document.getElementById('dot-assistance');
+                        if (dot) {
+                            dot.textContent = (Array.isArray(pending) && pending.length > 0) ? pending.length : '';
+                        }
+                    })
+                    .catch(() => {});
+            })
+            .catch(err => console.error('Resolve failed', err));
+    }
+
     function openNotificationModal() {
         document.getElementById('notificationModal').style.display = 'block';
         loadNotifications();
@@ -1236,7 +1281,12 @@
     function closeNotificationModal() {
         document.getElementById('notificationModal').style.display = 'none';
     }
-    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeNotificationModal(); });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeNotificationModal();
+            closePendingRequestsModal();
+        }
+    });
 
     function loadNotifications() {
         fetch('/api/dashboard/notifications')
@@ -1276,25 +1326,23 @@
         return map[cls] || '#3498db';
     }
 
-    // ============================================
-    // NOTIFICATION BADGE POLLING
-    // ============================================
     function pollNotifications() {
         fetch('/api/dashboard/notifications?countOnly=true')
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 var badge = document.getElementById('notifBadge');
+                if (!badge) return;
                 var count = data.count || 0;
-                badge.style.display = count > 0 ? 'inline' : 'none';
+                badge.classList.toggle('on', count > 0);
             })
-            .catch(function() { document.getElementById('notifBadge').style.display = 'none'; });
+            .catch(function() {
+                const badge = document.getElementById('notifBadge');
+                if (badge) badge.classList.remove('on');
+            });
     }
     pollNotifications();
     setInterval(pollNotifications, 30000);
 
-    // ============================================
-    // REAL-TIME DASHBOARD POLLING
-    // ============================================
     let pollingInterval = null;
     let isModalOpen = false;
     let pendingUpdates = false;
@@ -1337,7 +1385,9 @@
 
             if (data.newNotifications) {
                 data.newNotifications.forEach(function(n) {
-                    showToast(n.title, n.description, n.link, '<i class="bi ' + n.icon + '"></i>');
+                    if (typeof showToast === 'function') {
+                        showToast(n.title, n.description, n.link, '<i class="bi ' + n.icon + '"></i>');
+                    }
                 });
             }
             if (isModalOpen && !forceUpdate) { pendingUpdates = true; return; }
@@ -1355,12 +1405,15 @@
             if (data.upcomingProgramsChanged)   loadUpcomingPrograms();
 
             const role = document.getElementById('dataCurrentRole').value;
-            if (role === 'ADMIN' || role === 'BARANGAY-CAPTAIN' || role === 'SECRETARY') {
-                if (data.resolvedIncidents !== undefined || data.unresolvedIncidents !== undefined) {
-                    updateCharts(data.resolvedIncidents || 0, data.unresolvedIncidents || 0,
-                                 data.pendingDocuments || 0, data.allReports || 0);
+                if (role === 'ADMIN' || role === 'BARANGAY-CAPTAIN' || role === 'SECRETARY' || role === 'SECRETARIAT STAFF') {
+                    if (data.resolvedIncidents !== undefined || data.unresolvedIncidents !== undefined) {
+                        var blotter = parseInt(document.getElementById('dataBlotterPending').value) || 0;
+                        if (data.blotterPending !== undefined) blotter = data.blotterPending;
+
+                        updateCharts(data.resolvedIncidents || 0, data.unresolvedIncidents || 0,
+                                    data.pendingDocuments || 0, data.allReports || 0, blotter);
+                    }
                 }
-            }
             if (data.resolvedIncidents !== undefined)   document.getElementById('dataResolved').value   = data.resolvedIncidents;
             if (data.unresolvedIncidents !== undefined) document.getElementById('dataUnresolved').value = data.unresolvedIncidents;
         } catch (error) { console.error("Polling error:", error); }
@@ -1392,99 +1445,94 @@
         return false;
     }
 
-         function formatRelativeTime(dateString) {
-    if (!dateString) return '';
-    
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const diffWeeks = Math.floor(diffDays / 7);
-    const diffMonths = Math.floor(diffDays / 30);
-    const diffYears = Math.floor(diffDays / 365);
-    
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m`;
-    if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays}d`;
-    if (diffWeeks === 1) return '1w';
-    if (diffWeeks < 4) return `${diffWeeks}w`;
-    if (diffMonths === 1) return '1mo';
-    if (diffMonths < 12) return `${diffMonths}mo`;
-    if (diffYears === 1) return '1y';
-    return `${diffYears}y`;
-}
+    function formatRelativeTime(dateString) {
+        if (!dateString) return '';
 
-// Function to update announcement date with relative time
-function updateAnnouncementRelativeDate() {
-    const originalDateSpan = document.getElementById('announceOriginalDate');
-    const relativeSpan = document.getElementById('announceRelativeDate');
-    
-    if (originalDateSpan && originalDateSpan.textContent && relativeSpan) {
-        // Get the raw date from the data attribute or parse from text
-        const dateText = originalDateSpan.textContent;
-        // Parse "MMM dd, yyyy" format (e.g., "Jan 15, 2024")
-        const parsedDate = new Date(dateText);
-        
-        if (!isNaN(parsedDate.getTime())) {
-            const relativeText = formatRelativeTime(parsedDate);
-            relativeSpan.textContent = relativeText;
-        } else {
-            // Fallback: try to get from Thymeleaf data-date attribute if available
-            const dataDate = originalDateSpan.getAttribute('data-date');
-            if (dataDate) {
-                relativeSpan.textContent = formatRelativeTime(dataDate);
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        const diffWeeks = Math.floor(diffDays / 7);
+        const diffMonths = Math.floor(diffDays / 30);
+        const diffYears = Math.floor(diffDays / 365);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins}m`;
+        if (diffHours < 24) return `${diffHours}h`;
+        if (diffDays === 1) return 'Yesterday';
+        if (diffDays < 7) return `${diffDays}d`;
+        if (diffWeeks === 1) return '1w';
+        if (diffWeeks < 4) return `${diffWeeks}w`;
+        if (diffMonths === 1) return '1mo';
+        if (diffMonths < 12) return `${diffMonths}mo`;
+        if (diffYears === 1) return '1y';
+        return `${diffYears}y`;
+    }
+
+    function updateAnnouncementRelativeDate() {
+        const originalDateSpan = document.getElementById('announceOriginalDate');
+        const relativeSpan = document.getElementById('announceRelativeDate');
+
+        if (originalDateSpan && originalDateSpan.textContent && relativeSpan) {
+            const dateText = originalDateSpan.textContent;
+            const parsedDate = new Date(dateText);
+
+            if (!isNaN(parsedDate.getTime())) {
+                relativeSpan.textContent = formatRelativeTime(parsedDate);
+            } else {
+                const dataDate = originalDateSpan.getAttribute('data-date');
+                if (dataDate) {
+                    relativeSpan.textContent = formatRelativeTime(dataDate);
+                }
             }
         }
     }
-}
 
-function updateAnnouncement(announcement) {
-    if (!announcement || !announcement.title) return false;
-    if (announcement.title === lastAnnouncementId) return false;
-    lastAnnouncementId = announcement.title;
-    const announceBox         = document.getElementById('announcementBox');
-    const noAnnouncement      = document.getElementById('noAnnouncement');
-    const announcementContent = document.getElementById('announcementContent');
-    if (noAnnouncement)      noAnnouncement.style.display = 'none';
-    if (announcementContent) announcementContent.style.display = 'flex';
-    const titleEl = document.getElementById('announceTitle');
-    if (titleEl) titleEl.textContent = announcement.title;
-    const contentEl = document.getElementById('announceContent');
-    if (contentEl) contentEl.textContent = announcement.content || '';
-    
-    // Update original date (below image)
-    const originalDateEl = document.getElementById('announceOriginalDate');
-    if (originalDateEl && announcement.datePosted) {
-        const date = new Date(announcement.datePosted);
-        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const formattedDate = `${months[date.getMonth()]} ${String(date.getDate()).padStart(2, '0')}, ${date.getFullYear()}`;
-        originalDateEl.textContent = formattedDate;
-        originalDateEl.setAttribute('data-date', announcement.datePosted);
-        
-        // Update relative date in badge
-        const relativeDateEl = document.getElementById('announceRelativeDate');
-        if (relativeDateEl) {
-            relativeDateEl.textContent = formatRelativeTime(announcement.datePosted);
+    function updateAnnouncement(announcement) {
+        if (!announcement || !announcement.title) return false;
+        if (announcement.title === lastAnnouncementId) return false;
+        lastAnnouncementId = announcement.title;
+        const announceBox         = document.getElementById('announcementBox');
+        const noAnnouncement      = document.getElementById('noAnnouncement');
+        const announcementContent = document.getElementById('announcementContent');
+        if (noAnnouncement)      noAnnouncement.style.display = 'none';
+        if (announcementContent) announcementContent.style.display = 'flex';
+        const titleEl = document.getElementById('announceTitle');
+        if (titleEl) titleEl.textContent = announcement.title;
+        const contentEl = document.getElementById('announceContent');
+        if (contentEl) contentEl.textContent = announcement.content || '';
+
+        const originalDateEl = document.getElementById('announceOriginalDate');
+        if (originalDateEl && announcement.datePosted) {
+            const date = new Date(announcement.datePosted);
+            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const formattedDate = `${months[date.getMonth()]} ${String(date.getDate()).padStart(2, '0')}, ${date.getFullYear()}`;
+            originalDateEl.textContent = formattedDate;
+            originalDateEl.setAttribute('data-date', announcement.datePosted);
+
+            const relativeDateEl = document.getElementById('announceRelativeDate');
+            if (relativeDateEl) {
+                relativeDateEl.textContent = formatRelativeTime(announcement.datePosted);
+            }
         }
-    }
-    
-    const imageEl = document.getElementById('announceImage');
-    if (announcement.image) {
-        if (imageEl) { imageEl.src = announcement.image; imageEl.style.display = 'block'; }
-    } else if (imageEl) { imageEl.style.display = 'none'; }
-    const badge = document.getElementById('announceBadge');
-    if (badge) { badge.style.display = 'inline-block'; }
-    if (announceBox) {
-        announceBox.classList.add('new-content');
-        setTimeout(() => announceBox.classList.remove('new-content'), 3000);
-    }
-    return true;
-}
 
+        const imageEl = document.getElementById('announceImage');
+        if (announcement.image && announcement.id) {
+            if (imageEl) {
+                imageEl.src = '/media/announcement/' + announcement.id;
+                imageEl.style.display = 'block';
+            }
+        } else if (imageEl) { imageEl.style.display = 'none'; }
+        const badge = document.getElementById('announceBadge');
+        if (badge) { badge.style.display = 'inline-block'; }
+        if (announceBox) {
+            announceBox.classList.add('new-content');
+            setTimeout(() => announceBox.classList.remove('new-content'), 3000);
+        }
+        return true;
+    }
 
     function updateActivityLogs(logs) {
         if (!logs || logs.length === 0) return false;
@@ -1518,7 +1566,7 @@ function updateAnnouncement(announcement) {
     function startPolling() {
         if (pollingInterval) clearInterval(pollingInterval);
         initCurrentStats();
-        pollingInterval = setInterval(() => pollDashboard(false), 5000);
+        pollingInterval = setInterval(() => pollDashboard(false), 15000);
     }
 
     function formatDate(dateString) {
@@ -1528,80 +1576,80 @@ function updateAnnouncement(announcement) {
         return `${months[date.getMonth()]} ${String(date.getDate()).padStart(2, '0')}, ${date.getFullYear()}`;
     }
 
-    // ============================================
-    // CHARTS
-    // ============================================
+    const CHART_ANIM_OFF = { duration: 0 };
 
     function initDemographicCharts() {
-    const seniorMale = parseInt(document.getElementById('dataSeniorMale')?.value) || 0;
-    const seniorFemale = parseInt(document.getElementById('dataSeniorFemale')?.value) || 0;
-    
-    if (document.getElementById('seniorGenderDonut') && (seniorMale > 0 || seniorFemale > 0)) {
-        new Chart(document.getElementById('seniorGenderDonut'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Male Seniors', 'Female Seniors'],
-                datasets: [{
-                    data: [seniorMale, seniorFemale],
-                    backgroundColor: ['#3498db', '#e74c3c'],
-                    borderWidth: 0,
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '60%',
-                plugins: { legend: { display: false } },
-                tooltip: {
-                    callbacks: {
-                        label: function(ctx) {
-                            let total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                            let pct = total > 0 ? Math.round(ctx.parsed * 100 / total) : 0;
-                            return ctx.label + ': ' + ctx.parsed + ' (' + pct + '%)';
-                        }
-                    }
-                }
-            }
-        });
-    }
+        const seniorMale = parseInt(document.getElementById('dataSeniorMale')?.value) || 0;
+        const seniorFemale = parseInt(document.getElementById('dataSeniorFemale')?.value) || 0;
 
-    const pwdChildren = parseInt(document.getElementById('dataPwdChildren')?.value) || 0;
-    const pwdAdultMales = parseInt(document.getElementById('dataPwdAdultMales')?.value) || 0;
-    const pwdAdultFemales = parseInt(document.getElementById('dataPwdAdultFemales')?.value) || 0;
-    const pwdSeniors = parseInt(document.getElementById('dataPwdSeniors')?.value) || 0;
-
-    if (document.getElementById('pwdBreakdownChart')) {
-        const totalPWD = pwdChildren + pwdAdultMales + pwdAdultFemales + pwdSeniors;
-        
-        if (totalPWD > 0) {
-            new Chart(document.getElementById('pwdBreakdownChart'), {
-                type: 'bar',
+        if (document.getElementById('seniorGenderDonut') && (seniorMale > 0 || seniorFemale > 0)) {
+            new Chart(document.getElementById('seniorGenderDonut'), {
+                type: 'doughnut',
                 data: {
-                    labels: ['Children', 'Adult Males', 'Adult Females', 'Seniors'],
+                    labels: ['Male Seniors', 'Female Seniors'],
                     datasets: [{
-                        data: [pwdChildren, pwdAdultMales, pwdAdultFemales, pwdSeniors],
-                        backgroundColor: ['#3498db', '#27ae60', '#8e44ad', '#f39c12'],
-                        borderRadius: 4,
-                        borderSkipped: false
+                        data: [seniorMale, seniorFemale],
+                        backgroundColor: ['#3498db', '#e74c3c'],
+                        borderWidth: 0,
+                        hoverOffset: 4
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    cutout: '60%',
+                    animation: CHART_ANIM_OFF,
                     plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { stepSize: 1, color: '#9aa4a2' }, grid: { color: '#f0f0f0' } },
-                        x: { grid: { display: false }, ticks: { color: '#6b7675' } }
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                let total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                let pct = total > 0 ? Math.round(ctx.parsed * 100 / total) : 0;
+                                return ctx.label + ': ' + ctx.parsed + ' (' + pct + '%)';
+                            }
+                        }
                     }
                 }
             });
-        } else {
-            const parent = document.getElementById('pwdBreakdownChart').parentElement;
-            parent.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:180px; color:#9aa4a2; font-style:italic;">No PWDs registered in the barangay</div>';
+        }
+
+        const pwdChildren = parseInt(document.getElementById('dataPwdChildren')?.value) || 0;
+        const pwdAdultMales = parseInt(document.getElementById('dataPwdAdultMales')?.value) || 0;
+        const pwdAdultFemales = parseInt(document.getElementById('dataPwdAdultFemales')?.value) || 0;
+        const pwdSeniors = parseInt(document.getElementById('dataPwdSeniors')?.value) || 0;
+
+        if (document.getElementById('pwdBreakdownChart')) {
+            const totalPWD = pwdChildren + pwdAdultMales + pwdAdultFemales + pwdSeniors;
+
+            if (totalPWD > 0) {
+                new Chart(document.getElementById('pwdBreakdownChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Children', 'Adult Males', 'Adult Females', 'Seniors'],
+                        datasets: [{
+                            data: [pwdChildren, pwdAdultMales, pwdAdultFemales, pwdSeniors],
+                            backgroundColor: ['#3498db', '#27ae60', '#8e44ad', '#f39c12'],
+                            borderRadius: 4,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: CHART_ANIM_OFF,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { stepSize: 1, color: '#5a6564' }, grid: { color: '#f0f0f0' } },
+                            x: { grid: { display: false }, ticks: { color: '#4a5655' } }
+                        }
+                    }
+                });
+            } else {
+                const parent = document.getElementById('pwdBreakdownChart').parentElement;
+                parent.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:180px; color:#5a6564; font-style:italic;">No PWDs registered in the barangay</div>';
+            }
         }
     }
-}
 
     function initCharts() {
         const resolved   = parseInt(document.getElementById('dataResolved')?.value || '0') || 0;
@@ -1609,25 +1657,24 @@ function updateAnnouncement(announcement) {
         const pending    = parseInt(document.getElementById('dataPending')?.value || '0') || 0;
         const allReports = parseInt(document.getElementById('dataAllReports')?.value || '0') || 0;
         const blotter    = parseInt(document.getElementById('dataBlotterPending')?.value || '0') || 0;
-        
-            // Check if canvas elements exist before creating charts
-            if (document.getElementById('incidentDonut') && 
-                document.getElementById('rateChart') && 
-                document.getElementById('workloadChart')) {
-                createCharts(resolved, unresolved, pending, allReports, blotter);
-            }
-        }
 
-        function createCharts(resolved, unresolved, pending, allReports, blotter) {
+        if (document.getElementById('incidentDonut') &&
+            document.getElementById('rateChart') &&
+            document.getElementById('workloadChart')) {
+            createCharts(resolved, unresolved, pending, allReports, blotter);
+        }
+    }
+
+    function createCharts(resolved, unresolved, pending, allReports, blotter) {
         const incidentCanvas = document.getElementById('incidentDonut');
         const rateCanvas = document.getElementById('rateChart');
         const workloadCanvas = document.getElementById('workloadChart');
-        
+
         if (!incidentCanvas || !rateCanvas || !workloadCanvas) {
             console.warn('Chart canvases not found - skipping chart creation');
             return;
         }
-        
+
         Chart.defaults.font.family = "'DM Sans', Arial, sans-serif";
         Chart.defaults.font.size   = 11;
         if (chartInstances.incidentDonut) chartInstances.incidentDonut.destroy();
@@ -1642,6 +1689,7 @@ function updateAnnouncement(announcement) {
             },
             options: {
                 responsive: true, maintainAspectRatio: false, cutout: '65%',
+                animation: CHART_ANIM_OFF,
                 plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.parsed } } }
             }
         });
@@ -1659,6 +1707,7 @@ function updateAnnouncement(announcement) {
             },
             options: {
                 responsive: true, maintainAspectRatio: false, cutout: '72%',
+                animation: CHART_ANIM_OFF,
                 plugins: { legend: { display: false } }
             }
         });
@@ -1671,22 +1720,36 @@ function updateAnnouncement(announcement) {
             },
             options: {
                 indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                animation: CHART_ANIM_OFF,
                 plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.parsed.x } } },
                 scales: {
-                    x: { grid: { color: '#f0f0f0' }, ticks: { color: '#9aa4a2', stepSize: 1 }, beginAtZero: true },
-                    y: { grid: { display: false }, ticks: { color: '#6b7675' } }
+                    x: { grid: { color: '#f0f0f0' }, ticks: { color: '#5a6564', stepSize: 1 }, beginAtZero: true },
+                    y: { grid: { display: false }, ticks: { color: '#4a5655' } }
                 }
             }
         });
     }
 
     function updateCharts(resolved, unresolved, pending, allReports, blotter) {
-        createCharts(resolved, unresolved, pending, allReports, blotter);
+        if (!chartInstances.incidentDonut || !chartInstances.rateChart || !chartInstances.workloadChart) {
+            createCharts(resolved, unresolved, pending, allReports, blotter);
+            return;
+        }
+
+        chartInstances.incidentDonut.data.datasets[0].data = [resolved, unresolved];
+        chartInstances.incidentDonut.update();
+
+        var total = resolved + unresolved;
+        var rate = total > 0 ? Math.round(resolved * 100 / total) : 0;
+        chartInstances.rateChart.data.datasets[0].data = [rate, 100 - rate];
+        chartInstances.rateChart.update();
+        document.getElementById('ratePctLabel').textContent = rate + '%';
+        document.getElementById('rateSubLabel').textContent = resolved + ' of ' + total + ' resolved';
+
+        chartInstances.workloadChart.data.datasets[0].data = [blotter, pending, allReports];
+        chartInstances.workloadChart.update();
     }
 
-    // ============================================
-    // DYNAMIC CALENDAR
-    // ============================================
     const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     const today    = new Date();
     let   calYear  = today.getFullYear();
@@ -1752,9 +1815,6 @@ function updateAnnouncement(announcement) {
         }
     }
 
-    // ============================================
-    // UPCOMING PROGRAMS
-    // ============================================
     async function loadUpcomingPrograms() {
         const container = document.getElementById('upcomingProgramsList');
         try {
@@ -1793,25 +1853,18 @@ function updateAnnouncement(announcement) {
         }
     }
 
-    // ============================================
-    // UTILITY
-    // ============================================
     function esc(str) {
-        if (!str) return '';
-        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    // ============================================
-    // INIT
-    // ============================================
-    window.onload = function () {
+    window.addEventListener('DOMContentLoaded', function () {
         initCalendar();
         loadUpcomingPrograms();
         fetchWeather();
-        setInterval(fetchWeather, 30 * 60 * 1000);
+        weatherInterval = setInterval(fetchWeather, 30 * 60 * 1000);
         trackModalState();
 
-        // populate the relative-time badge on load, then keep it fresh
         updateAnnouncementRelativeDate();
         setInterval(updateAnnouncementRelativeDate, 60 * 1000);
 
@@ -1822,10 +1875,27 @@ function updateAnnouncement(announcement) {
         }
 
         startPolling();
-    };
+    });
 
-    window.addEventListener('beforeunload', function() {
+    window.addEventListener('pagehide', function() {
         if (pollingInterval) clearInterval(pollingInterval);
+        if (weatherInterval) clearInterval(weatherInterval);
+    });
+
+    window.addEventListener('pageshow', function(e) {
+        if (e.persisted) {
+            startPolling();
+            weatherInterval = setInterval(fetchWeather, 30 * 60 * 1000);
+        }
+    });
+
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            if (pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
+        } else {
+            pollDashboard(false);
+            startPolling();
+        }
     });
 
 </script>

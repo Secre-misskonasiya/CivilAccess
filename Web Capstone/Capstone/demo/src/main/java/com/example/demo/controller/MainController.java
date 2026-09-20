@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import java.net.URI;
 import java.security.Principal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -12,10 +13,13 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -135,6 +139,116 @@ public class MainController {
     }
 
     // =========================================================
+    // IMAGE HELPER — validates the upload, shrinks it to a
+    // 128x128 JPEG, and returns it as a data URI
+    // =========================================================
+
+    private String toAvatarDataUri(org.springframework.web.multipart.MultipartFile file) throws java.io.IOException {
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("Profile picture must be an image file.");
+        }
+
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        net.coobird.thumbnailator.Thumbnails.of(file.getInputStream())
+                .size(128, 128)
+                .crop(net.coobird.thumbnailator.geometry.Positions.CENTER)
+                .outputFormat("jpg")
+                .outputQuality(0.8)
+                .toOutputStream(out);
+
+        return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(out.toByteArray());
+    }
+
+    // =========================================================
+    // AVATAR ENDPOINT — serves the profile picture as a real
+    // image file with cache headers so browsers stop re-downloading
+    // the whole dashboard HTML just to render one avatar.
+    // =========================================================
+
+    @GetMapping("/media/avatar/{id}")
+    public ResponseEntity<?> getAvatar(@PathVariable Long id) {
+        AdminUser admin = adminUserService.getAdminById(id);
+        if (admin == null) {
+            return ResponseEntity.notFound().build();
+        }
+        String profilePicture = admin.getProfilePicture();
+        if (profilePicture == null || profilePicture.isBlank()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            if (profilePicture.startsWith("data:image")) {
+                int commaIdx = profilePicture.indexOf(',');
+                if (commaIdx < 0) {
+                    return ResponseEntity.notFound().build();
+                }
+                String meta = profilePicture.substring(5, commaIdx);
+                String base64 = profilePicture.substring(commaIdx + 1);
+                byte[] bytes = Base64.getDecoder().decode(base64);
+
+                MediaType mediaType = meta.startsWith("image/png")
+                        ? MediaType.IMAGE_PNG
+                        : MediaType.IMAGE_JPEG;
+
+                return ResponseEntity.ok()
+                        .contentType(mediaType)
+                        .cacheControl(CacheControl.maxAge(7, TimeUnit.DAYS).cachePublic().immutable())
+                        .body(bytes);
+            }
+
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(URI.create(profilePicture))
+                    .cacheControl(CacheControl.maxAge(1, TimeUnit.DAYS).cachePublic())
+                    .build();
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // =========================================================
+    // ANNOUNCEMENT IMAGE ENDPOINT — same idea as avatar but for
+    // announcement images that are also stored as Base64 data URIs.
+    // =========================================================
+
+    @GetMapping("/media/announcement/{id}")
+    public ResponseEntity<?> getAnnouncementImage(@PathVariable Long id) {
+        try {
+            var announcement = announcementsService.getById(id);
+            if (announcement == null || announcement.getImage() == null) {
+                return ResponseEntity.notFound().build();
+            }
+            String img = announcement.getImage();
+
+            if (img.startsWith("data:image")) {
+                int commaIdx = img.indexOf(',');
+                if (commaIdx < 0) return ResponseEntity.notFound().build();
+                String meta   = img.substring(5, commaIdx);
+                String base64 = img.substring(commaIdx + 1);
+                byte[] bytes  = Base64.getDecoder().decode(base64);
+
+                MediaType mediaType = meta.startsWith("image/png")  ? MediaType.IMAGE_PNG
+                                    : meta.startsWith("image/webp") ? MediaType.parseMediaType("image/webp")
+                                    : MediaType.IMAGE_JPEG;
+
+                return ResponseEntity.ok()
+                        .contentType(mediaType)
+                        .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS).cachePublic().immutable())
+                        .body(bytes);
+            }
+
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(URI.create(img))
+                    .cacheControl(CacheControl.maxAge(1, TimeUnit.DAYS).cachePublic())
+                    .build();
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // =========================================================
     // AUTH / NAVIGATION
     // =========================================================
     @GetMapping("/")
@@ -221,7 +335,6 @@ public class MainController {
                 ? adminUserService.getAdminById(admin.getId())
                 : null;
 
-        // Determine where to redirect after save
         String successRedirect = "redirect:/account";
         String errorRedirect   = "redirect:/account";
         if ("profile".equals(redirectTo)) {
@@ -243,14 +356,9 @@ public class MainController {
                 }
                 existingAdmin.setBirthDate(admin.getBirthDate());
 
-                // Handle profile picture: a freshly uploaded file always wins.
-                // Fall back to a Supabase-style URL if one was supplied instead.
-                // If neither is present, leave existingAdmin's current picture untouched.
                 if (file != null && !file.isEmpty()) {
-                    String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
-                    String dataUri = "data:" + file.getContentType() + ";base64," + base64Image;
-                    existingAdmin.setProfilePicture(dataUri);
-                    System.out.println("Saved uploaded profile picture (" + file.getContentType() + ", " + file.getSize() + " bytes)");
+                    existingAdmin.setProfilePicture(toAvatarDataUri(file));
+                    System.out.println("Saved resized profile picture (" + file.getSize() + " bytes uploaded)");
                 } else if (profilePictureUrl != null && !profilePictureUrl.isBlank()) {
                     existingAdmin.setProfilePicture(profilePictureUrl);
                     System.out.println("Saving profile picture URL: " + profilePictureUrl);
@@ -279,7 +387,6 @@ public class MainController {
                     request.getRemoteAddr(), "Success"
                 );
                 
-                // Update modification timestamp
                 lastAccountsModificationTime = System.currentTimeMillis();
 
             } else {
@@ -292,12 +399,9 @@ public class MainController {
                     return errorRedirect;
                 }
 
-                // Handle profile picture for a brand-new account, same rule as the edit path.
                 if (file != null && !file.isEmpty()) {
-                    String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
-                    String dataUri = "data:" + file.getContentType() + ";base64," + base64Image;
-                    admin.setProfilePicture(dataUri);
-                    System.out.println("Saved uploaded profile picture (" + file.getContentType() + ", " + file.getSize() + " bytes)");
+                    admin.setProfilePicture(toAvatarDataUri(file));
+                    System.out.println("Saved resized profile picture (" + file.getSize() + " bytes uploaded)");
                 } else if (profilePictureUrl != null && !profilePictureUrl.isBlank()) {
                     admin.setProfilePicture(profilePictureUrl);
                 }
@@ -310,7 +414,6 @@ public class MainController {
                     request.getRemoteAddr(), "Success"
                 );
                 
-                // Update modification timestamp
                 lastAccountsModificationTime = System.currentTimeMillis();
             }
 
@@ -329,7 +432,6 @@ public class MainController {
         return successRedirect;
     }
 
-    // Prevents VARCHAR(255) overflow in activity logs
     private String truncate(String text) {
         if (text == null) return null;
         return text.length() > 250 ? text.substring(0, 250) + "..." : text;
@@ -352,7 +454,6 @@ public class MainController {
                     request.getRemoteAddr(), "Success"
                 );
                 
-                // Update modification timestamp
                 lastAccountsModificationTime = System.currentTimeMillis();
             }
             return "redirect:/account";
@@ -375,7 +476,6 @@ public class MainController {
                     request.getRemoteAddr(), "Success"
                 );
             
-            // Update modification timestamp
             lastAccountsModificationTime = System.currentTimeMillis();
         }
         return "redirect:/account";
@@ -399,7 +499,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
     resident.setAccount_status("VERIFIED");
     residentUserService.saveResident(resident);
     
-    // Update modification timestamp
     lastAccountsModificationTime = System.currentTimeMillis();
     
     return ResponseEntity.ok().body("{\"success\":true}");
@@ -443,7 +542,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
 
         residentUserService.saveResident(resident);
         
-        // Update modification timestamp
         lastAccountsModificationTime = System.currentTimeMillis();
         
         return "redirect:/account";
@@ -460,7 +558,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
         }
 
         resident.setStatus("ACTIVE");
-        // consider NOT overwriting account_status here — see point 3 above
         residentUserService.saveResident(resident);
 
         activityLogService.log(
@@ -473,10 +570,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
         return ResponseEntity.ok(Map.of("success", true));
     }
 
-// =========================================================
-// SIMPLE POLLING ENDPOINT (like Safety Reports)
-// =========================================================
-
     @GetMapping("/accounts/api/poll")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> pollAccounts() {
@@ -484,16 +577,13 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
         
         response.put("lastModified", lastAccountsModificationTime);
         
-        // Get all admin accounts
         List<AdminUserDTO> allAdmins = adminUserService.getAllAdminsForTable();
         
-        // Active employees (not archived)
         List<Map<String, Object>> activeEmployees = allAdmins.stream()
             .filter(a -> !"Archived".equalsIgnoreCase(a.empstatus()))
             .map(this::mapAdminToPollResponse)
             .collect(Collectors.toList());
         
-        // Archived employees
         List<Map<String, Object>> archivedEmployees = allAdmins.stream()
             .filter(a -> "Archived".equalsIgnoreCase(a.empstatus()))
             .map(this::mapAdminToPollResponse)
@@ -502,16 +592,13 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
         response.put("employeeAccounts", activeEmployees);
         response.put("archivedEmployeeAccounts", archivedEmployees);
         
-        // Get all resident accounts
         List<ResidentDTO> allResidents = residentUserService.getAllResidentsDTO();
         
-        // Active residents (not archived)
         List<Map<String, Object>> activeResidents = allResidents.stream()
             .filter(r -> !"Archived".equalsIgnoreCase(r.status()))
             .map(this::mapResidentToPollResponse)
             .collect(Collectors.toList());
         
-        // Archived residents
         List<Map<String, Object>> archivedResidents = allResidents.stream()
             .filter(r -> "Archived".equalsIgnoreCase(r.status()))
             .map(this::mapResidentToPollResponse)
@@ -520,7 +607,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
         response.put("residentAccounts", activeResidents);
         response.put("archivedResidentAccounts", archivedResidents);
         
-        // Lists for validation (emails, usernames, phones)
         response.put("emailList", adminUserService.extractEmails(allAdmins));
         response.put("usernameList", adminUserService.extractUsernames(allAdmins));
         response.put("phoneList", adminUserService.extractPhoneNumbers(allAdmins));
@@ -528,7 +614,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
         return ResponseEntity.ok(response);
     }
 
-    // Helper method to map AdminUserDTO to poll response Map
     private Map<String, Object> mapAdminToPollResponse(AdminUserDTO admin) {
         Map<String, Object> map = new HashMap<>();
         map.put("id", admin.id());
@@ -547,7 +632,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
         return map;
     }
 
-    // Helper method to map ResidentDTO to poll response Map
     private Map<String, Object> mapResidentToPollResponse(ResidentDTO resident) {
         Map<String, Object> map = new HashMap<>();
         map.put("id", resident.id() != null ? resident.id().toString() : "");
@@ -675,12 +759,10 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
         if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Your Account is deactivated.");
         }
-        // 🔥 NEW: TANOD RESTRICTION
         if ("TANOD".equalsIgnoreCase(admin.getRole())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Tanod accounts can only log in through the mobile app.");
         }
-        // Validate password if provided
         if (password != null && !passwordEncoder.matches(password, admin.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password.");
         }
@@ -706,8 +788,8 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 model.addAttribute("currentrole", role);
                 model.addAttribute("currentstatus", admin.getEmpstatus());
                 model.addAttribute("currentAdminProfilePicture", admin.getProfilePicture());
+                model.addAttribute("currentAdminId", admin.getId());
                 
-                // Load detailed census demographics
                 try {
                     Map<String, Object> demoData = censusRecordService.getDetailedDemographics();
                     
@@ -742,7 +824,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                     System.err.println("Error loading census demographics: " + e.getMessage());
                 }
                 
-                // Core counts
                 try {
                     model.addAttribute("residents", residentUserService.countResidents());
                 } catch (Exception e) {
@@ -779,7 +860,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                     return "redirect:/logout";
                 }
                 
-                // Privileged role data - ALWAYS add with safe defaults
                 try {
                     model.addAttribute("recentLogs", activityLogService.getRecentLogs(5));
                 } catch (Exception e) {
@@ -818,6 +898,7 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 model.addAttribute("currentrole", "USER");
                 model.addAttribute("currentstatus", "Unknown");
                 model.addAttribute("currentAdminProfilePicture", "");
+                model.addAttribute("currentAdminId", null);
                 model.addAttribute("householdCount", 0);
                 model.addAttribute("childrenCount", 0);
                 model.addAttribute("adultMalesCount", 0);
@@ -855,7 +936,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
             
             List<Map<String, Object>> notifications = new ArrayList<>();
             
-            // 1. Pending Document Requests
             try {
                 long pendingDocuments = documentService.countPending();
                 if (pendingDocuments > 0) {
@@ -868,13 +948,11 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 }
             } catch (Exception e) {}
             
-            // 2. SAFETY REPORTS - ADD THIS SECTION
             try {
                 Map<String, Long> safetyStats = safetyReportService.getStatusCounts();
-                // Count incoming/unverified reports only
                 long incomingReports = safetyStats.getOrDefault("unverified", 0L);
                 
-                System.out.println("Safety Reports - incoming count: " + incomingReports); // Debug log
+                System.out.println("Safety Reports - incoming count: " + incomingReports);
                 
                 if (incomingReports > 0) {
                     notifications.add(createNotification(
@@ -889,7 +967,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 e.printStackTrace();
             }
             
-            // 3. SOS Alerts
             try {
                 long incomingSosCount = sosService.countByStatus("INCOMING");
                 if (incomingSosCount > 0) {
@@ -904,7 +981,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 System.err.println("Error getting SOS alerts: " + e.getMessage());
             }
             
-            // 4. Latest Announcement
             try {
                 var latestAnnouncement = announcementsService.getLatest();
                 if (latestAnnouncement != null && latestAnnouncement.getTitle() != null) {
@@ -919,7 +995,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 }
             } catch (Exception e) {}
             
-            // 5. Pending Resident Verifications
             try {
                 List<ResidentDTO> allResidents = residentUserService.getAllResidentsDTO();
                 long unverifiedResidents = allResidents.stream()
@@ -937,7 +1012,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 }
             } catch (Exception e) {}
             
-            // 6. Upcoming Programs
             try {
                 java.time.LocalDate today = java.time.LocalDate.now();
                 var allEvents = programCalendarService.getAllEvents();
@@ -958,7 +1032,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 System.err.println("Error getting programs: " + e.getMessage());
             }
 
-            // 7. Contact Help - Incoming Messages
             try {
                 List<ContactHelpRequest> incomingContacts = contactHelpService.getRequestsByStatus("INCOMING");
                 long incomingCount = incomingContacts.size();
@@ -972,10 +1045,8 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                     ));
                 }
             } catch (Exception e) {
-                // ContactHelpService might not be available
             }
 
-            // 8. Overdue Rentals
             try {
                 rentalService.updateOverdueStatus();
                 int overdueRentals = rentalService.getOverdueRentals().size();
@@ -991,7 +1062,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 System.err.println("Error getting overdue rentals: " + e.getMessage());
             }
 
-            // 9. Rentals due within 2 days
             try {
                 java.time.LocalDate today = java.time.LocalDate.now();
                 long dueSoon = rentalService.getActiveRentals().stream()
@@ -1013,12 +1083,10 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 System.err.println("Error getting due-soon rentals: " + e.getMessage());
             }
 
-            // Return count only
             if (countOnly) {
                 return ResponseEntity.ok(Map.of("count", (long) notifications.size()));
             }
             
-            // If no notifications, show "all clear"
             if (notifications.isEmpty()) {
                 notifications.add(createNotification(
                     "bi-check-circle-fill", "programs",
@@ -1030,21 +1098,16 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
             
             return ResponseEntity.ok(notifications);
         }
-        // =========================================================
-        // SIDEBAR COUNTS
-        // =========================================================
 
         @GetMapping("/api/sidebar/counts")
         @ResponseBody
         public ResponseEntity<Map<String, Integer>> getSidebarCounts(Principal principal) {
             Map<String, Integer> counts = new HashMap<>();
 
-            // Announcements — new/active count
             try {
                 counts.put("announcements", (int) announcementsService.countActive());
             } catch (Exception e) { counts.put("announcements", 0); }
 
-            // Accounts — unverified residents (not archived)
             try {
                 long unverified = residentUserService.getAllResidentsDTO().stream()
                     .filter(r -> "UNVERIFIED".equalsIgnoreCase(r.account_status()))
@@ -1053,7 +1116,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 counts.put("accounts", (int) unverified);
             } catch (Exception e) { counts.put("accounts", 0); }
 
-            // Requests + Documents — pending document requests + active blotters
             try {
                 int pending  = (int) documentService.countPending();
                 int blotters = blotterService.getByStatus("PROCESSING").size()
@@ -1062,17 +1124,14 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 counts.put("documents", pending);
             } catch (Exception e) { counts.put("requests", 0); counts.put("documents", 0); }
 
-            // Blotter — processing + ready
             try {
                 int blotters = blotterService.getByStatus("PROCESSING").size()
                             + blotterService.getByStatus("READY").size();
                 counts.put("blotter", blotters);
             } catch (Exception e) { counts.put("blotter", 0); }
 
-            // Facilities — nothing to count yet
             counts.put("facilities", 0);
 
-            // Safety reports — incoming + approved + in progress
             try {
                 Map<String, Long> safetyStats = safetyReportService.getStatusCounts();
                 int active = (int)(
@@ -1083,12 +1142,10 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 counts.put("safety-reports", active);
             } catch (Exception e) { counts.put("safety-reports", 0); }
 
-            // SOS — incoming alerts only
             try {
                 counts.put("sos", (int) sosService.countByStatus("INCOMING"));
             } catch (Exception e) { counts.put("sos", 0); }
 
-            // Programs — upcoming events
             try {
                 java.time.LocalDate today = java.time.LocalDate.now();
                 int upcoming = (int) programCalendarService.getAllEvents().stream()
@@ -1098,7 +1155,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                 counts.put("programs", upcoming);
             } catch (Exception e) { counts.put("programs", 0); }
 
-            // Activity logs — nothing to badge
             counts.put("activity-logs", 0);
 
             return ResponseEntity.ok(counts);
@@ -1122,9 +1178,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
             Map<String, Long> safetyStats = safetyReportService.getStatusCounts();
             return ResponseEntity.ok(safetyStats);
         }
-    // =========================================================
-    // OTHER PAGES
-    // =========================================================
 
     @GetMapping("/program-calendar")
     public String ProgramCalendarPage(Principal principal, Model model) {
@@ -1212,10 +1265,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
         return ResponseEntity.ok(response);
     }
 
-    // =========================================================
-    // FORGOT PASSWORD
-    // =========================================================
-
     @PostMapping("/api/forgot-password/send-otp")
     @ResponseBody
     public ResponseEntity<?> forgotPasswordSendOtp(@RequestBody Map<String, String> payload) {
@@ -1275,20 +1324,14 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
             AdminUser admin = adminUserService.getAdminByEmail(email);
             String fullName = admin.getName();
             
-            // Encode the temporary password
             admin.setPassword(passwordEncoder.encode(tempPassword));
-            
-            // Set status to "Newly Updated" - THIS IS THE KEY CHANGE
             admin.setEmpstatus("Newly Updated");
-            
-            // Save the admin with updated status
             adminUserService.saveAdmin(admin);
 
             try {
                 System.out.println("DEBUG: Sending temporary password to " + fullName);
                 emailService.sendGeneratedPassword(email, tempPassword, fullName);
             } catch (Exception e) {
-                // Log the error
                 System.err.println("Failed to send email: " + e.getMessage());
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Map.of("message", "Password was reset but failed to send email. Please contact your administrator."));
@@ -1311,16 +1354,12 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
 
         }
 
-            // =========================================================
-            // ADMIN ASSISTANCE REQUESTS
-            // =========================================================
-
             @PostMapping("/system-logs/request-assistance")
             @ResponseBody
             public ResponseEntity<Map<String, Object>> requestAssistance(
                     @RequestParam String message,
                     Principal principal,
-                    HttpServletRequest request) {   // <-- added
+                    HttpServletRequest request) {
 
                 Map<String, Object> response = new HashMap<>();
 
@@ -1344,7 +1383,6 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
                     message.trim()
                 );
 
-                // NEW: log the request itself (covers archive / removal / restore asks)
                 activityLogService.log(
                     currentAdmin.getName(), currentAdmin.getRole(), "REQUESTED", "Accounts",
                     truncate("Requested admin assistance — " + message.trim()),
@@ -1378,13 +1416,12 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
             @ResponseBody
             public ResponseEntity<Map<String, Object>> resolveAssistanceRequest(
                     @PathVariable Long id,
-                    Principal principal,          // <-- added
-                    HttpServletRequest request) { // <-- added
+                    Principal principal,
+                    HttpServletRequest request) {
 
                 Map<String, Object> response = new HashMap<>();
                 AdminUser currentAdmin = adminUserService.getAdminByEmail(principal.getName());
 
-                // Grab the request's details before it's marked resolved, for a readable log line
                 String requestSummary = systemLogsService.getPendingAssistanceRequests().stream()
                         .filter(log -> log.getId().equals(id))
                         .findFirst()
