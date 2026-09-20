@@ -179,9 +179,9 @@
 
     <!-- Global JS — loaded ONCE, deferred so it never blocks parsing -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" defer></script>
-    <script src="/js/sidebar.js" defer></script>
-    <script src="/js/notif.js" defer></script>
-    <script src="/js/sos-global-alert.js" defer></script>
+    <script th:src="@{/js/sidebar.js}" defer></script>
+    <script th:src="@{/js/notif.js}" defer></script>
+    <script th:src="@{/js/sos-global-alert.js}" defer></script>
 
 </div>
 </body>

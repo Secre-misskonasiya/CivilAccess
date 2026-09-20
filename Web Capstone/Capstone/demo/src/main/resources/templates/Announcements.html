@@ -1321,19 +1321,67 @@
     arrow.classList.toggle('open', !isOpen);
   }
 
-  async function uploadImageToSupabase(file) {
+  // Resize to max 1024px wide and re-encode as JPEG (~100-250 KB)
+  async function compressImage(file, maxW = 1024, quality = 0.8) {
+    const bitmap = await createImageBitmap(file);
+    const scale  = Math.min(1, maxW / bitmap.width);   // never upscale
+    const w = Math.round(bitmap.width  * scale);
+    const h = Math.round(bitmap.height * scale);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff';            // PNG transparency would turn black in JPEG
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close();
+
+    return new Promise((resolve, reject) =>
+      canvas.toBlob(
+        b => b ? resolve(b) : reject(new Error('Could not compress image')),
+        'image/jpeg', quality
+      )
+    );
+  }
+
+  async function uploadImageToSupabase(blob) {
     if (!supabaseClient) throw new Error('Supabase client not initialized');
-    const timestamp = Date.now();
-    const fileName = `announcement_${timestamp}.jpg`;
-    const filePath = `announcements/${fileName}`;
-    const arrayBuffer = await file.arrayBuffer();
-    const fileData = new Uint8Array(arrayBuffer);
-    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+    const filePath = `announcements/announcement_${Date.now()}.jpg`;
+
+    const { data, error } = await supabaseClient.storage
       .from('announcements')
-      .upload(filePath, fileData, { contentType: file.type || 'image/jpeg', upsert: true });
-    if (uploadError) throw uploadError;
-    const { data: urlData } = supabaseClient.storage.from('announcements').getPublicUrl(uploadData.path);
-    return urlData.publicUrl;
+      .upload(filePath, blob, {
+        contentType: 'image/jpeg',
+        cacheControl: '31536000',   // 1 year; filenames are unique
+        upsert: false
+      });
+    if (error) throw error;
+
+    return supabaseClient.storage.from('announcements')
+      .getPublicUrl(data.path).data.publicUrl;
+  }
+
+  async function processImageUpload(file, preview, placeholder, progressDiv, progressBar, urlInput, removeBtn, showImage, hideImage) {
+    if (progressDiv) { progressDiv.style.display = 'block'; if (progressBar) progressBar.style.width = '30%'; }
+    try {
+      const blob = await compressImage(file);
+      showImage(URL.createObjectURL(blob));      // preview the small version, not a 13 MB data URL
+      if (progressBar) progressBar.style.width = '60%';
+
+      urlInput.value = await uploadImageToSupabase(blob);
+      if (progressBar) progressBar.style.width = '100%';
+      setTimeout(() => {
+        if (progressDiv) progressDiv.style.display = 'none';
+        if (progressBar) progressBar.style.width = '0%';
+      }, 500);
+    } catch (error) {
+      console.error('Image upload error:', error);
+      showError('Failed to upload image: ' + error.message, 'Upload Error');
+      if (progressDiv) progressDiv.style.display = 'none';
+      if (progressBar) progressBar.style.width = '0%';
+      hideImage();
+    }
   }
   
   function setupImageUpload(uploadAreaId, fileInputId, previewId, progressId, urlInputId, removeBtnId, placeholderId) {
@@ -1388,27 +1436,6 @@
     return { showImage, hideImage };
   }
   
-  async function processImageUpload(file, preview, placeholder, progressDiv, progressBar, urlInput, removeBtn, showImage, hideImage) {
-    const reader = new FileReader();
-    reader.onload = (e) => { showImage(e.target.result); };
-    reader.readAsDataURL(file);
-    if (progressDiv) { progressDiv.style.display = 'block'; if (progressBar) progressBar.style.width = '50%'; }
-    try {
-      const imageUrl = await uploadImageToSupabase(file);
-      urlInput.value = imageUrl;
-      if (progressBar) progressBar.style.width = '100%';
-      setTimeout(() => {
-        if (progressDiv) progressDiv.style.display = 'none';
-        if (progressBar) progressBar.style.width = '0%';
-      }, 500);
-    } catch (error) {
-      console.error('Supabase upload error:', error);
-      showError('Failed to upload image to Supabase: ' + error.message, 'Upload Error');
-      if (progressDiv) progressDiv.style.display = 'none';
-      if (progressBar) progressBar.style.width = '0%';
-      hideImage();
-    }
-  }
   
   let currentPriorityFilter = 'all';
   

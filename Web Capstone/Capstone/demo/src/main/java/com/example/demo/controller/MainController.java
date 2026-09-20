@@ -12,7 +12,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -39,6 +41,7 @@ import com.example.demo.dto.AdminUserDTO;
 import com.example.demo.dto.ResidentDTO;
 import com.example.demo.model.Activitylogs;
 import com.example.demo.model.AdminUser;
+import com.example.demo.model.Announcements;
 import com.example.demo.model.ContactHelpRequest;
 import com.example.demo.model.ResidentUser;
 import com.example.demo.repository.CensusRecordRepository;
@@ -90,7 +93,8 @@ public class MainController {
     @Autowired(required = false)
     private ContactHelpService contactHelpService;
 
-
+    @Autowired
+    private java.util.concurrent.ExecutorService dashboardQueryExecutor;
     
 
     // Track last modification time for accounts polling
@@ -775,160 +779,232 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
     // =========================================================
 
         @GetMapping("/home")
-        public String HomePage(Principal principal, Model model) {
-            AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+public String HomePage(Principal principal, Model model) {
+    AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
 
-            if (admin != null) {
-                String role = admin.getRole();
+    if (admin != null) {
+        String role = admin.getRole();
+
+        model.addAttribute("currentUser", admin.getName());
+        model.addAttribute("currentrole", role);
+        model.addAttribute("currentstatus", admin.getEmpstatus());
+        model.addAttribute("currentAdminProfilePicture", admin.getProfilePicture());
+        model.addAttribute("currentAdminId", admin.getId());
+
+        // Archived check happens before we spend any time firing off
+        // queries — no point running ten DB calls just to redirect away.
+        if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+            return "redirect:/logout";
+        }
+
+        ExecutorService ex = dashboardQueryExecutor;
+
+        // ── Fire every independent query concurrently ──────────────────
+        // Each future carries its own try/catch so a single failing
+        // service can't take down the others — same fallback values as
+        // the original sequential version, just computed off the main
+        // request thread.
+
+        CompletableFuture<Map<String, Object>> demoDataFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return censusRecordService.getDetailedDemographics();
+            } catch (Exception e) {
+                System.err.println("Error loading census demographics: " + e.getMessage());
+                return null; // signal fallback below
+            }
+        }, ex);
+
+        CompletableFuture<Long> residentsFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return residentUserService.countResidents();
+            } catch (Exception e) {
+                return 0L;
+            }
+        }, ex);
+
+        CompletableFuture<Long> blotterCountFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return blotterService.countAll();
+            } catch (Exception e) {
+                return 0L;
+            }
+        }, ex);
+
+        CompletableFuture<Long> pendingBlottersFuture = CompletableFuture.supplyAsync(() -> {
+            try {
                 long processing = blotterService.countByStatus("PROCESSING");
                 long ready = blotterService.countByStatus("READY");
-                long pendingBlotters = processing + ready;
-                
-                model.addAttribute("currentUser", admin.getName());
-                model.addAttribute("currentrole", role);
-                model.addAttribute("currentstatus", admin.getEmpstatus());
-                model.addAttribute("currentAdminProfilePicture", admin.getProfilePicture());
-                model.addAttribute("currentAdminId", admin.getId());
-                
-                try {
-                    Map<String, Object> demoData = censusRecordService.getDetailedDemographics();
-                    
-                    model.addAttribute("householdCount", demoData.getOrDefault("householdCount", 0));
-                    model.addAttribute("childrenCount", demoData.getOrDefault("childrenCount", 0));
-                    model.addAttribute("adultMalesCount", demoData.getOrDefault("adultMalesCount", 0));
-                    model.addAttribute("adultFemalesCount", demoData.getOrDefault("adultFemalesCount", 0));
-                    model.addAttribute("seniorsCount", demoData.getOrDefault("seniorsCount", 0));
-                    model.addAttribute("totalResidents", demoData.getOrDefault("totalResidents", 0));
-                    model.addAttribute("pwdCount", demoData.getOrDefault("pwdCount", 0));
-                    model.addAttribute("pwdChildren", demoData.getOrDefault("pwdChildren", 0));
-                    model.addAttribute("pwdAdultMales", demoData.getOrDefault("pwdAdultMales", 0));
-                    model.addAttribute("pwdAdultFemales", demoData.getOrDefault("pwdAdultFemales", 0));
-                    model.addAttribute("pwdSeniors", demoData.getOrDefault("pwdSeniors", 0));
-                    model.addAttribute("seniorMaleCount", demoData.getOrDefault("seniorMaleCount", 0));
-                    model.addAttribute("seniorFemaleCount", demoData.getOrDefault("seniorFemaleCount", 0));
-                    
-                } catch (Exception e) {
-                    model.addAttribute("householdCount", 0);
-                    model.addAttribute("childrenCount", 0);
-                    model.addAttribute("adultMalesCount", 0);
-                    model.addAttribute("adultFemalesCount", 0);
-                    model.addAttribute("seniorsCount", 0);
-                    model.addAttribute("totalResidents", 0);
-                    model.addAttribute("pwdCount", 0);
-                    model.addAttribute("pwdChildren", 0);
-                    model.addAttribute("pwdAdultMales", 0);
-                    model.addAttribute("pwdAdultFemales", 0);
-                    model.addAttribute("pwdSeniors", 0);
-                    model.addAttribute("seniorMaleCount", 0);
-                    model.addAttribute("seniorFemaleCount", 0);
-                    System.err.println("Error loading census demographics: " + e.getMessage());
-                }
-                
-                try {
-                    model.addAttribute("residents", residentUserService.countResidents());
-                } catch (Exception e) {
-                    model.addAttribute("residents", 0L);
-                }
-                try {
-                    model.addAttribute("blotterCount", blotterService.countAll());
-                } catch (Exception e) {
-                    model.addAttribute("blotterCount", 0L);
-                }
-                model.addAttribute("blotterPending", pendingBlotters);
-                try {
-                    model.addAttribute("latestAnnouncement", announcementsService.getLatest());
-                } catch (Exception e) {
-                    model.addAttribute("latestAnnouncement", null);
-                }
-                try {
-                    model.addAttribute("pendingDocuments", documentService.countPending());
-                } catch (Exception e) {
-                    model.addAttribute("pendingDocuments", 0L);
-                }
-                try {
-                    model.addAttribute("budget", programBudgetService.getTotalBudget());
-                } catch (Exception e) {
-                    model.addAttribute("budget", 0.0);
-                }
-                try {
-                    model.addAttribute("newRequestsThisMonth", documentService.countThisMonth());
-                } catch (Exception e) {
-                    model.addAttribute("newRequestsThisMonth", 0L);
-                }
-                
-                if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
-                    return "redirect:/logout";
-                }
-                
-                try {
-                    model.addAttribute("recentLogs", activityLogService.getRecentLogs(5));
-                } catch (Exception e) {
-                    model.addAttribute("recentLogs", new ArrayList<>());
-                }
-                
-                try {
-                    model.addAttribute("sosAlertsThisMonth", sosService.countThisMonth());
-                } catch (Exception e) {
-                    model.addAttribute("sosAlertsThisMonth", 0L);
-                }
-
-                try {
-                    Map<String, Long> safetyStats = safetyReportService.getStatusCounts();
-                    
-                    long resolved = safetyStats.getOrDefault("resolved", 0L) + safetyStats.getOrDefault("arch-resolved", 0L);
-                    long arch = safetyStats.getOrDefault("archived", 0L);
-                    long inProgress = safetyStats.getOrDefault("in progress", 0L);
-                    long unverified = safetyStats.getOrDefault("unverified", 0L);
-                    long approved = safetyStats.getOrDefault("approved", 0L);
-                    
-                    long allUnresolved = arch + inProgress + unverified + approved;
-                    long allReports = resolved + allUnresolved;
-                    
-                    model.addAttribute("resolvedIncidents", resolved);
-                    model.addAttribute("unresolvedIncidents", allUnresolved);
-                    model.addAttribute("allreports", allReports);
-                } catch (Exception e) {
-                    model.addAttribute("resolvedIncidents", 0L);
-                    model.addAttribute("unresolvedIncidents", 0L);
-                    model.addAttribute("allreports", 0L);
-                }
-
-            } else {
-                model.addAttribute("currentUser", "Admin");
-                model.addAttribute("currentrole", "USER");
-                model.addAttribute("currentstatus", "Unknown");
-                model.addAttribute("currentAdminProfilePicture", "");
-                model.addAttribute("currentAdminId", null);
-                model.addAttribute("householdCount", 0);
-                model.addAttribute("childrenCount", 0);
-                model.addAttribute("adultMalesCount", 0);
-                model.addAttribute("adultFemalesCount", 0);
-                model.addAttribute("seniorsCount", 0);
-                model.addAttribute("totalResidents", 0);
-                model.addAttribute("pwdCount", 0);
-                model.addAttribute("pwdChildren", 0);
-                model.addAttribute("pwdAdultMales", 0);
-                model.addAttribute("pwdAdultFemales", 0);
-                model.addAttribute("pwdSeniors", 0);
-                model.addAttribute("seniorMaleCount", 0);
-                model.addAttribute("seniorFemaleCount", 0);
-                model.addAttribute("residents", 0L);
-                model.addAttribute("blotterCount", 0L);
-                model.addAttribute("blotterPending", 0L);
-                model.addAttribute("latestAnnouncement", null);
-                model.addAttribute("pendingDocuments", 0L);
-                model.addAttribute("budget", 0.0);
-                model.addAttribute("newRequestsThisMonth", 0L);
-                model.addAttribute("recentLogs", new ArrayList<>());
-                model.addAttribute("sosAlertsThisMonth", 0L);
-                model.addAttribute("resolvedIncidents", 0L);
-                model.addAttribute("unresolvedIncidents", 0L);
-                model.addAttribute("allreports", 0L);
+                return processing + ready;
+            } catch (Exception e) {
+                return 0L;
             }
+        }, ex);
 
-            model.addAttribute("newAdmin", new AdminUser());
-            return "Dashboard";
+        CompletableFuture<Announcements> latestAnnouncementFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return announcementsService.getLatest();
+            } catch (Exception e) {
+                return null;
+            }
+        }, ex);
+
+        CompletableFuture<Long> pendingDocumentsFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return documentService.countPending();
+            } catch (Exception e) {
+                return 0L;
+            }
+        }, ex);
+
+        CompletableFuture<Double> budgetFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return programBudgetService.getTotalBudget();
+            } catch (Exception e) {
+                return 0.0;
+            }
+        }, ex);
+
+        CompletableFuture<Long> newRequestsFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return documentService.countThisMonth();
+            } catch (Exception e) {
+                return 0L;
+            }
+        }, ex);
+
+        CompletableFuture<List<Activitylogs>> recentLogsFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return activityLogService.getRecentLogs(5);
+            } catch (Exception e) {
+                return new ArrayList<Activitylogs>();
+            }
+        }, ex);
+
+        CompletableFuture<Long> sosAlertsFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return sosService.countThisMonth();
+            } catch (Exception e) {
+                return 0L;
+            }
+        }, ex);
+
+        CompletableFuture<Map<String, Long>> safetyStatsFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return safetyReportService.getStatusCounts();
+            } catch (Exception e) {
+                return null; // signal fallback below
+            }
+        }, ex);
+
+        // ── Wait for everything to resolve ──────────────────────────────
+        // The wall-clock cost here is roughly the duration of the single
+        // slowest query, not the sum of all ten — this is where the TTFB
+        // win comes from.
+        CompletableFuture.allOf(
+            demoDataFuture, residentsFuture, blotterCountFuture, pendingBlottersFuture,
+            latestAnnouncementFuture, pendingDocumentsFuture, budgetFuture,
+            newRequestsFuture, recentLogsFuture, sosAlertsFuture, safetyStatsFuture
+        ).join();
+
+        // ── Populate the model — same attribute names/defaults as before ──
+
+        Map<String, Object> demoData = demoDataFuture.join();
+        if (demoData != null) {
+            model.addAttribute("householdCount", demoData.getOrDefault("householdCount", 0));
+            model.addAttribute("childrenCount", demoData.getOrDefault("childrenCount", 0));
+            model.addAttribute("adultMalesCount", demoData.getOrDefault("adultMalesCount", 0));
+            model.addAttribute("adultFemalesCount", demoData.getOrDefault("adultFemalesCount", 0));
+            model.addAttribute("seniorsCount", demoData.getOrDefault("seniorsCount", 0));
+            model.addAttribute("totalResidents", demoData.getOrDefault("totalResidents", 0));
+            model.addAttribute("pwdCount", demoData.getOrDefault("pwdCount", 0));
+            model.addAttribute("pwdChildren", demoData.getOrDefault("pwdChildren", 0));
+            model.addAttribute("pwdAdultMales", demoData.getOrDefault("pwdAdultMales", 0));
+            model.addAttribute("pwdAdultFemales", demoData.getOrDefault("pwdAdultFemales", 0));
+            model.addAttribute("pwdSeniors", demoData.getOrDefault("pwdSeniors", 0));
+            model.addAttribute("seniorMaleCount", demoData.getOrDefault("seniorMaleCount", 0));
+            model.addAttribute("seniorFemaleCount", demoData.getOrDefault("seniorFemaleCount", 0));
+        } else {
+            model.addAttribute("householdCount", 0);
+            model.addAttribute("childrenCount", 0);
+            model.addAttribute("adultMalesCount", 0);
+            model.addAttribute("adultFemalesCount", 0);
+            model.addAttribute("seniorsCount", 0);
+            model.addAttribute("totalResidents", 0);
+            model.addAttribute("pwdCount", 0);
+            model.addAttribute("pwdChildren", 0);
+            model.addAttribute("pwdAdultMales", 0);
+            model.addAttribute("pwdAdultFemales", 0);
+            model.addAttribute("pwdSeniors", 0);
+            model.addAttribute("seniorMaleCount", 0);
+            model.addAttribute("seniorFemaleCount", 0);
         }
+
+        model.addAttribute("residents", residentsFuture.join());
+        model.addAttribute("blotterCount", blotterCountFuture.join());
+        model.addAttribute("blotterPending", pendingBlottersFuture.join());
+        model.addAttribute("latestAnnouncement", latestAnnouncementFuture.join());
+        model.addAttribute("pendingDocuments", pendingDocumentsFuture.join());
+        model.addAttribute("budget", budgetFuture.join());
+        model.addAttribute("newRequestsThisMonth", newRequestsFuture.join());
+        model.addAttribute("recentLogs", recentLogsFuture.join());
+        model.addAttribute("sosAlertsThisMonth", sosAlertsFuture.join());
+
+        Map<String, Long> safetyStats = safetyStatsFuture.join();
+        if (safetyStats != null) {
+            long resolved = safetyStats.getOrDefault("resolved", 0L) + safetyStats.getOrDefault("arch-resolved", 0L);
+            long arch = safetyStats.getOrDefault("archived", 0L);
+            long inProgress = safetyStats.getOrDefault("in progress", 0L);
+            long unverified = safetyStats.getOrDefault("unverified", 0L);
+            long approved = safetyStats.getOrDefault("approved", 0L);
+
+            long allUnresolved = arch + inProgress + unverified + approved;
+            long allReports = resolved + allUnresolved;
+
+            model.addAttribute("resolvedIncidents", resolved);
+            model.addAttribute("unresolvedIncidents", allUnresolved);
+            model.addAttribute("allreports", allReports);
+        } else {
+            model.addAttribute("resolvedIncidents", 0L);
+            model.addAttribute("unresolvedIncidents", 0L);
+            model.addAttribute("allreports", 0L);
+        }
+
+    } else {
+        model.addAttribute("currentUser", "Admin");
+        model.addAttribute("currentrole", "USER");
+        model.addAttribute("currentstatus", "Unknown");
+        model.addAttribute("currentAdminProfilePicture", "");
+        model.addAttribute("currentAdminId", null);
+        model.addAttribute("householdCount", 0);
+        model.addAttribute("childrenCount", 0);
+        model.addAttribute("adultMalesCount", 0);
+        model.addAttribute("adultFemalesCount", 0);
+        model.addAttribute("seniorsCount", 0);
+        model.addAttribute("totalResidents", 0);
+        model.addAttribute("pwdCount", 0);
+        model.addAttribute("pwdChildren", 0);
+        model.addAttribute("pwdAdultMales", 0);
+        model.addAttribute("pwdAdultFemales", 0);
+        model.addAttribute("pwdSeniors", 0);
+        model.addAttribute("seniorMaleCount", 0);
+        model.addAttribute("seniorFemaleCount", 0);
+        model.addAttribute("residents", 0L);
+        model.addAttribute("blotterCount", 0L);
+        model.addAttribute("blotterPending", 0L);
+        model.addAttribute("latestAnnouncement", null);
+        model.addAttribute("pendingDocuments", 0L);
+        model.addAttribute("budget", 0.0);
+        model.addAttribute("newRequestsThisMonth", 0L);
+        model.addAttribute("recentLogs", new ArrayList<>());
+        model.addAttribute("sosAlertsThisMonth", 0L);
+        model.addAttribute("resolvedIncidents", 0L);
+        model.addAttribute("unresolvedIncidents", 0L);
+        model.addAttribute("allreports", 0L);
+    }
+
+    model.addAttribute("newAdmin", new AdminUser());
+    return "Dashboard";
+}
 
         @GetMapping("/api/dashboard/notifications")
         @ResponseBody

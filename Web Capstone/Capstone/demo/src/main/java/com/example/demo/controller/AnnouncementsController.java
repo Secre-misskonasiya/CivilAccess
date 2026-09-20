@@ -193,7 +193,7 @@ public class AnnouncementsController {
     public ResponseEntity<?> createAnnouncement(
             @RequestBody Announcements announcement,
             Principal principal,
-            HttpServletRequest request) {
+            HttpServletRequest request) throws java.io.IOException {
 
         AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
 
@@ -201,6 +201,8 @@ public class AnnouncementsController {
         announcement.setDatePosted(LocalDateTime.now());
         announcement.setStatus("ACTIVE");
         if (announcement.getPriority() == null) announcement.setPriority("NORMAL");
+        announcement.setImage(announcementsService.resizeIfDataUri(announcement.getImage()));
+
 
         Announcements saved = announcementsService.saveAnnouncement(announcement);
 
@@ -219,7 +221,7 @@ public class AnnouncementsController {
             @PathVariable Long id,
             @RequestBody Announcements announcement,
             Principal principal,
-            HttpServletRequest request) {
+            HttpServletRequest request) throws java.io.IOException {
 
         Announcements existing = announcementsService.getAnnouncementById(id);
         if (existing == null) return ResponseEntity.notFound().build();
@@ -229,7 +231,7 @@ public class AnnouncementsController {
         existing.setTitle(announcement.getTitle());
         existing.setContent(announcement.getContent());
         existing.setPriority(announcement.getPriority());
-        existing.setImage(announcement.getImage());
+        existing.setImage(announcementsService.resizeIfDataUri(announcement.getImage()));
         announcementsService.saveAnnouncement(existing);
 
         activityLogService.log(
