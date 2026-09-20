@@ -229,12 +229,11 @@ if (!window.__notifManagerLoaded) {
                     const badge = document.getElementById('notifBadge');
                     if (!badge) return;
                     const count = data.count || 0;
-                    badge.style.display = count > 0 ? 'inline' : 'none';
-                    badge.textContent = count > 0 ? count : '';
+                    badge.classList.toggle('on', count > 0);
                 })
                 .catch(() => {
                     const badge = document.getElementById('notifBadge');
-                    if (badge) badge.style.display = 'none';
+                    if (badge) badge.classList.remove('on');
                 });
         }
 
@@ -281,17 +280,26 @@ if (!window.__notifManagerLoaded) {
                     }
 
                     previousSnapshot = currentSnapshot;
-                    pollBadge();
+                    updateBadgeCount(real.length);
                 })
-                .catch(() => {});
+                .catch(() => {
+                    const badge = document.getElementById('notifBadge');
+                    if (badge) badge.classList.remove('on');
+                });
         }
+
+        function updateBadgeCount(count) {
+            const badge = document.getElementById('notifBadge');
+            if (!badge) return;
+            badge.classList.toggle('on', count > 0);
+        }
+
 
 
         // ─── Init ──────────────────────────────────────────────────────────────────
 
         function init() {
             injectStyles();
-            pollBadge();
             setTimeout(checkAndToast, 2000);
             snapshotInterval = setInterval(checkAndToast, 10000);
             window.addEventListener('beforeunload', () => {
@@ -316,7 +324,7 @@ if (!window.__notifManagerLoaded) {
 
         // ─── Public API ────────────────────────────────────────────────────────────
 
-        return { showToast, pollBadge, playSosSound };
+        return { showToast, playSosSound };
 
     })();
 
