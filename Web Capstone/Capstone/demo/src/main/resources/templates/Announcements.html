@@ -378,7 +378,14 @@
     }
     .image-upload-area:hover { border-color: #30534D; background-color: #f5f5f5; }
     .image-upload-area.dragover { border-color: #44C375; background-color: #f0fff4; }
-    .image-upload-area.has-image { padding: 10px; }
+    /* FIX: clear the dashed-border grey background once an image is loaded,
+       so no grey bars/backdrop show around images that don't fill the box */
+    .image-upload-area.has-image {
+        padding: 10px;
+        background-color: transparent;
+        border-style: solid;
+        border-color: #e0e0e0;
+    }
     .upload-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .upload-placeholder i { font-size: 32px; color: #aaa; }
     .upload-placeholder p { margin: 8px 0 0 0; font-size: 13px; color: #666; }
@@ -587,6 +594,121 @@
 .create-announcement-btn:hover { background-color: #196f3d; }
 
 
+/* ══════════════════════════════════════
+   CUSTOM CONFIRM OVERLAY
+   (replaces the dynamically-injected
+   Bootstrap confirm modal — prevents
+   stacked-modals/backdrop leftovers)
+══════════════════════════════════════ */
+.custom-confirm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 10700;
+    align-items: center;
+    justify-content: center;
+    animation: sysFadeIn 0.15s ease;
+}
+.custom-confirm-overlay.show { display: flex; }
+.custom-confirm-box {
+    background: #fff;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 440px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.35);
+    overflow: hidden;
+    animation: sysSlideUp 0.22s ease;
+}
+.custom-confirm-header {
+    background: linear-gradient(135deg, #30534D, #3d6b63);
+    color: #fff;
+    padding: 14px 20px;
+    font-weight: 700;
+    font-size: 16px;
+}
+.custom-confirm-body {
+    padding: 24px;
+    font-size: 16px;
+    color: #333;
+    line-height: 1.5;
+}
+.custom-confirm-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 20px;
+    border-top: 1px solid #f0f0f0;
+}
+.custom-confirm-footer button {
+    padding: 8px 22px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+}
+.custom-confirm-footer .btn-cancel {
+    background: #e0e0e0;
+    color: #333;
+}
+.custom-confirm-footer .btn-cancel:hover { background: #d0d0d0; }
+.custom-confirm-footer .btn-confirm {
+    background: #44C375;
+    color: #fff;
+}
+.custom-confirm-footer .btn-confirm:hover { background: #2ea05e; }
+
+/* ══════════════════════════════════════
+   CUSTOM SUCCESS OVERLAY
+   (replaces the Bootstrap success modal)
+══════════════════════════════════════ */
+.custom-success-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 10800;
+    align-items: center;
+    justify-content: center;
+    animation: sysFadeIn 0.18s ease;
+}
+.custom-success-overlay.show { display: flex; }
+.custom-success-box {
+    background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 32px 44px;
+    text-align: center;
+    max-width: 360px;
+    width: 90%;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.35);
+    animation: sysSlideUp 0.25s ease;
+}
+.custom-success-box .success-icon {
+    font-size: 60px;
+    margin-bottom: 12px;
+    color: #fff;
+}
+.custom-success-box h5 {
+    margin: 0 0 22px 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #fff;
+}
+.custom-success-box button {
+    background: rgba(255,255,255,0.95);
+    color: #2ea05e;
+    border: none;
+    padding: 9px 32px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: inherit;
+}
+.custom-success-box button:hover { background: #fff; }
 
 </style>
 
@@ -761,7 +883,7 @@
 </div>
 
 
-<!-- Success Modal -->
+<!-- Success Modal (kept for compatibility, no longer used by showSuccess) -->
 <div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
@@ -908,6 +1030,30 @@
 <div th:replace="fragments/logout-modal :: logoutModal"></div>
 
 
+<script th:inline="javascript">
+  // ============================================
+  // ROLE-BASED ACTION HELPERS
+  // (used by rebuildActiveList/rebuildArchivedList during live polling)
+  // These were previously called but never defined, which threw a
+  // ReferenceError and silently broke the polling refresh.
+  // Kept in its OWN th:inline script — putting this on the big script
+  // below breaks it, because Thymeleaf's JS-inlining tries to parse
+  // every ${...} in an inlined block, including plain JS template
+  // literals like `${a.id}` that appear all over the big script.
+  // ============================================
+  const currentRole = /*[[${currentrole}]]*/ '';
+
+  function canEditAnnouncements() {
+    return currentRole === 'ADMIN' || currentRole === 'SECRETARY' || currentRole === 'SECRETARIAT STAFF';
+  }
+  function canArchiveAnnouncements() {
+    return currentRole === 'ADMIN';
+  }
+  function canRequestArchive() {
+    return currentRole === 'SECRETARY' || currentRole === 'SECRETARIAT STAFF';
+  }
+</script>
+
 <script>
   // Supabase configuration
   const SUPABASE_URL = 'https://upfrofppponiqffbssqb.supabase.co';
@@ -925,8 +1071,7 @@
   let pendingUpdates = false;
 
   // ============================================
-  // IMAGE UPLOAD HANDLER REFERENCES (needed so we
-  // can reset the create form's image preview)
+  // IMAGE UPLOAD HANDLER REFERENCES
   // ============================================
   let createImageHandlers = null;
   let editImageHandlers = null;
@@ -945,12 +1090,54 @@
   document.head.appendChild(supabaseScript);
 
   // ============================================
+  // MODAL BACKDROP WATCHDOG
+  // Removes orphan Bootstrap backdrops / body
+  // state whenever no Bootstrap modal is
+  // actually visible on screen.
+  // ============================================
+  function cleanupOrphanBackdrops() {
+    // If a Bootstrap modal is currently visible, leave everything alone.
+    const visibleModal = document.querySelector('.modal.show');
+    if (visibleModal) return;
+
+    // No Bootstrap modal is showing — any backdrop / body lock is an orphan.
+    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+  }
+
+  // Watch direct body children (backdrops are appended to body).
+  // Debounced: Bootstrap appends the backdrop element BEFORE the modal
+  // finishes its own fade-in transition, so a synchronous check here
+  // would see "backdrop exists, but no .modal.show yet" and rip the
+  // backdrop back out mid-animation -- fighting Bootstrap and causing
+  // visible flicker/layout jumps. Waiting a beat lets the transition
+  // finish first so we only clean up backdrops that are truly orphaned.
+  let backdropCleanupTimer = null;
+  function scheduleBackdropCleanup() {
+    clearTimeout(backdropCleanupTimer);
+    backdropCleanupTimer = setTimeout(cleanupOrphanBackdrops, 250);
+  }
+  new MutationObserver(scheduleBackdropCleanup).observe(document.body, {
+    childList: true,
+    subtree: false,
+    attributes: true,
+    attributeFilter: ['class']
+  });
+
+  // Safety net — runs periodically even if no mutation fires.
+  setInterval(cleanupOrphanBackdrops, 500);
+
+  // ============================================
   // TRACK MODAL STATE
   // ============================================
   function trackModalState() {
     document.addEventListener('show.bs.modal', () => { isModalOpen = true; });
     document.addEventListener('hidden.bs.modal', () => { 
       isModalOpen = false; 
+      // Give Bootstrap a moment, then make sure nothing was left behind.
+      setTimeout(cleanupOrphanBackdrops, 50);
       if (pendingUpdates) {
         pendingUpdates = false;
         pollAnnouncements(true);
@@ -973,7 +1160,7 @@
   }
 
   // ============================================
-  // POLLING - Only refreshes when data changes
+  // POLLING
   // ============================================
   async function pollAnnouncements(forceUpdate = false) {
     try {
@@ -989,7 +1176,6 @@
         return;
       }
 
-      // Only update if the tab is visible (don't update hidden tabs)
       const activeTab = document.getElementById('tab-announcements');
       
       if (data.activeAnnouncements && activeTab && !activeTab.classList.contains('d-none')) {
@@ -1001,7 +1187,6 @@
         rebuildArchivedList(data.archivedAnnouncements);
       }
 
-      // Update footer counts
       if (data.activeCount !== undefined) {
         const footer = document.getElementById('activeFooter');
         if (footer) footer.querySelector('span').textContent = `Showing ${data.activeCount} announcements`;
@@ -1038,7 +1223,6 @@
     const grid = document.getElementById('announcementsGrid');
     if (!grid) return;
     
-    // Use the EXACT same sorting and pin logic as your existing code
     const container = document.createElement('div');
     announcements.forEach(a => {
       const row = document.createElement('div');
@@ -1074,7 +1258,6 @@
     grid.innerHTML = container.innerHTML;
     lastKnownAnnouncementIds = new Set(announcements.map(a => a.id));
     
-    // Re-apply sorting using EXISTING function
     filterAndSortAnnouncements();
   }
 
@@ -1111,7 +1294,6 @@
     grid.innerHTML = container.innerHTML;
     lastKnownArchivedIds = new Set(announcements.map(a => a.id));
     
-    // Re-apply sorting AND filtering using EXISTING functions
     applyArchivedFilters();
   }
 
@@ -1125,36 +1307,33 @@
   }
 
   // ============================================
-  // MODIFIED showSuccess - NO PAGE RELOAD
+  // CUSTOM SUCCESS OVERLAY (no Bootstrap modal)
   // ============================================
   function showSuccess(message) {
-    document.getElementById('successMessage').innerHTML = message;
-    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-    
-    const modalElement = document.getElementById('successModal');
-    const okButton = modalElement.querySelector('#successOkBtn');
-    
-    const newOkButton = okButton.cloneNode(true);
-    okButton.parentNode.replaceChild(newOkButton, okButton);
-    
-    newOkButton.addEventListener('click', function() {
-      successModal.hide();
-      // Force poll after success instead of reloading
-      setTimeout(() => pollAnnouncements(true), 300);
+    document.querySelectorAll('.custom-success-overlay').forEach(el => el.remove());
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-success-overlay';
+    overlay.innerHTML = `
+        <div class="custom-success-box">
+            <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <h5>${message}</h5>
+            <button type="button">OK</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('show'));
+
+    overlay.querySelector('button').addEventListener('click', () => {
+        overlay.classList.remove('show');
+        setTimeout(() => {
+            overlay.remove();
+            pollAnnouncements(true);
+        }, 220);
     });
-    
-    modalElement.addEventListener('hidden.bs.modal', function onHidden() {
-      modalElement.removeEventListener('hidden.bs.modal', onHidden);
-    }, { once: true });
-    
-    successModal.show();
   }
 
   // ============================================
-  // showError: now uses the same pure-CSS overlay
-  // style as the login page's error modal
-  // (icon + gradient card + OK button) instead of
-  // a dynamically-built Bootstrap modal.
+  // showError: pure-CSS overlay (matches login page)
   // ============================================
   function showError(message, title = 'Error') {
     document.getElementById('sysErrorMessage').innerHTML = message;
@@ -1162,10 +1341,7 @@
   }
 
   // ============================================
-  // NEW - resetCreateForm: clears the "Create
-  // Announcement" form (fields + image preview)
-  // so it never opens pre-filled with the last
-  // announcement's details again.
+  // resetCreateForm: clears the create form
   // ============================================
   function resetCreateForm() {
     const form = document.getElementById('createAnnouncementForm');
@@ -1178,53 +1354,47 @@
       createImageHandlers.hideImage();
     }
   }
-  
+
   // ============================================
-  // ALL EXISTING FUNCTIONS KEPT EXACTLY THE SAME
+  // CUSTOM CONFIRM OVERLAY (no Bootstrap modal)
   // ============================================
   function showConfirm(message, title, onConfirm) {
-    const confirmModalId = 'dynamicConfirmModal_' + Date.now();
-    const confirmModalHtml = `
-        <div id="${confirmModalId}" class="modal fade" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content" style="border-radius: 16px;">
-                    <div class="modal-header" style="background: linear-gradient(135deg, #30534D, #3d6b63);">
-                        <h5 class="modal-title" style="color: white;">${title}</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body" style="padding: 24px; font-size: 16px;">
-                        ${message}
-                    </div>
-                    <div class="modal-footer" style="border-top: none; padding: 16px 24px;">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" id="confirmOkBtn_${confirmModalId}" style="background-color: #44C375; border-color: #44C375;">Confirm</button>
-                    </div>
-                </div>
+    document.querySelectorAll('.custom-confirm-overlay').forEach(el => el.remove());
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-confirm-overlay';
+    overlay.innerHTML = `
+        <div class="custom-confirm-box">
+            <div class="custom-confirm-header">${title}</div>
+            <div class="custom-confirm-body">${message}</div>
+            <div class="custom-confirm-footer">
+                <button type="button" class="btn-cancel">Cancel</button>
+                <button type="button" class="btn-confirm">Confirm</button>
             </div>
         </div>
     `;
-    
-    document.querySelectorAll('[id^="dynamicConfirmModal_"]').forEach(modal => modal.remove());
-    document.body.insertAdjacentHTML('beforeend', confirmModalHtml);
-    const modalEl = document.getElementById(confirmModalId);
-    const modal = new bootstrap.Modal(modalEl);
-    
-    document.getElementById(`confirmOkBtn_${confirmModalId}`).onclick = function() {
-      modal.hide();
-      onConfirm();
-    };
-    
-    modalEl.addEventListener('hidden.bs.modal', function() { modalEl.remove(); });
-    modal.show();
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('show'));
+
+    function close() {
+        overlay.classList.remove('show');
+        setTimeout(() => overlay.remove(), 220);
+    }
+
+    overlay.querySelector('.btn-cancel').addEventListener('click', close);
+    overlay.querySelector('.btn-confirm').addEventListener('click', () => {
+        close();
+        setTimeout(onConfirm, 120);
+    });
   }
-  
+
+  // ============================================
+  // ARCHIVE / RESTORE / CREATE / UPDATE
+  // ============================================
   function archiveAnnouncementWithConfirm(id) {
     showConfirm('Are you sure you want to archive this announcement?', 'Archive Announcement', () => {
       fetch('/announcements/' + id + '/archive', { method: 'PUT' })
       .then(response => { 
         if (response.ok) {
-          const openModal = bootstrap.Modal.getInstance(document.querySelector('.modal.show'));
-          if (openModal) openModal.hide();
           showSuccess('Announcement archived successfully!');
         } else {
           showError('Failed to archive announcement. Please try again.');
@@ -1239,8 +1409,6 @@
       fetch('/announcements/' + id + '/restore', { method: 'PUT' })
       .then(response => { 
         if (response.ok) {
-          const openModal = bootstrap.Modal.getInstance(document.querySelector('.modal.show'));
-          if (openModal) openModal.hide();
           showSuccess('Announcement restored successfully!');
         } else {
           showError('Failed to restore announcement. Please try again.');
@@ -1272,6 +1440,7 @@
           const createModal = bootstrap.Modal.getInstance(document.getElementById('createAnnouncementModal'));
           if (createModal) createModal.hide();
           resetCreateForm();
+          // Show our custom (non-Bootstrap) success overlay — no stacking.
           showSuccess('Announcement created successfully!');
         } else {
           showError('Error creating announcement. Please try again.');
@@ -1321,10 +1490,9 @@
     arrow.classList.toggle('open', !isOpen);
   }
 
-  // Resize to max 1024px wide and re-encode as JPEG (~100-250 KB)
   async function compressImage(file, maxW = 1024, quality = 0.8) {
     const bitmap = await createImageBitmap(file);
-    const scale  = Math.min(1, maxW / bitmap.width);   // never upscale
+    const scale  = Math.min(1, maxW / bitmap.width);
     const w = Math.round(bitmap.width  * scale);
     const h = Math.round(bitmap.height * scale);
 
@@ -1332,7 +1500,7 @@
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#fff';            // PNG transparency would turn black in JPEG
+    ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, w, h);
     ctx.drawImage(bitmap, 0, 0, w, h);
     bitmap.close();
@@ -1353,7 +1521,7 @@
       .from('announcements')
       .upload(filePath, blob, {
         contentType: 'image/jpeg',
-        cacheControl: '31536000',   // 1 year; filenames are unique
+        cacheControl: '31536000',
         upsert: false
       });
     if (error) throw error;
@@ -1366,7 +1534,7 @@
     if (progressDiv) { progressDiv.style.display = 'block'; if (progressBar) progressBar.style.width = '30%'; }
     try {
       const blob = await compressImage(file);
-      showImage(URL.createObjectURL(blob));      // preview the small version, not a 13 MB data URL
+      showImage(URL.createObjectURL(blob));
       if (progressBar) progressBar.style.width = '60%';
 
       urlInput.value = await uploadImageToSupabase(blob);
@@ -1449,10 +1617,6 @@
     return false;
   }
 
-  // ============================================
-  //  NEW: shared helpers so search + priority
-  //  filter work on BOTH tabs
-  // ============================================
   function isArchivedTabActive() {
     const activeTab = document.querySelector('.tab.active');
     if (activeTab) return activeTab.textContent.trim().toLowerCase().includes('archived');
@@ -1468,13 +1632,10 @@
     }
   }
 
-  // Filters + sorts the ARCHIVED list (search term AND priority dropdown)
-  // and keeps the archived footer count in sync with what's visible.
   function applyArchivedFilters() {
     const grid = document.getElementById('archivedGrid');
     if (!grid) return;
 
-    // 1) sort newest-first first
     sortArchivedAnnouncements();
 
     const searchInput = document.getElementById('announcement-search');
@@ -1547,7 +1708,6 @@
   
   function onPriorityFilterChange(value) {
     currentPriorityFilter = value;
-    // FIX: apply to whichever tab is currently open (was only the active list)
     applyFiltersForActiveTab();
   }
 
@@ -1651,9 +1811,6 @@
     return div.innerHTML;
   }
 
-  // ============================================
-  // SEARCH - now routes to whichever tab is open
-  // ============================================
   const searchInput = document.getElementById('announcement-search');
   if (searchInput) {
     searchInput.addEventListener('keyup', function() {
@@ -1665,13 +1822,12 @@
     createImageHandlers = setupImageUpload('imageUploadArea', 'imageFile', 'imagePreview', 'uploadProgress', 'imageUrl', 'removeImageBtn', 'uploadPlaceholder');
     editImageHandlers = setupImageUpload('editImageUploadArea', 'editImageFile', 'editImagePreview', 'editUploadProgress', 'editImageUrl', 'editRemoveImageBtn', 'editUploadPlaceholder');
 
-    // Reset the create form every time the Create modal is closed
-    // (Cancel, backdrop click, X button, or after a successful create)
-    // so it never reopens pre-filled with the previous announcement.
     const createModalEl = document.getElementById('createAnnouncementModal');
     if (createModalEl) {
       createModalEl.addEventListener('hidden.bs.modal', function() {
         resetCreateForm();
+        // Safety: force-clean any leftover backdrop.
+        setTimeout(cleanupOrphanBackdrops, 50);
       });
     }
     
@@ -1723,7 +1879,6 @@
       setTimeout(() => { applyFiltersForActiveTab(); }, 100);
     }
     
-    // FIX: apply archived filter on load too
     applyFiltersForActiveTab();
     
     document.querySelectorAll('.tab').forEach(tab => {
@@ -1734,12 +1889,10 @@
       });
     });
 
-    // START POLLING - only new addition
     trackModalState();
     startPolling();
   });
 
-  // Clean up polling on page unload
   window.addEventListener('beforeunload', function() {
     if (pollingInterval) clearInterval(pollingInterval);
   });
