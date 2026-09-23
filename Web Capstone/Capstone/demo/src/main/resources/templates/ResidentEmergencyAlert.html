@@ -303,9 +303,9 @@
       <!-- Thymeleaf initial render - these stay until polling detects changes -->
       <th:block th:each="alert : ${alerts}">
         <div th:if="${!alert.archived}" id="alert-${alert.id}" class="alert-card warning" 
-             th:classappend="${alert.priority == 'Level 3' or alert.priority == 'CRITICAL' ? 'critical' : (alert.priority == 'Level 2' or alert.priority == 'WARNING' ? 'warning' : 'mild')}"
-             th:attr="data-id=${alert.id}, data-title=${alert.title}, data-message=${alert.message}, data-type=${alert.type}, data-location=${alert.location}, data-latitude=${alert.latitude}, data-longitude=${alert.longitude}, data-priority=${alert.priority}, data-date=${alert.dateCreated}"
-             onclick="openAlertModal(this)">
+            th:classappend="${alert.priority == 'Level 3' or alert.priority == 'CRITICAL' ? 'critical' : (alert.priority == 'Level 2' or alert.priority == 'WARNING' ? 'warning' : 'mild')}"
+            th:attr="data-id=${alert.id}, data-title=${alert.title}, data-message=${alert.message}, data-type=${alert.type}, data-location=${alert.location}, data-latitude=${alert.latitude}, data-longitude=${alert.longitude}, data-priority=${alert.priority}, data-date=${alert.dateCreated}"
+            onclick="openAlertModal(this)">
           <div class="alert-icon">
             <i class="bi bi-exclamation-triangle-fill"></i>
             </div>
@@ -384,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return 'bi bi-cloud';
   }
 
-  // Function to collect current visible alert IDs from the DOM
+  // Collect current visible alert IDs from the DOM (includes hidden ones)
   function getCurrentAlertIds() {
     const cards = document.querySelectorAll('#feed .alert-card');
     const ids = [];
@@ -398,48 +398,45 @@ document.addEventListener('DOMContentLoaded', function () {
   // Poll for updates - only reload if data changed
   async function pollAlerts() {
     if (currentTab === 'weather') return;
-    
+
     try {
       const res = await fetch('/resident/emergency-alerts/api/feed?t=' + Date.now());
       if (!res.ok) return;
       const data = await res.json();
-      
-      // Filter out archived alerts
+
       const activeAlerts = data.filter(a => !a.archived);
-      
-      // Get current alert IDs from the page
+
       const currentIds = getCurrentAlertIds();
-      const newIds = activeAlerts.map(a => a.id);
-      
-      // Check if IDs have changed
-      const idsChanged = currentIds.length !== newIds.length || 
-                        currentIds.some(id => !newIds.includes(id)) ||
-                        newIds.some(id => !currentIds.includes(id));
-      
+      const newIds = activeAlerts.map(a => String(a.id));
+
+      const idsChanged =
+        currentIds.length !== newIds.length ||
+        currentIds.some(id => !newIds.includes(id)) ||
+        newIds.some(id => !currentIds.includes(id));
+
       if (!idsChanged) {
-        // Also check for priority changes
-        let priorityChanged = false;
+        // Check for priority OR type changes on existing cards
         for (const alert of activeAlerts) {
           const card = document.getElementById(`alert-${alert.id}`);
           if (card) {
-            const currentPriority = card.getAttribute('data-priority');
-            if (currentPriority !== alert.priority) {
-              priorityChanged = true;
-              break;
+            if (card.getAttribute('data-priority') !== alert.priority ||
+                card.getAttribute('data-type')     !== alert.type) {
+              window.location.reload();
+              return;
             }
           }
         }
-        if (!priorityChanged) return;
+        return;
       }
-      
+
       // Something changed - reload the page
       window.location.reload();
-    } catch(e) { 
-      console.error('Poll error:', e); 
+    } catch (e) {
+      console.error('Poll error:', e);
     }
   }
 
- function openAlertModal(element) {
+  function openAlertModal(element) {
     const title = element.getAttribute('data-title') || '';
     const message = element.getAttribute('data-message') || '';
     const type = element.getAttribute('data-type') || '';
@@ -448,22 +445,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const date = element.getAttribute('data-date') || '';
     const latitude = parseFloat(element.getAttribute('data-latitude'));
     const longitude = parseFloat(element.getAttribute('data-longitude'));
-    
+
     const priorityClass = getPriorityClass(priority);
     const priorityLabel = getPriorityLabel(priority);
-    
+
     let dateFormatted = 'N/A';
     if (date) {
       try {
         dateFormatted = new Date(date).toLocaleString('en-PH');
-      } catch(e) {}
+      } catch (e) {}
     }
-    
+
     const hasLocation = latitude && longitude && !isNaN(latitude) && !isNaN(longitude) && latitude !== 0 && longitude !== 0;
-    
+
     const modalContent = document.getElementById('modalContent');
     if (!modalContent) return;
-    
+
     modalContent.innerHTML = `
       <div class="modal-body-custom">
         <div style="text-align: center; margin-bottom: 16px;">
@@ -490,10 +487,10 @@ document.addEventListener('DOMContentLoaded', function () {
         <button class="btn-close-m" onclick="closeModal()">Close</button>
       </div>
     `;
-    
+
     document.getElementById('overlay').classList.add('open');
     document.body.style.overflow = 'hidden';
-    
+
     if (hasLocation) {
       setTimeout(() => {
         if (currentMap) currentMap.remove();
@@ -534,52 +531,55 @@ document.addEventListener('DOMContentLoaded', function () {
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  // Tab switching - hide/show weather and filter the feed
+  // ── Tab filter (extracted so it can run on initial load too) ──
+  function applyTabFilter(tab) {
+    currentTab = tab;
+
+    const weatherContent = document.getElementById('weatherContent');
+    const alertsContent  = document.getElementById('alertsContent');
+    const sectionTitle   = document.getElementById('activeSectionTitle');
+    const emptyState     = document.getElementById('emptyState');
+
+    if (tab === 'weather') {
+      if (weatherContent) weatherContent.style.display = 'block';
+      if (alertsContent)  alertsContent.style.display  = 'none';
+      fetchWeather();
+      return;
+    }
+
+    if (weatherContent) weatherContent.style.display = 'none';
+    if (alertsContent)  alertsContent.style.display  = 'block';
+
+    const cards = document.querySelectorAll('#feed .alert-card');
+    let anyVisible = false;
+
+    cards.forEach(card => {
+      const type = card.getAttribute('data-type') || '';
+      const isPublicSafety = type === 'Public Safety';
+      const show = (tab === 'road') ? isPublicSafety : !isPublicSafety;
+
+      card.style.display = show ? '' : 'none';
+      if (show) anyVisible = true;
+    });
+
+    if (sectionTitle) {
+      sectionTitle.textContent = (tab === 'road')
+        ? 'Public Safety Advisories'
+        : 'Emergency Alerts';
+    }
+    if (emptyState) emptyState.style.display = anyVisible ? 'none' : 'block';
+  }
+
+  // Tab switching
   document.querySelectorAll('.sub-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      currentTab = tab.dataset.tab;
-      
-      const weatherContent = document.getElementById('weatherContent');
-      const alertsContent = document.getElementById('alertsContent');
-      const sectionTitle = document.getElementById('activeSectionTitle');
-      
-      if (currentTab === 'weather') {
-        if (weatherContent) weatherContent.style.display = 'block';
-        if (alertsContent) alertsContent.style.display = 'none';
-        fetchWeather();
-      } else {
-        if (weatherContent) weatherContent.style.display = 'none';
-        if (alertsContent) alertsContent.style.display = 'block';
-        
-        // Filter the existing cards instead of rebuilding
-        const cards = document.querySelectorAll('#feed .alert-card');
-        let anyVisible = false;
-        
-        cards.forEach(card => {
-          const type = card.getAttribute('data-type') || '';
-          
-          if (currentTab === 'road') {
-            const show = type === 'Public Safety';
-            card.style.display = show ? '' : 'none';
-            if (show) anyVisible = true;
-            if (sectionTitle) sectionTitle.textContent = 'Public Safety Advisories';
-          } else {
-            const show = type !== 'Public Safety';
-            card.style.display = show ? '' : 'none';
-            if (show) anyVisible = true;
-            if (sectionTitle) sectionTitle.textContent = 'Emergency Alerts';
-          }
-        });
-        
-        const emptyState = document.getElementById('emptyState');
-        if (emptyState) emptyState.style.display = anyVisible ? 'none' : 'block';
-      }
+      applyTabFilter(tab.dataset.tab);
     });
   });
 
-  // Weather functions
+  // ── Weather functions ──
   let weeklyForecast = [];
   let weatherData = null;
   let expandedDay = null;
@@ -592,18 +592,18 @@ document.addEventListener('DOMContentLoaded', function () {
         `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&timezone=Asia%2FSingapore&forecast_days=7`
       );
       const data = await response.json();
-      
+
       weatherData = {
         temp: Math.round(data.current.temperature_2m),
         code: data.current.weather_code
       };
-      
+
       weeklyForecast = [];
       for (let i = 0; i < data.daily.time.length; i++) {
         const date = new Date(data.daily.time[i]);
         const dayName = date.toLocaleDateString('en-PH', { weekday: 'short' });
         const monthDay = date.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
-        
+
         weeklyForecast.push({
           id: i,
           dayName,
@@ -614,7 +614,7 @@ document.addEventListener('DOMContentLoaded', function () {
           precipProb: data.daily.precipitation_probability_max[i],
         });
       }
-      
+
       updateWeatherUI();
     } catch (error) {
       console.error("Weather fetch failed:", error);
@@ -642,7 +642,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const currentTemp = document.getElementById('currentTemp');
       if (currentTemp) currentTemp.textContent = weatherData.temp + '°C';
     }
-    
+
     const forecastContainer = document.getElementById('forecastList');
     if (forecastContainer && weeklyForecast.length) {
       forecastContainer.innerHTML = '';
@@ -680,10 +680,14 @@ document.addEventListener('DOMContentLoaded', function () {
     updateWeatherUI();
   }
 
+  // ── Init ──
+  // Apply the default tab filter on load so Public Safety cards are hidden initially
+  applyTabFilter('alerts');
+
   // Start polling every 5 seconds - only reloads when data actually changes
   setInterval(pollAlerts, 5000);
-  
-  // Initial weather fetch
+
+  // Initial weather fetch (pre-warm cache)
   fetchWeather();
 </script>
 

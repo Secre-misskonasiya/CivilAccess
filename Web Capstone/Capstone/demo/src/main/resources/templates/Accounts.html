@@ -1183,7 +1183,7 @@
             <h2>Edit Resident Account</h2>
             <span class="close-btn" onclick="closeResidentModal()">&times;</span>
         </div>
-        <form id="residentForm" th:action="@{/residents/update}" method="post" enctype="multipart/form-data"
+        <form id="residentForm" th:action="@{/residents/register}" method="post" enctype="multipart/form-data"
               onsubmit="handleResidentFormSubmit(event)">
             <input type="hidden" id="res-id" name="id">
             <input type="hidden" id="res-address" name="address">
@@ -1463,8 +1463,7 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
         const cells = row.querySelectorAll('td');
         const statusCell = row.getAttribute('data-status') || '';
         
-        const matchesSearch = !q || Array.from(cells).slice(0, -1)
-            .some(cell => cell.textContent.toLowerCase().includes(q));
+        const matchesSearch = !q || buildRowHaystack(row).includes(q);
         
         let matchesStatus = true;
         if (value !== '') {
@@ -1475,14 +1474,43 @@ function applyFilterByStatus(tabKey, value, label, labelElId) {
     });
 }
 
+// Builds a lowercase haystack of everything searchable in a row:
+// visible cell text + hidden data-* attributes (email, username, phone…).
+function buildRowHaystack(row) {
+    let haystack = '';
+    const cells = row.querySelectorAll('td');
+    // Skip the last cell (Actions column)
+    for (let i = 0; i < cells.length - 1; i++) {
+        haystack += ' ' + cells[i].textContent;
+    }
+
+    // Attributes on the <tr> itself (resident rows carry email here)
+    ['data-email','data-username','data-phone','data-resident-id','data-employee']
+        .forEach(attr => {
+            const v = row.getAttribute(attr);
+            if (v) haystack += ' ' + v;
+        });
+
+    // Attributes on any buttons inside the row (employee rows carry
+    // email/username/phone on the View button)
+    row.querySelectorAll('button').forEach(btn => {
+        ['data-email','data-username','data-phone','data-employee']
+            .forEach(attr => {
+                const v = btn.getAttribute(attr);
+                if (v) haystack += ' ' + v;
+            });
+    });
+
+    return haystack.toLowerCase();
+}
+
 function filterRows(tableSelector, q, tabKey) {
     const filterVal = window.activeFilters && window.activeFilters[tabKey] ? window.activeFilters[tabKey].value : '';
     const colIndex = window.activeFilters && window.activeFilters[tabKey] ? window.activeFilters[tabKey].colIndex : 3;
-    
+
     document.querySelectorAll(tableSelector + ' tbody tr').forEach(row => {
         const cells = row.querySelectorAll('td');
-        const matchesSearch = !q || Array.from(cells).slice(0, -1)
-            .some(cell => cell.textContent.toLowerCase().includes(q));
+        const matchesSearch = !q || buildRowHaystack(row).includes(q);
         const cellVal = cells[colIndex] ? cells[colIndex].textContent.trim() : '';
         const matchesFilter = !filterVal || cellVal === filterVal;
         const visible = matchesSearch && matchesFilter;

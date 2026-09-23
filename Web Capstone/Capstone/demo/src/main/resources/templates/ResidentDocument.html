@@ -747,7 +747,7 @@
                     </div>
                     <div class="info-row">
                         <span class="info-label">Unit Price</span>
-                        <span class="info-value">₱${(rental.equipment_price || 0).toLocaleString()}/day</span>
+                        <span class="info-value">₱${(((rental.total_price/days)/rental.quantity ) || 0).toLocaleString()}/day</span>
                     </div>
                 </div>
             </div>

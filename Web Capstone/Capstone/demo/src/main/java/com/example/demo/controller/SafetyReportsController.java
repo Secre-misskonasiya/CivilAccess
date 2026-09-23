@@ -1,22 +1,34 @@
 package com.example.demo.controller;
 
+import java.security.Principal;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
 import com.example.demo.model.AdminUser;
 import com.example.demo.model.SafetyReports;
 import com.example.demo.services.ActivityLogService;
 import com.example.demo.services.AdminUserServices;
 import com.example.demo.services.SafetyReportService;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
-import java.time.LocalDateTime;
-import java.time.Duration;
-import java.util.*;
-import java.util.stream.Collectors;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
 @RequestMapping("/safety-reports")
@@ -148,6 +160,7 @@ public class SafetyReportsController {
         response.put("description", report.getDescription() != null ? report.getDescription() : "N/A");
         response.put("type", report.getType() != null ? report.getType() : "Safety");
         response.put("priority", report.getPriority() != null ? report.getPriority() : "N/A");
+        response.put("reporterId", report.getReporterId() != null ? report.getReporterId().toString() : null);
         response.put("reporterName", report.getReporterName() != null ? report.getReporterName() : "N/A");
         response.put("reporterContact", report.getReporterContact() != null ? report.getReporterContact() : "N/A");
         response.put("dateSubmitted", report.getDateSubmitted() != null ? report.getDateSubmitted().toString() : null);

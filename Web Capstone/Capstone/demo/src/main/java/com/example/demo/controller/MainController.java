@@ -518,7 +518,7 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
     @PostMapping("/residents/register")
     public String registerResident(
             @ModelAttribute("newResident") ResidentUser resident,
-            @RequestParam("selfieFile") org.springframework.web.multipart.MultipartFile file)
+            @RequestParam(value = "selfieFile", required = false) org.springframework.web.multipart.MultipartFile file)
             throws java.io.IOException {
 
         if (resident.getId() != null && resident.getId().toString().isEmpty()) {
@@ -548,6 +548,25 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
         
         lastAccountsModificationTime = System.currentTimeMillis();
         
+        return "redirect:/account";
+    }
+
+    @GetMapping("/restore-admin/{id}")
+    public String restoreAdmin(@PathVariable Long id, Principal principal, HttpServletRequest request) {
+        AdminUser currentAdmin = adminUserService.getAdminByEmail(principal.getName());
+        AdminUser admin = adminUserService.getAdminById(id);
+        if (admin != null) {
+            admin.setEmpstatus("Working");
+            adminUserService.saveAdmin(admin);
+
+            activityLogService.log(
+                currentAdmin.getName(), admin.getRole(), "RESTORED", "Accounts",
+                "Restored the account of " + admin.getName() + " (" + admin.getRole() + ")",
+                request.getRemoteAddr(), "Success"
+            );
+
+            lastAccountsModificationTime = System.currentTimeMillis();
+        }
         return "redirect:/account";
     }
 

@@ -380,9 +380,13 @@
     .msg-row.grouped { margin-bottom: 2px; }
 
     .bubble {
-      max-width: 65%; padding: 9px 14px;
-      border-radius: 20px; word-break: break-word;
-      line-height: 1.55; font-size: 14px;
+      max-width: 100%;          /* fill the column, don't fight percentages */
+      padding: 9px 14px;
+      border-radius: 20px;
+      overflow-wrap: anywhere;  /* proper, standards-compliant breaking */
+      word-break: normal;
+      line-height: 1.55;
+      font-size: 14px;
     }
     .bubble.me {
       background: var(--bubble-me); color: var(--bubble-me-t);
@@ -393,7 +397,12 @@
       border-bottom-left-radius: 6px;
     }
 
-    .msg-col { display: flex; flex-direction: column; }
+    .msg-col {
+      display: flex;
+      flex-direction: column;
+      max-width: 65%;   /* width cap lives here now — a definite value */
+      min-width: 0;     /* critical: lets flex item shrink instead of overflow */
+    }
     .msg-col.me { align-items: flex-end; }
 
     .sender-name {

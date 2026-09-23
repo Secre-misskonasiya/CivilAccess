@@ -75,7 +75,7 @@
     }
     @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
 
-    .page { max-width: 660px; margin: 0 auto; padding: 28px 14px 64px; }
+    .page { max-width: 1200px; margin: 0 auto; padding: 28px 14px 64px; }
 
     .page-head { text-align: center; margin-bottom: 26px; animation: fadeDown .45s ease both; }
     .page-head h1 { font-family: var(--font-h); font-size: 24px; font-weight: 800; color: var(--brand-dark); letter-spacing: -.4px; }
@@ -118,9 +118,10 @@
     .chip.chip-high.active { background: #7d6108; border-color: var(--gold); color: #fff; }
 
     #feed {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 16px;
+      align-items: start;
     }
 
     .card {
@@ -218,24 +219,31 @@
     #feed .card:nth-child(5) { animation-delay:.25s }
     #feed .card:nth-child(n+6){ animation-delay:.30s }
 
-    .empty { text-align: center; padding: 60px 0; color: var(--text-3); }
+    .empty { text-align: center; padding: 60px 0; color: var(--text-3); grid-column: 1 / -1;}
     .empty i { font-size: 50px; display: block; margin-bottom: 12px; opacity: .3; }
     .empty p { font-size: 15px; }
 
     .overlay {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
-      z-index: 200; align-items: center; justify-content: center;
+      z-index: 200;
+      align-items: center; justify-content: center;
       padding: 20px;
+      overflow: hidden;
     }
     .overlay.open { display: flex; }
-
+    
     .modal-box {
-      background: var(--card); border-radius: 16px;
-      width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+      background: var(--card);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 1100px;
+      max-height: 90vh;      /* cap it to the viewport */
+      overflow-y: auto;      /* scroll inside the modal, not the page */
       box-shadow: 0 24px 60px rgba(0,0,0,.3);
       animation: popIn .25s ease both;
     }
+
     @keyframes popIn {
       from { opacity:0; transform:scale(.95) translateY(10px); }
       to   { opacity:1; transform:scale(1)   translateY(0); }
@@ -256,7 +264,13 @@
     .m-head { display: flex; align-items: center; gap: 10px; padding: 16px 16px 8px; }
     .m-title { font-family: var(--font-h); font-weight: 700; font-size: 16px; padding: 0 16px 10px; line-height: 1.4; }
     .m-body  { font-size: 14.5px; color: #3e4042; line-height: 1.7; padding: 0 16px 16px; white-space: pre-wrap; word-break: break-word; }
-    .m-img   { width: 100%; object-fit: cover; max-height: 300px; display: block; }
+    .m-img {
+      width: 100%;
+      height: auto;          /* natural aspect ratio */
+      max-height: none;      /* was 300px — that was capping it */
+      object-fit: contain;   /* was cover — that was cropping it */
+      display: block;
+    }
     .m-foot  {
       display: flex; align-items: center; justify-content: space-between;
       padding: 12px 16px; border-top: 1px solid var(--border);
@@ -273,9 +287,10 @@
     @keyframes fadeDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
     @keyframes fadeUp   { from{opacity:0;transform:translateY(16px)}  to{opacity:1;transform:translateY(0)} }
 
-    @media(max-width:480px){
+    @media(max-width: 1024px){
       .page { padding: 18px 8px 50px; }
       .nav-sub { display:none; }
+      #feed { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
 
