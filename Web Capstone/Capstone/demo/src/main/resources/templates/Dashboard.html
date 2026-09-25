@@ -70,13 +70,13 @@
     .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 
     .top-bar {
-        background: var(--surface);
+        background: #2d4a44;
         padding: 0 32px;
         height: 70px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 2px solid var(--gold);
         flex-shrink: 0;
         box-shadow: 0 1px 0 rgba(0,0,0,0.04);
         z-index: 10;
@@ -84,18 +84,18 @@
     .welcome-text {
         font-size: 18px;
         font-weight: 600;
-        color: var(--gray-700);
+        color: #ffffff;
         letter-spacing: -0.01em;
     }
     .welcome-text span {
-        color: var(--green-700);
+        color: var(--gold);
         font-weight: 700;
     }
     .user-info { display: flex; align-items: center; gap: 14px; }
     .user-info > span {
         font-size: 14px;
         font-weight: 500;
-        color: var(--gray-500);
+        color: #cfe0dd;
     }
     .user-avatar {
         width: 44px; height: 44px;
@@ -639,12 +639,15 @@
         cursor: pointer;
         margin-right: 12px;
         font-size: 20px;
-        color: var(--gray-400);
+        color: #cfe0dd;
         transition: color 0.2s;
         padding: 7px;
         border-radius: var(--radius-sm);
     }
-    .notification-bell:hover { color: var(--green-700); background: var(--green-50); }
+    .notification-bell:hover {
+        color: var(--gold);
+        background: rgba(255,255,255,0.08);
+    }
     .notification-bell .badge {
         position: absolute;
         top: 4px; right: 4px;

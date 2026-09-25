@@ -291,7 +291,7 @@ public class SafetyReportsController {
         safetyReportService.saveReport(report);
 
         activityLogService.log(
-            principal.getName(), admin.getRole(), "RESOLVED", "Safety Reports",
+            admin.getName(), admin.getRole(), "RESOLVED", "Safety Reports",
             "Resolved the safety report: \"" + report.getTitle() + "\" and submitted resolution details",
             request.getRemoteAddr(), "Success"
         );
@@ -321,7 +321,7 @@ public class SafetyReportsController {
         SafetyReports report = safetyReportService.getReportById(id);
         if (report == null) {
             activityLogService.log(
-                principal.getName(), admin.getRole(), "UPDATED", "Safety Reports",
+                admin.getName(), admin.getRole(), "UPDATED", "Safety Reports",
                 "Tried to update status of safety report #" + id + " but it was not found",
                 request.getRemoteAddr(), "Failed"
             );
@@ -350,7 +350,7 @@ public class SafetyReportsController {
         };
 
         activityLogService.log(
-            principal.getName(), admin.getRole(), "UPDATED", "Safety Reports",
+            admin.getName(), admin.getRole(), "UPDATED", "Safety Reports",
             "\"" + report.getTitle() + "\" — " + actionLabel,
             request.getRemoteAddr(), "Success"
         );
@@ -386,7 +386,7 @@ public class SafetyReportsController {
         safetyReportService.saveReport(report);
 
         activityLogService.log(
-            principal.getName(), admin.getRole(), "UPDATED", "Safety Reports",
+            admin.getName(), admin.getRole(), "UPDATED", "Safety Reports",
             "Updated priority to " + priority + " for report: \"" + report.getTitle() + "\"",
             request.getRemoteAddr(), "Success"
         );
@@ -416,7 +416,7 @@ public class SafetyReportsController {
         SafetyReports report = safetyReportService.getReportById(id);
         if (report == null) {
             activityLogService.log(
-                principal.getName(), admin.getRole(), "UPDATED", "Safety Reports",
+                admin.getName(), admin.getRole(), "UPDATED", "Safety Reports",
                 "Tried to add remarks to safety report #" + id + " but it was not found",
                 request.getRemoteAddr(), "Failed"
             );
@@ -427,7 +427,7 @@ public class SafetyReportsController {
         safetyReportService.saveReport(report);
 
         activityLogService.log(
-                principal.getName(), admin.getRole(), "UPDATED", "Safety Reports",
+                admin.getName(), admin.getRole(), "UPDATED", "Safety Reports",
                 "Added handler remarks to the report: \"" + report.getTitle() + "\"",
                 request.getRemoteAddr(), "Success"
             );
