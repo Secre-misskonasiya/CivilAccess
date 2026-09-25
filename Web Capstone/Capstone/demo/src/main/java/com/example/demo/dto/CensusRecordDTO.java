@@ -1,7 +1,8 @@
 package com.example.demo.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class CensusRecordDTO {
 
@@ -227,5 +228,15 @@ public class CensusRecordDTO {
         if (s1 && s2)       return 2;
         if (s1)             return 1;
         return 0;
+    }
+
+    public String displayName() {
+        StringBuilder sb = new StringBuilder();
+        if (lastName != null && !lastName.isBlank()) sb.append(lastName);
+        sb.append(", ");
+        if (firstName != null && !firstName.isBlank()) sb.append(firstName);
+        if (middleName != null && !middleName.isBlank()) sb.append(" ").append(middleName);
+        if (suffix != null && !suffix.isBlank()) sb.append(" ").append(suffix);
+        return sb.toString().trim();
     }
 }

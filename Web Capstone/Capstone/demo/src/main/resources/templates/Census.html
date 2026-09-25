@@ -449,13 +449,13 @@ td{padding:12px 14px !important;vertical-align:middle !important}
               </thead>
               <tbody>
                 <tr th:each="r : ${activeRecords}"
-                    th:attr="data-name=${r.firstName + ' ' + r.lastName},
+                    th:attr="data-name=${r.fullName()},
                              data-address=${r.address},
                              data-id=${r.recordId},
                              data-status=${r.censusStatus}">
                   <td><span class="mono" th:text="${r.recordId}">—</span></td>
                   <td>
-                    <span class="name-primary" th:text="${r.lastName + ', ' + r.firstName + ' ' + r.middleName}">—</span>
+                    <span class="name-primary" th:text="${r.displayName()}">—</span>
                     <span class="name-sub">
                       <span th:text="${r.gender != null ? r.gender : '—'}">—</span> ·
                       <span th:text="${r.age() != null ? r.age() + ' yrs' : '—'}">—</span>
@@ -584,6 +584,8 @@ td{padding:12px 14px !important;vertical-align:middle !important}
                                         data-vaccovid=${r.vaccCovid19},
                                         data-vaccflu=${r.vaccInfluenza},
                                         data-vacchpv=${r.vaccHpv},
+                                        data-govid=${r.governmentIdUrl},
+                                        data-selfie=${r.selfieWithIdUrl},
                                         data-lat=${r.latitude}, 
                                         data-lng=${r.longitude},
                                         data-ecname=${r.emergencyContactName},
@@ -643,7 +645,7 @@ td{padding:12px 14px !important;vertical-align:middle !important}
                 </thead>
                 <tbody>
                   <tr th:each="r : ${archivedRecords}"
-                      th:attr="data-name=${r.firstName + ' ' + r.lastName},
+                      th:attr="data-name=${r.fullName()},
                               data-address=${r.address},
                               data-id=${r.recordId},
                               data-status=${r.censusStatus}">
@@ -725,6 +727,8 @@ td{padding:12px 14px !important;vertical-align:middle !important}
                                   data-vaccovid=${r.vaccCovid19},
                                   data-vaccflu=${r.vaccInfluenza},
                                   data-vacchpv=${r.vaccHpv},
+                                  data-govid=${r.governmentIdUrl},
+                                  data-selfie=${r.selfieWithIdUrl},
                                   data-ecrel=${r.emergencyContactRelation}"
                           onclick="viewRecord(this)">View</button>
                         <button class="restore-btn"
@@ -1051,7 +1055,7 @@ td{padding:12px 14px !important;vertical-align:middle !important}
             <div class="field"><label>PhilHealth membership category</label>
               <select name="philhealthCategory" id="f_philcat"><option value="">Select…</option><option>Direct contributor</option><option>Indirect contributor (indigent)</option><option>Lifetime member</option><option>OFW member</option><option>Senior citizen</option><option>Not enrolled</option></select>
             </div>
-            <div class="field"><label>Blood pressure history (optional)</label><input type="text" name="bloodPressureHistory" id="f_bp" placeholder="e.g. 120/80"></div>
+            <div class="field"><label>Recent blood pressure history (optional)</label><input type="text" name="bloodPressureHistory" id="f_bp" placeholder="e.g. 120/80"></div>
             <div class="field"><label>Evacuation priority</label>
               <select name="evacuationPriority" id="f_evac"><option value="">Select…</option><option value="High">High — requires special assistance</option><option value="Medium">Medium — needs some support</option><option value="Low">Low — self-sufficient</option></select>
             </div>
@@ -1772,13 +1776,76 @@ function calcAge() {
 }
 
 function previewFile(inputId, imgId, lblId) {
-  const file = document.getElementById(inputId).files[0];
+  const input = document.getElementById(inputId);
+  const file = input.files[0];
   if (!file) return;
-  document.getElementById(lblId).textContent = file.name;
-  const img = document.getElementById(imgId);
-  const reader = new FileReader();
-  reader.onload = e => { img.src = e.target.result; img.style.display = 'block'; };
-  reader.readAsDataURL(file);
+
+  // PDFs can't be canvas-compressed — just show the name as before
+  if (!file.type.startsWith('image/')) {
+    document.getElementById(lblId).textContent = file.name;
+    return;
+  }
+
+  document.getElementById(lblId).textContent = 'Compressing…';
+
+  compressImage(file, 1280, 1280, 0.75, 400 * 1024) // max 1280px side, target ~400KB
+    .then(compressedFile => {
+      // Swap the compressed file back into the <input> so it's what gets submitted
+      const dt = new DataTransfer();
+      dt.items.add(compressedFile);
+      input.files = dt.files;
+
+      const kb = (compressedFile.size / 1024).toFixed(0);
+      document.getElementById(lblId).textContent = compressedFile.name + ' (' + kb + ' KB)';
+
+      const img = document.getElementById(imgId);
+      const reader = new FileReader();
+      reader.onload = e => { img.src = e.target.result; img.style.display = 'block'; };
+      reader.readAsDataURL(compressedFile);
+    })
+    .catch(() => {
+      document.getElementById(lblId).textContent = file.name;
+      showToast('Could not compress image — uploading original.', 'error');
+    });
+}
+
+function compressImage(file, maxW, maxH, startQuality, targetBytes) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        const scale = Math.min(1, maxW / width, maxH / height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+        let q = startQuality;
+        const attempt = () => {
+          canvas.toBlob(blob => {
+            if (!blob) { reject(new Error('toBlob failed')); return; }
+            if (blob.size > targetBytes && q > 0.3) {
+              q -= 0.1;
+              attempt();
+            } else {
+              const newName = file.name.replace(/\.\w+$/, '') + '.jpg';
+              resolve(new File([blob], newName, { type: 'image/jpeg' }));
+            }
+          }, 'image/jpeg', q);
+        };
+        attempt();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function showToast(msg, type = '') {
