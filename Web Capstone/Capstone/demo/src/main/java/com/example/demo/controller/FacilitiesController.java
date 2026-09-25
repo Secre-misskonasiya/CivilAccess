@@ -1,23 +1,33 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.AdminUser;
-import com.example.demo.model.Facilities;
-import com.example.demo.services.ActivityLogService;
-import com.example.demo.services.AdminUserServices;
-import com.example.demo.services.FacilitiesService;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.example.demo.model.AdminUser;
+import com.example.demo.model.Facilities;
+import com.example.demo.services.ActivityLogService;
+import com.example.demo.services.AdminUserServices;
+import com.example.demo.services.FacilitiesService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
 @RequestMapping("/facilities")
@@ -93,7 +103,7 @@ public class FacilitiesController {
         Facilities saved = facilitiesService.saveFacility(facility);
 
         activityLogService.log(
-            principal.getName(), admin.getRole(), "CREATED", "Facilities",
+            admin.getName(), admin.getRole(), "CREATED", "Facilities",
             "Added a new " + saved.getFacilityType().toLowerCase() + " facility: \"" + saved.getFacilityName() + "\"",
             request.getRemoteAddr(), "Success"
         );
@@ -111,18 +121,16 @@ public class FacilitiesController {
             @RequestBody Facilities facility,
             Principal principal,
             HttpServletRequest request) {
-
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
         Facilities existing = facilitiesService.getFacilityById(id);
         if (existing == null) {
             activityLogService.log(
-                    principal.getName(), "ADMIN", "UPDATED", "Facilities",
+                    admin.getName(), "ADMIN", "UPDATED", "Facilities",
                     "Tried to edit facility #" + id + " but it was not found",
                     request.getRemoteAddr(), "Failed"
                 );
             return ResponseEntity.notFound().build();
         }
-
-        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
 
         existing.setFacilityName(facility.getFacilityName());
         existing.setFacilityType(facility.getFacilityType());
@@ -136,7 +144,7 @@ public class FacilitiesController {
         facilitiesService.saveFacility(existing);
 
         activityLogService.log(
-            principal.getName(), admin.getRole(), "UPDATED", "Facilities",
+            admin.getName(), admin.getRole(), "UPDATED", "Facilities",
             "Updated facility details for \"" + existing.getFacilityName() + "\"",
             request.getRemoteAddr(), "Success"
         );
@@ -163,7 +171,7 @@ public class FacilitiesController {
         Facilities existing = facilitiesService.getFacilityById(id);
         if (existing == null) {
             activityLogService.log(
-                    principal.getName(), "ADMIN", "DELETED", "Facilities",
+                    admin.getName(), "ADMIN", "DELETED", "Facilities",
                     "Tried to delete facility #" + id + " but it was not found",
                     request.getRemoteAddr(), "Failed"
                 );
@@ -174,7 +182,7 @@ public class FacilitiesController {
         facilitiesService.deleteFacility(id);
 
         activityLogService.log(
-            principal.getName(), admin.getRole(), "DELETED", "Facilities",
+            admin.getName(), admin.getRole(), "DELETED", "Facilities",
             "Removed the facility: \"" + facilityName + "\"",
             request.getRemoteAddr(), "Success"
         );

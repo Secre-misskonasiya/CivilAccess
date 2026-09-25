@@ -560,7 +560,7 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
             adminUserService.saveAdmin(admin);
 
             activityLogService.log(
-                currentAdmin.getName(), admin.getRole(), "RESTORED", "Accounts",
+                admin.getName(), admin.getRole(), "RESTORED", "Accounts",
                 "Restored the account of " + admin.getName() + " (" + admin.getRole() + ")",
                 request.getRemoteAddr(), "Success"
             );
