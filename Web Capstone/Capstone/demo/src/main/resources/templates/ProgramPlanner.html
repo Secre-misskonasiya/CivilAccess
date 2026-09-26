@@ -746,6 +746,19 @@
     .log-open-btn:hover { background-color: #2d4a44; color: white; }
 
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    .ai-disclaimer {
+        font-size: 11px;
+        color: #999;
+        text-align: center;
+        padding: 6px 16px 12px;
+        line-height: 1.5;
+    }
+    .ai-disclaimer a {
+        color: #888;
+        text-decoration: underline;
+    }
+    .ai-disclaimer a:hover { color: #2d4a44; }
 </style>
 
 <meta charset="UTF-8">
@@ -827,6 +840,10 @@
           <button class="chat-create-btn" id="chat-create-btn" onclick="openAICreateModal()" disabled>
             <i class="bi bi-plus-circle"></i> Create
           </button>
+        </div>
+        <div class="ai-disclaimer">
+          This AI assistant is for planning and reference purposes only, review all suggested programs and budgets before approval.
+          Gemini is AI and can make mistakes. Please double-check responses.
         </div>
       </div>
 

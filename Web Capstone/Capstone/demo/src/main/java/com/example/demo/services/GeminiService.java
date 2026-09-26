@@ -1,11 +1,46 @@
 package com.example.demo.services;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.stereotype.Service;
 
 @Service
 public class GeminiService {
+
+    private static final List<String> ALLOWED_LOCATIONS = List.of(
+        "Barangay Hall", "Covered Court", "Comelec Village", "Parksville",
+        "Lancaster Village 1", "Rosedale", "Veraneo"
+    );
+
+    // Only these two exact search-query URL shapes are ever allowed through.
+    // Anything else (a specific listing, item ID, seller page) is treated as
+    // a hallucinated link and stripped before the response leaves this service.
+    private static final Pattern ALLOWED_LINK = Pattern.compile(
+        "https://shopee\\.ph/search\\?keyword=[^\\s\"]*" +
+        "|https://www\\.lazada\\.com\\.ph/catalog/\\?q=[^\\s\"]*"
+    );
+
+    // Trailing characters that are almost always closing punctuation from
+    // surrounding prose (e.g. "[Shopee: https://...keyword=x]") rather than
+    // part of the URL itself. Stripped before validating against ALLOWED_LINK
+    // so a bracket or period doesn't get glued onto an otherwise-valid link.
+    private static final Pattern ANY_URL = Pattern.compile("https?://\\S+");
+    private static final Pattern TRAILING_PUNCTUATION = Pattern.compile("[\\]\\)\\.,;:!?\"']+$");
+
+    // Matches "location":"..." inside the trailing JSON payload the model emits.
+    private static final Pattern LOCATION_FIELD = Pattern.compile(
+        "\"location\"\\s*:\\s*\"([^\"]*)\""
+    );
+
+    // Matches "eventDate":"YYYY-MM-DD"
+    private static final Pattern DATE_FIELD = Pattern.compile(
+        "\"eventDate\"\\s*:\\s*\"(\\d{4}-\\d{2}-\\d{2})\""
+    );
 
     private final ChatClient chatClient;
 
@@ -16,14 +51,15 @@ public class GeminiService {
     }
 
     public String getAiResponse(String userPrompt) {
-        return chatClient.prompt()
+        String raw = chatClient.prompt()
                 .system("""
                     You are a helpful Barangay Program Planning Assistant.
                     The user's message will include the barangay's current available budget and TODAY'S DATE at the top.
                     Always read and consider the budget and today's date before responding.
 
                     LOCATION RULES:
-                    - When suggesting a program location, ONLY suggest from this list:
+                    - When suggesting or confirming a program location, the ONLY valid values are
+                      exactly (character-for-character) one of:
                     • Barangay Hall
                     • Covered Court
                     • Comelec Village
@@ -31,8 +67,12 @@ public class GeminiService {
                     • Lancaster Village 1
                     • Rosedale
                     • Veraneo
-                    - NEVER suggest any other location.
-                    - If the user asks for a location not in this list, politely explain that only these barangay locations are available.
+                    - Do not paraphrase, abbreviate, translate, or invent a nearby-sounding location.
+                      If a user names a place not on this list (even a real, well-known place), it is
+                      still invalid for this system — explain that only the listed barangay venues
+                      are available and ask them to pick one from the list.
+                    - Never put a location in the final "location" JSON field unless it is one of the
+                      exact strings above.
 
                     TODAY'S DATE RULE:
                     - Today's date is provided in the user's message (e.g., "Today's date is 2026-04-26").
@@ -95,11 +135,21 @@ public class GeminiService {
                     7. MISCELLANEOUS - Transportation, communication, etc.
 
                     BUDGET DATA ACCURACY RULES:
-                    - Base all prices on the most recent information available to you, not memorized estimates.
-                    - If you are not confident a price reflects current market rates, say so explicitly
-                      (e.g., "approximate, based on typical current rates") rather than stating it as exact.
-                    - Prefer round, conservative estimates over precise-looking numbers you're unsure of —
-                      a wrong number that looks exact is worse than an honest range.
+                    - You have no live access to current prices, stock, or product listings. Every price
+                      you give is a rough planning estimate, never a verified current price.
+                    - NEVER present a price as exact or current. Always phrase it as an estimate
+                      (e.g., "approx. ₱1,200" not "₱1,200"), and round to the nearest ₱50–₱100
+                      rather than giving falsely precise numbers (e.g., prefer ₱1,200 over ₱1,187).
+                    - NEVER invent or output a link to a specific product listing, seller page, or
+                      product ID. You may ONLY output a generic SEARCH QUERY URL in these exact forms:
+                      • https://shopee.ph/search?keyword=[url-encoded item name]
+                      • https://www.lazada.com.ph/catalog/?q=[url-encoded item name]
+                      Any other URL form (a listing URL, an item ID, a seller shop link) is a
+                      fabrication and must never be produced.
+                    - Do not state a specific store name, brand availability, or stock status as fact —
+                      you do not know this. Say "check availability" instead of asserting it.
+                    - If you are not confident about a program's typical scale, attendee count, or
+                      duration, say so and offer a range instead of a single invented number.
                       
                     EXAMPLE BUDGET BREAKDOWN WITH LINKS:
                     
@@ -190,5 +240,94 @@ public class GeminiService {
                 .user(userPrompt)
                 .call()
                 .content();
+
+        return sanitize(raw);
+    }
+
+    /**
+     * Defense-in-depth: never trust the model's own instruction-following as
+     * the only safeguard. This strips any link the model was not authorized
+     * to produce, and flags (rather than silently trusts) any location/date
+     * in the trailing JSON payload that violates the rules we gave it.
+     */
+    private String sanitize(String content) {
+        if (content == null || content.isBlank()) {
+            return content;
+        }
+
+        String result = stripUnauthorizedLinks(content);
+        result = flagInvalidLocation(result);
+        result = flagPastDate(result);
+        return result;
+    }
+
+    private String stripUnauthorizedLinks(String content) {
+        Matcher m = ANY_URL.matcher(content);
+        StringBuilder out = new StringBuilder();
+        int last = 0;
+        while (m.find()) {
+            String rawUrl = m.group();
+            int matchEnd = m.end();
+
+            // Peel off trailing punctuation that belongs to the surrounding
+            // sentence/bracket, not the URL, before validating it.
+            Matcher trail = TRAILING_PUNCTUATION.matcher(rawUrl);
+            String url = rawUrl;
+            String trailing = "";
+            if (trail.find()) {
+                trailing = trail.group();
+                url = rawUrl.substring(0, rawUrl.length() - trailing.length());
+            }
+
+            out.append(content, last, m.start());
+            if (ALLOWED_LINK.matcher(url).matches()) {
+                out.append(url).append(trailing);
+            } else {
+                // Fabricated/unsupported link shape — never forward it as clickable.
+                out.append("[link removed — could not be verified]").append(trailing);
+            }
+            last = matchEnd;
+        }
+        out.append(content.substring(last));
+        return out.toString();
+    }
+
+    private String flagInvalidLocation(String content) {
+        // Annual/multi-program plans emit a JSON ARRAY with one "location"
+        // field per program — check every occurrence, not just the first,
+        // or a bad venue buried in program #7 of 10 would slip through.
+        Matcher m = LOCATION_FIELD.matcher(content);
+        java.util.LinkedHashSet<String> invalid = new java.util.LinkedHashSet<>();
+        while (m.find()) {
+            String loc = m.group(1);
+            if (!ALLOWED_LOCATIONS.contains(loc)) {
+                invalid.add(loc);
+            }
+        }
+        if (invalid.isEmpty()) {
+            return content;
+        }
+        // Don't silently pass an invented location downstream to be
+        // saved/displayed as a confirmed program venue.
+        StringBuilder warning = new StringBuilder("\n\n⚠️ Note: the following suggested location(s) are not "
+            + "approved barangay venues and were not saved automatically: ");
+        warning.append(String.join(", ", invalid.stream().map(l -> "\"" + l + "\"").toList()));
+        return content + warning;
+    }
+
+    private String flagPastDate(String content) {
+        Matcher m = DATE_FIELD.matcher(content);
+        java.util.LinkedHashSet<String> pastDates = new java.util.LinkedHashSet<>();
+        while (m.find()) {
+            LocalDate eventDate = LocalDate.parse(m.group(1));
+            if (eventDate.isBefore(LocalDate.now())) {
+                pastDates.add(eventDate.toString());
+            }
+        }
+        if (pastDates.isEmpty()) {
+            return content;
+        }
+        return content + "\n\n⚠️ Note: the following suggested date(s) are in the past and were not saved "
+            + "automatically: " + String.join(", ", pastDates);
     }
 }

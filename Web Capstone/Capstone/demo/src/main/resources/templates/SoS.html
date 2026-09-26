@@ -241,14 +241,8 @@
     .modal.success-toast-modal {
         z-index: 10600 !important;
     }
-    .modal.success-toast-modal + .modal-backdrop {
-        z-index: 10590 !important;
-    }
     [id^="dynamicConfirmModal_"] {
         z-index: 10550 !important;
-    }
-    [id^="dynamicConfirmModal_"] + .modal-backdrop {
-        z-index: 10540 !important;
     }
 
     /* ============================================
@@ -396,6 +390,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Brgy. San Sebastian SOS Monitoring: Manage and Monitor SOS Requests">
+<meta name="_csrf"        th:content="${_csrf?.token}">
+<meta name="_csrf_header" th:content="${_csrf?.headerName}">
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" th:href="@{/css/sidebar.css}">
@@ -449,20 +446,17 @@
             <input type="text" id="sos-search" placeholder="Search by name, location, or SoS type...">
         </div>
         <div class="dropdown" th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" style="display:inline-block;">
-            <button class="filter-btn dropdown-toggle" type="button" id="typeFilterDropdown"
+            <button class="filter-btn dropdown-toggle" type="button" id="dateFilterDropdown"
                     data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-funnel"></i> Filter by Type
+                <i class="bi bi-calendar3"></i> <span id="dateFilterLabel">All Dates</span>
             </button>
-            <ul class="dropdown-menu" aria-labelledby="typeFilterDropdown" id="typeFilterMenu">
-                <li><a class="dropdown-item" href="#" data-type="all">All Types</a></li>
+            <ul class="dropdown-menu" id="dateFilterMenu" aria-labelledby="dateFilterDropdown">
+                <li><a class="dropdown-item" href="#" data-range="all">All Dates</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#" data-type="Flood">Flood</a></li>
-                <li><a class="dropdown-item" href="#" data-type="Earthquake">Earthquake</a></li>
-                <li><a class="dropdown-item" href="#" data-type="Severe Weather">Severe Weather</a></li>
-                <li><a class="dropdown-item" href="#" data-type="Crime and Security">Crime and Security</a></li>
-                <li><a class="dropdown-item" href="#" data-type="Infrastructure and Utilities">Infrastructure and Utilities</a></li>
-                <li><a class="dropdown-item" href="#" data-type="Environmental Hazard">Environmental Hazard</a></li>
-                <li><a class="dropdown-item" href="#" data-type="Public Safety">Public Safety</a></li>
+                <li><a class="dropdown-item" href="#" data-range="today">Today</a></li>
+                <li><a class="dropdown-item" href="#" data-range="7">Last 7 Days</a></li>
+                <li><a class="dropdown-item" href="#" data-range="30">Last 30 Days</a></li>
+                <li><a class="dropdown-item" href="#" data-range="month">This Month</a></li>
             </ul>
         </div>
             <button class="export-btn" 
@@ -480,10 +474,10 @@
             Processing <span class="tab-badge" id="badge-processing"  th:text="${processingCount}">0</span>
         </div>
         <div class="tab" data-tab="resolved" th:classappend="${currentTab == 'resolved' ? 'active' : ''}">
-            Resolved   <span class="tab-badge"                        th:text="${resolvedCount}">0</span>
+            Resolved   <span class="tab-badge" id="badge-resolved" th:text="${resolvedCount}">0</span>
         </div>
         <div class="tab" data-tab="archive" th:classappend="${currentTab == 'archive' ? 'active' : ''}">
-            Archive    <span class="tab-badge"                        th:text="${archivedCount}">0</span>
+            Archive    <span class="tab-badge" id="badge-archive" th:text="${archivedCount}">0</span>
         </div>
         <div class="tab" data-tab="cancelled" th:classappend="${currentTab == 'cancelled' ? 'active' : ''}">
             Cancelled  <span class="tab-badge" id="badge-cancelled"   th:text="${cancelledCount}">0</span>
@@ -497,18 +491,15 @@
             <div class="panel-header">Incoming SOS Alerts</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0" id="sos-table-incoming">
-                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Date/TimeStamp</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Date/TimeStamp</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="incoming-tbody">
                         <tr th:each="report : ${incomingReports}" th:if="${not #lists.isEmpty(incomingReports)}" th:attr="data-id=${report.id}">
                             <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
                             <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
-                            <td class="sos-type-cell" th:text="${report.dateReported != null ? #temporals.format(report.dateReported, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>
-                            <td th:text="${report.location != null and report.location != 'N/A' 
-                                ? report.location 
-                                : (report.latitude != null and report.longitude != null 
-                                    ? 'Latitude (Y): ' + report.latitude + ', Longitude (X): ' + report.longitude 
-                                    : 'N/A')}">N/A</td>
+                            <td class="date-cell"
+                                th:attr="data-iso=${report.dateReported != null ? #temporals.formatISO(report.dateReported) : ''}"
+                                th:text="${report.dateReported != null ? #temporals.formatISO(report.dateReported) : 'N/A'}"></td>
                             <td><span class="status-incoming">Incoming</span></td>
                             <td>
                                 <div class="d-flex gap-2">
@@ -518,7 +509,7 @@
                                     <!-- Process/Archive - ONLY for ADMIN, SECRETARY, SECRETARIAT STAFF -->
                                     <th:block th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
                                         <button class="resolve-btn" th:onclick="'updateStatusWithConfirm(' + ${report.id} + ', \'PROCESSING\')'">Process</button>
-                                        <button class="archive-btn" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                        <button class="archive-btn" th:if="${currentrole == 'ADMIN'}"
                                             th:onclick="|updateStatusWithConfirm(${report.id}, 'ARCHIVED')|">Archive</button>
                                     <button class="archive-btn" th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
                                             onclick="openAssistanceModal()">Archive</button>
@@ -531,7 +522,7 @@
                 <div class="table-footer">
                     <span id="incomingCount">Showing <span th:text="${incomingReports != null ? #lists.size(incomingReports) : 0}">0</span> incoming alert(s)</span>
                 </div>
-                <div class="text-center p-4" id="incoming-empty" th:if="${#lists.isEmpty(incomingReports)}"><p class="text-muted">No incoming SoS alerts</p></div>
+                <div class="text-center p-4" id="incoming-empty" th:style="${#lists.isEmpty(incomingReports) ? '' : 'display:none;'}"><p class="text-muted">No incoming SoS alerts</p></div>
             </div>
         </div>
 
@@ -540,18 +531,15 @@
             <div class="panel-header">Processing SOS Alerts</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
-                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Date/TimeStamp</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Date/TimeStamp</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="processing-tbody">
                         <tr th:each="report : ${processingReports}" th:if="${processingReports != null and not #lists.isEmpty(processingReports)}" th:attr="data-id=${report.id}">
                             <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
                             <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
-                            <td class="sos-type-cell" th:text="${report.dateReported != null ? #temporals.format(report.dateReported, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>
-                            <td th:text="${report.location != null and report.location != 'N/A' 
-                                ? report.location 
-                                : (report.latitude != null and report.longitude != null 
-                                    ? 'Latitude (Y): ' + report.latitude + ', Longitude (X): ' + report.longitude 
-                                    : 'N/A')}">N/A</td>
+                            <td class="date-cell"
+                                th:attr="data-iso=${report.dateReported != null ? #temporals.formatISO(report.dateReported) : ''}"
+                                th:text="${report.dateReported != null ? #temporals.formatISO(report.dateReported) : 'N/A'}"></td>
                             <td><span class="status-processing">Processing</span></td>
                             <td>
                                 <div class="d-flex gap-2">
@@ -574,7 +562,7 @@
                 <div class="table-footer">
                     <span id="processingCount">Showing <span th:text="${processingReports != null ? #lists.size(processingReports) : 0}">0</span> processing alert(s)</span>
                 </div>
-                <div class="text-center p-4" id="processing-empty" th:if="${processingReports == null or #lists.isEmpty(processingReports)}"><p class="text-muted">No processing SoS alerts</p></div>
+                <div class="text-center p-4" id="processing-empty" th:style="${(processingReports == null or #lists.isEmpty(processingReports)) ? '' : 'display:none;'}"><p class="text-muted">No processing SoS alerts</p></div>
             </div>
         </div>
 
@@ -583,18 +571,15 @@
             <div class="panel-header">Resolved SOS Alerts</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
-                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Date/TimeStamp</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Date/TimeStamp</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
-                        <tr th:each="report : ${resolvedReports}" th:if="${not #lists.isEmpty(resolvedReports)}">
+                        <tr th:each="report : ${resolvedReports}" th:if="${not #lists.isEmpty(resolvedReports)}" th:attr="data-id=${report.id}">
                             <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
                             <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
-                            <td th:text="${report.dateReported != null ? #temporals.format(report.dateReported, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>                       
-                            <td th:text="${report.location != null and report.location != 'N/A' 
-                                ? report.location 
-                                : (report.latitude != null and report.longitude != null 
-                                    ? 'Latitude (Y): ' + report.latitude + ', Longitude (X): ' + report.longitude 
-                                    : 'N/A')}">N/A</td>
+                            <td class="date-cell"
+                                th:attr="data-iso=${report.dateReported != null ? #temporals.formatISO(report.dateReported) : ''}"
+                                th:text="${report.dateReported != null ? #temporals.formatISO(report.dateReported) : 'N/A'}"></td>
                             <td><span class="status-resolved">Resolved</span></td>
                             <td>
                                 <div class="d-flex gap-2">
@@ -611,7 +596,7 @@
                 <div class="table-footer">
                     <span id="resolvedCount">Showing <span th:text="${resolvedReports != null ? #lists.size(resolvedReports) : 0}">0</span> resolved alert(s)</span>
                 </div>
-                <div class="text-center p-4" id="resolved-empty" th:if="${#lists.isEmpty(resolvedReports)}"><p class="text-muted">No resolved SoS alerts</p></div>
+                <div class="text-center p-4" id="resolved-empty" th:style="${#lists.isEmpty(resolvedReports) ? '' : 'display:none;'}"><p class="text-muted">No resolved SoS alerts</p></div>
             </div>
         </div>
 
@@ -620,18 +605,15 @@
             <div class="panel-header">Archived SOS Alerts</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
-                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Date/TimeStamp</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Date/TimeStamp</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
                         <tr th:each="report : ${archivedReports}" th:if="${not #lists.isEmpty(archivedReports)}">
                             <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
                             <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
-                            <td th:text="${report.dateReported != null ? #temporals.format(report.dateReported, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>       
-                            <td th:text="${report.location != null and report.location != 'N/A' 
-                                ? report.location 
-                                : (report.latitude != null and report.longitude != null 
-                                    ? 'Latitude (Y): ' + report.latitude + ', Longitude (X): ' + report.longitude 
-                                    : 'N/A')}">N/A</td>
+                            <td class="date-cell"
+                                th:attr="data-iso=${report.dateReported != null ? #temporals.formatISO(report.dateReported) : ''}"
+                                th:text="${report.dateReported != null ? #temporals.formatISO(report.dateReported) : 'N/A'}"></td>
                             <td><span class="status-archived">Archived</span></td>
                             <td><button class="view-btn" th:onclick="'viewReport(' + ${report.id} + ')'">View</button></td>
                         </tr>
@@ -640,7 +622,7 @@
                 <div class="table-footer">
                     <span id="archiveCount">Showing <span th:text="${archivedReports != null ? #lists.size(archivedReports) : 0}">0</span> archived alert(s)</span>
                 </div>
-                <div class="text-center p-4" id="archive-empty" th:if="${#lists.isEmpty(archivedReports)}"><p class="text-muted">No archived SoS alerts</p></div>
+                <div class="text-center p-4" id="archive-empty" th:style="${#lists.isEmpty(archivedReports) ? '' : 'display:none;'}"><p class="text-muted">No archived SoS alerts</p></div>
             </div>
         </div>
 
@@ -649,18 +631,15 @@
             <div class="panel-header">Cancelled SOS Alerts</div>
             <div class="panel-content">
                 <table class="table table-bordered table-hover mb-0">
-                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Date/TimeStamp</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Resident</th><th>Phone Number</th><th>SoS Type</th><th>Date/TimeStamp</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="cancelled-tbody">
                         <tr th:each="report : ${cancelledReports}" th:if="${cancelledReports != null and not #lists.isEmpty(cancelledReports)}" th:attr="data-id=${report.id}">
                             <td><div class="sos-name" th:text="${report.reporterName != null ? report.reporterName : 'Unknown'}"></div><div class="sos-id" th:text="'ID: ' + ${report.id}"></div></td>
                             <td th:text="${report.phoneNumber != null ? report.phoneNumber : 'N/A'}"></td>
                             <td class="sos-type-cell"><span class="badge-sos" th:text="${report.sosType != null ? report.sosType : 'General'}"></span></td>
-                            <td th:text="${report.dateReported != null ? #temporals.format(report.dateReported, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>     
-                            <td th:text="${report.location != null and report.location != 'N/A' 
-                                ? report.location 
-                                : (report.latitude != null and report.longitude != null 
-                                    ? 'Latitude (Y): ' + report.latitude + ', Longitude (X): ' + report.longitude 
-                                    : 'N/A')}">N/A</td>
+                            <td class="date-cell"
+                                th:attr="data-iso=${report.dateReported != null ? #temporals.formatISO(report.dateReported) : ''}"
+                                th:text="${report.dateReported != null ? #temporals.formatISO(report.dateReported) : 'N/A'}"></td>
                             <td><span class="status-cancelled">Cancelled</span></td>
                             <td>
                                 <div class="d-flex gap-2">
@@ -677,7 +656,7 @@
                 <div class="table-footer">
                     <span id="cancelledCount">Showing <span th:text="${cancelledReports != null ? #lists.size(cancelledReports) : 0}">0</span> cancelled alert(s)</span>
                 </div>
-                <div class="text-center p-4" id="cancelled-empty" th:if="${cancelledReports == null or #lists.isEmpty(cancelledReports)}"><p class="text-muted">No cancelled SoS alerts</p></div>
+                <div class="text-center p-4" id="cancelled-empty" th:style="${(cancelledReports == null or #lists.isEmpty(cancelledReports)) ? '' : 'display:none;'}"><p class="text-muted">No cancelled SoS alerts</p></div>
             </div>
         </div>
 
@@ -711,7 +690,7 @@
 // =================================================================
 function showSuccess(message) {
     document.getElementById('successMessage').innerHTML = message;
-    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+    const successModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('successModal'));
     successModal.show();
 }
 
@@ -719,6 +698,18 @@ function showSuccess(message) {
 // DYNAMIC CONFIRMATION MODAL
 // =================================================================
 function showConfirm(message, title, onConfirm) {
+    // Clean up any leftover confirm modal safely — hide it first (letting
+    // Bootstrap finish its transition/backdrop cleanup), then remove it.
+    document.querySelectorAll('[id^="dynamicConfirmModal_"]').forEach(oldModalEl => {
+        const oldInstance = bootstrap.Modal.getInstance(oldModalEl);
+        if (oldInstance) {
+            oldModalEl.addEventListener('hidden.bs.modal', () => oldModalEl.remove(), { once: true });
+            oldInstance.hide();
+        } else {
+            oldModalEl.remove();
+        }
+    });
+
     const confirmModalId = 'dynamicConfirmModal_' + Date.now();
     const confirmModalHtml = `
         <div id="${confirmModalId}" class="modal fade" tabindex="-1">
@@ -739,112 +730,121 @@ function showConfirm(message, title, onConfirm) {
             </div>
         </div>
     `;
-    
-    document.querySelectorAll('[id^="dynamicConfirmModal_"]').forEach(modal => modal.remove());
+
     document.body.insertAdjacentHTML('beforeend', confirmModalHtml);
     const modalEl = document.getElementById(confirmModalId);
     const modal = new bootstrap.Modal(modalEl);
-    
+
+    let confirmed = false;
     const confirmBtn = document.getElementById(`confirmOkBtn_${confirmModalId}`);
-    confirmBtn.onclick = function() {
-        modal.hide();
-        onConfirm();
-    };
-    
-    modalEl.addEventListener('hidden.bs.modal', function() {
+    confirmBtn.onclick = () => { confirmed = true; modal.hide(); };
+
+    modalEl.addEventListener('hidden.bs.modal', () => {
         modalEl.remove();
-    });
-    
+        if (confirmed) onConfirm();
+    }, { once: true });
+
     modal.show();
+}
+
+// =================================================================
+// CSRF — reads Spring Security's CSRF meta tags if present.
+// Add these to the layout's <head> if not already there:
+//   <meta name="_csrf" th:content="${_csrf.token}">
+//   <meta name="_csrf_header" th:content="${_csrf.headerName}">
+// Harmless no-op if the tags aren't present (e.g. CSRF disabled).
+// =================================================================
+function getCsrfHeaders() {
+    const token = document.querySelector('meta[name="_csrf"]')?.content;
+    const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+    return (token && header) ? { [header]: token } : {};
+}
+
+// =================================================================
+// BADGE HELPER — keyed by data-tab, not label text
+// =================================================================
+function adjustBadge(tab, delta) {
+    const idMap = {
+        incoming:   'badge-incoming',
+        processing: 'badge-processing',
+        resolved:   'badge-resolved',
+        archive:    'badge-archive',
+        cancelled:  'badge-cancelled'
+    };
+    const badge = idMap[tab] && document.getElementById(idMap[tab]);
+    if (!badge) return;
+    const count = parseInt(badge.textContent) || 0;
+    badge.textContent = Math.max(0, count + delta);
 }
 
 // =================================================================
 // STATUS UPDATE WITH CONFIRMATION
 // =================================================================
 function updateStatusWithConfirm(id, status) {
-    let actionText = '';
     let title = '';
     let message = '';
-    
-    switch(status) {
+
+    switch (status) {
         case 'PROCESSING':
-            actionText = 'process';
             title = 'Confirm Process';
             message = 'Are you sure you want to mark this SoS alert as Processing?';
             break;
         case 'RESOLVED':
-            actionText = 'resolve';
             title = 'Confirm Resolve';
             message = 'Are you sure you want to mark this SoS alert as Resolved?';
             break;
         case 'ARCHIVED':
-            actionText = 'archive';
             title = 'Confirm Archive';
             message = 'Are you sure you want to archive this SoS alert?';
             break;
         case 'INCOMING':
-            actionText = 'restore';
             title = 'Confirm Restore';
             message = 'Are you sure you want to restore this SoS alert back to Incoming?';
             break;
         default:
-            actionText = 'update';
             title = 'Confirm Update';
             message = 'Are you sure you want to update this SoS alert?';
     }
-    
+
     showConfirm(message, title, () => {
-        let responderName = '';
-        const nameElement = document.querySelector('.user-name, .admin-name, [class*="user"], [class*="admin"]');
-        if (nameElement) {
-            let fullText = nameElement.innerText.trim();
-            responderName = fullText.replace(/^ADMIN:\s*/i, '').replace(/^Name:\s*/i, '');
-        }
-        if (!responderName) responderName = 'Barangay Responder';
-        
+        const responderName = document.getElementById('currentUserName')?.value?.trim() || 'Barangay Responder';
+
         let url = '/sos-monitoring/' + id + '/status?status=' + status;
         if (status === 'PROCESSING') url += '&responderName=' + encodeURIComponent(responderName);
-        
-        fetch(url, { method: 'PUT' })
-    .then(r => {
-        if (r.ok) {
-            let successMsg = '';
-            switch(status) {
-                case 'PROCESSING': successMsg = 'SoS alert moved to Processing!'; break;
-                case 'RESOLVED': successMsg = 'SoS alert marked as Resolved!'; break;
-                case 'ARCHIVED': successMsg = 'SoS alert archived successfully!'; break;
-                case 'INCOMING': successMsg = 'SoS alert restored to Incoming!'; break;
-                default: successMsg = 'Status updated successfully!';
-            }
-            showSuccess(successMsg);
-            const row = document.querySelector(`[data-id="${id}"]`);
-            if (row) {
-                row.remove();
-            }
-            const activeTab = document.querySelector('.tab.active');
-            if (activeTab) {
-                const tabText = activeTab.innerText.toLowerCase();
-                if (tabText.includes('incoming')) {
-                    const badge = document.getElementById('badge-incoming');
-                    if (badge) { let count = parseInt(badge.textContent) || 0; badge.textContent = Math.max(0, count - 1); }
-                } else if (tabText.includes('processing')) {
-                    const badge = document.getElementById('badge-processing');
-                    if (badge) { let count = parseInt(badge.textContent) || 0; badge.textContent = Math.max(0, count - 1); }
-                } else if (tabText.includes('cancelled')) {
-                    const badge = document.getElementById('badge-cancelled');
-                    if (badge) { let count = parseInt(badge.textContent) || 0; badge.textContent = Math.max(0, count - 1); }
+
+        fetch(url, { method: 'PUT', headers: getCsrfHeaders() })
+            .then(r => {
+                if (!r.ok) {
+                    alert('Error updating status');
+                    return;
                 }
-            }
-            const tbody = row ? row.parentElement : null;
-            if (tbody && tbody.children.length === 0) {
-                const emptyDiv = document.querySelector(`#${tbody.id}-empty`);
-                if (emptyDiv) emptyDiv.style.display = 'block';
-            }
-            applyFilters();
-        } else {
-            alert('Error updating status');
-        }
-    })
+
+                const successMsg = {
+                    PROCESSING: 'SoS alert moved to Processing!',
+                    RESOLVED:   'SoS alert marked as Resolved!',
+                    ARCHIVED:   'SoS alert archived successfully!',
+                    INCOMING:   'SoS alert restored to Incoming!'
+                }[status] || 'Status updated successfully!';
+                showSuccess(successMsg);
+
+                const row = document.querySelector(`[data-id="${id}"]`);
+                const tbody = row ? row.parentElement : null;   // capture BEFORE removing
+                if (row) row.remove();
+
+                const activeTab = document.querySelector('.tab.active');
+                const sourceTab = activeTab?.dataset.tab;
+                adjustBadge(sourceTab, -1);
+                if (status === 'PROCESSING') adjustBadge('processing', 1);
+                if (status === 'INCOMING')   adjustBadge('incoming', 1);
+                if (status === 'RESOLVED')   adjustBadge('resolved', 1);
+                if (status === 'ARCHIVED')   adjustBadge('archive', 1);
+
+                if (tbody && tbody.children.length === 0) {
+                    const emptyDiv = document.querySelector(`#${tbody.id}-empty`);
+                    if (emptyDiv) emptyDiv.style.display = 'block';
+                }
+                applyFilters();
+            })
             .catch(error => {
                 console.error('Error:', error);
                 alert('Network error occurred');
@@ -852,19 +852,20 @@ function updateStatusWithConfirm(id, status) {
     });
 }
 
-function updateStatus(id, status) {
-    updateStatusWithConfirm(id, status);
-}
-
 // =================================================================
 // AUDIO
 // =================================================================
-const _actx = new (window.AudioContext || window.webkitAudioContext)();
+let _actx = null;
+function getAudioCtx() {
+    if (!_actx) _actx = new (window.AudioContext || window.webkitAudioContext)();
+    return _actx;
+}
 ['click','keydown','touchstart','mousedown'].forEach(e =>
-    document.addEventListener(e, () => { if (_actx.state === 'suspended') _actx.resume(); }, { passive: true })
+    document.addEventListener(e, () => { const c = getAudioCtx(); if (c.state === 'suspended') c.resume(); }, { passive: true })
 );
 
 function playSiren() {
+    const _actx = getAudioCtx();
     _actx.resume().then(() => {
         const now = _actx.currentTime;
         const totalDur = 5.0;
@@ -880,11 +881,14 @@ function playSiren() {
         oscB.type = 'sine';
         oscA.frequency.setValueAtTime(freqA, now);
         oscB.frequency.setValueAtTime(freqB, now);
+        master.gain.setValueAtTime(0.0001, now);
         for (let i = 0; i < totalDur / cycleDur; i++) {
             const tStart = now + (i * cycleDur);
             const tEnd = tStart + toneDur;
-            master.gain.setValueAtTime(0.5, tStart);
-            master.gain.setValueAtTime(0.0, tEnd);
+            // short ramps instead of instant jumps — avoids audible clicks
+            master.gain.exponentialRampToValueAtTime(0.5, tStart + 0.02);
+            master.gain.setValueAtTime(0.5, tEnd - 0.05);
+            master.gain.exponentialRampToValueAtTime(0.0001, tEnd);
         }
         oscA.connect(master);
         oscB.connect(master);
@@ -922,14 +926,14 @@ function initLastSeenIds() {
         if (m) maxId = Math.max(maxId, parseInt(m[1]));
     });
     lastSeenIncomingId = maxId;
-    
+
     maxId = 0;
     document.querySelectorAll('#processing-tbody tr').forEach(row => {
         const m = (row.querySelector('.sos-id')?.innerText || '').match(/ID:\s*(\d+)/);
         if (m) maxId = Math.max(maxId, parseInt(m[1]));
     });
     lastSeenProcessingId = maxId;
-    
+
     maxId = 0;
     document.querySelectorAll('#cancelled-tbody tr').forEach(row => {
         const m = (row.querySelector('.sos-id')?.innerText || '').match(/ID:\s*(\d+)/);
@@ -939,6 +943,7 @@ function initLastSeenIds() {
 }
 
 async function pollIncoming() {
+    if (document.hidden) return; // pause polling on a backgrounded tab
     try {
         const res = await fetch('/sos-monitoring/api/incoming?lastId=' + lastSeenIncomingId + '&t=' + Date.now());
         if (!res.ok) return;
@@ -953,7 +958,7 @@ async function pollIncoming() {
             const empty = document.getElementById('incoming-empty');
             if (empty) empty.style.display = 'none';
             data.newSos.forEach(r => {
-                if (tbody.querySelector('[data-id="' + r.id + '"]')) return;
+                if (!tbody || tbody.querySelector('[data-id="' + r.id + '"]')) return;
                 const tr = document.createElement('tr');
                 tr.className = 'new-sos-row';
                 tr.setAttribute('data-id', r.id);
@@ -962,10 +967,13 @@ async function pollIncoming() {
             });
             applyFilters();
         }
-    } catch (_) {}
+    } catch (err) {
+        console.warn('pollIncoming failed:', err);
+    }
 }
 
 async function pollProcessing() {
+    if (document.hidden) return;
     try {
         const res = await fetch('/sos-monitoring/api/processing?lastId=' + lastSeenProcessingId + '&t=' + Date.now());
         if (!res.ok) return;
@@ -976,7 +984,7 @@ async function pollProcessing() {
             lastSeenProcessingId = Math.max(lastSeenProcessingId, ...data.newProcessing.map(r => r.id));
             const tbody = document.getElementById('processing-tbody');
             const empty = document.getElementById('processing-empty');
-            if (empty && tbody.children.length === 0) empty.style.display = 'none';
+            if (empty && tbody && tbody.children.length === 0) empty.style.display = 'none';
             data.newProcessing.forEach(r => {
                 if (tbody && !tbody.querySelector('[data-id="' + r.id + '"]')) {
                     const tr = document.createElement('tr');
@@ -987,10 +995,13 @@ async function pollProcessing() {
             });
             applyFilters();
         }
-    } catch (_) {}
+    } catch (err) {
+        console.warn('pollProcessing failed:', err);
+    }
 }
 
 async function pollCancelled() {
+    if (document.hidden) return;
     try {
         const res = await fetch('/sos-monitoring/api/cancelled?lastId=' + lastSeenCancelledId + '&t=' + Date.now());
         if (!res.ok) return;
@@ -1018,9 +1029,12 @@ async function pollCancelled() {
             applyFilters();
         }
         if (data.reports && data.reports.length > 0) {
+            console.warn('pollCancelled: unexpected `reports` field on response — verify /api/cancelled contract', data.reports);
             lastSeenCancelledId = Math.max(lastSeenCancelledId, ...data.reports.map(r => r.id));
         }
-    } catch (_) {}
+    } catch (err) {
+        console.warn('pollCancelled failed:', err);
+    }
 }
 
 // =================================================================
@@ -1036,37 +1050,45 @@ function isPrivilegedRole() {
 }
 
 function archiveBtnHtml(id) {
-    return isPrivilegedRole()
-        ? `<button class="archive-btn" onclick="updateStatusWithConfirm(${id},'ARCHIVED')">Archive</button>`
-        : `<button class="archive-btn" onclick="openAssistanceModal()">Archive</button>`;
+    const role = document.getElementById('currentUserRole')?.value;
+    if (role === 'ADMIN') {
+        return `<button class="archive-btn" onclick="updateStatusWithConfirm(${id},'ARCHIVED')">Archive</button>`;
+    }
+    if (role === 'SECRETARY' || role === 'SECRETARIAT STAFF') {
+        return `<button class="archive-btn" onclick="openAssistanceModal()">Archive</button>`;
+    }
+    return '';
 }
 
 function buildIncomingRow(r) {
+    const processBtn = isPrivilegedRole()
+        ? `<button class="resolve-btn" onclick="updateStatusWithConfirm(${r.id},'PROCESSING')">Process</button>`
+        : '';
     return `<td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td>
             <td>${escapeHtml(r.phoneNumber) || 'N/A'}</td>
             <td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td>
-            <td>${r.dateReported ? new Date(r.dateReported).toLocaleString() : 'N/A'}</td>
-            <td>${escapeHtml(r.location) || 'N/A'}</td>
+            <td>${fmtDate(r.dateReported)}</td>
             <td><span class="status-incoming">Incoming</span></td>
-            <td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatusWithConfirm(${r.id},'PROCESSING')">Process</button>${archiveBtnHtml(r.id)}</div></td>`;
+            <td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button>${processBtn}${archiveBtnHtml(r.id)}</div></td>`;
 }
 
 function buildProcessingRow(r) {
+    const resolveBtn = isPrivilegedRole()
+        ? `<button class="resolve-btn" onclick="updateStatusWithConfirm(${r.id},'RESOLVED')">Resolve</button>`
+        : '';
     return `<td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td>
             <td>${escapeHtml(r.phoneNumber) || 'N/A'}</td>
             <td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td>
-            <td>${r.dateReported ? new Date(r.dateReported).toLocaleString() : 'N/A'}</td>
-            <td>${escapeHtml(r.location) || 'N/A'}</td>
+            <td>${fmtDate(r.dateReported)}</td>
             <td><span class="status-processing">Processing</span></td>
-            <td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button><button class="resolve-btn" onclick="updateStatusWithConfirm(${r.id},'RESOLVED')">Resolve</button>${archiveBtnHtml(r.id)}</div></td>`;
+            <td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button>${resolveBtn}${archiveBtnHtml(r.id)}</div></td>`;
 }
 
 function buildCancelledRow(r) {
     return `<td><div class="sos-name">${escapeHtml(r.reporterName) || 'Unknown'}</div><div class="sos-id">ID: ${r.id}</div></td>
             <td>${escapeHtml(r.phoneNumber) || 'N/A'}</td>
             <td class="sos-type-cell"><span class="badge-sos">${escapeHtml(r.sosType) || 'General'}</span></td>
-            <td>${r.dateReported ? new Date(r.dateReported).toLocaleString() : 'N/A'}</td>
-            <td>${escapeHtml(r.location) || 'N/A'}</td>
+            <td>${fmtDate(r.dateReported)}</td>
             <td><span class="status-cancelled">Cancelled</span></td>
             <td><div class="d-flex gap-2"><button class="view-btn" onclick="viewReport(${r.id})">View</button>${archiveBtnHtml(r.id)}</div></td>`;
 }
@@ -1076,7 +1098,10 @@ function buildCancelledRow(r) {
 // =================================================================
 function viewReport(id) {
     fetch('/sos-monitoring/' + id)
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) throw new Error('Failed to load report ' + id);
+            return r.json();
+        })
         .then(data => {
             const hasLocation = data.latitude && data.longitude && data.latitude !== 0 && data.longitude !== 0;
             const statusColor = getStatusColor(data.status);
@@ -1122,7 +1147,7 @@ function viewReport(id) {
                                     <div class="vm-pill-row">
                                         <span class="vm-status-pill" style="background-color:${statusColor};">
                                             <i class="bi bi-circle-fill" style="font-size:7px;"></i>
-                                            ${data.status || 'Pending'}
+                                            ${escapeHtml(data.status) || 'Pending'}
                                         </span>
                                     </div>
                                     <div class="vm-card-value wrap">${escapeHtml(data.description) || 'No description provided.'}</div>
@@ -1154,43 +1179,52 @@ function viewReport(id) {
             if (currentMap) { currentMap.remove(); currentMap = null; }
 
             const modalEl = document.getElementById('viewModal');
-            const modal = new bootstrap.Modal(modalEl);
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+            const renderMap = () => {
+                const mapContainer = document.getElementById('viewMap');
+                if (!mapContainer) return;
+                const map = L.map('viewMap').setView([data.latitude, data.longitude], 16);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+                const redIcon = L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                });
+                const marker = L.marker([data.latitude, data.longitude], { icon: redIcon }).addTo(map);
+                if (data.location && data.location !== 'N/A' && data.location.trim() !== '') {
+                    marker.bindPopup(`<b>${escapeHtml(data.sosType) || 'SOS Location'}</b><br><small>${escapeHtml(data.location)}</small>`).openPopup();
+                } else {
+                    marker.bindPopup(`<b>${escapeHtml(data.sosType) || 'SOS Location'}</b><br><small>Loading address...</small>`).openPopup();
+                    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${data.latitude}&lon=${data.longitude}&format=json`)
+                        .then(r => r.json())
+                        .then(geo => {
+                            const address = geo.display_name || `${data.latitude}, ${data.longitude}`;
+                            marker.setPopupContent(`<b>${escapeHtml(data.sosType) || 'SOS Location'}</b><br><small>${address}</small>`);
+                            const locEl = document.getElementById('vm-location-text');
+                            if (locEl) locEl.innerHTML = `<i class="bi bi-geo-alt-fill" style="color:#e74c3c;font-size:12px;"></i> ${address}`;
+                        })
+                        .catch(() => {
+                            marker.setPopupContent(`<b>${escapeHtml(data.sosType) || 'SOS Location'}</b><br><small>${data.latitude}, ${data.longitude}</small>`);
+                        });
+                }
+                map.invalidateSize();
+                currentMap = map;
+            };
 
             if (hasLocation) {
-                modalEl.addEventListener('shown.bs.modal', function handler() {
-                    modalEl.removeEventListener('shown.bs.modal', handler);
-                    const mapContainer = document.getElementById('viewMap');
-                    if (!mapContainer) return;
-                    const map = L.map('viewMap').setView([data.latitude, data.longitude], 16);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
-                    const redIcon = L.icon({
-                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                    });
-                    const marker = L.marker([data.latitude, data.longitude], { icon: redIcon }).addTo(map);
-                    if (data.location && data.location !== 'N/A' && data.location.trim() !== '') {
-                        marker.bindPopup(`<b>${escapeHtml(data.sosType) || 'SOS Location'}</b><br><small>${escapeHtml(data.location)}</small>`).openPopup();
-                    } else {
-                        marker.bindPopup(`<b>${escapeHtml(data.sosType) || 'SOS Location'}</b><br><small>Loading address...</small>`).openPopup();
-                        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${data.latitude}&lon=${data.longitude}&format=json`)
-                            .then(r => r.json())
-                            .then(geo => {
-                                const address = geo.display_name || `${data.latitude}, ${data.longitude}`;
-                                marker.setPopupContent(`<b>${escapeHtml(data.sosType) || 'SOS Location'}</b><br><small>${address}</small>`);
-                                const locEl = document.getElementById('vm-location-text');
-                                if (locEl) locEl.innerHTML = `<i class="bi bi-geo-alt-fill" style="color:#e74c3c;font-size:12px;"></i> ${address}`;
-                            })
-                            .catch(() => {
-                                marker.setPopupContent(`<b>${escapeHtml(data.sosType) || 'SOS Location'}</b><br><small>${data.latitude}, ${data.longitude}</small>`);
-                            });
-                    }
-                    map.invalidateSize();
-                    currentMap = map;
-                });
+                if (modalEl.classList.contains('show')) {
+                    renderMap(); // modal already open (viewing a second report) — render now
+                } else {
+                    modalEl.addEventListener('shown.bs.modal', renderMap, { once: true });
+                }
             }
 
             modal.show();
+        })
+        .catch(error => {
+            console.error('viewReport failed:', error);
+            alert('Unable to load report details. Please try again.');
         });
 }
 
@@ -1206,16 +1240,60 @@ function getStatusColor(status) {
 }
 
 function escapeHtml(text) {
-    if (!text) return text;
+    if (text === null || text === undefined) return '';
     const div = document.createElement('div');
-    div.textContent = text;
+    div.textContent = String(text);
     return div.innerHTML;
 }
 
 // =================================================================
 // FILTERS & UTILITIES
 // =================================================================
-let currentTypeFilter = 'all';
+let currentDateRange = 'all';
+
+// Finds the "Date/TimeStamp" column by its header text rather than a
+// hardcoded index, so it can't silently drift if columns are reordered.
+// Cached per table so repeated header lookups don't happen on every row.
+const _dateColIndexCache = new WeakMap();
+function getDateColumnIndex(table) {
+    if (_dateColIndexCache.has(table)) return _dateColIndexCache.get(table);
+    const headers = table.querySelectorAll('thead th');
+    let idx = 3; // fallback, shouldn't be hit
+    for (let i = 0; i < headers.length; i++) {
+        if (headers[i].textContent.trim().toLowerCase().startsWith('date')) { idx = i; break; }
+    }
+    _dateColIndexCache.set(table, idx);
+    return idx;
+}
+
+function parseRowDate(row) {
+    const table = row.closest('table');
+    const idx = table ? getDateColumnIndex(table) : 3;
+    const cell = row.querySelectorAll('td')[idx];
+    if (!cell) return null;
+    const txt = cell.textContent.trim();
+    if (!txt || txt === 'N/A') return null;
+    const m = txt.match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+    const d = new Date(txt.replace(' ', 'T')); // more reliable cross-browser fallback
+    return isNaN(d) ? null : d;
+}
+
+function matchesDateRange(row) {
+    if (currentDateRange === 'all') return true;
+    const d = parseRowDate(row);
+    if (!d) return true;               // never hide a row we can't parse
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today.getTime() + 864e5);
+    switch (currentDateRange) {
+        case 'today': return d >= today && d < tomorrow;
+        case '7':     return d >= new Date(today.getTime() - 6 * 864e5);
+        case '30':    return d >= new Date(today.getTime() - 29 * 864e5);
+        case 'month': return d >= new Date(now.getFullYear(), now.getMonth(), 1);
+        default:      return true;
+    }
+}
 
 function applyFilters() {
     const val = (document.getElementById('sos-search').value || '').toLowerCase().trim();
@@ -1230,24 +1308,17 @@ function applyFilters() {
         if (row.querySelector('td[colspan]')) return;
 
         const matchSearch = !val || row.textContent.toLowerCase().includes(val);
+        const matchDate   = matchesDateRange(row);
 
-        let matchType = true;
-        if (currentTypeFilter !== 'all') {
-            const span = row.querySelector('.badge-sos');
-            matchType = span ? span.textContent.trim() === currentTypeFilter : false;
-        }
-
-        const show = matchSearch && matchType;
+        const show = matchSearch && matchDate;
         row.style.display = show ? '' : 'none';
         if (show) visibleCount++;
     });
 
     // Toggle the empty-state message for the current tab
-    const tabId = activePanel.id.replace('tab-', '');       // "cancelled", "incoming", ...
+    const tabId = activePanel.id.replace('tab-', '');   // "incoming", "processing", ...
     const emptyDiv = document.getElementById(tabId + '-empty');
     if (emptyDiv) {
-        // Only show the empty-state if there are literally zero real rows,
-        // OR the filter hides everything.
         const hasAnyRealRow = Array.from(rows).some(r => !r.querySelector('td[colspan]'));
         emptyDiv.style.display = (!hasAnyRealRow || visibleCount === 0) ? 'block' : 'none';
     }
@@ -1256,51 +1327,44 @@ function applyFilters() {
     const countSpan = document.getElementById(tabId + 'Count');
     if (countSpan) {
         const total = Array.from(rows).filter(r => !r.querySelector('td[colspan]')).length;
-        countSpan.textContent = (val || currentTypeFilter !== 'all')
+        const isFiltered = val || currentDateRange !== 'all';
+        countSpan.textContent = isFiltered
             ? `Showing ${visibleCount} of ${total} alert(s)`
             : `Showing ${total} alert(s)`;
     }
 }
 
-document.querySelectorAll('#typeFilterMenu .dropdown-item').forEach(item => {
-    item.addEventListener('click', function(e) {
-        e.preventDefault();
-        currentTypeFilter = this.getAttribute('data-type');
-        document.getElementById('typeFilterDropdown').innerHTML = '<i class="bi bi-funnel"></i> ' + (currentTypeFilter === 'all' ? 'Filter by Type' : currentTypeFilter);
-        applyFilters();
+function fmtDate(iso) {
+    if (!iso) return 'N/A';
+    const d = new Date(iso);
+    if (isNaN(d)) return 'N/A';
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Manila',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hour12: false
+    }).format(d).replace(',', '');
+}
+
+// Server-rendered date cells carry the raw ISO string in data-iso (see
+// #temporals.formatISO in the template) so we don't lose the timezone
+// offset. This rewrites their visible text through fmtDate so they read
+// identically to polled rows, instead of showing a raw ISO string.
+function formatDateCells(root = document) {
+    root.querySelectorAll('.date-cell[data-iso]').forEach(td => {
+        const iso = td.dataset.iso;
+        td.textContent = iso ? fmtDate(iso) : 'N/A';
     });
-});
-
-document.getElementById('sos-search').addEventListener('keyup', applyFilters);
-
-// =================================================================
-// TAB SWITCHING — client-side, so the search / type filter survives
-// =================================================================
-document.querySelectorAll('.tabbar .tab').forEach(tab => {
-    tab.addEventListener('click', function () {
-        const target = this.dataset.tab;
-        if (!target) return;
-
-        document.querySelectorAll('.tabbar .tab').forEach(t => t.classList.toggle('active', t === this));
-        document.querySelectorAll('.panel-inner').forEach(p => p.classList.add('d-none'));
-        const panel = document.getElementById('tab-' + target);
-        if (panel) panel.classList.remove('d-none');
-
-        history.replaceState({}, '', '/sos-monitoring?tab=' + target);
-        applyFilters();
-    });
-});
+}
 
 // export to pdf
-
-
 function exportToPDF() {
     const activePanel = document.querySelector('.panel-inner:not(.d-none)');
     if (!activePanel) return;
     const table = activePanel.querySelector('table');
     if (!table) return;
-
-    const title = activePanel.querySelector('.panel-header').innerText.trim();
+    const panelHeaderEl = activePanel.querySelector('.panel-header');
+    if (!panelHeaderEl) return;
+    const title = panelHeaderEl.innerText.trim();
 
     // Columns to exclude: Actions (buttons)
     const excludedHeaders = ['Actions', ''];
@@ -1342,7 +1406,7 @@ function exportToPDF() {
     });
 
     // Columns that need to wrap instead of clip
-    const wideColumns = ['Resident', 'Location'];
+    const wideColumns = ['Resident'];
 
     // Page header — same layout as Blotter Records export
     let tableHtml = `
@@ -1425,14 +1489,45 @@ function exportToPDF() {
         });
 }
 
-
+// =================================================================
+// EVERYTHING BELOW RUNS ONLY AFTER THE DOM IS READY — safe even if
+// this script is ever moved to <head> or loaded with `defer`.
+// =================================================================
 window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('sos-search').addEventListener('keyup', applyFilters);
+
+    document.querySelectorAll('#dateFilterMenu .dropdown-item').forEach(item => {
+        item.addEventListener('click', function (e) {
+            e.preventDefault();
+            currentDateRange = this.getAttribute('data-range');
+            document.getElementById('dateFilterLabel').textContent = this.textContent.trim();
+            applyFilters();
+        });
+    });
+
+    // TAB SWITCHING — client-side, so the search / date filter survives
+    document.querySelectorAll('.tabbar .tab').forEach(tab => {
+        tab.addEventListener('click', function () {
+            const target = this.dataset.tab;
+            if (!target) return;
+
+            document.querySelectorAll('.tabbar .tab').forEach(t => t.classList.toggle('active', t === this));
+            document.querySelectorAll('.panel-inner').forEach(p => p.classList.add('d-none'));
+            const panel = document.getElementById('tab-' + target);
+            if (panel) panel.classList.remove('d-none');
+
+            history.replaceState({}, '', '/sos-monitoring?tab=' + target);
+            applyFilters();
+        });
+    });
+
+    formatDateCells();
     applyFilters();
     initLastSeenIds();
     setInterval(pollIncoming, 5000);
     setInterval(pollProcessing, 5000);
     setInterval(pollCancelled, 5000);
-    setTimeout(() => { if (_actx.state === 'suspended') _actx.resume(); }, 100);
+    setTimeout(() => { const c = getAudioCtx(); if (c.state === 'suspended') c.resume(); }, 100);
 });
 </script>
 
