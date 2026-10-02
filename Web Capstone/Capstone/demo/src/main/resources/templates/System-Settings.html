@@ -87,6 +87,8 @@
         border-radius: 8px;
         background: #fafafa;
     }
+    .perm-item .form-check { padding-left: 0; min-height: 0; display: flex; align-items: center; }
+    .perm-item .form-check-input { float: none; margin: 0; width: 2.5em; height: 1.3em; cursor: pointer; }
     .perm-item label {
         margin: 0;
         cursor: pointer;
@@ -254,6 +256,7 @@ function showConfirm(message, title, onConfirm) {
                     <div class="modal-header" style="background: linear-gradient(135deg, #30534D, #3d6b63);">
                         <h5 class="modal-title" style="color: white;">${title}</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
                     <div class="modal-body" style="padding: 24px; font-size: 16px;">
                         ${message}
                     </div>
@@ -447,8 +450,9 @@ function loadPermissions() {
         return `
         <div class="perm-item">
             <div class="form-check form-switch mb-0">
-                <input class="form-check-input perm-toggle" type="checkbox" data-key="${key}" aria-label="${section}" style="width:2.5em;height:1.3em;cursor:pointer;" ${checked ? 'checked' : ''}>
-            <label style="margin:0; cursor:pointer;">${section}</label>
+                <input class="form-check-input perm-toggle" type="checkbox" data-key="${key}" aria-label="${section}" id="perm_${key.replace(/\./g, '_')}" ${checked ? 'checked' : ''}>
+            </div>
+            <label for="perm_${key.replace(/\./g, '_')}" style="margin:0; cursor:pointer;">${section}</label>
         </div>`;
     }).join('');
 }

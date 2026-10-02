@@ -1,38 +1,42 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.AdminUser;
-import com.example.demo.repository.AdminUserRepository;
-import com.example.demo.services.AdminUserServices;
-import com.example.demo.services.ActivityLogService;
-import com.example.demo.services.EmailService;
-import com.example.demo.services.SystemSettingsService;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.security.Principal;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.FileSystemResource;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.ui.Model;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.example.demo.model.AdminUser;
+import com.example.demo.repository.AdminUserRepository;
+import com.example.demo.services.ActivityLogService;
+import com.example.demo.services.AdminUserServices;
+import com.example.demo.services.EmailService;
+import com.example.demo.services.SystemSettingsService;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.security.Principal;
-import java.util.List;
-import java.util.Map;
 
 @Controller
 public class SystemSettingsController {
@@ -49,6 +53,12 @@ public class SystemSettingsController {
         if (admin != null) {
             // 🔴 Check if user is archived - redirect to home
             if ("Archived".equalsIgnoreCase(admin.getEmpstatus())) {
+                return "redirect:/logout";
+            }
+
+            // Role temporarily deactivated when Dashboard permission is off
+            String roleKey = admin.getRole().toUpperCase().replace(" ", "-");
+            if ("false".equals(settingsService.get("perm." + roleKey + ".Dashboard", "true"))) {
                 return "redirect:/logout";
             }
             
