@@ -1,0 +1,313 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.layout { display: flex; height: 100vh; overflow: hidden; }
+
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.top-header {
+    background-color: #2d4a44;
+    display: flex;
+    border-bottom: 2px solid #FED734;
+}
+.top-header-tab {
+    flex: 1;
+    color: white;
+    text-align: center;
+    padding: 16px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.top-header-tab.inactive {
+    color: #8aada8;
+    font-weight: normal;
+}
+.top-header-tab.active {
+    color: white;
+    font-weight: bold;
+}
+
+.search-bar-area {
+    padding: 16px 20px 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #f5f5f5;
+}
+.search-input-wrap {
+    flex: 1;
+    position: relative;
+}
+.search-input-wrap input {
+    width: 100%;
+    padding: 9px 14px 9px 38px;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+    box-sizing: border-box;
+}
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+}
+.filter-btn {
+    padding: 9px 16px;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    background: white;
+    font-size: 14px;
+    cursor: pointer;
+    color: #444;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.filter-btn:hover {
+    background-color: #f0f0f0;
+}
+.create-btn {
+    background-color: #44C375;
+    color: white;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.create-btn:hover { background-color: #2ea05e; }
+
+.tabbar {
+    display: flex;
+    background-color: white;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 0 20px;
+    gap: 4px;
+}
+.tab {
+    padding: 12px 18px;
+    color: #666;
+    cursor: pointer;
+    font-size: 14px;
+    border-bottom: 3px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.tab.active {
+    background-color: #2d4a44;
+    color: white;
+    border-radius: 6px 6px 0 0;
+    font-weight: bold;
+}
+.tab-badge {
+    background-color: #FED734;
+    color: #2d4a44;
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.panel {
+    padding: 20px;
+    background-color: #f5f5f5;
+    flex: 1;
+    overflow-y: auto;
+}
+.panel-inner {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+}
+.panel-header {
+    background-color: #3d5f58;
+    color: white;
+    padding: 14px 20px;
+    font-weight: bold;
+    font-size: 15px;
+}
+.panel-content { padding: 0; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th {
+    background-color: #eaf2f0;
+    color: #2d4a44;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 10px 14px;
+    text-align: left;
+}
+td {
+    padding: 14px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.status-incoming {
+    background-color: #fff8e1;
+    color: #b8860b;
+    border: 1px solid #FED734;
+}
+.status-active {
+    background-color: #e8f5f0;
+    color: #2d7a5f;
+    border: 1px solid #b8ddd0;
+}
+.status-overdue {
+    background-color: #fdecea;
+    color: #c0392b;
+    border: 1px solid #f5c6cb;
+}
+.status-returned {
+    background-color: #e0e0e0;
+    color: #666;
+    border: 1px solid #ccc;
+}
+.status-archive {
+    background-color: #fdecea;
+    color: #c0392b;
+    border: 1px solid #f5c6cb;
+}
+
+.btn-sm {
+    padding: 5px 12px;
+    border: none;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    margin: 0 2px;
+}
+.btn-view {
+    background-color: #3498db;
+    color: white;
+}
+.btn-approve {
+    background-color: #44C375;
+    color: white;
+}
+.btn-return {
+    background-color: #44C375;
+    color: white;
+}
+.btn-archive {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.table-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-top: 1px solid #e0e0e0;
+    font-size: 13px;
+    color: #888;
+}
+
+.modal-content {
+    border-radius: 8px;
+}
+.modal-header {
+    background-color: #30534D;
+    color: white;
+    border-bottom: 2px solid #FED734;
+}
+.modal-header .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+.total-display {
+    background: #e8f5e9;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 15px;
+    text-align: right;
+    font-weight: bold;
+    color: #2d7a5f;
+}
+
+.success-toast-modal .modal-content {
+    background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
+    color: white;
+    border: none;
+    border-radius: 16px;
+}
+.success-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+/* Confirm Modal Overlay */
+.confirm-modal-overlay {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+}
+.confirm-modal-content {
+    background: white;
+    width: 380px;
+    border-radius: 12px;
+    text-align: center;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.confirm-modal-content h4 {
+    margin-bottom: 12px;
+    color: #2d4a44;
+}
+.confirm-modal-content p {
+    margin-bottom: 24px;
+    color: #666;
+}
+.confirm-modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+.confirm-modal-buttons button {
+    padding: 8px 24px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+.confirm-cancel {
+    background-color: #e0e0e0;
+    color: #333;
+}
+.confirm-ok {
+    background-color: #e74c3c;
+    color: white;
+}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" th:href="@{/css/sidebar2.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+</head>
+<body>
+
+<!-- Logout Modal Fragment -->
+<div th:fragment="logoutModal" class="logout-modal" id="logoutModal">
+    <div class="logout-modal-content">
+        <h3><i class="bi bi-box-arrow-right"></i> Confirm Logout</h3>
+        <p>Are you sure you want to logout?</p>
+        <div class="logout-buttons">
+            <button class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+            <button class="btn-confirm" onclick="confirmLogout()">Logout</button>
+        </div>
+    </div>
+</div>
+
+<!-- Sidebar Fragment -->
+<div th:fragment="sidebar" class="sidebar" id="mainSidebar">
+
+    <div class="header">
+        <div class="header-title">
+            <img src="/images/seal.png" th:src="@{/images/seal.png}" class="brgy" alt="Barangay Logo"/>
+            <span>Brgy. San Sebastian</span>
+        </div>
+    </div>
+
+    <div class="header-user">
+        <i class="bi bi-person-circle"></i>
+        <span th:text="${session.residentName}">Resident</span>
+        <span th:if="${session.userType == 'ADMIN_AS_RESIDENT'}" class="admin-tag"> (Admin)</span>
+    </div>
+
+    <ul class="menu">
+        <li onclick="window.location.href='/resident/announcements'" id="nav-announcements">
+            <i class="bi bi-megaphone"></i> Announcements
+        </li>
+        <li onclick="window.location.href='/resident/my-requests'" id="nav-requests">
+            <i class="bi bi-list-check"></i> Barangay Services
+        </li>
+        <li onclick="window.location.href='/resident/safety-reports'" id="nav-safety">
+            <i class="bi bi-shield-exclamation"></i> Safety Reports
+        </li>
+        <li onclick="window.location.href='/resident/emergency-alerts'" id="nav-alerts">
+            <i class="bi bi-bell"></i> Emergency Alerts
+        </li>
+        <li onclick="window.location.href='/resident/contact'" id="nav-contact">
+            <i class="bi bi-envelope"></i> Chat Assistance
+        </li>
+        <li onclick="window.location.href='/resident/facilities'" id="nav-facilities">
+            <i class="bi bi-building"></i> Facilities and Hotlines
+        </li>
+    </ul>
+
+    <hr class="sidebar-divider">
+
+    <div class="logout-item" onclick="openLogoutModal()">
+        <i class="bi bi-box-arrow-right"></i> Logout
+    </div>
+
+</div>
+
+<!-- Mobile menu toggle button — kept as its OWN fragment, not nested inside
+     .sidebar. It must stay a sibling: .sidebar slides off-screen with
+     transform:translateX(-100%) on mobile, and if this button were a child
+     it would slide off-screen with it, making it impossible to reopen. -->
+<button th:fragment="mobileToggle" class="menu-toggle" onclick="toggleMobileMenu()" id="menuToggle">
+    <i class="bi bi-list"></i>
+</button>
+
+<script th:src="@{/js/sidebar2.js}"></script>
+
+</body>
+</html>

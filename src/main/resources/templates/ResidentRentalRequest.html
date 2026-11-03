@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brgy. San Sebastian Rent: Rent Available Assets from the Barangay">
+    
+    <!-- External CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Lato&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar2.css}">
+    <link rel="stylesheet" href="/css/resident-rental-request.css">
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <title>Rent Equipment – CivilAccess</title>
+</head>
+<body>
+<div class="layout">
+    <div th:replace="~{fragments/sidebar2 :: sidebar}"></div>
+    <div th:replace="~{fragments/sidebar2 :: logoutModal}"></div>
+    <div th:replace="~{fragments/sidebar2 :: mobileToggle}"></div>
+
+    <div class="content" role="main">
+        <nav class="topnav">
+            <button class="back-btn" id="btnBack"><i class="bi bi-arrow-left"></i></button>
+            <a class="nav-brand" href="#">
+                <div class="nav-icon"><i class="bi bi-building-fill"></i></div>
+                <div>
+                    <div class="nav-name">CivilAccess</div>
+                    <div class="nav-sub">Barangay Portal</div>
+                </div>
+            </a>
+        </nav>
+
+        <div class="scroll-area">
+            <div class="form-card">
+                <div class="form-header">
+                    <i class="bi bi-box-seam"></i>
+                    <span class="form-title">New Equipment Rental</span>
+                </div>
+                <div class="title-underline"></div>
+
+                <!-- Renter Name -->
+                <label for="renterName">Renter Name *</label>
+                <input type="text" id="renterName" placeholder="Your full name">
+                <span class="error-text" id="err-renterName">Renter name is required</span>
+
+                <!-- Equipment Type -->
+                <label>Equipment Type *</label>
+                <div class="equip-selector" id="equipSelector">
+                    <div>
+                        <div class="equip-name" id="equipName">Chair</div>
+                        <div class="equip-price" id="equipPriceSub">₱15/day</div>
+                    </div>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <span class="error-text" id="err-equipment">Please select equipment</span>
+
+                <!-- Quantity -->
+                <label>Quantity *</label>
+                <div class="qty-row">
+                    <button type="button" class="qty-btn" id="btnQtyMinus"><i class="bi bi-dash"></i></button>
+                    <input type="number" class="qty-input" id="quantity" value="1" min="1" max="100">
+                    <button type="button" class="qty-btn" id="btnQtyPlus"><i class="bi bi-plus"></i></button>
+                </div>
+                <span class="error-text" id="err-quantity">Quantity must be at least 1</span>
+
+                <!-- Rental Date -->
+                <label for="rentalDate">Rental Date *</label>
+                <input type="date" id="rentalDate">
+                <span class="error-text" id="err-rentalDate">Rental date is required</span>
+                <span class="hint-text" id="hint-rentalDate">✓ Valid rental date</span>
+
+                <!-- Expected Return Date -->
+                <label for="expectedReturn">Expected Return Date *</label>
+                <input type="date" id="expectedReturn">
+                <span class="error-text" id="err-expectedReturn">Expected return date is required</span>
+                <span class="hint-text" id="hint-expectedReturn">✓ Valid return date</span>
+
+                <!-- Duration chip -->
+                <div class="duration-chip" id="durationChip">
+                    <i class="bi bi-clock"></i>
+                    <span id="durationText">1 day rental period</span>
+                </div>
+
+                <!-- Total card -->
+                <div class="total-card">
+                    <div class="total-row">
+                        <span class="total-label">Unit Price</span>
+                        <span class="total-value" id="totalUnitPrice">₱15/day</span>
+                    </div>
+                    <div class="total-row">
+                        <span class="total-label">Quantity</span>
+                        <span class="total-value" id="totalQty">× 1</span>
+                    </div>
+                    <div class="total-row">
+                        <span class="total-label">Duration</span>
+                        <span class="total-value" id="totalDays">× 0 days</span>
+                    </div>
+                    <div class="total-divider"></div>
+                    <div class="total-row">
+                        <span class="total-final-label">Total</span>
+                        <span class="total-final-amount" id="totalAmount">₱0.00</span>
+                    </div>
+                </div>
+
+                <!-- Info box -->
+                <div class="info-box">
+                    <i class="bi bi-info-circle"></i>
+                    Payment is collected upon pickup at the barangay hall. Please return equipment on or before
+                    the expected return date to avoid overdue charges.
+                </div>
+
+                <!-- Submit -->
+                <button class="submit-btn" id="submitBtn">
+                    <div class="spinner"></div>
+                    <span class="btn-label" id="submitLabel">Create Rental  (₱0.00)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Equipment bottom sheet -->
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+<div class="bottom-sheet" id="bottomSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Select Equipment</div>
+    <!-- options injected by JS -->
+</div>
+
+<!-- Success Modal -->
+<div class="modal-overlay" id="successModal">
+    <div class="modal-box">
+        <i class="bi bi-check-circle-fill modal-icon"></i>
+        <div class="modal-title">Rental Submitted!</div>
+        <p class="modal-msg">
+            Your equipment rental request has been submitted. Please proceed to the barangay hall
+            to pick up your equipment once approved.
+        </p>
+        <div class="modal-total-row">
+            <span class="modal-total-label">Total Amount:</span>
+            <span class="modal-total-amount" id="modalTotal">₱0.00</span>
+        </div>
+        <button class="modal-btn" id="btnCloseModal">OK</button>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal-overlay" id="errorModal">
+    <div class="modal-box">
+        <i class="bi bi-x-circle-fill modal-icon error-icon"></i>
+        <div class="modal-title">Error</div>
+        <p class="modal-msg" id="errorModalMsg">Something went wrong.</p>
+        <button class="modal-btn error-btn" id="btnCloseErrorModal">OK</button>
+    </div>
+</div>
+
+<script src="/js/sidebar2.js"></script>
+<script src="/js/resident-rental-request.js"></script>
+</body>
+</html>

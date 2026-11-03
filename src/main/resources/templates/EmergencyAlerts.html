@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brgy. San Sebastian Emergency Alerts: Manage Emergency Alerts">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/css/emergency-alerts.css">
+    
+    <!-- External Libraries -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    
+    <title>Emergency Alerts</title>
+</head>
+<body>
+    <script src="/js/notif.js"></script>
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <div class="layout">
+        <input type="hidden" id="accountStatus" th:value="${currentstatus}">
+        
+        <div id="forcePasswordModal" class="force-modal">
+            <div class="force-modal-content">
+                <h2>🔒 First Login Detected</h2>
+                <p>You must change your password before using the system.</p>
+                <button id="redirectPasswordBtn">Change Password</button>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+        <!-- Main content -->
+        <div class="content">
+
+            <!-- Top header -->
+            <div class="top-header">
+                <div class="top-header-tab inactive" id="tabHeaderSafety">Safety Reports</div>
+                <div class="top-header-tab active" id="tabHeaderEmergency">Emergency Alerts</div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabbar">
+                <div class="tab" id="tabBtnCreate"
+                     th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                     th:classappend="${currentTab == 'create' ? 'active' : ''}" data-tab="create">Create Alert</div>
+                <div class="tab" th:classappend="${currentTab == 'current' ? 'active' : ''}" data-tab="current">Current Alerts</div>
+                <div class="tab" th:classappend="${currentTab == 'history' ? 'active' : ''}" data-tab="history">Alert History</div>
+            </div>
+
+            <!-- Panel -->
+            <div class="panel" role="main">
+
+                <!-- Create Alert -->
+                <div id="tab-create" class="panel-inner"
+                     th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                     th:classappend="${currentTab != 'create' ? 'd-none' : ''}">
+                    <div class="panel-header">Create an Alert</div>
+                    <div class="panel-content">
+                        <div class="d-flex gap-3 mb-3">
+                            <select class="form-select" id="alertType">
+                                <option value="">Alert Type</option>
+                                <option value="Evacuation">Evacuation</option>
+                                <option value="Fire Emergency">Fire Emergency</option>
+                                <option value="Flood">Flood</option>
+                                <option value="Earthquake">Earthquake</option>
+                                <option value="Severe Weather">Severe Weather</option>
+                                <option value="Medical Emergency">Medical Emergency (outbreak)</option>
+                                <option value="Crime and Security">Crime and Security</option>
+                                <option value="Infrastructure">Infrastructure and utilities</option>
+                                <option value="Environmental">Environmental Hazards</option>
+                                <option value="Public Safety">Public Safety</option>
+                                <option value="Road Closure">Road Closure</option>
+                            </select>
+                            <select class="form-select" id="priority">
+                                <option value="">Severity Level</option>
+                                <option value="Level 1">Level 1</option>
+                                <option value="Level 2">Level 2</option>
+                                <option value="Level 3">Level 3</option>
+                                <option value="Level 4">Level 4</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="title" placeholder="Alert Title">
+                        </div>
+                        
+                        <!-- Map section -->
+                        <div id="mapSection" class="map-wrapper">
+                            <div class="map-instruction">
+                                <i class="bi bi-geo-alt-fill"></i> Click on the map to pin the alert location
+                                <button type="button" class="current-location-btn" id="btnUseMyLocation">
+                                    <i class="bi bi-crosshair"></i> Use My Location
+                                </button>
+                            </div>
+                            <div id="createMap"></div>
+                            <div id="boundaryStatus" class="boundary-status" style="display: none;"></div>
+                        </div>
+                        <input type="hidden" id="latitude" value="">
+                        <input type="hidden" id="longitude" value="">
+                        <input type="text" class="form-control mb-3" id="location" placeholder="Location address" readonly>
+                        
+                        <label class="mb-1" style="font-size:14px; font-weight:bold;">Message</label>
+                        <textarea class="form-control mb-3" id="message" rows="5" placeholder="Type your alert message here..."></textarea>
+                        <div class="d-flex justify-content-end">
+                            <button class="proceed-btn" id="btnPostAlert">Post Alert</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Alerts -->
+                <div id="tab-current" class="panel-inner" th:classappend="${currentTab != 'current' ? 'd-none' : ''}">
+                    <div class="panel-header">Current Alerts</div>
+                    <div class="panel-content">
+                        <div class="search-bar-area mb-3">
+                            <div class="search-input-wrap">
+                                <span class="search-icon"><i class="bi bi-search"></i></span>
+                                <input type="text" id="current-search" placeholder="Search alerts...">
+                            </div>
+                            <button class="filter-btn" id="btnResetCurrent"><i class="bi bi-funnel"></i> Reset</button>
+                        </div>
+                        
+                        <div th:if="${not #lists.isEmpty(currentAlerts)}" id="currentAlertsContainer">
+                            <div class="alert-card" th:each="alert : ${currentAlerts}" th:attr="data-alert-id=${alert.id}">
+                                <div class="alert-card-top">
+                                    <span class="alert-card-title" th:text="${alert.title != null ? alert.title : 'Alert'}">Alert 1</span>
+                                    <span class="alert-card-date" th:text="${alert.dateCreated != null ? #temporals.format(alert.dateCreated, 'MMM dd, yyyy hh:mm a') : 'N/A'}">Mar 15, 2026 08:00 AM</span>
+                                </div>
+                                <p class="alert-card-msg" th:text="${alert.message != null ? alert.message : 'No message'}">Flooding reported near Purok 3.</p>
+                                <div class="d-flex justify-content-end">
+                                    <button class="view-btn btn-view-alert" th:attr="data-id=${alert.id}">View</button>
+                                    <button class="archive-btn btn-archive-alert" th:if="${currentrole == 'ADMIN'}" th:attr="data-id=${alert.id}">Archive</button>
+                                    <button class="archive-btn btn-assistance-archive" th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">Archive</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center p-4" th:if="${#lists.isEmpty(currentAlerts)}">
+                            <p class="text-muted">No current alerts</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert History -->
+                <div id="tab-history" class="panel-inner" th:classappend="${currentTab != 'history' ? 'd-none' : ''}">
+                    <div class="panel-header">Alert History</div>
+                    <div class="panel-content">
+                        <div class="search-bar-area mb-3">
+                            <div class="search-input-wrap">
+                                <span class="search-icon"><i class="bi bi-search"></i></span>
+                                <input type="text" id="history-search" placeholder="Search alert history...">
+                            </div>
+                            <button class="filter-btn" id="btnResetHistory"><i class="bi bi-funnel"></i> Reset</button>
+                        </div>
+                        
+                        <div th:if="${not #lists.isEmpty(archivedAlerts)}">
+                            <div class="alert-card" th:each="alert : ${archivedAlerts}">
+                                <div class="alert-card-top">
+                                    <span class="alert-card-title" th:text="${alert.title != null ? alert.title : 'Alert'}">Alert 1</span>
+                                    <span class="alert-card-date" th:text="${alert.dateCreated != null ? #temporals.format(alert.dateCreated, 'MMM dd, yyyy hh:mm a') : 'N/A'}">Mar 10, 2026 10:00 AM</span>
+                                </div>
+                                <p class="alert-card-msg" th:text="${alert.message != null ? alert.message : 'No message'}">Fire incident reported.</p>
+                                <div class="d-flex justify-content-end">
+                                    <button class="view-btn btn-view-alert" th:attr="data-id=${alert.id}">View</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center p-4" th:if="${#lists.isEmpty(archivedAlerts)}">
+                            <p class="text-muted">No archived alerts</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0"></div>
+                <div class="modal-body">
+                    <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                    <h5 id="successMessage">Success!</h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" id="successOkBtn">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Alert Modal -->
+    <div class="modal fade" id="viewAlertModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content" style="left: -200px; width: 1009px; justify-content: center;">
+                <div class="modal-header">
+                    <h5 class="modal-title">Emergency Alert Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="viewModalBody" style="padding: 0; overflow-x: hidden;"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
+
+    <!-- External App JS -->
+    <script src="/js/emergency-alerts.js"></script>
+</body>
+</html>

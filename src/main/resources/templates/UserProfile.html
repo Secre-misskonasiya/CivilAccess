@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Barangay San Sebastian User Profile: Manage User Profile">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" href="/css/user-profile.css">
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"></script>
+
+    <title>User Profile</title>
+</head>
+<body>
+    <script src="/js/notif.js"></script>
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <div class="layout">
+        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+        <div class="toast-wrap" id="toastWrap"></div>
+
+        <div class="main-content">
+            <div class="top-header">
+                <div class="top-header-tab">User Profile</div>
+            </div>
+
+            <div class="content-area">
+                <div class="profile-panel view-mode" id="profilePanel">
+                    <div class="profile-hero">
+                        <form id="profileForm" th:action="@{/register}" method="post" enctype="multipart/form-data" style="display:contents">
+                            <input type="hidden" name="id" th:value="${currentAdminNumericId}">
+                            <input type="hidden" name="employeeId" th:value="${currentAdminID}">
+                            <input type="hidden" name="address" id="hiddenAddress" th:value="${currentAdminAddress}">
+                            <input type="hidden" name="gender" th:value="${currentAdminGender}">
+                            <input type="hidden" name="birthDate" id="hiddenBirthDate" th:value="${currentAdminBirthDate}">
+                            <input type="hidden" name="firstName" id="hiddenFirstName">
+                            <input type="hidden" name="lastName" id="hiddenLastName">
+                            <input type="hidden" name="username" id="hiddenUsername" th:value="${currentAdminUsername}">
+                            <input type="hidden" name="email" id="hiddenEmail" th:value="${currentAdminEmail}">
+                            <input type="hidden" name="phoneNumber" id="hiddenPhoneNumber" th:value="${currentAdminPhone}">
+                            <input type="hidden" name="password" value="">
+                            <input type="hidden" name="redirectTo" value="profile">
+                            <input type="hidden" name="profilePictureUrl" id="profilePictureUrlHidden">
+                            <input type="hidden" name="role" id="hiddenRole" th:if="${currentAdminRole != 'ADMIN'}" th:value="${currentAdminRole}">
+
+                            <div class="avatar-wrap">
+                                <div class="avatar" id="profilePictureDisplay">
+                                    <img th:if="${currentAdminProfilePicture != null}" th:src="${currentAdminProfilePicture}" alt="Profile Picture" style="width:100%;height:100%;object-fit:cover;">
+                                    <svg th:unless="${currentAdminProfilePicture != null}" viewBox="0 0 24 24">
+                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                    </svg>
+                                </div>
+                                <div class="avatar-edit edit-only" id="avatarEditBtn">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </div>
+                                <input type="file" id="profileImageInput" name="profilePicture" accept="image/*" style="display:none">
+                            </div>
+
+                            <div class="hero-info">
+                                <div class="hero-name view-only" id="viewHeroName" th:text="${currentUser}">Full Name</div>
+                                <div class="hero-name edit-only">
+                                    <input type="text" id="editHeroName" style="background:rgba(255,255,255,0.15);border:none;color:white;font-weight:bold;font-size:20px;padding:4px 8px;width:100%;border-radius:4px;" th:value="${currentUser}">
+                                </div>
+                                <div class="hero-email" th:text="${currentAdminEmail}">email@example.com</div>
+                                <div class="hero-meta">
+                                    <th:block th:if="${currentAdminRole == 'ADMIN'}">
+                                        <span class="role-static view-only" th:text="${currentAdminRole}">Admin</span>
+                                        <select class="role-select edit-only" id="roleSelect" name="role">
+                                            <option value="ADMIN" th:selected="${currentAdminRole == 'ADMIN'}">Admin</option>
+                                            <option value="BARANGAY-CAPTAIN" th:selected="${currentAdminRole == 'BARANGAY-CAPTAIN'}">Barangay Captain</option>
+                                            <option value="SECRETARIAT STAFF" th:selected="${currentAdminRole == 'SECRETARIAT STAFF'}">Secretariat Staff</option>
+                                            <option value="TREASURER" th:selected="${currentAdminRole == 'TREASURER'}">Treasurer</option>
+                                            <option value="SECRETARY" th:selected="${currentAdminRole == 'SECRETARY'}">Secretary</option>
+                                        </select>
+                                    </th:block>
+                                    <span class="role-static" th:unless="${currentAdminRole == 'ADMIN'}" th:text="${currentAdminRole}">Staff</span>
+                                    <span class="hero-empid" th:text="'ID: ' + ${currentAdminID}">ID: —</span>
+                                </div>
+                                <small class="file-error edit-only" id="fileError">File must not exceed 2MB</small>
+                                <small class="file-size-info edit-only">Max photo size: 2MB</small>
+                            </div>
+
+                            <div class="hero-actions">
+                                <button type="button" class="btn-edit view-only" id="btnEditProfile"><i class="bi bi-pencil-square"></i> Edit Profile</button>
+                                <button type="button" class="btn-pwd view-only" id="btnChangePassword"><i class="bi bi-key"></i> Change Password</button>
+                                <button type="submit" class="btn-save edit-only" id="saveBtn" disabled><i class="bi bi-check-circle"></i> Save Changes</button>
+                                <button type="button" class="btn-cancel-edit edit-only" id="btnCancelEdit"><i class="bi bi-x-circle"></i> Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="view-only">
+                        <div class="section-header">Personal information</div>
+                        <div class="fields-grid">
+                            <div class="view-field"><label>Full name</label><div class="view-val" id="view-fullname" th:text="${currentUser}">—</div></div>
+                            <div class="view-field"><label>Phone number</label><div class="view-val" id="view-phone" th:text="${currentAdminPhone}">—</div></div>
+                            <div class="view-field"><label>Username</label><div class="view-val" id="view-username" th:text="${currentAdminUsername}">—</div></div>
+                            <div class="view-field"><label>Email address</label><div class="view-val" id="view-email" th:text="${currentAdminEmail}">—</div></div>
+                        </div>
+                    </div>
+
+                    <div class="edit-only">
+                        <div class="section-header">Personal information</div>
+                        <div class="fields-grid">
+                            <div class="field"><label>Full name</label><input type="text" id="fullname" th:value="${currentUser}"><span class="vicon" id="fullname-icon"></span>
+                                <small class="err" id="fullname-error">Name is required</small><small class="err" id="fullname-error2">Only letters and spaces allowed</small><small class="err" id="fullname-error3">Please enter both first and last name</small></div>
+                            <div class="field"><label>Phone number</label><input type="tel" id="phone" th:value="${currentAdminPhone}"><span class="vicon" id="phone-icon"></span>
+                                <small class="err" id="phone-error">Must start with 09 and be 11 digits</small><small class="err" id="phone-taken">This phone number is already in use</small></div>
+                            <div class="field"><label>Username</label><input type="text" id="username" th:value="${currentAdminUsername}"><span class="vicon" id="username-icon"></span>
+                                <small class="err" id="username-error">Username is required (min 3 characters)</small><small class="err" id="username-error2">Only letters, numbers, and hyphens allowed</small><small class="err" id="username-taken">This username is already taken</small></div>
+                            <div class="field"><label>Email address</label><input type="email" id="email" th:value="${currentAdminEmail}"><span class="vicon" id="email-icon"></span>
+                                <small class="err" id="email-error">Valid email is required</small><small class="err" id="email-taken">This email is already in use</small></div>
+                        </div>
+                    </div>
+
+                    <th:block th:if="${currentAdminRole == 'ADMIN'}">
+                        <div class="section-divider"></div>
+                        <div class="section-header">Additional information</div>
+                        <div class="view-only">
+                            <div class="fields-grid">
+                                <div class="view-field"><label>Birth date</label><div class="view-val" id="view-birthdate" th:text="${currentAdminBirthDate} ?: 'Not on record'">—</div></div>
+                                <div class="view-field"><label>Home address</label><div class="view-val" id="view-address" th:text="${currentAdminAddress} ?: 'Not on record'">—</div></div>
+                            </div>
+                        </div>
+                        <div class="edit-only">
+                            <div class="fields-grid">
+                                <div class="field"><label>Birth date</label><input type="date" id="birthdate" th:value="${currentAdminBirthDate}"><span class="vicon" id="birthdate-icon"></span>
+                                    <small class="err" id="birthdate-error">A valid birth date is required</small><small class="err" id="birthdate-error-age">Must be at least 18 years old</small></div>
+                                <div class="field"><label>Home address</label><input type="text" id="address" th:value="${currentAdminAddress}"><span class="vicon" id="address-icon"></span>
+                                    <small class="err" id="address-error">Address must be at least 5 characters</small></div>
+                            </div>
+                        </div>
+                    </th:block>
+
+                    <th:block th:unless="${currentAdminRole == 'ADMIN'}">
+                        <div class="section-divider"></div>
+                        <div class="section-header">Restricted fields</div>
+                        <div class="fields-grid">
+                            <div class="locked-field"><div class="locked-label"><i class="bi bi-lock-fill"></i> Birth date</div><div class="locked-val" th:text="${currentAdminBirthDate} ?: 'Not on record'">Not on record</div><div class="locked-hint"><i class="bi bi-info-circle-fill"></i> Contact Administrator to update</div></div>
+                            <div class="locked-field"><div class="locked-label"><i class="bi bi-lock-fill"></i> Home address</div><div class="locked-val" th:text="${currentAdminAddress} ?: 'Not on record'">Not on record</div><div class="locked-hint"><i class="bi bi-info-circle-fill"></i> Contact Administrator to update</div></div>
+                        </div>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h3 class="modal-title"><i class="bi bi-key me-2"></i>Change Password</h3><button class="close-btn" id="btnClosePasswordModal">&times;</button></div>
+            <form id="passwordChangeForm" th:action="@{/register}" method="post">
+                <input type="hidden" name="id" th:value="${currentAdminNumericId}">
+                <input type="hidden" name="employeeId" th:value="${currentAdminID}">
+                <input type="hidden" name="address" th:value="${currentAdminAddress}">
+                <input type="hidden" name="gender" th:value="${currentAdminGender}">
+                <input type="hidden" name="birthDate" th:value="${currentAdminBirthDate}">
+                <input type="hidden" name="role" th:value="${currentAdminRole}">
+                <input type="hidden" name="firstName" id="pwdHiddenFirstName">
+                <input type="hidden" name="lastName" id="pwdHiddenLastName">
+                <input type="hidden" name="username" id="pwdHiddenUsername" th:value="${currentAdminUsername}">
+                <input type="hidden" name="email" id="pwdHiddenEmail" th:value="${currentAdminEmail}">
+                <input type="hidden" name="phoneNumber" id="pwdHiddenPhoneNumber" th:value="${currentAdminPhone}">
+                <input type="hidden" name="password" id="pwdHiddenPassword" value="">
+                <input type="hidden" name="redirectTo" value="profile">
+                <div class="modal-body">
+                    <div style="display:flex;gap:8px;margin-bottom:10px">
+                        <input type="email" id="otpEmail" placeholder="Enter your email to verify" style="flex:1;padding:10px 12px;border:1px solid #d0d5dd;border-radius:6px;" th:value="${currentAdminEmail}">
+                        <button type="button" id="btnSendOtp" style="padding:10px 14px;background:#30534D;color:white;border:none;border-radius:6px;cursor:pointer;">Send OTP</button>
+                    </div>
+                    <div class="input-wrapper" style="margin-bottom:10px">
+                        <input type="text" id="otpInput" placeholder="Enter OTP" maxlength="6" style="width:100%;padding:10px 12px;border:1px solid #d0d5dd;border-radius:6px;">
+                        <small id="otp-error" style="color:#e74c3c;font-size:11px;display:none">Invalid OTP</small>
+                        <small id="otp-success" style="color:#27ae60;font-size:11px;display:none">✓ OTP verified</small>
+                    </div>
+                    <div class="input-wrapper" style="position:relative">
+                        <input type="password" id="newPassword" placeholder="New Password" style="width:100%;padding:10px 40px 10px 12px;border:1px solid #d0d5dd;border-radius:6px;">
+                        <button type="button" class="toggle-pwd-btn" data-target="newPassword" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#666;padding:0;margin:0;line-height:1;">
+                            <i class="bi bi-eye-slash" id="newPasswordIcon"></i>
+                        </button>
+                    </div>
+                    <div id="password-requirements" class="password-requirements">
+                        <div class="requirement-item" id="req-length">At least 8 characters</div>
+                        <div class="requirement-item" id="req-uppercase">Contains uppercase letter</div>
+                        <div class="requirement-item" id="req-lowercase">Contains lowercase letter</div>
+                        <div class="requirement-item" id="req-number">Contains number</div>
+                        <div class="requirement-item" id="req-special">Contains special character (!@#$%^&amp;*)</div>
+                    </div>
+                    <div class="input-wrapper" style="margin-top:8px;position:relative">
+                        <input type="password" id="confirmPassword" placeholder="Confirm New Password" style="width:100%;padding:10px 40px 10px 12px;border:1px solid #d0d5dd;border-radius:6px;">
+                        <button type="button" class="toggle-pwd-btn" data-target="confirmPassword" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#666;padding:0;margin:0;line-height:1;">
+                            <i class="bi bi-eye-slash" id="confirmPasswordIcon"></i>
+                        </button>
+                    </div>
+                    <small class="err" id="confirm-password-error">Passwords do not match</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" id="btnCancelPassword">Cancel</button>
+                    <button type="submit" class="btn-confirm" id="changePasswordBtn" disabled>Change Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                    <h5 id="successMessage">Success!</h5>
+                </div>
+                <div class="modal-footer justify-content-center border-0 pb-4">
+                    <button type="button" class="btn btn-light" id="successOkBtn" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade error-toast-modal" id="errorModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <div class="error-icon"><i class="bi bi-x-circle-fill"></i></div>
+                    <h5 id="errorMessage">Something went wrong</h5>
+                </div>
+                <div class="modal-footer justify-content-center border-0 pb-4">
+                    <button type="button" class="btn btn-light" id="errorOkBtn" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
+    
+    <!-- Server Data -->
+    <script th:inline="javascript">
+        window.PROFILE_DATA = {
+            usernameList: /*[[${usernameList}]]*/ [],
+            emailList: /*[[${emailList}]]*/ [],
+            phoneList: /*[[${phoneList}]]*/ []
+        };
+    </script>
+
+    <!-- External App JS -->
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/user-profile.js"></script>
+</body>
+</html>
