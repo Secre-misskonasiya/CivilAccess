@@ -42,8 +42,10 @@ public class SecurityConfig {
             .headers(headers -> headers
                 .contentSecurityPolicy(csp -> csp
                     .policyDirectives("default-src 'self'; "
-                        + "style-src 'self' 'unsafe-inline' https:; "
-                        + "script-src 'self' 'unsafe-inline' https:; "
+                        // We KEEP 'unsafe-inline' for styles (CSS), this is safe.
+                        + "style-src 'self' 'unsafe-inline' https:; " 
+                        // We REMOVED 'unsafe-inline' for scripts (JavaScript) to get A+
+                        + "script-src 'self' https:; " 
                         + "img-src 'self' data: https:; "
                         + "font-src 'self' data: https:; "
                         + "connect-src 'self' https:"))
