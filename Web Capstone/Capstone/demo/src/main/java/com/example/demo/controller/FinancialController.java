@@ -70,6 +70,10 @@ public class FinancialController {
         return date;
     }
 
+    private boolean isFutureDate(LocalDate date) {
+        return date != null && date.isAfter(LocalDate.now());
+    }
+
     private String generateNextOrNumber() {
         try {
             int currentYear = LocalDate.now().getYear();
@@ -213,6 +217,11 @@ public class FinancialController {
     public String saveIncome(@ModelAttribute BarangayIncome income,
                              RedirectAttributes redirectAttributes) {
         try {
+            if (isFutureDate(income.getIncomeDate())) {
+                redirectAttributes.addFlashAttribute("error", "Income date cannot be in the future.");
+                return "redirect:/finance#income";
+            }
+
             income.setIncomeDate(validateDate(income.getIncomeDate()));
 
             if (income.getAmount() == null || income.getAmount() <= 0) {
@@ -240,6 +249,12 @@ public class FinancialController {
     public String updateIncome(@ModelAttribute BarangayIncome income,
                                RedirectAttributes redirectAttributes) {
         try {
+
+            if (isFutureDate(income.getIncomeDate())) {
+                redirectAttributes.addFlashAttribute("error", "Income date cannot be in the future.");
+                return "redirect:/finance#income";
+            }
+
             income.setIncomeDate(validateDate(income.getIncomeDate()));
 
             if (income.getAmount() == null || income.getAmount() <= 0) {
@@ -273,6 +288,12 @@ public class FinancialController {
     public String saveExpense(@ModelAttribute BarangayExpense expense,
                               RedirectAttributes redirectAttributes) {
         try {
+
+            if (isFutureDate(expense.getExpenseDate())) {
+                redirectAttributes.addFlashAttribute("error", "Expense date cannot be in the future.");
+                return "redirect:/finance#expenses";
+            }
+
             expense.setExpenseDate(validateDate(expense.getExpenseDate()));
 
             if (expense.getAmount() == null || expense.getAmount() <= 0) {
@@ -295,6 +316,12 @@ public class FinancialController {
     public String updateExpense(@ModelAttribute BarangayExpense expense,
                                 RedirectAttributes redirectAttributes) {
         try {
+
+            if (isFutureDate(expense.getExpenseDate())) {
+                redirectAttributes.addFlashAttribute("error", "Expense date cannot be in the future.");
+                return "redirect:/finance#expenses";
+            }
+
             expense.setExpenseDate(validateDate(expense.getExpenseDate()));
 
             if (expense.getAmount() == null || expense.getAmount() <= 0) {

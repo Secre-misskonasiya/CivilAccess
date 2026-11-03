@@ -526,9 +526,7 @@
     }
 
     /* Ensure confirm/success/error modals appear above all custom overlays */
-    #successModal,
-    #errorModal,
-    [id^="dynamicConfirmModal_"] {
+    .modal {
         z-index: 9000 !important;
     }
 
@@ -650,7 +648,7 @@
         <div class="tab" onclick="switchTab(this, 'ready')">
             Ready <span class="tab-badge" id="badge-ready" th:text="${readyCount}">0</span>
         </div>
-        <div class="tab" th:if="${currentrole == 'ADMIN'}" onclick="switchTab(this, 'archive')">
+        <div class="tab" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" onclick="switchTab(this, 'archive')">
             Archive <span class="tab-badge" id="badge-archive" th:text="${archivedCount}">0</span>
         </div>
     </div>
@@ -855,6 +853,9 @@
                                 th:if="${currentrole == 'ADMIN'}"
                                     th:data-id="${req.id}"
                                     onclick="confirmArchive(this)">Archive</button>
+                                <button class="archive-btn" type="button"
+                                 th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                  onclick="openAssistanceModal()">Archive</button>   
                             </div></td>
                          </tr>
                         <tr th:if="${#lists.isEmpty(readyRequests)}">
@@ -902,6 +903,9 @@
                             <td><div class="action-buttons">
                                 <button type="button" class="view-btn"
                                         onclick="openDocModalFromRow(this, true)">View Document</button>
+                                <button class="archive-btn" type="button"
+                                 th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                  onclick="openAssistanceModal()">Archive</button>   
                             </div></td>
                          </tr>
                         <tr th:if="${#lists.isEmpty(archivedRequests)}">
@@ -1008,6 +1012,17 @@
     return element && element.textContent && element.textContent.toLowerCase().includes(text.toLowerCase());
   }
 
+  function clearStuckBackdrops() {
+      // If no modal is actually visible but backdrops exist, nuke them
+      const visibleModal = document.querySelector('.modal.show');
+      if (!visibleModal) {
+          document.querySelectorAll('.modal-backdrop').forEach(bd => bd.remove());
+          document.body.classList.remove('modal-open');
+          document.body.style.removeProperty('overflow');
+          document.body.style.removeProperty('padding-right');
+      }
+  }
+
   // Supabase configuration
   const SUPABASE_URL = 'https://upfrofppponiqffbssqb.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_tZyxrTJrpd_OD5-TKUkT8Q__DnuY0tj';
@@ -1033,9 +1048,10 @@
 
   // ─── Confirmation & Success/Error Modal helpers ────────────────────────────
   function showSuccess(message) {
+    clearStuckBackdrops();
     document.getElementById('successMessage').innerHTML = message;
     const successModalEl = document.getElementById('successModal');
-    const successModal = new bootstrap.Modal(successModalEl);
+    const successModal = bootstrap.Modal.getOrCreateInstance(successModalEl);
     
     const okButton = document.getElementById('successOkBtn');
     const newOkButton = okButton.cloneNode(true);
@@ -1054,9 +1070,10 @@
   }
 
   function showError(message) {
+    clearStuckBackdrops();
     document.getElementById('errorMessage').innerHTML = message;
     const errorModalEl = document.getElementById('errorModal');
-    const errorModal = new bootstrap.Modal(errorModalEl);
+    const errorModal = bootstrap.Modal.getOrCreateInstance(errorModalEl);
 
     errorModalEl.addEventListener('hidden.bs.modal', function onHidden() {
       pollSuppressed = false;
@@ -1089,9 +1106,11 @@
     const modalEl = document.getElementById(confirmModalId);
     const modal = new bootstrap.Modal(modalEl);
     document.getElementById(`confirmOkBtn_${confirmModalId}`).onclick = function() {
+      modalEl.addEventListener('hidden.bs.modal', function () {
+          onConfirm();
+      }, { once: true });
       modal.hide();
-      onConfirm();
-    };
+  };
     modalEl.addEventListener('hidden.bs.modal', function() { modalEl.remove(); });
     modal.show();
   }

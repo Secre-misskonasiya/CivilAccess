@@ -420,7 +420,7 @@ td{padding:12px 14px !important;vertical-align:middle !important}
         <i class="bi bi-person-check"></i> Active Records
         <span class="tab-count" id="activeCount" th:text="${activeCount}">0</span>
       </div>
-      <div class="tab" id="tab-archived-btn" onclick="switchTab('archived')" th:if="${currentrole == 'ADMIN'}">
+      <div class="tab" id="tab-archived-btn" onclick="switchTab('archived')" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
         <i class="bi bi-archive"></i> Archived
         <span class="tab-count" id="archivedCount" th:text="${archivedCount}">0</span>
       </div>
