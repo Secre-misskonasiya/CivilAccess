@@ -1345,7 +1345,7 @@
 <!-- ═══════════════════════════════════════ -->
 <!-- FORCE PASSWORD MODAL (Inline)            -->
 <!-- ═══════════════════════════════════════ -->
-<div id="forcePasswordModal" class="modal" style="display:none; z-index: 99999;">
+<!-- <div id="forcePasswordModal" class="modal" style="display:none; z-index: 99999;">
     <div class="modal-content" style="width:440px; text-align:center; padding:30px; border-radius:16px;">
         <div style="font-size:48px; margin-bottom:12px;">🔒</div>
         <h2 style="color:#30534D; margin-bottom:8px;">Password Change Required</h2>
@@ -1355,23 +1355,9 @@
             Change Password
         </button>
     </div>
-</div>
+</div> -->
 
-<script>
-// ─── Force Password Lock ─────────────────────────────────────
-(function() {
-    var status = document.getElementById('accountStatus')?.value || '';
-    if (status === 'New' || status === 'Newly Updated') {
-        document.getElementById('forcePasswordModal').style.display = 'block';
-        document.getElementById('lockStatusLabel').textContent = status;
-        document.body.style.overflow = 'hidden';
-    }
-})();
 
-function redirectToPassword() {
-    window.location.href = '/user-profile';
-}
-</script>
 
 <script>
 
@@ -2651,7 +2637,7 @@ console.log("=== POLLING SCRIPT STARTED ===");
     var lastDataSnapshot = '';
     
     function checkModals() {
-        var ids = ['accountModal','viewModal','residentModal','confirmModal','residentViewModal','verifyModal','sendPasswordModal','imageEnlargeModal','forcePasswordModal','logoutModal'];
+        var ids = ['accountModal','viewModal','residentModal','confirmModal','residentViewModal','verifyModal','sendPasswordModal','imageEnlargeModal','logoutModal'];
         for (var i = 0; i < ids.length; i++) {
             var m = document.getElementById(ids[i]);
             if (m && (m.style.display === 'block' || m.style.display === 'flex')) return true;
