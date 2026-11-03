@@ -725,6 +725,7 @@ public ResponseEntity<?> verifyResident(@PathVariable UUID id) {
             System.out.println("DEBUG: OTP sent is: " + otp);
             return ResponseEntity.ok("OTP Sent Successfully");
         } catch (Exception e) {
+            e.printStackTrace(); 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error sending email");
         }
     }

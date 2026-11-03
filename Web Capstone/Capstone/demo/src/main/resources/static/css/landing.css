@@ -648,3 +648,19 @@
         .navbar { padding: 16px 6%; }
         .hero { padding: 0 6%; }
     }
+
+    
+.navbar-links a.nav-resident { color: rgba(255,255,255,0.88); font-weight: 500; }
+.navbar-links a.nav-admin { color: var(--gold); font-weight: 700; }
+
+.hero-content a.hero-resident-btn,
+.hero-content a.hero-resident-btn:hover {
+    background: transparent;
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,0.5);
+    margin-left: 12px;
+}
+
+.eyebrow-left { text-align: left; }
+.divider-left { margin-left: 0; }
+.cta-tagline-spaced { margin-top: 16px; }

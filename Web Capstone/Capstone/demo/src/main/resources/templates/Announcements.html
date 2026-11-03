@@ -1,889 +1,175 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta name="description" content="Barangay San Sebastian announcements: manage community announcements.">
-<style>
-    /* ... ALL EXISTING STYLES KEPT EXACTLY THE SAME ... */
-    body { margin: 0; font-family: Arial, sans-serif; }
-    .layout { display: flex; height: 100vh; overflow: hidden; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Barangay San Sebastian announcements: manage community announcements.">
     
-    .content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-    }
-
-    .top-header {
-        background-color: #2d4a44;
-        display: flex;
-        border-bottom: 2px solid #FED734;
-    }
-    .top-header-tab {
-        flex: 1;
-        color: white;
-        text-align: center;
-        padding: 16px 20px;
-        font-size: 16px;
-        font-weight: bold;
-    }
-
-    .search-bar-area {
-        padding: 16px 20px 10px 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background-color: #f5f5f5;
-    }
-    .search-input-wrap { flex: 1; position: relative; }
-    .search-input-wrap input {
-        width: 100%;
-        padding: 9px 14px 9px 38px;
-        border: 1px solid #d0d5dd;
-        border-radius: 6px;
-        font-size: 14px;
-        background: white;
-        box-sizing: border-box;
-    }
-    .search-icon {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #aaa;
-    }
-    .filter-btn {
-        padding: 9px 16px;
-        border: 1px solid #d0d5dd;
-        border-radius: 6px;
-        background: white;
-        font-size: 14px;
-        cursor: pointer;
-        color: #444;
-    }
-    .create-announcement-btn {
-        background-color: #44C375;
-        color: white;
-        border: none;
-        padding: 9px 20px;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: bold;
-        cursor: pointer;
-    }
-    .create-announcement-btn:hover { background-color: #2ea05e; }
-
-    .tabbar {
-        display: flex;
-        background-color: white;
-        border-bottom: 1px solid #e0e0e0;
-        padding: 0 20px;
-        gap: 4px;
-    }
-    .tab {
-        padding: 12px 18px;
-        color: #666;
-        cursor: pointer;
-        font-size: 14px;
-        border-bottom: 3px solid transparent;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .tab.active {
-        background-color: #2d4a44;
-        color: white;
-        border-radius: 6px 6px 0 0;
-        font-weight: bold;
-    }
-
-    .panel {
-        padding: 20px;
-        background-color: #f5f5f5;
-        flex: 1;
-        overflow-y: auto;
-    }
-    .panel-inner {
-        background: white;
-        border-radius: 8px;
-        border: 1px solid #e0e0e0;
-        overflow: hidden;
-    }
-    .panel-header {
-        background-color: #3d5f58;
-        color: white;
-        padding: 14px 20px;
-        font-weight: bold;
-        font-size: 15px;
-    }
-    .panel-content { padding: 0; }
-
-    .announcement-list {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .announcement-row {
-        display: flex;
-        align-items: center;
-        padding: 0 20px;
-        height: 68px;
-        border-bottom: 1px solid #f0f0f0;
-        cursor: default;
-        transition: background 0.12s;
-        gap: 0;
-        position: relative;
-        box-sizing: border-box;
-    }
-    .announcement-row:hover {
-        background-color: #f2f6f5;
-        box-shadow: inset 3px 0 0 #2d4a44;
-    }
-    .announcement-row.pinned {
-        background-color: #fffef2;
-    }
-    .announcement-row.pinned:hover {
-        background-color: #fffbe0;
-        box-shadow: inset 3px 0 0 #FED734;
-    }
-
-    #confirmActionModal { z-index: 10500 !important; }
-    #confirmActionModal + .modal-backdrop,
-    .modal-backdrop ~ .modal-backdrop { z-index: 10400 !important; }
-
-    [id^="dynamicConfirmModal_"] { z-index: 10550 !important; }
-    [id^="dynamicConfirmModal_"] + .modal-backdrop { z-index: 10540 !important; }
-
-    [id^="dynamicErrorModal_"] { z-index: 10550 !important; }
-    [id^="dynamicErrorModal_"] + .modal-backdrop { z-index: 10540 !important; }
-    
-    .modal.success-toast-modal { z-index: 10600 !important; }
-    .modal.success-toast-modal + .modal-backdrop { z-index: 10590 !important; }
-    #createAnnouncementModal { z-index: 10500 !important; }
-    .row-pin {
-        width: 28px;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .pin-icon {
-        font-size: 18px;
-        cursor: pointer;
-        color: #ccc;
-        transition: color 0.2s;
-    }
-    .pin-icon.active { color: #FED734; }
-    .pin-icon:hover { color: #bbb; }
-
-    .row-badge {
-        width: 80px;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-    }
-    .card-category {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: 700;
-        background-color: #e8f5f0;
-        color: #2d7a5f;
-        border: 1px solid #b8ddd0;
-        white-space: nowrap;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-    }
-    .card-category.high {
-        background-color: #fff8e1;
-        color: #b8860b;
-        border-color: #FED734;
-    }
-
-    .row-title {
-        width: 240px;
-        flex-shrink: 0;
-        font-weight: 600;
-        font-size: 15px;
-        color: #1a1a1a;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        padding-right: 16px;
-    }
-
-    .row-sep {
-        color: #ccc;
-        font-size: 12px;
-        flex-shrink: 0;
-        margin-right: 10px;
-    }
-
-    .row-snippet {
-        flex: 1;
-        font-size: 14px;
-        color: #777;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        min-width: 0;
-    }
-
-    .row-date {
-        width: 100px;
-        flex-shrink: 0;
-        font-size: 13px;
-        color: #999;
-        text-align: right;
-        padding-right: 10px;
-        white-space: nowrap;
-    }
-
-    .row-actions {
-        display: none;
-        align-items: center;
-        gap: 8px;
-        flex-shrink: 0;
-        position: absolute;
-        right: 14px;
-        background: inherit;
-    }
-    .announcement-row:hover .row-actions { display: flex; }
-    .announcement-row:hover .row-date { visibility: hidden; }
-
-    .edit-btn {
-        background-color: #f1c40f;
-        color: #30534D;
-        padding: 6px 14px;
-        border: none;
-        border-radius: 6px;
-        font-size: 12px;
-        cursor: pointer;
-        font-weight: bold;
-    }
-    .edit-btn:hover { background-color: #d4ac0d; }
-
-    .archive-btn {
-        background-color: #e74c3c;
-        color: white;
-        padding: 6px 14px;
-        border: none;
-        border-radius: 6px;
-        font-size: 12px;
-        cursor: pointer;
-        font-weight: bold;
-    }
-    .archive-btn:hover { background-color: #b93e30; }
-    
-    .view-btn {
-        background-color: #3498db;
-        color: white;
-        padding: 6px 14px;
-        border: none;
-        border-radius: 6px;
-        font-size: 12px;
-        cursor: pointer;
-        font-weight: bold;
-    }
-    .view-btn:hover { background-color: #2176ae; }
-    
-    .restore-btn {
-        background-color: #44C375;
-        color: white;
-        padding: 6px 14px;
-        border: none;
-        border-radius: 6px;
-        font-size: 12px;
-        cursor: pointer;
-        font-weight: bold;
-    }
-    .restore-btn:hover { background-color: #2ea05e; }
-
-    .list-header {
-        display: flex;
-        align-items: center;
-        padding: 0 20px;
-        height: 42px;
-        border-bottom: 2px solid #e8f0ee;
-        background-color: #f9fafb;
-        gap: 0;
-        box-sizing: border-box;
-    }
-    .list-header-pin { width: 28px; flex-shrink: 0; }
-    .list-header-badge { width: 80px; flex-shrink: 0; font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-    .list-header-title { width: 240px; flex-shrink: 0; font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; padding-right: 16px; }
-    .list-header-sep { width: 18px; flex-shrink: 0; }
-    .list-header-snippet { flex: 1; font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; min-width: 0; }
-    .list-header-date { width: 100px; flex-shrink: 0; font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; text-align: right; padding-right: 10px; }
-
-    .table-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px 24px;
-        font-size: 14px;
-        color: #888;
-        border-top: 1px solid #e0e0e0;
-        background: #fafafa;
-    }
-    .page-item.active .page-link { background-color: #2d4a44; border-color: #2d4a44; }
-    .page-link { color: #2d4a44; }
-
-    .modal-content { border-radius: 8px; }
-    .modal-header {
-        background-color: #30534D;
-        color: white;
-        border-bottom: 2px solid #FED734;
-    }
-    .modal-header .btn-close { filter: brightness(0) invert(1); }
-    .modal-body label { font-weight: bold; color: #30534D; margin-top: 10px; }
-    .modal-body p { padding: 8px; background-color: #f5f5f5; border-radius: 4px; }
-    .modal-body input, .modal-body select, .modal-body textarea { margin-bottom: 15px; }
-
-    #viewAnnouncementModal .modal-dialog { max-width: 720px; z-index: 10000; }
-    #viewAnnouncementModal .modal-content { border-radius: 12px; border: none; overflow: hidden; }
-    #viewAnnouncementModal .modal-header { background-color: #30534D; border-bottom: 2px solid #FED734; padding: 12px 16px; }
-    #viewAnnouncementModal .modal-body { padding: 0;  }
-    #viewAnnouncementModal .modal-footer { border-top: 1px solid #f0f0f0; padding: 10px 16px; }
-    .view-post-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px 16px; }
-    .view-post-avatar { width: 42px; height: 42px; border-radius: 50%; background-color: #30534D; display: flex; align-items: center; justify-content: center; color: #FED734; font-size: 18px; flex-shrink: 0; }
-    .view-post-meta { flex: 1; min-width: 0; }
-    .view-post-author { font-weight: bold; font-size: 14px; color: #1a1a1a; }
-    .view-post-date { font-size: 12px; color: #aaa; }
-    .view-post-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background-color: #e8f5f0; color: #2d7a5f; border: 1px solid #b8ddd0; flex-shrink: 0; }
-    .view-post-badge.high { background-color: #fff8e1; color: #b8860b; border-color: #FED734; }
-    .view-post-title { font-weight: bold; font-size: 18px; color: #1a1a1a; padding: 0 16px 8px 16px; }
-    .view-post-content { font-size: 15px; color: #333; padding: 0 16px 14px 16px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
-    .view-post-image { width: 100%; max-height: 420px; object-fit: cover; display: block; }
-    .view-post-divider { border: none; border-top: 1px solid #f0f0f0; margin: 0; }
-    .view-post-footer { display: flex; align-items: center; gap: 6px; padding: 10px 16px; font-size: 12px; color: #aaa; }
-
-    .image-upload-area {
-        border: 2px dashed #d0d5dd;
-        border-radius: 8px;
-        padding: 20px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        margin-bottom: 15px;
-        background-color: #fafafa;
-        min-height: 150px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-    }
-    .image-upload-area:hover { border-color: #30534D; background-color: #f5f5f5; }
-    .image-upload-area.dragover { border-color: #44C375; background-color: #f0fff4; }
-    /* FIX: clear the dashed-border grey background once an image is loaded,
-       so no grey bars/backdrop show around images that don't fill the box */
-    .image-upload-area.has-image {
-        padding: 10px;
-        background-color: transparent;
-        border-style: solid;
-        border-color: #e0e0e0;
-    }
-    .upload-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .upload-placeholder i { font-size: 32px; color: #aaa; }
-    .upload-placeholder p { margin: 8px 0 0 0; font-size: 13px; color: #666; }
-    .image-preview-inline { max-width: 100%; max-height: 200px; border-radius: 8px; display: none; object-fit: contain; }
-    .upload-progress { display: none; margin-top: 10px; width: 100%; }
-    .upload-progress .progress-bar { height: 4px; background-color: #44C375; width: 0%; transition: width 0.3s ease; border-radius: 2px; }
-    .remove-image-btn { background-color: #e74c3c; color: white; border: none; padding: 4px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; margin-top: 8px; display: none; }
-    .remove-image-btn:hover { background-color: #c0392b; }
-    
-    .success-toast-modal .modal-content {
-        background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
-        color: white;
-        border: none;
-        border-radius: 16px;
-    }
-    .success-toast-modal .modal-header {
-        background: transparent;
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-    .success-toast-modal .modal-body {
-        text-align: center;
-        padding: 20px;
-    }
-    .success-toast-modal .modal-footer {
-        border-top: none;
-        justify-content: center;
-        padding-top: 0;
-        background: transparent;
-    }
-    .success-icon {
-        font-size: 60px;
-        margin-bottom: 12px;
-    }
-
-    /* ══════════════════════════════════════
-       SYSTEM ERROR MODAL (matches login page style)
-    ══════════════════════════════════════ */
-    .sys-overlay {
-        display: none;
-        position: fixed; inset: 0;
-        background: rgba(0,0,0,0.72);
-        z-index: 99999;
-        justify-content: center;
-        align-items: center;
-        animation: sysFadeIn 0.2s ease;
-    }
-    .sys-overlay.show { display: flex; }
-
-    @keyframes sysFadeIn  { from { opacity: 0 } to { opacity: 1 } }
-    @keyframes sysSlideUp {
-        from { transform: translateY(40px); opacity: 0; }
-        to   { transform: translateY(0);    opacity: 1; }
-    }
-
-    .sys-modal-box {
-        border-radius: 16px;
-        overflow: hidden;
-        min-width: 300px;
-        max-width: 420px;
-        width: 90%;
-        box-shadow: 0 28px 72px rgba(0,0,0,0.45);
-        animation: sysSlideUp 0.25s ease;
-    }
-
-    .sys-modal-box.error {
-        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-    }
-
-    .sys-modal-body {
-        text-align: center;
-        padding: 32px 28px 20px;
-    }
-
-    .sys-modal-icon {
-        font-size: 56px;
-        margin-bottom: 12px;
-    }
-
-    .sys-modal-body h5 {
-        color: #fff;
-        font-size: 1.05rem;
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .sys-modal-footer {
-        display: flex;
-        justify-content: center;
-        padding: 0 28px 28px;
-        gap: 10px;
-    }
-
-    .sys-btn-ok {
-        background: rgba(255,255,255,0.2);
-        color: #fff;
-        border: 2px solid rgba(255,255,255,0.5);
-        padding: 9px 32px;
-        border-radius: 8px;
-        font-size: 0.95rem;
-        font-weight: 700;
-        cursor: pointer;
-        font-family: inherit;
-        transition: background 0.2s;
-    }
-    .sys-btn-ok:hover { background: rgba(255,255,255,0.35); }
-
-    /* ══════════════════════════════════════
-       FORCE MODAL
-    ══════════════════════════════════════ */
-    /* ══════════════════════════════════════
-   FORCE MODAL - FIXED
-══════════════════════════════════════ */
-.force-modal {
-    display: none;
-    position: fixed;
-    z-index: 9999;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(3px);
-}
-
-.force-modal-content {
-    background: white;
-    width: 420px;
-    max-width: 90%;
-    padding: 32px 36px 36px 36px;
-    border-radius: 20px;
-    text-align: center;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
-    animation: modalFadeIn 0.3s ease-out;
-}
-
-@keyframes modalFadeIn {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -48%);
-    }
-    to {
-        opacity: 1;
-        transform: translate(-50%, -50%);
-    }
-}
-
-.force-modal-content h2 {
-    color: #2d4a44;
-    margin-bottom: 12px;
-    font-size: 24px;
-    font-weight: 700;
-}
-
-.force-modal-content p {
-    font-size: 15px;
-    color: #555;
-    line-height: 1.5;
-    margin-bottom: 8px;
-}
-
-.force-modal-content button {
-    margin-top: 24px;
-    padding: 12px 32px;
-    background: #2d4a44;
-    color: white;
-    border: none;
-    border-radius: 40px;
-    cursor: pointer;
-    font-size: 15px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.force-modal-content button:hover {
-    background: #1f3631;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.force-modal-content button:active {
-    transform: translateY(0);
-}
-
-
-/* ── Accessibility: contrast fixes ── */
-.row-snippet,
-.row-date,
-.table-footer,
-.list-header-badge,
-.list-header-title,
-.list-header-snippet,
-.list-header-date { color: #5f5f5f; }
-
-.row-sep { color: #6b6b6b; }
-
-.card-category.high,
-.view-post-badge.high { color: #7a5a00; }
-
-.create-announcement-btn { background-color: #1e8449; }
-.create-announcement-btn:hover { background-color: #196f3d; }
-
-
-/* ══════════════════════════════════════
-   CUSTOM CONFIRM OVERLAY
-   (replaces the dynamically-injected
-   Bootstrap confirm modal — prevents
-   stacked-modals/backdrop leftovers)
-══════════════════════════════════════ */
-.custom-confirm-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.55);
-    z-index: 10700;
-    align-items: center;
-    justify-content: center;
-    animation: sysFadeIn 0.15s ease;
-}
-.custom-confirm-overlay.show { display: flex; }
-.custom-confirm-box {
-    background: #fff;
-    border-radius: 16px;
-    width: 90%;
-    max-width: 440px;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.35);
-    overflow: hidden;
-    animation: sysSlideUp 0.22s ease;
-}
-.custom-confirm-header {
-    background: linear-gradient(135deg, #30534D, #3d6b63);
-    color: #fff;
-    padding: 14px 20px;
-    font-weight: 700;
-    font-size: 16px;
-}
-.custom-confirm-body {
-    padding: 24px;
-    font-size: 16px;
-    color: #333;
-    line-height: 1.5;
-}
-.custom-confirm-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    padding: 16px 20px;
-    border-top: 1px solid #f0f0f0;
-}
-.custom-confirm-footer button {
-    padding: 8px 22px;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 14px;
-    cursor: pointer;
-    border: none;
-    font-family: inherit;
-}
-.custom-confirm-footer .btn-cancel {
-    background: #e0e0e0;
-    color: #333;
-}
-.custom-confirm-footer .btn-cancel:hover { background: #d0d0d0; }
-.custom-confirm-footer .btn-confirm {
-    background: #44C375;
-    color: #fff;
-}
-.custom-confirm-footer .btn-confirm:hover { background: #2ea05e; }
-
-/* ══════════════════════════════════════
-   CUSTOM SUCCESS OVERLAY
-   (replaces the Bootstrap success modal)
-══════════════════════════════════════ */
-.custom-success-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.35);
-    z-index: 10800;
-    align-items: center;
-    justify-content: center;
-    animation: sysFadeIn 0.18s ease;
-}
-.custom-success-overlay.show { display: flex; }
-.custom-success-box {
-    background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
-    color: #fff;
-    border-radius: 16px;
-    padding: 32px 44px;
-    text-align: center;
-    max-width: 360px;
-    width: 90%;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.35);
-    animation: sysSlideUp 0.25s ease;
-}
-.custom-success-box .success-icon {
-    font-size: 60px;
-    margin-bottom: 12px;
-    color: #fff;
-}
-.custom-success-box h5 {
-    margin: 0 0 22px 0;
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: #fff;
-}
-.custom-success-box button {
-    background: rgba(255,255,255,0.95);
-    color: #2ea05e;
-    border: none;
-    padding: 9px 32px;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 14px;
-    cursor: pointer;
-    font-family: inherit;
-}
-.custom-success-box button:hover { background: #fff; }
-
-</style>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">   
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
-<title>Announcements</title>
+    <link rel="stylesheet" href="/css/announcements.css">
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <title>Announcements</title>
 </head>
 <body>
 
-  <script src="/js/notif.js"></script>
+<script src="/js/notif.js"></script>
 <div class="toast-container" id="toastContainer"></div>
 <div class="layout">
 
-<!-- Sidebar -->
-<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
-  <div class="content">
-
-    <!-- Top header -->
-    <div class="top-header">
-      <div class="top-header-tab">Announcements</div>
-    </div>
-
-    <!-- Search bar + Create button -->
-    <div class="search-bar-area">
-      <div class="search-input-wrap">
-        <span class="search-icon"><i class="bi bi-search"></i></span>
-        <input type="text" id="announcement-search" placeholder="Search announcements..." aria-label="Search announcements">
-      </div>
-      <button class="filter-btn" onclick="window.location.href='/announcements'"><i class="bi bi-funnel"></i> Reset</button>
-      <button class="create-announcement-btn" data-bs-toggle="modal" data-bs-target="#createAnnouncementModal"
-          th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
-          <i class="bi bi-plus-circle"></i> Create Announcement
-      </button>
-</div>
-
-    <!-- Tabs -->
-    <div class="tabbar">
-      <div class="tab" th:classappend="${currentTab == 'announcements' ? 'active' : ''}" onclick="window.location.href='/announcements?tab=announcements'">Announcements</div>
-      <div class="tab" th:classappend="${currentTab == 'archived' ? 'active' : ''}" onclick="window.location.href='/announcements?tab=archived'">Archived</div>
-    </div>
-
-    <!-- Panel -->
-    <div class="panel" role="main">
-      <div class="panel-inner">
-
-        <!-- Announcements Tab -->
-        <div id="tab-announcements" th:classappend="${currentTab != 'announcements' ? 'd-none' : ''}">
-          <div class="panel-header">Active Announcements</div>
-          <div class="panel-content">
-
-            <div th:if="${not #lists.isEmpty(announcements)}">
-              <div class="list-header">
-                <div class="list-header-pin"></div>
-                <div class="list-header-badge">Priority</div>
-                <div class="list-header-title">Title</div>
-                <div class="list-header-sep"></div>
-                <div class="list-header-snippet">Content Preview</div>
-                <div class="list-header-date">Date</div>
-              </div>
-
-              <div class="announcement-list" id="announcementsGrid">
-                <div class="announcement-row" th:each="announcement : ${announcements}"
-                     th:classappend="${announcement.priority == 'HIGH' ? 'pinned' : ''}"
-                     th:attr="data-id=${announcement.id}">
-
-                  <div class="row-pin">
-                    <i class="bi bi-pin-angle-fill pin-icon"
-                       th:classappend="${announcement.priority == 'HIGH' ? 'active' : ''}"
-                       th:attr="onclick='togglePin(this, ' + ${announcement.id} + ')'"
-                       title="Pin"></i>
-                  </div>
-
-                  <div class="row-badge">
-                    <span class="card-category"
-                          th:classappend="${announcement.priority == 'HIGH' ? 'high' : ''}"
-                          th:text="${announcement.priority != null ? announcement.priority : 'NORMAL'}">NORMAL</span>
-                  </div>
-
-                  <div class="row-title" th:text="${announcement.title}">Free Medical Mission</div>
-
-                  <div class="row-sep">—</div>
-
-                  <div class="row-snippet" th:text="${announcement.content}">Announcement content goes here.</div>
-
-                  <div class="row-date" th:text="${announcement.datePosted != null ? #temporals.format(announcement.datePosted, 'MMM dd, yyyy') : 'N/A'}">Mar 15, 2026</div>
-
-                  <div class="row-actions">
-                      <button class="view-btn" th:attr="onclick='viewAnnouncement(' + ${announcement.id} + ')'">View</button>
-                      <button class="edit-btn" th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" th:attr="onclick='editAnnouncement(' + ${announcement.id} + ')'">Edit</button>
-                      <button class="archive-btn" th:if="${currentrole == 'ADMIN'}" th:attr="onclick='archiveAnnouncementWithConfirm(' + ${announcement.id} + ')'">Archive</button>
-                      <button class="archive-btn" th:if="${currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" th:attr="onclick='openAssistanceModal()'">Archive</button>
-                  </div>
-
-                </div>
-              </div>
-            </div>
-
-            <div class="text-center p-4" th:if="${#lists.isEmpty(announcements)}">
-              <p class="text-muted">No announcements found</p>
-            </div>
-
-            <div class="table-footer" id="activeFooter">
-              <span th:text="'Showing ' + ${#lists.size(announcements)} + ' announcements'">Showing 6 announcements</span>
-            </div>
-          </div>
+    <div class="content">
+        <!-- Top header -->
+        <div class="top-header">
+            <div class="top-header-tab">Announcements</div>
         </div>
 
-        <!-- Archived Tab -->
-        <div id="tab-archived" th:classappend="${currentTab != 'archived' ? 'd-none' : ''}">
-          <div class="panel-header">Archived Announcements</div>
-          <div class="panel-content">
-
-            <div th:if="${not #lists.isEmpty(archivedAnnouncements)}">
-              <div class="list-header">
-                <div class="list-header-pin"></div>
-                <div class="list-header-badge">Priority</div>
-                <div class="list-header-title">Title</div>
-                <div class="list-header-sep"></div>
-                <div class="list-header-snippet">Content Preview</div>
-                <div class="list-header-date">Date</div>
-              </div>
-
-              <div class="announcement-list" id="archivedGrid">
-                <div class="announcement-row" th:each="announcement : ${archivedAnnouncements}"
-                     th:attr="data-id=${announcement.id}">
-
-                  <div class="row-pin"></div>
-
-                  <div class="row-badge">
-                    <span class="card-category"
-                          th:text="${announcement.priority != null ? announcement.priority : 'NORMAL'}">NORMAL</span>
-                  </div>
-
-                  <div class="row-title" th:text="${announcement.title}">Dengue Prevention Drive</div>
-
-                  <div class="row-sep">—</div>
-
-                  <div class="row-snippet" th:text="${announcement.content}">Archived announcement content goes here.</div>
-
-                  <div class="row-date" th:text="${announcement.datePosted != null ? #temporals.format(announcement.datePosted, 'MMM dd, yyyy') : 'N/A'}">Feb 20, 2026</div>
-
-                  <div class="row-actions">
-                    <button class="view-btn" th:attr="onclick='viewAnnouncement(' + ${announcement.id} + ')'">View</button>
-                    <button class="restore-btn" th:if="${currentrole == 'ADMIN'}" th:attr="onclick='restoreAnnouncementWithConfirm(' + ${announcement.id} + ')'">Restore</button>
-                    <button class="restore-btn" th:if="${currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" th:attr="onclick='openAssistanceModal()'">Restore</button>
-                  </div>
-
-                </div>
-              </div>
+        <!-- Search bar + Create button -->
+        <div class="search-bar-area">
+            <div class="search-input-wrap">
+                <span class="search-icon"><i class="bi bi-search"></i></span>
+                <input type="text" id="announcement-search" placeholder="Search announcements..." aria-label="Search announcements">
             </div>
+            
+            <!-- Filter Container (replaces the inline Reset button) -->
+            <div id="filterContainer"></div>
 
-            <div class="text-center p-4" th:if="${#lists.isEmpty(archivedAnnouncements)}">
-              <p class="text-muted">No archived announcements</p>
-            </div>
-
-            <div class="table-footer" id="archivedFooter">
-              <span th:text="'Showing ' + ${#lists.size(archivedAnnouncements)} + ' archived announcements'">Showing 3 archived announcements</span>
-            </div>
-          </div>
+            <button class="create-announcement-btn" data-bs-toggle="modal" data-bs-target="#createAnnouncementModal"
+                    th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
+                <i class="bi bi-plus-circle"></i> Create Announcement
+            </button>
         </div>
 
-      </div>
-    </div>
+        <!-- Tabs -->
+        <div class="tabbar">
+            <div class="tab" th:classappend="${currentTab == 'announcements' ? 'active' : ''}" data-tab="announcements">Announcements</div>
+            <div class="tab" th:classappend="${currentTab == 'archived' ? 'active' : ''}" data-tab="archived">Archived</div>
+        </div>
 
-  </div>
+        <!-- Panel -->
+        <div class="panel" role="main">
+            <div class="panel-inner">
+
+                <!-- Announcements Tab -->
+                <div id="tab-announcements" th:classappend="${currentTab != 'announcements' ? 'd-none' : ''}">
+                    <div class="panel-header">Active Announcements</div>
+                    <div class="panel-content">
+
+                        <div th:if="${not #lists.isEmpty(announcements)}">
+                            <div class="list-header">
+                                <div class="list-header-pin"></div>
+                                <div class="list-header-badge">Priority</div>
+                                <div class="list-header-title">Title</div>
+                                <div class="list-header-sep"></div>
+                                <div class="list-header-snippet">Content Preview</div>
+                                <div class="list-header-date">Date</div>
+                            </div>
+
+                            <div class="announcement-list" id="announcementsGrid">
+                                <div class="announcement-row" th:each="announcement : ${announcements}"
+                                     th:classappend="${announcement.priority == 'HIGH' ? 'pinned' : ''}"
+                                     th:attr="data-id=${announcement.id}">
+
+                                    <div class="row-pin">
+                                        <i class="bi bi-pin-angle-fill pin-icon pin-trigger"
+                                           th:classappend="${announcement.priority == 'HIGH' ? 'active' : ''}"
+                                           th:attr="data-id=${announcement.id}"
+                                           title="Pin"></i>
+                                    </div>
+
+                                    <div class="row-badge">
+                                        <span class="card-category"
+                                              th:classappend="${announcement.priority == 'HIGH' ? 'high' : ''}"
+                                              th:text="${announcement.priority != null ? announcement.priority : 'NORMAL'}">NORMAL</span>
+                                    </div>
+
+                                    <div class="row-title" th:text="${announcement.title}">Free Medical Mission</div>
+                                    <div class="row-sep">—</div>
+                                    <div class="row-snippet" th:text="${announcement.content}">Announcement content goes here.</div>
+                                    <div class="row-date" th:text="${announcement.datePosted != null ? #temporals.format(announcement.datePosted, 'MMM dd, yyyy') : 'N/A'}">Mar 15, 2026</div>
+
+                                    <div class="row-actions">
+                                        <button class="view-btn view-trigger" th:attr="data-id=${announcement.id}">View</button>
+                                        <button class="edit-btn edit-trigger" th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" th:attr="data-id=${announcement.id}">Edit</button>
+                                        <button class="archive-btn archive-trigger" th:if="${currentrole == 'ADMIN'}" th:attr="data-id=${announcement.id}">Archive</button>
+                                        <button class="archive-btn assistance-trigger" th:if="${currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" data-action="archive">Archive</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center p-4" th:if="${#lists.isEmpty(announcements)}">
+                            <p class="text-muted">No announcements found</p>
+                        </div>
+
+                        <div class="table-footer" id="activeFooter">
+                            <span th:text="'Showing ' + ${#lists.size(announcements)} + ' announcements'">Showing 6 announcements</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Archived Tab -->
+                <div id="tab-archived" th:classappend="${currentTab != 'archived' ? 'd-none' : ''}">
+                    <div class="panel-header">Archived Announcements</div>
+                    <div class="panel-content">
+
+                        <div th:if="${not #lists.isEmpty(archivedAnnouncements)}">
+                            <div class="list-header">
+                                <div class="list-header-pin"></div>
+                                <div class="list-header-badge">Priority</div>
+                                <div class="list-header-title">Title</div>
+                                <div class="list-header-sep"></div>
+                                <div class="list-header-snippet">Content Preview</div>
+                                <div class="list-header-date">Date</div>
+                            </div>
+
+                            <div class="announcement-list" id="archivedGrid">
+                                <div class="announcement-row" th:each="announcement : ${archivedAnnouncements}"
+                                     th:attr="data-id=${announcement.id}">
+
+                                    <div class="row-pin"></div>
+                                    <div class="row-badge">
+                                        <span class="card-category" th:text="${announcement.priority != null ? announcement.priority : 'NORMAL'}">NORMAL</span>
+                                    </div>
+                                    <div class="row-title" th:text="${announcement.title}">Dengue Prevention Drive</div>
+                                    <div class="row-sep">—</div>
+                                    <div class="row-snippet" th:text="${announcement.content}">Archived announcement content goes here.</div>
+                                    <div class="row-date" th:text="${announcement.datePosted != null ? #temporals.format(announcement.datePosted, 'MMM dd, yyyy') : 'N/A'}">Feb 20, 2026</div>
+
+                                    <div class="row-actions">
+                                        <button class="view-btn view-trigger" th:attr="data-id=${announcement.id}">View</button>
+                                        <button class="restore-btn restore-trigger" th:if="${currentrole == 'ADMIN'}" th:attr="data-id=${announcement.id}">Restore</button>
+                                        <button class="restore-btn assistance-trigger" th:if="${currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">Restore</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center p-4" th:if="${#lists.isEmpty(archivedAnnouncements)}">
+                            <p class="text-muted">No archived announcements</p>
+                        </div>
+
+                        <div class="table-footer" id="archivedFooter">
+                            <span th:text="'Showing ' + ${#lists.size(archivedAnnouncements)} + ' archived announcements'">Showing 3 archived announcements</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
 </div>
 
-
-<!-- Success Modal (kept for compatibility, no longer used by showSuccess) -->
+<!-- Success Modal -->
 <div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
@@ -899,1006 +185,140 @@
     </div>
 </div>
 
-<!-- Error Modal (matches login page style) -->
+<!-- Error Modal -->
 <div class="sys-overlay" id="sysErrorOverlay">
-  <div class="sys-modal-box error">
-    <div class="sys-modal-body">
-      <div class="sys-modal-icon">
-        <i class="bi bi-x-circle-fill text-white"></i>
-      </div>
-      <h5 id="sysErrorMessage">An error occurred.</h5>
+    <div class="sys-modal-box error">
+        <div class="sys-modal-body">
+            <div class="sys-modal-icon"><i class="bi bi-x-circle-fill text-white"></i></div>
+            <h5 id="sysErrorMessage">An error occurred.</h5>
+        </div>
+        <div class="sys-modal-footer">
+            <button class="sys-btn-ok" id="sysErrorOkBtn">OK</button>
+        </div>
     </div>
-    <div class="sys-modal-footer">
-      <button class="sys-btn-ok" onclick="document.getElementById('sysErrorOverlay').classList.remove('show')">OK</button>
-    </div>
-  </div>
 </div>
 
 <!-- View Announcement Modal -->
 <div class="modal fade" id="viewAnnouncementModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Announcement</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" id="viewModalBody">
-        <!-- Filled by JavaScript -->
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Announcement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewModalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
-<!-- Create Announcement Modal with Image Upload -->
+<!-- Create Announcement Modal -->
 <div class="modal fade" id="createAnnouncementModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Create New Announcement</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form id="createAnnouncementForm">
-          <label>Title:</label>
-          <input type="text" class="form-control mb-2" id="title" required>
-          
-          <label>Priority:</label>
-          <select class="form-control mb-2" id="priority">
-            <option value="NORMAL">Normal</option>
-            <option value="HIGH">High (Pinned)</option>
-          </select>
-          
-          <label>Content:</label>
-          <textarea class="form-control mb-2" id="content" rows="5" required></textarea>
-          
-          <label>Image (Upload):</label>
-          <div class="image-upload-area" id="imageUploadArea">
-            <div class="upload-placeholder" id="uploadPlaceholder">
-              <i class="bi bi-cloud-upload"></i>
-              <p>Click or drag &amp; drop an image here</p>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Announcement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <img id="imagePreview" class="image-preview-inline" alt="Preview">
-            <input type="file" id="imageFile" accept="image/*" style="display: none;">
-            <div class="upload-progress" id="uploadProgress">
-              <div class="progress-bar"></div>
+            <div class="modal-body">
+                <form id="createAnnouncementForm">
+                    <label>Title:</label>
+                    <input type="text" class="form-control mb-2" id="title" required>
+                    
+                    <label>Priority:</label>
+                    <select class="form-control mb-2" id="priority">
+                        <option value="NORMAL">Normal</option>
+                        <option value="HIGH">High (Pinned)</option>
+                    </select>
+                    
+                    <label>Content:</label>
+                    <textarea class="form-control mb-2" id="content" rows="5" required></textarea>
+                    
+                    <label>Image (Upload):</label>
+                    <div class="image-upload-area" id="imageUploadArea">
+                        <div class="upload-placeholder" id="uploadPlaceholder">
+                            <i class="bi bi-cloud-upload"></i>
+                            <p>Click or drag &amp; drop an image here</p>
+                        </div>
+                        <img id="imagePreview" class="image-preview-inline" alt="Preview">
+                        <input type="file" id="imageFile" accept="image/*" style="display: none;">
+                        <div class="upload-progress" id="uploadProgress">
+                            <div class="progress-bar"></div>
+                        </div>
+                        <button type="button" class="remove-image-btn" id="removeImageBtn">Remove Image</button>
+                    </div>
+                    <input type="hidden" id="imageUrl" value="">
+                </form>
             </div>
-            <button type="button" class="remove-image-btn" id="removeImageBtn">Remove Image</button>
-          </div>
-          <input type="hidden" id="imageUrl" value="">
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="createAnnouncementWithConfirm()">Create</button>
-      </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="createAnnouncementBtn">Create</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
-<!-- Edit Announcement Modal with Image Upload -->
+<!-- Edit Announcement Modal -->
 <div class="modal fade" id="editAnnouncementModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Edit Announcement</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form id="editAnnouncementForm">
-          <input type="hidden" id="editId">
-          
-          <label>Title:</label>
-          <input type="text" class="form-control mb-2" id="editTitle" required>
-          
-          <label>Priority:</label>
-          <select class="form-control mb-2" id="editPriority">
-            <option value="NORMAL">Normal</option>
-            <option value="HIGH">High (Pinned)</option>
-          </select>
-          
-          <label>Content:</label>
-          <textarea class="form-control mb-2" id="editContent" rows="5" required></textarea>
-          
-          <label>Image (Upload):</label>
-          <div class="image-upload-area" id="editImageUploadArea">
-            <div class="upload-placeholder" id="editUploadPlaceholder">
-              <i class="bi bi-cloud-upload"></i>
-              <p>Click or drag &amp; drop an image here</p>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Announcement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <img id="editImagePreview" class="image-preview-inline" alt="Preview">
-            <input type="file" id="editImageFile" accept="image/*" style="display: none;">
-            <div class="upload-progress" id="editUploadProgress">
-              <div class="progress-bar"></div>
+            <div class="modal-body">
+                <form id="editAnnouncementForm">
+                    <input type="hidden" id="editId">
+                    
+                    <label>Title:</label>
+                    <input type="text" class="form-control mb-2" id="editTitle" required>
+                    
+                    <label>Priority:</label>
+                    <select class="form-control mb-2" id="editPriority">
+                        <option value="NORMAL">Normal</option>
+                        <option value="HIGH">High (Pinned)</option>
+                    </select>
+                    
+                    <label>Content:</label>
+                    <textarea class="form-control mb-2" id="editContent" rows="5" required></textarea>
+                    
+                    <label>Image (Upload):</label>
+                    <div class="image-upload-area" id="editImageUploadArea">
+                        <div class="upload-placeholder" id="editUploadPlaceholder">
+                            <i class="bi bi-cloud-upload"></i>
+                            <p>Click or drag &amp; drop an image here</p>
+                        </div>
+                        <img id="editImagePreview" class="image-preview-inline" alt="Preview">
+                        <input type="file" id="editImageFile" accept="image/*" style="display: none;">
+                        <div class="upload-progress" id="editUploadProgress">
+                            <div class="progress-bar"></div>
+                        </div>
+                        <button type="button" class="remove-image-btn" id="editRemoveImageBtn">Remove Image</button>
+                    </div>
+                    <input type="hidden" id="editImageUrl" value="">
+                </form>
             </div>
-            <button type="button" class="remove-image-btn" id="editRemoveImageBtn">Remove Image</button>
-          </div>
-          <input type="hidden" id="editImageUrl" value="">
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="updateAnnouncementWithConfirm()">Update</button>
-      </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="updateAnnouncementBtn">Update</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <!-- Logout Modal -->
 <div th:replace="fragments/logout-modal :: logoutModal"></div>
 
+<!-- Hidden container to pass server data to JS (CSP compliant) -->
+<div id="announcementDataContainer" style="display:none;"
+     th:attr="data-current-role=${currentrole},
+              data-current-tab=${currentTab}">
+</div>
 
-<script th:inline="javascript">
-  // ============================================
-  // ROLE-BASED ACTION HELPERS
-  // (used by rebuildActiveList/rebuildArchivedList during live polling)
-  // These were previously called but never defined, which threw a
-  // ReferenceError and silently broke the polling refresh.
-  // Kept in its OWN th:inline script — putting this on the big script
-  // below breaks it, because Thymeleaf's JS-inlining tries to parse
-  // every ${...} in an inlined block, including plain JS template
-  // literals like `${a.id}` that appear all over the big script.
-  // ============================================
-  const currentRole = /*[[${currentrole}]]*/ '';
-
-  function canEditAnnouncements() {
-    return currentRole === 'ADMIN' || currentRole === 'SECRETARY' || currentRole === 'SECRETARIAT STAFF';
-  }
-  function canArchiveAnnouncements() {
-    return currentRole === 'ADMIN';
-  }
-  function canRequestArchive() {
-    return currentRole === 'SECRETARY' || currentRole === 'SECRETARIAT STAFF';
-  }
-</script>
-
-<script>
-  // Supabase configuration
-  const SUPABASE_URL = 'https://upfrofppponiqffbssqb.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_tZyxrTJrpd_OD5-TKUkT8Q__DnuY0tj';
-  
-  let supabaseClient = null;
-
-  // ============================================
-  // POLLING VARIABLES
-  // ============================================
-  let pollingInterval = null;
-  let lastKnownAnnouncementIds = new Set();
-  let lastKnownArchivedIds = new Set();
-  let isModalOpen = false;
-  let pendingUpdates = false;
-
-  // ============================================
-  // IMAGE UPLOAD HANDLER REFERENCES
-  // ============================================
-  let createImageHandlers = null;
-  let editImageHandlers = null;
-  
-  function initSupabase() {
-    if (typeof supabase !== 'undefined' && supabase.createClient) {
-      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } else {
-      setTimeout(initSupabase, 500);
-    }
-  }
-  
-  const supabaseScript = document.createElement('script');
-  supabaseScript.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-  supabaseScript.onload = initSupabase;
-  document.head.appendChild(supabaseScript);
-
-  // ============================================
-  // MODAL BACKDROP WATCHDOG
-  // Removes orphan Bootstrap backdrops / body
-  // state whenever no Bootstrap modal is
-  // actually visible on screen.
-  // ============================================
-  function cleanupOrphanBackdrops() {
-    // If a Bootstrap modal is currently visible, leave everything alone.
-    const visibleModal = document.querySelector('.modal.show');
-    if (visibleModal) return;
-
-    // No Bootstrap modal is showing — any backdrop / body lock is an orphan.
-    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-    document.body.classList.remove('modal-open');
-    document.body.style.removeProperty('overflow');
-    document.body.style.removeProperty('padding-right');
-  }
-
-  // Watch direct body children (backdrops are appended to body).
-  // Debounced: Bootstrap appends the backdrop element BEFORE the modal
-  // finishes its own fade-in transition, so a synchronous check here
-  // would see "backdrop exists, but no .modal.show yet" and rip the
-  // backdrop back out mid-animation -- fighting Bootstrap and causing
-  // visible flicker/layout jumps. Waiting a beat lets the transition
-  // finish first so we only clean up backdrops that are truly orphaned.
-  let backdropCleanupTimer = null;
-  function scheduleBackdropCleanup() {
-    clearTimeout(backdropCleanupTimer);
-    backdropCleanupTimer = setTimeout(cleanupOrphanBackdrops, 250);
-  }
-  new MutationObserver(scheduleBackdropCleanup).observe(document.body, {
-    childList: true,
-    subtree: false,
-    attributes: true,
-    attributeFilter: ['class']
-  });
-
-  // Safety net — runs periodically even if no mutation fires.
-  setInterval(cleanupOrphanBackdrops, 500);
-
-  // ============================================
-  // TRACK MODAL STATE
-  // ============================================
-  function trackModalState() {
-    document.addEventListener('show.bs.modal', () => { isModalOpen = true; });
-    document.addEventListener('hidden.bs.modal', () => { 
-      isModalOpen = false; 
-      // Give Bootstrap a moment, then make sure nothing was left behind.
-      setTimeout(cleanupOrphanBackdrops, 50);
-      if (pendingUpdates) {
-        pendingUpdates = false;
-        pollAnnouncements(true);
-      }
-    });
-  }
-
-  // ============================================
-  // INITIALIZE KNOWN IDS
-  // ============================================
-  function initKnownIds() {
-    document.querySelectorAll('#announcementsGrid .announcement-row').forEach(row => {
-      const id = row.getAttribute('data-id');
-      if (id) lastKnownAnnouncementIds.add(parseInt(id));
-    });
-    document.querySelectorAll('#archivedGrid .announcement-row').forEach(row => {
-      const id = row.getAttribute('data-id');
-      if (id) lastKnownArchivedIds.add(parseInt(id));
-    });
-  }
-
-  // ============================================
-  // POLLING
-  // ============================================
-  async function pollAnnouncements(forceUpdate = false) {
-    try {
-      const response = await fetch('/announcements/api/poll?t=' + Date.now());
-      if (!response.ok) return;
-      const data = await response.json();
-      
-      const hasChanges = checkForChanges(data);
-      if (!hasChanges && !forceUpdate) return;
-      
-      if (isModalOpen && !forceUpdate) {
-        pendingUpdates = true;
-        return;
-      }
-
-      const activeTab = document.getElementById('tab-announcements');
-      
-      if (data.activeAnnouncements && activeTab && !activeTab.classList.contains('d-none')) {
-        rebuildActiveList(data.activeAnnouncements);
-      }
-
-      const archivedTab = document.getElementById('tab-archived');
-      if (data.archivedAnnouncements && archivedTab && !archivedTab.classList.contains('d-none')) {
-        rebuildArchivedList(data.archivedAnnouncements);
-      }
-
-      if (data.activeCount !== undefined) {
-        const footer = document.getElementById('activeFooter');
-        if (footer) footer.querySelector('span').textContent = `Showing ${data.activeCount} announcements`;
-      }
-      if (data.archivedCount !== undefined) {
-        const footer = document.getElementById('archivedFooter');
-        if (footer) footer.querySelector('span').textContent = `Showing ${data.archivedCount} archived announcements`;
-      }
-
-    } catch (error) {
-      console.error("Polling error:", error);
-    }
-  }
-
-  function checkForChanges(data) {
-    if (data.activeAnnouncements) {
-      const newIds = new Set(data.activeAnnouncements.map(a => a.id));
-      if (newIds.size !== lastKnownAnnouncementIds.size) return true;
-      for (const id of newIds) {
-        if (!lastKnownAnnouncementIds.has(id)) return true;
-      }
-    }
-    if (data.archivedAnnouncements) {
-      const newIds = new Set(data.archivedAnnouncements.map(a => a.id));
-      if (newIds.size !== lastKnownArchivedIds.size) return true;
-      for (const id of newIds) {
-        if (!lastKnownArchivedIds.has(id)) return true;
-      }
-    }
-    return false;
-  }
-
-  function rebuildActiveList(announcements) {
-    const grid = document.getElementById('announcementsGrid');
-    if (!grid) return;
-    
-    const container = document.createElement('div');
-    announcements.forEach(a => {
-      const row = document.createElement('div');
-      row.className = 'announcement-row' + (a.priority === 'HIGH' ? ' pinned' : '');
-      row.setAttribute('data-id', a.id);
-      
-      const isHigh = a.priority === 'HIGH';
-      const dateStr = a.datePosted ? new Date(a.datePosted).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'N/A';
-      
-      row.innerHTML = `
-      <div class="row-pin">
-        <i class="bi bi-pin-angle-fill pin-icon ${isHigh ? 'active' : ''}"
-          onclick="togglePin(this, ${a.id})"
-          title="${isHigh ? 'Unpin' : 'Pin'}"></i>
-      </div>
-      <div class="row-badge">
-        <span class="card-category ${isHigh ? 'high' : ''}">${escapeHtml(a.priority || 'NORMAL')}</span>
-      </div>
-      <div class="row-title">${escapeHtml(a.title || 'N/A')}</div>
-      <div class="row-sep">—</div>
-      <div class="row-snippet">${escapeHtml(a.content || '')}</div>
-      <div class="row-date">${dateStr}</div>
-      <div class="row-actions">
-        <button class="view-btn" onclick="viewAnnouncement(${a.id})">View</button>
-        ${canEditAnnouncements() ? `<button class="edit-btn" onclick="editAnnouncement(${a.id})">Edit</button>` : ''}
-        ${canArchiveAnnouncements() ? `<button class="archive-btn" onclick="archiveAnnouncementWithConfirm(${a.id})">Archive</button>` : ''}
-        ${canRequestArchive() ? `<button class="archive-btn" onclick="openAssistanceModal('archive', ${a.id})">Archive</button>` : ''}
-      </div>
-    `;
-      container.appendChild(row);
-    });
-    
-    grid.innerHTML = container.innerHTML;
-    lastKnownAnnouncementIds = new Set(announcements.map(a => a.id));
-    
-    filterAndSortAnnouncements();
-  }
-
-    function rebuildArchivedList(announcements) {
-    const grid = document.getElementById('archivedGrid');
-    if (!grid) return;
-    
-    const container = document.createElement('div');
-    announcements.forEach(a => {
-      const row = document.createElement('div');
-      row.className = 'announcement-row';
-      row.setAttribute('data-id', a.id);
-      
-      const dateStr = a.datePosted ? new Date(a.datePosted).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'N/A';
-      
-      row.innerHTML = `
-        <div class="row-pin"></div>
-        <div class="row-badge">
-          <span class="card-category">${escapeHtml(a.priority || 'NORMAL')}</span>
-        </div>
-        <div class="row-title">${escapeHtml(a.title || 'N/A')}</div>
-        <div class="row-sep">—</div>
-        <div class="row-snippet">${escapeHtml(a.content || '')}</div>
-        <div class="row-date">${dateStr}</div>
-        <div class="row-actions">
-          <button class="view-btn" onclick="viewAnnouncement(${a.id})">View</button>
-          ${canArchiveAnnouncements() ? `<button class="restore-btn" onclick="restoreAnnouncementWithConfirm(${a.id})">Restore</button>` : ''}
-          ${canRequestArchive() ? `<button class="restore-btn" onclick="openAssistanceModal()">Restore</button>` : ''}
-        </div>
-      `;
-      container.appendChild(row);
-    });
-    
-    grid.innerHTML = container.innerHTML;
-    lastKnownArchivedIds = new Set(announcements.map(a => a.id));
-    
-    applyArchivedFilters();
-  }
-
-  // ============================================
-  // START POLLING
-  // ============================================
-  function startPolling() {
-    if (pollingInterval) clearInterval(pollingInterval);
-    initKnownIds();
-    pollingInterval = setInterval(() => pollAnnouncements(false), 5000);
-  }
-
-  // ============================================
-  // CUSTOM SUCCESS OVERLAY (no Bootstrap modal)
-  // ============================================
-  function showSuccess(message) {
-    document.querySelectorAll('.custom-success-overlay').forEach(el => el.remove());
-    const overlay = document.createElement('div');
-    overlay.className = 'custom-success-overlay';
-    overlay.innerHTML = `
-        <div class="custom-success-box">
-            <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
-            <h5>${message}</h5>
-            <button type="button">OK</button>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-    requestAnimationFrame(() => overlay.classList.add('show'));
-
-    overlay.querySelector('button').addEventListener('click', () => {
-        overlay.classList.remove('show');
-        setTimeout(() => {
-            overlay.remove();
-            pollAnnouncements(true);
-        }, 220);
-    });
-  }
-
-  // ============================================
-  // showError: pure-CSS overlay (matches login page)
-  // ============================================
-  function showError(message, title = 'Error') {
-    document.getElementById('sysErrorMessage').innerHTML = message;
-    document.getElementById('sysErrorOverlay').classList.add('show');
-  }
-
-  // ============================================
-  // resetCreateForm: clears the create form
-  // ============================================
-  function resetCreateForm() {
-    const form = document.getElementById('createAnnouncementForm');
-    if (form) form.reset();
-    document.getElementById('title').value = '';
-    document.getElementById('priority').value = 'NORMAL';
-    document.getElementById('content').value = '';
-    document.getElementById('imageUrl').value = '';
-    if (createImageHandlers && typeof createImageHandlers.hideImage === 'function') {
-      createImageHandlers.hideImage();
-    }
-  }
-
-  // ============================================
-  // CUSTOM CONFIRM OVERLAY (no Bootstrap modal)
-  // ============================================
-  function showConfirm(message, title, onConfirm) {
-    document.querySelectorAll('.custom-confirm-overlay').forEach(el => el.remove());
-    const overlay = document.createElement('div');
-    overlay.className = 'custom-confirm-overlay';
-    overlay.innerHTML = `
-        <div class="custom-confirm-box">
-            <div class="custom-confirm-header">${title}</div>
-            <div class="custom-confirm-body">${message}</div>
-            <div class="custom-confirm-footer">
-                <button type="button" class="btn-cancel">Cancel</button>
-                <button type="button" class="btn-confirm">Confirm</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-    requestAnimationFrame(() => overlay.classList.add('show'));
-
-    function close() {
-        overlay.classList.remove('show');
-        setTimeout(() => overlay.remove(), 220);
-    }
-
-    overlay.querySelector('.btn-cancel').addEventListener('click', close);
-    overlay.querySelector('.btn-confirm').addEventListener('click', () => {
-        close();
-        setTimeout(onConfirm, 120);
-    });
-  }
-
-  // ============================================
-  // ARCHIVE / RESTORE / CREATE / UPDATE
-  // ============================================
-  function archiveAnnouncementWithConfirm(id) {
-    showConfirm('Are you sure you want to archive this announcement?', 'Archive Announcement', () => {
-      fetch('/announcements/' + id + '/archive', { method: 'PUT' })
-      .then(response => { 
-        if (response.ok) {
-          showSuccess('Announcement archived successfully!');
-        } else {
-          showError('Failed to archive announcement. Please try again.');
-        }
-      })
-      .catch(error => { console.error('Error archiving announcement:', error); showError('Failed to archive announcement. Please try again.'); });
-    });
-  }
-  
-  function restoreAnnouncementWithConfirm(id) {
-    showConfirm('Are you sure you want to restore this announcement?', 'Restore Announcement', () => {
-      fetch('/announcements/' + id + '/restore', { method: 'PUT' })
-      .then(response => { 
-        if (response.ok) {
-          showSuccess('Announcement restored successfully!');
-        } else {
-          showError('Failed to restore announcement. Please try again.');
-        }
-      })
-      .catch(error => { console.error('Error restoring announcement:', error); showError('Failed to restore announcement. Please try again.'); });
-    });
-  }
-  
-  function createAnnouncementWithConfirm() {
-    const announcement = {
-      title: document.getElementById('title').value,
-      priority: document.getElementById('priority').value,
-      content: document.getElementById('content').value,
-      image: document.getElementById('imageUrl').value
-    };
-    if (!announcement.title || !announcement.content) {
-      showError('Please fill in all required fields.', 'Missing Information');
-      return;
-    }
-    showConfirm('Create this new announcement?', 'Create Announcement', () => {
-      fetch('/announcements/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(announcement)
-      })
-      .then(response => {
-        if (response.ok) {
-          const createModal = bootstrap.Modal.getInstance(document.getElementById('createAnnouncementModal'));
-          if (createModal) createModal.hide();
-          resetCreateForm();
-          // Show our custom (non-Bootstrap) success overlay — no stacking.
-          showSuccess('Announcement created successfully!');
-        } else {
-          showError('Error creating announcement. Please try again.');
-        }
-      })
-      .catch(error => { console.error('Error:', error); showError('Error creating announcement. Please try again.'); });
-    });
-  }
-  
-  function updateAnnouncementWithConfirm() {
-    const id = document.getElementById('editId').value;
-    const announcement = {
-      title: document.getElementById('editTitle').value,
-      priority: document.getElementById('editPriority').value,
-      content: document.getElementById('editContent').value,
-      image: document.getElementById('editImageUrl').value
-    };
-    if (!announcement.title || !announcement.content) {
-      showError('Please fill in all required fields.', 'Missing Information');
-      return;
-    }
-    showConfirm('Update this announcement with the new changes?', 'Update Announcement', () => {
-      fetch('/announcements/' + id, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(announcement)
-      })
-      .then(response => {
-        if (response.ok) {
-          const editModal = bootstrap.Modal.getInstance(document.getElementById('editAnnouncementModal'));
-          if (editModal) editModal.hide();
-          showSuccess('Announcement updated successfully!');
-        } else {
-          showError('Error updating announcement. Please try again.');
-        }
-      })
-      .catch(error => { console.error('Error updating announcement:', error); showError('Error updating announcement. Please try again.'); });
-    });
-  }
-
-  // ALL EXISTING FUNCTIONS UNCHANGED BELOW
-  function toggleDropdown(el) {
-    const dropdown = document.getElementById('requests-dropdown');
-    const arrow = el.querySelector('.dropdown-arrow');
-    const isOpen = dropdown.style.display === 'block';
-    dropdown.style.display = isOpen ? 'none' : 'block';
-    arrow.classList.toggle('open', !isOpen);
-  }
-
-  async function compressImage(file, maxW = 1024, quality = 0.8) {
-    const bitmap = await createImageBitmap(file);
-    const scale  = Math.min(1, maxW / bitmap.width);
-    const w = Math.round(bitmap.width  * scale);
-    const h = Math.round(bitmap.height * scale);
-
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, w, h);
-    ctx.drawImage(bitmap, 0, 0, w, h);
-    bitmap.close();
-
-    return new Promise((resolve, reject) =>
-      canvas.toBlob(
-        b => b ? resolve(b) : reject(new Error('Could not compress image')),
-        'image/jpeg', quality
-      )
-    );
-  }
-
-  async function uploadImageToSupabase(blob) {
-    if (!supabaseClient) throw new Error('Supabase client not initialized');
-    const filePath = `announcements/announcement_${Date.now()}.jpg`;
-
-    const { data, error } = await supabaseClient.storage
-      .from('announcements')
-      .upload(filePath, blob, {
-        contentType: 'image/jpeg',
-        cacheControl: '31536000',
-        upsert: false
-      });
-    if (error) throw error;
-
-    return supabaseClient.storage.from('announcements')
-      .getPublicUrl(data.path).data.publicUrl;
-  }
-
-  async function processImageUpload(file, preview, placeholder, progressDiv, progressBar, urlInput, removeBtn, showImage, hideImage) {
-    if (progressDiv) { progressDiv.style.display = 'block'; if (progressBar) progressBar.style.width = '30%'; }
-    try {
-      const blob = await compressImage(file);
-      showImage(URL.createObjectURL(blob));
-      if (progressBar) progressBar.style.width = '60%';
-
-      urlInput.value = await uploadImageToSupabase(blob);
-      if (progressBar) progressBar.style.width = '100%';
-      setTimeout(() => {
-        if (progressDiv) progressDiv.style.display = 'none';
-        if (progressBar) progressBar.style.width = '0%';
-      }, 500);
-    } catch (error) {
-      console.error('Image upload error:', error);
-      showError('Failed to upload image: ' + error.message, 'Upload Error');
-      if (progressDiv) progressDiv.style.display = 'none';
-      if (progressBar) progressBar.style.width = '0%';
-      hideImage();
-    }
-  }
-  
-  function setupImageUpload(uploadAreaId, fileInputId, previewId, progressId, urlInputId, removeBtnId, placeholderId) {
-    const uploadArea = document.getElementById(uploadAreaId);
-    const fileInput = document.getElementById(fileInputId);
-    const preview = document.getElementById(previewId);
-    const placeholder = document.getElementById(placeholderId);
-    const progressDiv = document.getElementById(progressId);
-    const progressBar = progressDiv?.querySelector('.progress-bar');
-    const urlInput = document.getElementById(urlInputId);
-    const removeBtn = document.getElementById(removeBtnId);
-    if (!uploadArea || !fileInput) return;
-    function showImage(imageUrl) {
-      preview.src = imageUrl;
-      preview.style.display = 'block';
-      if (placeholder) placeholder.style.display = 'none';
-      uploadArea.classList.add('has-image');
-      if (removeBtn) removeBtn.style.display = 'inline-block';
-    }
-    function hideImage() {
-      preview.style.display = 'none';
-      preview.src = '';
-      if (placeholder) placeholder.style.display = 'flex';
-      uploadArea.classList.remove('has-image');
-      if (removeBtn) removeBtn.style.display = 'none';
-      urlInput.value = '';
-      fileInput.value = '';
-    }
-    uploadArea.addEventListener('click', (e) => {
-      if (e.target === removeBtn || removeBtn?.contains(e.target)) return;
-      fileInput.click();
-    });
-    fileInput.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (file && file.type.startsWith('image/')) {
-        await processImageUpload(file, preview, placeholder, progressDiv, progressBar, urlInput, removeBtn, showImage, hideImage);
-      }
-    });
-    uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
-    uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('dragover'); });
-    uploadArea.addEventListener('drop', async (e) => {
-      e.preventDefault();
-      uploadArea.classList.remove('dragover');
-      const file = e.dataTransfer.files[0];
-      if (file && file.type.startsWith('image/')) {
-        await processImageUpload(file, preview, placeholder, progressDiv, progressBar, urlInput, removeBtn, showImage, hideImage);
-      }
-    });
-    if (removeBtn) {
-      removeBtn.addEventListener('click', (e) => { e.stopPropagation(); hideImage(); });
-    }
-    return { showImage, hideImage };
-  }
-  
-  
-  let currentPriorityFilter = 'all';
-  
-  function isHighPriority(row) {
-    if (row.classList.contains('pinned')) return true;
-    const badge = row.querySelector('.card-category');
-    if (badge) {
-      const priorityText = badge.textContent.toUpperCase().trim();
-      if (priorityText === 'HIGH') return true;
-    }
-    return false;
-  }
-
-  function isArchivedTabActive() {
-    const activeTab = document.querySelector('.tab.active');
-    if (activeTab) return activeTab.textContent.trim().toLowerCase().includes('archived');
-    const archivedPane = document.getElementById('tab-archived');
-    return !!archivedPane && !archivedPane.classList.contains('d-none');
-  }
-
-  function applyFiltersForActiveTab() {
-    if (isArchivedTabActive()) {
-      applyArchivedFilters();
-    } else {
-      filterAndSortAnnouncements();
-    }
-  }
-
-  function applyArchivedFilters() {
-    const grid = document.getElementById('archivedGrid');
-    if (!grid) return;
-
-    sortArchivedAnnouncements();
-
-    const searchInput = document.getElementById('announcement-search');
-    const searchValue = searchInput ? searchInput.value.toLowerCase().trim() : '';
-
-    const rows = Array.from(grid.querySelectorAll('.announcement-row'));
-    let visibleCount = 0;
-
-    rows.forEach(row => {
-      const highPriority = isHighPriority(row);
-      const matchesSearch = !searchValue || row.textContent.toLowerCase().includes(searchValue);
-
-      let matchesPriority = true;
-      if (currentPriorityFilter === 'high') matchesPriority = highPriority;
-      else if (currentPriorityFilter === 'normal') matchesPriority = !highPriority;
-
-      const show = matchesSearch && matchesPriority;
-      row.style.display = show ? '' : 'none';
-      if (show) visibleCount++;
-    });
-
-    const footer = document.getElementById('archivedFooter');
-    if (footer && footer.querySelector('span')) {
-      footer.querySelector('span').textContent =
-        `Showing ${visibleCount} of ${rows.length} archived announcements`;
-    }
-  }
-  
-  function filterAndSortAnnouncements() {
-    const grid = document.getElementById('announcementsGrid');
-    if (!grid) return;
-    const allRows = Array.from(grid.querySelectorAll('.announcement-row'));
-    if (allRows.length === 0) return;
-    const searchInput = document.getElementById('announcement-search');
-    const searchValue = searchInput ? searchInput.value.toLowerCase() : '';
-    allRows.forEach(row => {
-      const highPriority = isHighPriority(row);
-      const matchesSearch = row.textContent.toLowerCase().includes(searchValue);
-      let matchesPriority = true;
-      if (currentPriorityFilter === 'high') matchesPriority = highPriority;
-      else if (currentPriorityFilter === 'normal') matchesPriority = !highPriority;
-      row.style.display = (matchesSearch && matchesPriority) ? '' : 'none';
-    });
-    const pinnedRows = allRows.filter(r => isHighPriority(r));
-    const normalRows = allRows.filter(r => !isHighPriority(r));
-    const sortByDate = (a, b) => getRowDate(b) - getRowDate(a);
-    pinnedRows.sort(sortByDate);
-    normalRows.sort(sortByDate);
-    grid.innerHTML = '';
-    pinnedRows.forEach(r => grid.appendChild(r));
-    normalRows.forEach(r => grid.appendChild(r));
-  }
-  
-  function sortArchivedAnnouncements() {
-    const archivedList = document.querySelector('#tab-archived .announcement-list');
-    if (!archivedList) return;
-    const rows = Array.from(archivedList.querySelectorAll('.announcement-row'));
-    if (rows.length === 0) return;
-    rows.sort((a, b) => getRowDate(b) - getRowDate(a));
-    archivedList.innerHTML = '';
-    rows.forEach(r => archivedList.appendChild(r));
-  }
-  
-  function getRowDate(row) {
-    const dateEl = row.querySelector('.row-date');
-    if (!dateEl) return 0;
-    const parsed = new Date(dateEl.textContent.trim());
-    return isNaN(parsed.getTime()) ? 0 : parsed.getTime();
-  }
-  
-  function onPriorityFilterChange(value) {
-    currentPriorityFilter = value;
-    applyFiltersForActiveTab();
-  }
-
-  function togglePin(el, id) {
-    const row = el.closest('.announcement-row');
-    const wasPinned = el.classList.contains('active');
-    const newPriority = wasPinned ? 'NORMAL' : 'HIGH';
-    el.style.opacity = '0.5';
-    el.style.cursor = 'wait';
-    fetch('/announcements/' + id + '/priority?priority=' + newPriority, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' }
-    })
-    .then(response => {
-      if (response.ok) {
-        if (wasPinned) {
-          el.classList.remove('active');
-          row.classList.remove('pinned');
-          el.title = 'Pin';
-        } else {
-          el.classList.add('active');
-          row.classList.add('pinned');
-          el.title = 'Unpin';
-        }
-        const badge = row.querySelector('.card-category');
-        if (badge) {
-          badge.textContent = newPriority;
-          if (newPriority === 'HIGH') badge.classList.add('high');
-          else badge.classList.remove('high');
-        }
-        setTimeout(() => { filterAndSortAnnouncements(); }, 50);
-      } else {
-        showError('Failed to update pin status.');
-      }
-    })
-    .catch(error => { console.error('Error updating priority:', error); showError('Failed to update pin status.'); })
-    .finally(() => { el.style.opacity = ''; el.style.cursor = ''; });
-  }
-
-  function viewAnnouncement(id) {
-    fetch('/announcements/' + id)
-      .then(response => response.json())
-      .then(data => {
-        const priority = data.priority || 'NORMAL';
-        const isHigh = priority === 'HIGH';
-        const dateStr = data.datePosted ? new Date(data.datePosted).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A';
-        const imageHtml = data.image ? `<img src="${data.image}" class="view-post-image" alt="Announcement image" onerror="this.style.display='none'">` : '';
-        const modalBody = document.getElementById('viewModalBody');
-        modalBody.innerHTML = `
-          <div class="view-post-header">
-            <div class="view-post-avatar"><i class="bi bi-megaphone-fill"></i></div>
-            <div class="view-post-meta">
-              <div class="view-post-author">Barangay San Sebastian</div>
-              <div class="view-post-date">${dateStr}</div>
-            </div>
-            <span class="view-post-badge ${isHigh ? 'high' : ''}">${priority}</span>
-          </div>
-          <div class="view-post-title">${escapeHtml(data.title || 'N/A')}</div>
-          <div class="view-post-content">${escapeHtml(data.content || 'N/A')}</div>
-          ${imageHtml}
-          <hr class="view-post-divider">
-          <div class="view-post-footer">
-            <i class="bi bi-info-circle"></i> Status: ${data.status || 'N/A'}
-          </div>
-        `;
-        new bootstrap.Modal(document.getElementById('viewAnnouncementModal')).show();
-      })
-      .catch(error => { console.error('Error viewing announcement:', error); showError('Failed to load announcement details.'); });
-  }
-
-  function editAnnouncement(id) {
-    fetch('/announcements/' + id)
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById('editId').value = data.id;
-        document.getElementById('editTitle').value = data.title || '';
-        document.getElementById('editPriority').value = data.priority || 'NORMAL';
-        document.getElementById('editContent').value = data.content || '';
-        const imageUrl = data.image || '';
-        document.getElementById('editImageUrl').value = imageUrl;
-        if (imageUrl) {
-          const preview = document.getElementById('editImagePreview');
-          const placeholder = document.getElementById('editUploadPlaceholder');
-          const removeBtn = document.getElementById('editRemoveImageBtn');
-          const uploadArea = document.getElementById('editImageUploadArea');
-          preview.src = imageUrl;
-          preview.style.display = 'block';
-          if (placeholder) placeholder.style.display = 'none';
-          if (uploadArea) uploadArea.classList.add('has-image');
-          if (removeBtn) removeBtn.style.display = 'inline-block';
-        }
-        new bootstrap.Modal(document.getElementById('editAnnouncementModal')).show();
-      })
-      .catch(error => { console.error('Error loading announcement for edit:', error); showError('Failed to load announcement for editing.'); });
-  }
-
-  function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  const searchInput = document.getElementById('announcement-search');
-  if (searchInput) {
-    searchInput.addEventListener('keyup', function() {
-      applyFiltersForActiveTab();
-    });
-  }
-  
-  document.addEventListener('DOMContentLoaded', function() {
-    createImageHandlers = setupImageUpload('imageUploadArea', 'imageFile', 'imagePreview', 'uploadProgress', 'imageUrl', 'removeImageBtn', 'uploadPlaceholder');
-    editImageHandlers = setupImageUpload('editImageUploadArea', 'editImageFile', 'editImagePreview', 'editUploadProgress', 'editImageUrl', 'editRemoveImageBtn', 'editUploadPlaceholder');
-
-    const createModalEl = document.getElementById('createAnnouncementModal');
-    if (createModalEl) {
-      createModalEl.addEventListener('hidden.bs.modal', function() {
-        resetCreateForm();
-        // Safety: force-clean any leftover backdrop.
-        setTimeout(cleanupOrphanBackdrops, 50);
-      });
-    }
-    
-    const resetBtn = document.querySelector('.search-bar-area .filter-btn');
-    if (resetBtn && resetBtn.textContent.includes('Reset')) {
-      const filterBtn = document.createElement('button');
-      filterBtn.id = 'priorityFilterBtn';
-      filterBtn.className = 'filter-btn';
-      filterBtn.innerHTML = '<i class="bi bi-funnel"></i> Filter: All Priorities';
-      const dropdownContainer = document.createElement('div');
-      dropdownContainer.style.position = 'relative';
-      dropdownContainer.style.display = 'inline-block';
-      const dropdownMenu = document.createElement('div');
-      dropdownMenu.className = 'priority-dropdown-menu';
-      dropdownMenu.style.cssText = 'position: absolute; top: 100%; left: 0; margin-top: 4px; background: white; border: 1px solid #d0d5dd; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 1000; min-width: 180px; display: none;';
-      dropdownMenu.innerHTML = `
-        <div class="priority-option" data-value="all" style="padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-          <i class="bi bi-list-ul"></i> All Priorities
-        </div>
-        <div class="priority-option" data-value="high" style="padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-          <i class="bi bi-pin-angle-fill" style="color: #FED734;"></i> High Priority Only
-        </div>
-        <div class="priority-option" data-value="normal" style="padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-          <i class="bi bi-flag"></i> Normal Priority Only
-        </div>
-      `;
-      dropdownMenu.querySelectorAll('.priority-option').forEach(option => {
-        option.addEventListener('mouseenter', () => { option.style.backgroundColor = '#f5f5f5'; });
-        option.addEventListener('mouseleave', () => { option.style.backgroundColor = 'white'; });
-        option.addEventListener('click', () => {
-          const value = option.getAttribute('data-value');
-          if (value === 'all') filterBtn.innerHTML = '<i class="bi bi-funnel"></i> Filter: All Priorities';
-          else if (value === 'high') filterBtn.innerHTML = '<i class="bi bi-pin-angle-fill"></i> Filter: High Priority';
-          else if (value === 'normal') filterBtn.innerHTML = '<i class="bi bi-flag"></i> Filter: Normal Priority';
-          dropdownMenu.style.display = 'none';
-          onPriorityFilterChange(value);
-        });
-      });
-      filterBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
-      });
-      document.addEventListener('click', (e) => {
-        if (!dropdownContainer.contains(e.target)) dropdownMenu.style.display = 'none';
-      });
-      dropdownContainer.appendChild(filterBtn);
-      dropdownContainer.appendChild(dropdownMenu);
-      resetBtn.parentNode.replaceChild(dropdownContainer, resetBtn);
-      setTimeout(() => { applyFiltersForActiveTab(); }, 100);
-    }
-    
-    applyFiltersForActiveTab();
-    
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', function() {
-        setTimeout(() => {
-          applyFiltersForActiveTab();
-        }, 100);
-      });
-    });
-
-    trackModalState();
-    startPolling();
-  });
-
-  window.addEventListener('beforeunload', function() {
-    if (pollingInterval) clearInterval(pollingInterval);
-  });
-  
-
-</script>
+<!-- External App JS -->
+<script src="/js/announcements.js"></script>
 
 </body>
 </html>

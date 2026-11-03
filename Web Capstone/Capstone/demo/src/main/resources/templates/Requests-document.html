@@ -1,922 +1,348 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-
-<style>
-    body { margin: 0; font-family: Arial, sans-serif; }
-     .layout { display: flex; height: 100vh; overflow: hidden; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brgy. San Sebastian Documents: Manage Document Requests">
     
-    .content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-    }
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">   
+    <link rel="stylesheet" href="/css/requests-document.css">
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
-    .top-header {
-        background-color: #2d4a44;
-        display: flex;
-        border-bottom: 2px solid #FED734;
-    }
-    .top-header-tab {
-        flex: 1;
-        color: white;
-        text-align: center;
-        padding: 16px 20px;
-        font-size: 16px;
-        font-weight: bold;
-    }
-
-    .search-bar-area {
-        padding: 16px 20px 10px 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background-color: #f5f5f5;
-        flex-wrap: wrap;
-    }
-    .search-input-wrap { flex: 1; position: relative; min-width: 200px; }
-    .search-input-wrap input {
-        width: 100%;
-        padding: 9px 14px 9px 38px;
-        border: 1px solid #d0d5dd;
-        border-radius: 6px;
-        font-size: 14px;
-        background: white;
-        box-sizing: border-box;
-    }
-    .search-icon {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #aaa;
-    }
-    .filter-btn {
-        padding: 9px 16px;
-        border: 1px solid #d0d5dd;
-        border-radius: 6px;
-        background: white;
-        font-size: 14px;
-        cursor: pointer;
-        color: #444;
-    }
-    .filter-select {
-        padding: 9px 16px;
-        border: 1px solid #d0d5dd;
-        border-radius: 6px;
-        background: white;
-        font-size: 14px;
-        cursor: pointer;
-        color: #444;
-        min-width: 200px;
-    }
-    .export-btn {
-        padding: 9px 20px;
-        border: none;
-        border-radius: 6px;
-        background: #FED734;
-        font-size: 14px;
-        font-weight: bold;
-        cursor: pointer;
-        color: #2d4a44;
-    }
-
-    .tabbar {
-        display: flex;
-        background-color: white;
-        border-bottom: 1px solid #e0e0e0;
-        padding: 0 20px;
-        gap: 4px;
-        flex-wrap: wrap;
-    }
-    .tab {
-        padding: 12px 18px;
-        color: #666;
-        cursor: pointer;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        border-bottom: 3px solid transparent;
-    }
-    .tab.active {
-        background-color: #2d4a44;
-        color: white;
-        border-radius: 6px 6px 0 0;
-        font-weight: bold;
-    }
-    .tab-badge {
-        background-color: #FED734;
-        color: #2d4a44;
-        border-radius: 10px;
-        padding: 1px 7px;
-        font-size: 12px;
-        font-weight: bold;
-    }
-
-    .panel {
-        padding: 20px;
-        background-color: #f5f5f5;
-        flex: 1;
-        overflow-y: auto;
-    }
-    .panel-inner {
-        background: white;
-        border-radius: 8px;
-        border: 1px solid #e0e0e0;
-        overflow: hidden;
-    }
-    .panel-header {
-        background-color: #3d5f58;
-        color: white;
-        padding: 14px 20px;
-        font-weight: bold;
-        font-size: 15px;
-    }
-    .panel-content { overflow-x: auto; padding: 16px 20px; }
-
-    th {
-        background-color: #eaf2f0 !important;
-        color: #2d4a44 !important;
-        font-size: 12px !important;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        padding: 10px 14px !important;
-        white-space: nowrap;
-    }
-    td {
-        padding: 12px 14px !important;
-        vertical-align: middle !important;
-    }
-
-    .action-buttons { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-    .approve-btn { background-color: #44C375; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
-    .approve-btn:hover { background-color: #2ea05e; }
-    .process-btn { background-color: #3498db; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
-    .process-btn:hover { background-color: #2176ae; }
-    .ready-btn { background-color: #FED734; color: #2d4a44; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
-    .ready-btn:hover { background-color: #e0bc2a; }
-    .view-btn { background-color: #3498db;  color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
-    .view-btn:hover { background-color: #2176ae; }
-    .archive-btn { background-color: #e74c3c; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
-    .archive-btn:hover { background-color: #b93e30; }
-    .viewfile-btn { background-color: #16a085; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
-    .viewfile-btn:hover { background-color: #0e6655; }
-
-    .table-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px 16px;
-        border-top: 1px solid #e0e0e0;
-        font-size: 13px;
-        color: #888;
-    }
-    .page-item.active .page-link { background-color: #2d4a44; border-color: #2d4a44; }
-    .page-link { color: #2d4a44; }
-
-    /* Document Modal */
-    .doc-modal-overlay {
-        display: none;
-        position: fixed;
-        z-index: 3000;
-        left: 0; top: 0;
-        width: 100%; height: 100%;
-        background-color: rgba(0,0,0,0.6);
-        overflow-y: auto;
-    }
-    .doc-modal-box {
-        background: white;
-        margin: 30px auto;
-        border-radius: 10px;
-        width: 1050px;
-        max-width: 96%;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        overflow: hidden;
-    }
-    .doc-modal-header {
-        background-color: #2d4a44;
-        color: white;
-        padding: 16px 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 3px solid #FED734;
-    }
-    .doc-modal-header h4 { margin: 0; font-size: 16px; }
-    .doc-modal-close {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 22px;
-        cursor: pointer;
-        line-height: 1;
-    }
-    .doc-modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
-    .doc-modal-footer {
-        padding: 16px 24px;
-        border-top: 1px solid #e0e0e0;
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 10px;
-        background: #f9f9f9;
-        flex-wrap: wrap;
-    }
-
-    /* Document Template */
-    .doc-template {
-        border: 2px solid #2d4a44;
-        border-radius: 10px;
-        padding: 20px;
-        position: relative;
-        background: white;
-        font-family: 'Times New Roman', serif;
-    }
-    .doc-template.with-watermark::before {
-        content: 'READY FOR PICKUP';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(-35deg);
-        font-size: 52px;
-        font-weight: 900;
-        color: rgba(231, 76, 60, 0.18);
-        white-space: nowrap;
-        pointer-events: none;
-        z-index: 10;
-        letter-spacing: 4px;
-        font-family: Arial, sans-serif;
-    }
-    .doc-field { margin-bottom: 14px; }
-    .doc-field label { display: block; font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
-    .doc-field input, .doc-field select, .doc-field textarea {
-        width: 100%;
-        border: none;
-        border-bottom: 1px solid #aaa;
-        padding: 5px 2px;
-        font-size: 14px;
-        font-family: 'Times New Roman', serif;
-        background: transparent;
-        box-sizing: border-box;
-        outline: none;
-        color: #222;
-    }
-    .doc-field input:focus, .doc-field select:focus, .doc-field textarea:focus {
-        border-bottom: 2px solid #2d4a44;
-    }
-    .doc-template input,
-    .doc-template select,
-    .doc-template textarea {
-        background: transparent !important;
-        outline: none !important;
-    }
-    .doc-template input:not([readonly]):hover,
-    .doc-template select:not([readonly]):hover {
-        background-color: rgba(45,74,68,0.06) !important;
-        cursor: text !important;
-    }
-    .doc-template input:not([readonly]):focus,
-    .doc-template select:not([readonly]):focus,
-    .doc-template textarea:not([readonly]):focus {
-        border-bottom: 2px solid #2d4a44 !important;
-        background-color: rgba(45,74,68,0.08) !important;
-        cursor: text !important;
-    }
-    .doc-template input[readonly],
-    .doc-template select[readonly],
-    .doc-template textarea[readonly] {
-        cursor: default !important;
-        pointer-events: none !important;
-        color: #333 !important;
-    }
-    .doc-row { display: flex; gap: 20px; flex-wrap: wrap; }
-    .doc-row .doc-field { flex: 1; min-width: 150px; }
-
-    .btn-print {
-        padding: 9px 20px; border: none; border-radius: 6px;
-        background: #2d4a44; font-size: 14px; font-weight: bold;
-        cursor: pointer; color: white;
-    }
-    .btn-print:hover { background: #1e3330; }
-    .btn-download {
-        padding: 9px 20px; border: none; border-radius: 6px;
-        background: #FED734; font-size: 14px; font-weight: bold;
-        cursor: pointer; color: #2d4a44;
-    }
-    .btn-download:hover { background: #e0bc2a; }
-    .btn-cancel {
-        padding: 9px 20px; border: 1px solid #ccc; border-radius: 6px;
-        background: white; font-size: 14px; cursor: pointer; color: #555;
-    }
-   /* ══════════════════════════════════════
-       FORCE MODAL
-    ══════════════════════════════════════ */
-    .force-modal {
-        display: none;
-        position: fixed; z-index: 9999;
-        left: 0; top: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.55);
-        backdrop-filter: blur(2px);
-    }
-    .force-modal-content {
-        background: white;
-        width: 440px;
-        padding: 44px;
-        border-radius: var(--radius-lg);
-        text-align: center;
-        margin: 18% auto;
-        box-shadow: var(--shadow-lg);
-    }
-    .force-modal-content h2 { color: var(--green-900); margin-bottom: 12px; font-size: 22px; font-weight: 700; }
-    .force-modal-content p { font-size: 15px; color: var(--gray-500); }
-    .force-modal-content button {
-        margin-top: 22px;
-        padding: 13px 32px;
-        background: var(--green-700);
-        color: white;
-        border: none;
-        border-radius: var(--radius-sm);
-        cursor: pointer;
-        font-size: 15px;
-        font-weight: 600;
-        font-family: var(--font);
-        transition: background 0.2s;
-    }
-    .force-modal-content button:hover { background: var(--green-900); }
-
-    /* View File Modal */
-    .viewfile-modal-overlay {
-        display: none;
-        position: fixed;
-        z-index: 4000;
-        left: 0; top: 0;
-        width: 100%; height: 100%;
-        background-color: rgba(0,0,0,0.7);
-        overflow-y: auto;
-    }
-    .viewfile-modal-box {
-        background: white;
-        margin: 30px auto;
-        border-radius: 10px;
-        width: 700px;
-        max-width: 95%;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-        overflow: hidden;
-    }
-    .viewfile-modal-header {
-        background-color: #2d4a44;
-        color: white;
-        padding: 20px 24px 0;
-        position: relative;
-        border-bottom: 3px solid #FED734;
-    }
-    .viewfile-modal-header .close-x {
-        position: absolute; top: 12px; right: 16px;
-        color: white; opacity: 0.7; font-size: 22px;
-        cursor: pointer; background: none; border: none; line-height:1;
-    }
-    .viewfile-modal-header .close-x:hover { opacity: 1; }
-    .viewfile-modal-body { padding: 24px; }
-    .vf-doc-card {
-        flex: 1; min-width: 160px; text-align: center;
-        background: #f9f9f9; border-radius: 10px; padding: 14px;
-    }
-    .vf-doc-card h4 { font-size: 13px; color: #2d4a44; margin-bottom: 10px; }
-    .vf-doc-img-wrap {
-        background: #e9ecef; height: 160px; display: flex;
-        align-items: center; justify-content: center; border-radius: 6px;
-        overflow: hidden;
-    }
-    .vf-doc-img-wrap img { max-width: 100%; max-height: 160px; object-fit: contain; cursor: pointer; border-radius: 6px; }
-
-    .tab-badge {
-        background-color: #FED734;
-        color: #2d4a44;
-        border-radius: 10px;
-        padding: 1px 7px;
-        font-size: 12px;
-        font-weight: bold;
-    }
-    
-    .loading-spinner {
-        display: inline-block;
-        width: 14px;
-        height: 14px;
-        border: 2px solid #fff;
-        border-radius: 50%;
-        border-top-color: transparent;
-        animation: spin 0.6s linear infinite;
-        margin-right: 5px;
-    }
-
-    /* Hide dropdown arrows, spinners, and placeholder text in readonly mode */
-    .doc-template input[readonly]::-webkit-calendar-picker-indicator,
-    .doc-template select[readonly]::-webkit-calendar-picker-indicator,
-    .doc-template input[readonly]::-webkit-inner-spin-button,
-    .doc-template input[readonly]::-webkit-outer-spin-button {
-        display: none;
-        visibility: hidden;
-        opacity: 0;
-        pointer-events: none;
-    }
-    
-    .doc-template input[readonly]::-webkit-input-placeholder,
-    .doc-template select[readonly]::-webkit-input-placeholder {
-        color: transparent;
-        visibility: hidden;
-    }
-    
-    .doc-template input[readonly]::placeholder,
-    .doc-template select[readonly]::placeholder {
-        color: transparent;
-        visibility: hidden;
-    }
-    
-    .doc-template select[readonly] {
-        -webkit-appearance: none;
-        appearance: none;
-        background-image: none;
-    }
-    
-    .doc-template input[readonly]::-moz-placeholder {
-        color: transparent;
-        visibility: hidden;
-    }
-    
-    .doc-template input[readonly]:placeholder-shown {
-        color: #333;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    .btn-save-document {
-        padding: 9px 20px;
-        border: none;
-        border-radius: 6px;
-        background: #44C375;
-        font-size: 14px;
-        font-weight: bold;
-        cursor: pointer;
-        color: white;
-    }
-    .btn-save-document:hover {
-        background: #2ea05e;
-    }
-    .btn-save-document:disabled {
-        background: #a0d4b0;
-        cursor: not-allowed;
-    }
-
-    /* Success Toast Modal */
-    .success-toast-modal .modal-content {
-        background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
-        color: white;
-        border: none;
-        border-radius: 16px;
-    }
-    .success-toast-modal .modal-header {
-        background: transparent;
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-    .success-toast-modal .modal-body {
-        text-align: center;
-        padding: 20px;
-    }
-    .success-toast-modal .modal-footer {
-        border-top: none;
-        justify-content: center;
-        padding-top: 0;
-        background: transparent;
-    }
-    .success-icon {
-        font-size: 60px;
-        margin-bottom: 12px;
-    }
-
-    /* Error Toast Modal */
-    .error-toast-modal .modal-content {
-        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-        color: white;
-        border: none;
-        border-radius: 16px;
-    }
-    .error-toast-modal .modal-header {
-        background: transparent;
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-    .error-toast-modal .modal-body {
-        text-align: center;
-        padding: 20px;
-    }
-    .error-toast-modal .modal-footer {
-        border-top: none;
-        justify-content: center;
-        padding-top: 0;
-        background: transparent;
-    }
-    .error-icon {
-        font-size: 60px;
-        margin-bottom: 12px;
-    }
-
-    /* Ensure confirm/success/error modals appear above all custom overlays */
-    .modal {
-        z-index: 9000 !important;
-    }
-
-    .modal-backdrop {
-        z-index: 8999 !important;
-    }
-
-    select {
-        -webkit-appearance: none;
-        appearance: none;
-        background-image: none;
-    }
-
-    .sortable-th:hover { background-color: #d6e6e1 !important; cursor: pointer; }
-    .sortable-th .sort-icon { font-size: 11px; opacity: 0.6; }
-
-    /* Responsive table */
-    @media (max-width: 768px) {
-        .search-bar-area {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        .search-input-wrap { min-width: 100%; }
-        .filter-select { min-width: 100%; }
-        .doc-modal-box { width: 100%; margin: 10px; }
-        .doc-row { flex-direction: column; }
-        .doc-modal-footer { flex-direction: column; align-items: stretch; }
-        .doc-modal-footer button { width: 100%; }
-        .action-buttons { flex-wrap: wrap; }
-        .action-buttons button { font-size: 11px; padding: 4px 8px; }
-    }
-
-    
-
-</style>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Brgy. San Sebastian Documents: Manage Document Requests">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link rel="stylesheet" th:href="@{/css/sidebar.css}">   
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<title>Requests</title>
+    <title>Requests</title>
 </head>
 <body>
   <input type="hidden" id="currentUserName" th:value="${currentUser}">
-<script src="/js/notif.js"></script>
-<div class="toast-container" id="toastContainer"></div>
-<input type="hidden" id="currentUserName" th:value="${currentUser}">
+  <input type="hidden" id="accountStatus" th:value="${currentstatus}">
+  <script src="/js/notif.js"></script>
+  <div class="toast-container" id="toastContainer"></div>
+
 <div class="layout">
-
-<!-- Success Modal -->
-<div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0"></div>
-            <div class="modal-body">
-                <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
-                <h5 id="successMessage">Success!</h5>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" id="successOkBtn">OK</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Error Modal -->
-<div class="modal fade error-toast-modal" id="errorModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0"></div>
-            <div class="modal-body">
-                <div class="error-icon"><i class="bi bi-x-circle-fill"></i></div>
-                <h5 id="errorMessage">Error!</h5>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" id="errorOkBtn" data-bs-dismiss="modal">OK</button>
+    <!-- Success Modal -->
+    <div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0"></div>
+                <div class="modal-body">
+                    <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                    <h5 id="successMessage">Success!</h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" id="successOkBtn">OK</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Sidebar -->
-<div th:replace="~{fragments/sidebar :: sidebar}"></div>
-
-<div class="content">
-    <div class="top-header">
-        <div class="top-header-tab">Document Requests</div>
-    </div>
-
-    <div class="search-bar-area">
-        <div class="search-input-wrap">
-            <span class="search-icon"><i class="bi bi-search"></i></span>
-            <input type="text" id="request-search" placeholder="Search by name, type, or ID...">
-        </div>
-        <select id="filter-type" class="filter-select" aria-label="Filter by document type">
-            <option value="all">All Document Types</option>
-            <option value="Barangay_ID">Barangay ID</option>
-            <option value="Barangay_Clearance">Barangay Clearance</option>
-            <option value="Barangay Indigency">Certificate of Indigency</option>
-        </select>
-        <button class="export-btn" id="export-pdf-btn" onclick="exportToPDF()">Export</button>
-    </div>
-
-    <div class="tabbar">
-        <div class="tab active" onclick="switchTab(this, 'incoming')">
-            Incoming <span class="tab-badge" id="badge-incoming" th:text="${incomingCount}">0</span>
-        </div>
-        <div class="tab" onclick="switchTab(this, 'processing')">
-            Processing <span class="tab-badge" id="badge-processing" th:text="${processingCount}">0</span>
-        </div>
-        <div class="tab" onclick="switchTab(this, 'ready')">
-            Ready <span class="tab-badge" id="badge-ready" th:text="${readyCount}">0</span>
-        </div>
-        <div class="tab" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" onclick="switchTab(this, 'archive')">
-            Archive <span class="tab-badge" id="badge-archive" th:text="${archivedCount}">0</span>
+    <!-- Error Modal -->
+    <div class="modal fade error-toast-modal" id="errorModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0"></div>
+                <div class="modal-body">
+                    <div class="error-icon"><i class="bi bi-x-circle-fill"></i></div>
+                    <h5 id="errorMessage">Error!</h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" id="errorOkBtn" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="panel" role="main">
-        <!-- Incoming -->
-        <div id="tab-incoming" class="panel-inner">
-            <div class="panel-header">Incoming Document Requests</div>
-            <div class="panel-content">
-                <table class="table table-bordered table-hover mb-0">
-                    <thead>
-                        <tr><th>Request ID</th>
-                          <th class="sortable-th" onclick="sortByDate(this)" style="cursor:pointer; user-select:none;">
-                            Date/TimeStamp Created <span class="sort-icon">⇅</span>
-                        </th>
-                        <th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="req : ${incomingRequests}"
-                            th:attr="data-name=${req.fullName},
-                                     data-validid=${req.validIdUrl},
-                                     data-type=${req.documentType},
-                                     data-purpose=${req.purposeOfRequest},
-                                     data-photo=${req.photo2x2Url},
-                                     data-residency=${req.residencyProofUrl},
-                                     data-id=${req.id},
-                                     data-timestamp=${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
-                                     data-address=${req.address},
-                                     data-birthdate=${req.birthdate},
-                                     data-emergency-name=${req.emergencyName},
-                                     data-emergency-address=${req.emergencyAddress},
-                                     data-emergency-contact=${req.emergencyContact},
-                                     data-doc-age=${req.docAge},
-                                    data-doc-civil-status=${req.docCivilStatus},
-                                    data-doc-gender=${req.docGender},
-                                    data-doc-issued-day=${req.docIssuedDay},
-                                    data-doc-issued-month-year=${req.docIssuedMonthYear},
-                                    data-doc-captain-name=${req.docCaptainName},
-                                    data-doc-or-number=${req.docOrNumber},
-                                    data-doc-date-issued=${req.docDateIssued},
-                                    data-doc-purpose=${req.docPurpose},
-                                    data-doc-nb-note=${req.docNbNote},
-                                    data-middle-name=${req.middleName}
-                                     ">
-                            <td th:text="${req.id}"></td>
-                            <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd hh:mm a') : 'N/A'}"></td> 
-                            <td th:text="${req.fullName}"></td>
-                            <td th:text="${req.contactNumber}"></td>
-                            <td><button type="button" class="viewfile-btn" onclick="openViewFileModal(this.closest('tr'))">View File</button></td>
-                            <td th:text="${req.documentType}"></td>
-                            <td><div class="action-buttons">
-                                <button class="approve-btn" type="button"
-                                th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
-                                    th:data-id="${req.id}"
-                                    onclick="confirmApprove(this)">Approve</button>
-                                <button class="archive-btn" type="button"
-                                    th:if="${currentrole == 'ADMIN'}"
-                                    th:data-id="${req.id}"
-                                    onclick="confirmArchive(this)">Archive</button>
-                                <button class="archive-btn" type="button"
-                                  th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
-                                  onclick="openAssistanceModal()">Archive</button>
-                            </div></td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(incomingRequests)}">
-                            <td colspan="7" style="text-align:center; color:#999;">No incoming requests</td>
-                        </tr>
-                    </tbody>
-                </table>
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="content">
+        <div class="top-header">
+            <div class="top-header-tab">Document Requests</div>
+        </div>
+
+        <div class="search-bar-area">
+            <div class="search-input-wrap">
+                <span class="search-icon"><i class="bi bi-search"></i></span>
+                <input type="text" id="request-search" placeholder="Search by name, type, or ID...">
+            </div>
+            <select id="filter-type" class="filter-select" aria-label="Filter by document type">
+                <option value="all">All Document Types</option>
+                <option value="Barangay_ID">Barangay ID</option>
+                <option value="Barangay_Clearance">Barangay Clearance</option>
+                <option value="Barangay Indigency">Certificate of Indigency</option>
+            </select>
+            <button class="export-btn" id="export-pdf-btn">Export</button>
+        </div>
+
+        <div class="tabbar">
+            <div class="tab active" data-tab="incoming">
+                Incoming <span class="tab-badge" id="badge-incoming" th:text="${incomingCount}">0</span>
+            </div>
+            <div class="tab" data-tab="processing">
+                Processing <span class="tab-badge" id="badge-processing" th:text="${processingCount}">0</span>
+            </div>
+            <div class="tab" data-tab="ready">
+                Ready <span class="tab-badge" id="badge-ready" th:text="${readyCount}">0</span>
+            </div>
+            <div class="tab" th:if="${currentrole == 'ADMIN'}" data-tab="archive">
+                Archive <span class="tab-badge" id="badge-archive" th:text="${archivedCount}">0</span>
             </div>
         </div>
 
-        <!-- Processing -->
-        <div id="tab-processing" class="panel-inner d-none">
-            <div class="panel-header">Processing Document Requests</div>
-            <div class="panel-content">
-                <table class="table table-bordered table-hover mb-0">
-                    <thead>
-                        <tr><th>Request ID</th>
-                          <th class="sortable-th" onclick="sortByDate(this)" style="cursor:pointer; user-select:none;">
-                          Date/TimeStamp Created <span class="sort-icon">⇅</span>
-                          </th><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="req : ${processingRequests}"
-                            th:attr="data-name=${req.fullName},
-                                     data-validid=${req.validIdUrl},
-                                     data-type=${req.documentType},
-                                     data-purpose=${req.purposeOfRequest},
-                                     data-photo=${req.photo2x2Url},
-                                     data-residency=${req.residencyProofUrl},
-                                     data-id=${req.id},
-                                     data-timestamp=${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
-                                     data-address=${req.address},
-                                     data-birthdate=${req.birthdate},
-                                     data-emergency-name=${req.emergencyName},
-                                     data-emergency-address=${req.emergencyAddress},
-                                     data-emergency-contact=${req.emergencyContact},
-                                     data-contact=${req.contactNumber},
-                                     data-emergency-contact=${req.emergencyContact},
-                                     data-doc-age=${req.docAge},
-                                    data-doc-civil-status=${req.docCivilStatus},
-                                    data-doc-gender=${req.docGender},
-                                    data-doc-issued-day=${req.docIssuedDay},
-                                    data-doc-issued-month-year=${req.docIssuedMonthYear},
-                                    data-doc-captain-name=${req.docCaptainName},
-                                    data-doc-or-number=${req.docOrNumber},
-                                    data-doc-date-issued=${req.docDateIssued},
-                                    data-doc-purpose=${req.docPurpose},
-                                    data-doc-nb-note=${req.docNbNote},
-                                    data-middle-name=${req.middleName}
-                                     ">
-                            <td th:text="${req.id}"></td>
-                            <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd hh:mm a') : 'N/A'}"></td>  
-                            <td th:text="${req.fullName}"></td>
-                            <td th:text="${req.contactNumber}"></td>
-                            <td><button type="button" class="viewfile-btn" onclick="openViewFileModal(this.closest('tr'))">View File</button></td>
-                            <td th:text="${req.documentType}"></td>
-                            <td><div class="action-buttons">
-                                <button type="button" class="process-btn"
-                                th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
-                                        onclick="openDocModalFromRow(this, false)">Process</button>
-                                <button type="button" class="ready-btn" 
-                                    th:data-id="${req.id}"
-                                    th:data-name="${req.fullName}"
-                                    th:data-phone="${req.contactNumber}"
-                                    th:data-type="${req.documentType}"
-                                    th:data-photo="${req.photo2x2Url}"
-                                    th:data-address="${req.address}"
-                                    th:data-birthdate="${req.birthdate}"
-                                    th:data-emergency-name="${req.emergencyName}"
-                                    th:data-emergency-address="${req.emergencyAddress}"
-                                    th:data-emergency-contact="${req.emergencyContact}"
+        <div class="panel" role="main">
+            <!-- Incoming -->
+            <div id="tab-incoming" class="panel-inner">
+                <div class="panel-header">Incoming Document Requests</div>
+                <div class="panel-content">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead>
+                            <tr><th>Request ID</th>
+                              <th class="sortable-th" onclick="sortByDate(this)" style="cursor:pointer; user-select:none;">
+                                Date/TimeStamp Created <span class="sort-icon">⇅</span>
+                              </th>
+                            <th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="req : ${incomingRequests}"
+                                th:attr="data-name=${req.fullName},
+                                         data-validid=${req.validIdUrl},
+                                         data-type=${req.documentType},
+                                         data-purpose=${req.purposeOfRequest},
+                                         data-photo=${req.photo2x2Url},
+                                         data-residency=${req.residencyProofUrl},
+                                         data-id=${req.id},
+                                         data-timestamp=${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
+                                         data-address=${req.address},
+                                         data-birthdate=${req.birthdate},
+                                         data-emergency-name=${req.emergencyName},
+                                         data-emergency-address=${req.emergencyAddress},
+                                         data-emergency-contact=${req.emergencyContact},
+                                         data-doc-age=${req.docAge},
+                                        data-doc-civil-status=${req.docCivilStatus},
+                                        data-doc-gender=${req.docGender},
+                                        data-doc-issued-day=${req.docIssuedDay},
+                                        data-doc-issued-month-year=${req.docIssuedMonthYear},
+                                        data-doc-captain-name=${req.docCaptainName},
+                                        data-doc-or-number=${req.docOrNumber},
+                                        data-doc-date-issued=${req.docDateIssued},
+                                        data-doc-purpose=${req.docPurpose},
+                                        data-doc-nb-note=${req.docNbNote},
+                                        data-middle-name=${req.middleName}">
+                                <td th:text="${req.id}"></td>
+                                <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd hh:mm a') : 'N/A'}"></td> 
+                                <td th:text="${req.fullName}"></td>
+                                <td th:text="${req.contactNumber}"></td>
+                                <td><button type="button" class="viewfile-btn btn-view-file">View File</button></td>
+                                <td th:text="${req.documentType}"></td>
+                                <td><div class="action-buttons">
+                                    <button class="approve-btn btn-approve" type="button"
                                     th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
-                                    onclick="markAsReady(this)">Mark Ready</button>
-                                <button class="archive-btn" type="button"
-                                    th:data-id="${req.id}"
+                                        th:data-id="${req.id}">Approve</button>
+                                    <button class="archive-btn btn-archive-doc" type="button"
+                                        th:if="${currentrole == 'ADMIN'}"
+                                        th:data-id="${req.id}">Archive</button>
+                                    <button class="archive-btn btn-assistance-archive" type="button"
+                                      th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">Archive</button>
+                                </div></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(incomingRequests)}">
+                                <td colspan="7" style="text-align:center; color:#999;">No incoming requests</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Processing -->
+            <div id="tab-processing" class="panel-inner d-none">
+                <div class="panel-header">Processing Document Requests</div>
+                <div class="panel-content">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead>
+                            <tr><th>Request ID</th>
+                              <th class="sortable-th" onclick="sortByDate(this)" style="cursor:pointer; user-select:none;">
+                              Date/TimeStamp Created <span class="sort-icon">⇅</span>
+                              </th><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="req : ${processingRequests}"
+                                th:attr="data-name=${req.fullName},
+                                         data-validid=${req.validIdUrl},
+                                         data-type=${req.documentType},
+                                         data-purpose=${req.purposeOfRequest},
+                                         data-photo=${req.photo2x2Url},
+                                         data-residency=${req.residencyProofUrl},
+                                         data-id=${req.id},
+                                         data-timestamp=${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
+                                         data-address=${req.address},
+                                         data-birthdate=${req.birthdate},
+                                         data-emergency-name=${req.emergencyName},
+                                         data-emergency-address=${req.emergencyAddress},
+                                         data-emergency-contact=${req.emergencyContact},
+                                         data-contact=${req.contactNumber},
+                                         data-emergency-contact=${req.emergencyContact},
+                                         data-doc-age=${req.docAge},
+                                        data-doc-civil-status=${req.docCivilStatus},
+                                        data-doc-gender=${req.docGender},
+                                        data-doc-issued-day=${req.docIssuedDay},
+                                        data-doc-issued-month-year=${req.docIssuedMonthYear},
+                                        data-doc-captain-name=${req.docCaptainName},
+                                        data-doc-or-number=${req.docOrNumber},
+                                        data-doc-date-issued=${req.docDateIssued},
+                                        data-doc-purpose=${req.docPurpose},
+                                        data-doc-nb-note=${req.docNbNote},
+                                        data-middle-name=${req.middleName}">
+                                <td th:text="${req.id}"></td>
+                                <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd hh:mm a') : 'N/A'}"></td>  
+                                <td th:text="${req.fullName}"></td>
+                                <td th:text="${req.contactNumber}"></td>
+                                <td><button type="button" class="viewfile-btn btn-view-file">View File</button></td>
+                                <td th:text="${req.documentType}"></td>
+                                <td><div class="action-buttons">
+                                    <button type="button" class="process-btn btn-open-doc-edit"
+                                    th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">Process</button>
+                                    <button type="button" class="ready-btn btn-mark-ready" 
+                                        th:data-id="${req.id}"
+                                        th:data-name="${req.fullName}"
+                                        th:data-phone="${req.contactNumber}"
+                                        th:data-type="${req.documentType}"
+                                        th:data-photo="${req.photo2x2Url}"
+                                        th:data-address="${req.address}"
+                                        th:data-birthdate="${req.birthdate}"
+                                        th:data-emergency-name="${req.emergencyName}"
+                                        th:data-emergency-address="${req.emergencyAddress}"
+                                        th:data-emergency-contact="${req.emergencyContact}"
+                                        th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">Mark Ready</button>
+                                    <button class="archive-btn btn-archive-doc" type="button"
+                                        th:data-id="${req.id}"
+                                        th:if="${currentrole == 'ADMIN'}">Archive</button>
+                                    <button class="archive-btn btn-assistance-archive" type="button"
+                                     th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">Archive</button>   
+                                </div></td>
+                             </tr>
+                            <tr th:if="${#lists.isEmpty(processingRequests)}">
+                                <td colspan="7" style="text-align:center; color:#999;">No processing requests</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Ready -->
+            <div id="tab-ready" class="panel-inner d-none">
+                <div class="panel-header">Ready Document Requests</div>
+                <div class="panel-content">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead>
+                            <tr><th>Request ID</th>
+                              <th class="sortable-th" onclick="sortByDate(this)" style="cursor:pointer; user-select:none;">
+                              Date/TimeStamp Created <span class="sort-icon">⇅</span>
+                            </th><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="req : ${readyRequests}"
+                                th:attr="data-name=${req.fullName},
+                                         data-validid=${req.validIdUrl},
+                                         data-type=${req.documentType},
+                                         data-purpose=${req.purposeOfRequest},
+                                         data-photo=${req.photo2x2Url},
+                                         data-residency=${req.residencyProofUrl},
+                                         data-id=${req.id},
+                                         data-timestamp=${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
+                                         data-address=${req.address},
+                                         data-birthdate=${req.birthdate},
+                                         data-emergency-name=${req.emergencyName},
+                                         data-emergency-address=${req.emergencyAddress},
+                                         data-emergency-contact=${req.emergencyContact},
+                                         data-contact=${req.contactNumber},
+                                         data-emergency-contact=${req.emergencyContact},
+                                         data-doc-age=${req.docAge},
+                                        data-doc-civil-status=${req.docCivilStatus},
+                                        data-doc-gender=${req.docGender},
+                                        data-doc-issued-day=${req.docIssuedDay},
+                                        data-doc-issued-month-year=${req.docIssuedMonthYear},
+                                        data-doc-captain-name=${req.docCaptainName},
+                                        data-doc-or-number=${req.docOrNumber},
+                                        data-doc-date-issued=${req.docDateIssued},
+                                        data-doc-purpose=${req.docPurpose},
+                                        data-doc-nb-note=${req.docNbNote},
+                                        data-middle-name=${req.middleName}">
+                                <td th:text="${req.id}"></td>
+                                <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd hh:mm a') : 'N/A'}"></td>  
+                                <td th:text="${req.fullName}"></td>
+                                <td th:text="${req.contactNumber}"></td>
+                                <td><button type="button" class="viewfile-btn btn-view-file">View File</button></td>
+                                <td th:text="${req.documentType}"></td>
+                                <td><div class="action-buttons">
+                                    <button type="button" class="view-btn btn-open-doc-view">View</button>
+                                    <button class="archive-btn btn-archive-doc" type="button"
                                     th:if="${currentrole == 'ADMIN'}"
-                                    onclick="confirmArchive(this)">Archive</button>
-                                <button class="archive-btn" type="button"
-                                 th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
-                                  onclick="openAssistanceModal()">Archive</button>   
-                            </div></td>
-                         </tr>
-                        <tr th:if="${#lists.isEmpty(processingRequests)}">
-                            <td colspan="7" style="text-align:center; color:#999;">No processing requests</td>
-                        </tr>
-                    </tbody>
-                </table>
+                                        th:data-id="${req.id}">Archive</button>
+                                </div></td>
+                             </tr>
+                            <tr th:if="${#lists.isEmpty(readyRequests)}">
+                                <td colspan="7" style="text-align:center; color:#999;">No ready requests</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
 
-        <!-- Ready -->
-        <div id="tab-ready" class="panel-inner d-none">
-            <div class="panel-header">Ready Document Requests</div>
-            <div class="panel-content">
-                <table class="table table-bordered table-hover mb-0">
-                    <thead>
-                        <tr><th>Request ID</th>
-                          <th class="sortable-th" onclick="sortByDate(this)" style="cursor:pointer; user-select:none;">
-                          Date/TimeStamp Created <span class="sort-icon">⇅</span>
-                        </th><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="req : ${readyRequests}"
-                            th:attr="data-name=${req.fullName},
-                                     data-validid=${req.validIdUrl},
-                                     data-type=${req.documentType},
-                                     data-purpose=${req.purposeOfRequest},
-                                     data-photo=${req.photo2x2Url},
-                                     data-residency=${req.residencyProofUrl},
-                                     data-id=${req.id},
-                                     data-timestamp=${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
-                                     data-address=${req.address},
-                                     data-birthdate=${req.birthdate},
-                                     data-emergency-name=${req.emergencyName},
-                                     data-emergency-address=${req.emergencyAddress},
-                                     data-emergency-contact=${req.emergencyContact},
-                                     data-contact=${req.contactNumber},
-                                     data-emergency-contact=${req.emergencyContact},
-                                     data-doc-age=${req.docAge},
-                                    data-doc-civil-status=${req.docCivilStatus},
-                                    data-doc-gender=${req.docGender},
-                                    data-doc-issued-day=${req.docIssuedDay},
-                                    data-doc-issued-month-year=${req.docIssuedMonthYear},
-                                    data-doc-captain-name=${req.docCaptainName},
-                                    data-doc-or-number=${req.docOrNumber},
-                                    data-doc-date-issued=${req.docDateIssued},
-                                    data-doc-purpose=${req.docPurpose},
-                                    data-doc-nb-note=${req.docNbNote},
-                                    data-middle-name=${req.middleName}">
-                            <td th:text="${req.id}"></td>
-                            <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd hh:mm a') : 'N/A'}"></td>  
-                            <td th:text="${req.fullName}"></td>
-                            <td th:text="${req.contactNumber}"></td>
-                            <td><button type="button" class="viewfile-btn" onclick="openViewFileModal(this.closest('tr'))">View File</button></td>
-                            <td th:text="${req.documentType}"></td>
-                            <td><div class="action-buttons">
-                                <button type="button" class="view-btn"
-                                        onclick="openDocModalFromRow(this, true)">View</button>
-                                <button class="archive-btn" type="button"
-                                th:if="${currentrole == 'ADMIN'}"
-                                    th:data-id="${req.id}"
-                                    onclick="confirmArchive(this)">Archive</button>
-                                <button class="archive-btn" type="button"
-                                 th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
-                                  onclick="openAssistanceModal()">Archive</button>   
-                            </div></td>
-                         </tr>
-                        <tr th:if="${#lists.isEmpty(readyRequests)}">
-                            <td colspan="7" style="text-align:center; color:#999;">No ready requests</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Archive -->
-        <div id="tab-archive" class="panel-inner d-none">
-            <div class="panel-header">Archived Document Requests</div>
-            <div class="panel-content">
-                <table class="table table-bordered table-hover mb-0">
-                    <thead>
-                        <tr><th>Request ID</th><th class="sortable-th" onclick="sortByDate(this)" style="cursor:pointer; user-select:none;">
-                          Date/TimeStamp Created <span class="sort-icon">⇅</span>
-                        </th>
-                        <th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="req : ${archivedRequests}"
-                            th:attr="data-name=${req.fullName},
-                                     data-validid=${req.validIdUrl},
-                                     data-type=${req.documentType},
-                                     data-purpose=${req.purposeOfRequest},
-                                     data-photo=${req.photo2x2Url},
-                                     data-residency=${req.residencyProofUrl},
-                                     data-id=${req.id},
-                                     data-timestamp=${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
-                                     data-address=${req.address},
-                                     data-birthdate=${req.birthdate},
-                                     data-emergency-name=${req.emergencyName},
-                                     data-emergency-address=${req.emergencyAddress},
-                                     data-emergency-contact=${req.emergencyContact},
-                                     data-contact=${req.contactNumber},
-                                     data-middle-name=${req.middleName}">
-                            <td th:text="${req.id}"></td>
-                            <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd hh:mm a') : 'N/A'}"></td> 
-                            <td th:text="${req.fullName}"></td>
-                            <td th:text="${req.contactNumber}"></td>
-                            <td><button type="button" class="viewfile-btn" onclick="openViewFileModal(this.closest('tr'))">View File</button></td>
-                            <td th:text="${req.documentType}"></td>
-                            <td><div class="action-buttons">
-                                <button type="button" class="view-btn"
-                                        onclick="openDocModalFromRow(this, true)">View Document</button>
-                                <button class="archive-btn" type="button"
-                                 th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
-                                  onclick="openAssistanceModal()">Archive</button>   
-                            </div></td>
-                         </tr>
-                        <tr th:if="${#lists.isEmpty(archivedRequests)}">
-                            <td colspan="7" style="text-align:center; color:#999;">No archived requests</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- Archive -->
+            <div id="tab-archive" class="panel-inner d-none">
+                <div class="panel-header">Archived Document Requests</div>
+                <div class="panel-content">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead>
+                            <tr><th>Request ID</th><th class="sortable-th" onclick="sortByDate(this)" style="cursor:pointer; user-select:none;">
+                              Date/TimeStamp Created <span class="sort-icon">⇅</span>
+                            </th>
+                            <th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="req : ${archivedRequests}"
+                                th:attr="data-name=${req.fullName},
+                                         data-validid=${req.validIdUrl},
+                                         data-type=${req.documentType},
+                                         data-purpose=${req.purposeOfRequest},
+                                         data-photo=${req.photo2x2Url},
+                                         data-residency=${req.residencyProofUrl},
+                                         data-id=${req.id},
+                                         data-timestamp=${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
+                                         data-address=${req.address},
+                                         data-birthdate=${req.birthdate},
+                                         data-emergency-name=${req.emergencyName},
+                                         data-emergency-address=${req.emergencyAddress},
+                                         data-emergency-contact=${req.emergencyContact},
+                                         data-contact=${req.contactNumber},
+                                         data-middle-name=${req.middleName}">
+                                <td th:text="${req.id}"></td>
+                                <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd hh:mm a') : 'N/A'}"></td> 
+                                <td th:text="${req.fullName}"></td>
+                                <td th:text="${req.contactNumber}"></td>
+                                <td><button type="button" class="viewfile-btn btn-view-file">View File</button></td>
+                                <td th:text="${req.documentType}"></td>
+                                <td><div class="action-buttons">
+                                    <button type="button" class="view-btn btn-open-doc-view">View Document</button>
+                                </div></td>
+                             </tr>
+                            <tr th:if="${#lists.isEmpty(archivedRequests)}">
+                                <td colspan="7" style="text-align:center; color:#999;">No archived requests</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-</div>
 </div>
 
 <!-- Logout Modal -->
@@ -928,7 +354,7 @@
     <div class="viewfile-modal-box">
         <div class="viewfile-modal-header">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <button class="close-x" onclick="closeViewFileModal()">&times;</button>
+                <button class="close-x" id="btnCloseViewFileModal">&times;</button>
                 <div>
                     <p style="color:#9fd4c8; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; margin:0 0 2px;">Barangay San Sebastian</p>
                     <p style="color:white; font-size:15px; font-weight:500; margin:0;">Document Request Files</p>
@@ -973,14 +399,14 @@
                 <p style="font-size:15px; color:#333; margin:0;" id="vf-purpose-text">—</p>
             </div>
             <div style="text-align:right; margin-top:18px;">
-                <button class="btn-cancel" onclick="closeViewFileModal()">Close</button>
+                <button class="btn-cancel" id="btnCloseViewFileModalFooter">Close</button>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Image Enlarge overlay -->
-<div id="imgEnlargeOverlay" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.88); cursor:zoom-out;" onclick="this.style.display='none'">
+<div id="imgEnlargeOverlay" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.88); cursor:zoom-out;">
     <img id="imgEnlargeSrc" src="" style="max-width:90%; max-height:90vh; object-fit:contain; border-radius:8px; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);">
 </div>
 
@@ -989,7 +415,7 @@
     <div class="doc-modal-box">
         <div class="doc-modal-header">
             <h4 id="docModalTitle">Document Template</h4>
-            <button class="doc-modal-close" onclick="closeDocModal()">&times;</button>
+            <button class="doc-modal-close" id="btnCloseDocModal">&times;</button>
         </div>
         <div class="doc-modal-body">
             <div id="printable-area"></div>
@@ -998,1407 +424,14 @@
             <div id="priceLabel" style="flex:1; display:none; align-items:center;">
                 <span style="font-family:'Arial', sans-serif; font-size:17px; font-weight:bold; color:#e74c3c; letter-spacing:0.5px;">Price: &#8369;30</span>
             </div>
-            <button class="btn-cancel" onclick="closeDocModal()">Close</button>
-            <button id="saveDocumentBtn" class="btn-save-document" style="display:none;" onclick="saveProcessedDocument()"><i class="bi bi-save"></i> Save Document</button>
-            <button class="btn-download" onclick="downloadPDF()"><i class="bi bi-download"></i> Download PDF</button>
-            <button class="btn-print" onclick="printDocument()"><i class="bi bi-printer"></i> Print</button>
+            <button class="btn-cancel" id="btnCloseDocModalFooter">Close</button>
+            <button id="saveDocumentBtn" class="btn-save-document" style="display:none;"><i class="bi bi-save"></i> Save Document</button>
+            <button class="btn-download" id="btnDownloadDocPDF"><i class="bi bi-download"></i> Download PDF</button>
+            <button class="btn-print" id="btnPrintDoc"><i class="bi bi-printer"></i> Print</button>
         </div>
     </div>
 </div>
 
-<script>
-  // Helper function for text contains checking
-  function textContains(element, text) {
-    return element && element.textContent && element.textContent.toLowerCase().includes(text.toLowerCase());
-  }
-
-  function clearStuckBackdrops() {
-      // If no modal is actually visible but backdrops exist, nuke them
-      const visibleModal = document.querySelector('.modal.show');
-      if (!visibleModal) {
-          document.querySelectorAll('.modal-backdrop').forEach(bd => bd.remove());
-          document.body.classList.remove('modal-open');
-          document.body.style.removeProperty('overflow');
-          document.body.style.removeProperty('padding-right');
-      }
-  }
-
-  // Supabase configuration
-  const SUPABASE_URL = 'https://upfrofppponiqffbssqb.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_tZyxrTJrpd_OD5-TKUkT8Q__DnuY0tj';
-  
-  let supabaseClient = null;
-  let currentDocId = null;
-  let currentDocType = null;
-  let currentIsReadOnly = false;
-  let pollSuppressed = false;
-
-  function initSupabase() {
-    if (typeof supabase !== 'undefined' && supabase.createClient) {
-      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } else {
-      setTimeout(initSupabase, 500);
-    }
-  }
-  
-  const supabaseScript = document.createElement('script');
-  supabaseScript.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-  supabaseScript.onload = initSupabase;
-  document.head.appendChild(supabaseScript);
-
-  // ─── Confirmation & Success/Error Modal helpers ────────────────────────────
-  function showSuccess(message) {
-    clearStuckBackdrops();
-    document.getElementById('successMessage').innerHTML = message;
-    const successModalEl = document.getElementById('successModal');
-    const successModal = bootstrap.Modal.getOrCreateInstance(successModalEl);
-    
-    const okButton = document.getElementById('successOkBtn');
-    const newOkButton = okButton.cloneNode(true);
-    okButton.parentNode.replaceChild(newOkButton, okButton);
-    
-    newOkButton.addEventListener('click', function() {
-      window.location.reload();
-    });
-    
-    successModalEl.addEventListener('hidden.bs.modal', function onHidden() {
-      window.location.reload();
-      successModalEl.removeEventListener('hidden.bs.modal', onHidden);
-    }, { once: true });
-    
-    successModal.show();
-  }
-
-  function showError(message) {
-    clearStuckBackdrops();
-    document.getElementById('errorMessage').innerHTML = message;
-    const errorModalEl = document.getElementById('errorModal');
-    const errorModal = bootstrap.Modal.getOrCreateInstance(errorModalEl);
-
-    errorModalEl.addEventListener('hidden.bs.modal', function onHidden() {
-      pollSuppressed = false;
-      errorModalEl.removeEventListener('hidden.bs.modal', onHidden);
-    }, { once: true });
-
-    errorModal.show();
-  }
-
-  function showConfirm(message, title, onConfirm) {
-    const confirmModalId = 'dynamicConfirmModal_' + Date.now();
-    const confirmModalHtml = `
-      <div id="${confirmModalId}" class="modal fade" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content" style="border-radius:16px;">
-            <div class="modal-header" style="background:linear-gradient(135deg,#30534D,#3d6b63);">
-              <h5 class="modal-title" style="color:white;">${title}</h5>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" style="padding:24px;font-size:16px;">${message}</div>
-            <div class="modal-footer" style="border-top:none;padding:16px 24px;">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-primary" id="confirmOkBtn_${confirmModalId}" style="background-color:#44C375;border-color:#44C375;">Confirm</button>
-            </div>
-          </div>
-        </div>
-      </div>`;
-    document.querySelectorAll('[id^="dynamicConfirmModal_"]').forEach(m => m.remove());
-    document.body.insertAdjacentHTML('beforeend', confirmModalHtml);
-    const modalEl = document.getElementById(confirmModalId);
-    const modal = new bootstrap.Modal(modalEl);
-    document.getElementById(`confirmOkBtn_${confirmModalId}`).onclick = function() {
-      modalEl.addEventListener('hidden.bs.modal', function () {
-          onConfirm();
-      }, { once: true });
-      modal.hide();
-  };
-    modalEl.addEventListener('hidden.bs.modal', function() { modalEl.remove(); });
-    modal.show();
-  }
-
-  // ─── Approve with confirmation ─────────────────────────────────────────────
-  function confirmApprove(button) {
-    const id = button.getAttribute('data-id');
-    const row = button.closest('tr');
-    const name = row ? row.getAttribute('data-name') : '';
-    showConfirm(
-      `Approve the request from <strong>${name || 'this resident'}</strong>?`,
-      'Confirm Approve',
-      function() {
-        pollSuppressed = true;
-        fetch(`/requests-document/${id}/process`, { method: 'POST' })
-          .then(response => {
-            if (response.ok) {
-              showSuccess('Request approved successfully!');
-            } else {
-              showError('Failed to approve the request. Please try again.');
-            }
-          })
-          .catch(error => {
-            showError('Error approving request: ' + error.message);
-          });
-      }
-    );
-  }
-
-  // ─── Archive with confirmation ─────────────────────────────────────────────
-  function confirmArchive(button) {
-    const id = button.getAttribute('data-id');
-    const row = button.closest('tr');
-    const name = row ? row.getAttribute('data-name') : '';
-    showConfirm(
-      `Archive the request from <strong>${name || 'this resident'}</strong>? This action cannot be undone easily.`,
-      'Confirm Archive',
-      function() {
-        pollSuppressed = true;
-        fetch(`/requests-document/${id}/archive`, { method: 'POST' })
-          .then(response => {
-            if (response.ok) {
-              showSuccess('Request archived successfully!');
-            } else {
-              showError('Failed to archive the request. Please try again.');
-            }
-          })
-          .catch(error => {
-            showError('Error archiving request: ' + error.message);
-          });
-      }
-    );
-  }
-
-  // ─── Tab switching with filter reset ──────────────────────────────────────
-  function switchTab(el, tab) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    el.classList.add('active');
-    document.querySelectorAll('.panel-inner').forEach(p => p.classList.add('d-none'));
-    document.getElementById('tab-' + tab).classList.remove('d-none');
-    document.getElementById('request-search').value = '';
-    document.getElementById('filter-type').value = 'all';
-    applyFilters();
-  }
-
-  // ─── Apply Filters (fixed to work with all tabs) ──────────────────────────
-  function applyFilters() {
-    const searchValue = document.getElementById('request-search').value.toLowerCase().trim();
-    const filterType = document.getElementById('filter-type').value;
-    const activePanel = document.querySelector('.panel-inner:not(.d-none)');
-    if (!activePanel) return;
-    
-    const rows = activePanel.querySelectorAll('tbody tr');
-    let visibleCount = 0;
-    
-    rows.forEach(row => {
-      // Skip "no data" row
-      if (row.querySelector('td[colspan]')) {
-        row.style.display = '';
-        return;
-      }
-      
-      // Get all cell text
-      const allText = row.textContent.toLowerCase();
-      
-      // Check search match
-      let matchesSearch = searchValue === '' || allText.includes(searchValue);
-      
-      // Check type filter
-      let matchesFilter = filterType === 'all';
-      if (!matchesFilter && filterType !== 'all') {
-        const filterValue = filterType.toLowerCase().replace(/_/g, ' ');
-        // Get the request type from the 6th column (index 5)
-        const typeCell = row.querySelectorAll('td')[5];
-        const typeText = typeCell ? typeCell.textContent.toLowerCase() : '';
-        matchesFilter = typeText.includes(filterValue) || typeText.includes(filterType.toLowerCase());
-      }
-      
-      if (matchesSearch && matchesFilter) {
-        row.style.display = '';
-        visibleCount++;
-      } else {
-        row.style.display = 'none';
-      }
-    });
-    
-    // Update or hide "no data" row
-    const noDataRow = activePanel.querySelector('tbody tr td[colspan]')?.parentElement;
-    if (noDataRow) {
-      const td = noDataRow.querySelector('td');
-      if (visibleCount === 0 && searchValue !== '') {
-        noDataRow.style.display = '';
-        if (td) td.textContent = 'No matching requests found';
-      } else if (visibleCount === 0 && filterType !== 'all') {
-        noDataRow.style.display = '';
-        if (td) td.textContent = `No ${filterType.replace(/_/g, ' ')} requests found`;
-      } else if (visibleCount === 0) {
-        noDataRow.style.display = '';
-        if (td) td.textContent = 'No requests found';
-      } else {
-        noDataRow.style.display = 'none';
-      }
-    }
-  }
-
-  // ─── Event listeners for filter ──────────────────────────────────────────
-  const searchInput = document.getElementById('request-search');
-  if (searchInput) searchInput.addEventListener('input', applyFilters);
-  
-  const filterSelect = document.getElementById('filter-type');
-  if (filterSelect) filterSelect.addEventListener('change', applyFilters);
-
-  function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  function isValidUrl(val) {
-    return val && val.trim() !== '' && val !== 'null' && val !== 'undefined';
-  }
-
-  // ─── View File Modal ───────────────────────────────────────────────────────
-  function openViewFileModal(row) {
-      const name      = row.getAttribute('data-name')      || '—';
-      const validId   = row.getAttribute('data-validid')   || '';
-      const photo     = row.getAttribute('data-photo')     || '';
-      const residency = row.getAttribute('data-residency') || '';
-      const type      = row.getAttribute('data-type')      || '';
-      const purpose   = row.getAttribute('data-purpose')   || '—';
-
-      document.getElementById('vf-name').textContent = name;
-      document.getElementById('vf-doctype').textContent = type.replace(/_/g, ' ').toUpperCase();
-      document.getElementById('vf-purpose-label').textContent = 'Purpose:';
-      document.getElementById('vf-purpose-text').textContent = purpose;
-
-      const photoWrap = document.getElementById('vf-photo-wrap');
-      if (isValidUrl(photo)) {
-          photoWrap.innerHTML = `<img src="${escapeHtml(photo)}" alt="2x2 Photo" onclick="enlargeImg('${escapeHtml(photo)}')">`;
-      } else {
-          photoWrap.innerHTML = '<span style="color:#aaa; font-size:13px;">No 2x2 photo uploaded</span>';
-      }
-
-      const idWrap = document.getElementById('vf-validid-wrap');
-      if (isValidUrl(validId)) {
-          idWrap.innerHTML = `<img src="${escapeHtml(validId)}" alt="Valid ID" onclick="enlargeImg('${escapeHtml(validId)}')">`;
-      } else {
-          idWrap.innerHTML = '<span style="color:#aaa; font-size:13px;">No ID uploaded</span>';
-      }
-
-      const residencyWrap = document.getElementById('vf-residency-wrap');
-      if (isValidUrl(residency)) {
-          residencyWrap.innerHTML = `<img src="${escapeHtml(residency)}" alt="Residency Proof" onclick="enlargeImg('${escapeHtml(residency)}')">`;
-      } else {
-          residencyWrap.innerHTML = '<span style="color:#aaa; font-size:13px;">No residency proof uploaded</span>';
-      }
-
-      document.getElementById('viewFileModalOverlay').style.display = 'block';
-  }
-
-  function closeViewFileModal() {
-    document.getElementById('viewFileModalOverlay').style.display = 'none';
-  }
-
-  function enlargeImg(src) {
-    document.getElementById('imgEnlargeSrc').src = src;
-    document.getElementById('imgEnlargeOverlay').style.display = 'block';
-  }
-
-  document.getElementById('viewFileModalOverlay').addEventListener('click', function(e) {
-    if (e.target === this) closeViewFileModal();
-  });
-
-  // ─── Upload document image to Supabase ────────────────────────────────────
-  async function uploadReadiedDocumentToSupabase(imageData, docId) {
-    if (!supabaseClient) throw new Error('Supabase client not initialized');
-    
-    const base64Data = imageData.split(',')[1];
-    const byteCharacters = atob(base64Data);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'image/png' });
-    
-    const timestamp = Date.now();
-    const fileName = `readied_document_${docId}_${timestamp}.png`;
-    const filePath = `readied_documents/${fileName}`;
-    
-    const { data: uploadData, error: uploadError } = await supabaseClient.storage
-      .from('resident-documents')
-      .upload(filePath, blob, { contentType: 'image/png', upsert: true });
-    
-    if (uploadError) throw uploadError;
-    
-    const { data: urlData } = supabaseClient.storage.from('resident-documents').getPublicUrl(uploadData.path);
-    return urlData.publicUrl;
-  }
-
-  // ─── Save field edits to DB ────────────────────────────────────────────────
-  async function saveFieldEdits() {
-    if (!currentDocId) return;
-
-    const area = document.getElementById('printable-area');
-    const params = new URLSearchParams();
-    const docType = currentDocType.toLowerCase();
-
-    function addParam(key, value) {
-      if (value !== undefined && value !== null && value !== '') {
-        params.set(key, value);
-      }
-    }
-
-    if (docType.includes('barangay id')) {
-      const allFields = area.querySelectorAll('.doc-field');
-      let firstName = '', middleName = '', lastName = '';
-      
-      allFields.forEach(field => {
-        const label = field.querySelector('label');
-        const input = field.querySelector('input:not([readonly])');
-        if (!label || !input) return;
-        
-        const labelText = label.textContent.toLowerCase();
-        const value = input.value;
-        
-        if (labelText.includes('first name')) firstName = value;
-        else if (labelText.includes('middle name')) middleName = value;
-        else if (labelText.includes('last name')) lastName = value;
-        else if (labelText.includes('address')) addParam('address', value);
-        else if (labelText.includes('birthdate')) addParam('birthdate', value);
-        else if (labelText.includes('contact no')) addParam('contactNumber', value);
-      });
-      
-      const fullName = [firstName, middleName, lastName].filter(p => p && p.trim()).join(' ');
-      if (fullName) addParam('fullName', fullName);
-      
-      const emergencySection = area.querySelector('[style*="e74c3c"]');
-      if (emergencySection) {
-        const emergencyInputs = emergencySection.querySelectorAll('.doc-field input:not([readonly])');
-        if (emergencyInputs[0]) addParam('emergencyName', emergencyInputs[0].value);
-        if (emergencyInputs[1]) addParam('emergencyAddress', emergencyInputs[1].value);
-        if (emergencyInputs[2]) addParam('emergencyContact', emergencyInputs[2].value);
-      }
-    } 
-    else if (docType.includes('barangay indigency')) {
-      const allInputs = area.querySelectorAll('input:not([readonly])');
-      const allSelects = area.querySelectorAll('select:not([readonly])');
-      
-      if (allInputs[0]) addParam('fullName', allInputs[0].value);
-      if (allInputs[1]) addParam('address', allInputs[1].value);
-      if (allInputs[2]) addParam('docPurpose', allInputs[2].value);
-      if (allInputs[3]) addParam('docIssuedDay', allInputs[3].value);
-      if (allInputs[4]) addParam('docIssuedMonthYear', allInputs[4].value);
-      if (allInputs[5]) addParam('docCaptainName', allInputs[5].value);
-      if (allInputs[6]) addParam('docNbNote', allInputs[6].value);
-      
-      if (allSelects[0]) addParam('docGender', allSelects[0].value);
-      if (allSelects[1]) addParam('docCivilStatus', allSelects[1].value);
-    } 
-    else if (docType.includes('barangay clearance')) {
-      const allInputs = area.querySelectorAll('input:not([readonly])');
-      const allSelects = area.querySelectorAll('select:not([readonly])');
-      
-      if (allInputs[0]) addParam('fullName', allInputs[0].value);
-      if (allInputs[1]) addParam('docAge', allInputs[1].value);
-      if (allInputs[2]) addParam('address', allInputs[2].value);
-      if (allInputs[3]) addParam('docIssuedDay', allInputs[3].value);
-      if (allInputs[4]) addParam('docIssuedMonthYear', allInputs[4].value);
-      if (allInputs[5]) addParam('docCaptainName', allInputs[5].value);
-      if (allInputs[6]) addParam('docOrNumber', allInputs[6].value);
-      if (allInputs[7]) addParam('docDateIssued', allInputs[7].value);
-      
-      if (allSelects[0]) addParam('docCivilStatus', allSelects[0].value);
-    }
-
-    console.log('Saving params:', Object.fromEntries(params));
-    
-    try {
-      const response = await fetch(`/requests-document/${currentDocId}/save-field-edits`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString()
-      });
-      const result = await response.json();
-      if (result.success) {
-        updateRowDataAttributes(currentDocId, params);
-        console.log('Save successful!');
-      } else {
-        console.error('Save failed:', result.message);
-      }
-    } catch (e) {
-      console.error('Error saving field edits:', e);
-    }
-  }
-
-  function updateRowDataAttributes(docId, params) {
-    const row = document.querySelector(`tr[data-id="${docId}"]`);
-    if (!row) return;
-    
-    if (params.has('fullName')) { 
-      row.setAttribute('data-name', params.get('fullName')); 
-      row.cells[0].textContent = params.get('fullName'); 
-    }
-    if (params.has('address')) row.setAttribute('data-address', params.get('address'));
-    if (params.has('birthdate')) row.setAttribute('data-birthdate', params.get('birthdate'));
-    if (params.has('contactNumber')) { 
-      row.setAttribute('data-contact', params.get('contactNumber')); 
-      row.cells[1].textContent = params.get('contactNumber'); 
-    }
-    if (params.has('emergencyName')) row.setAttribute('data-emergency-name', params.get('emergencyName'));
-    if (params.has('emergencyAddress')) row.setAttribute('data-emergency-address', params.get('emergencyAddress'));
-    if (params.has('emergencyContact')) row.setAttribute('data-emergency-contact', params.get('emergencyContact'));
-    if (params.has('docAge')) row.setAttribute('data-doc-age', params.get('docAge'));
-    if (params.has('docCivilStatus')) row.setAttribute('data-doc-civil-status', params.get('docCivilStatus'));
-    if (params.has('docGender')) row.setAttribute('data-doc-gender', params.get('docGender'));
-    if (params.has('docIssuedDay')) row.setAttribute('data-doc-issued-day', params.get('docIssuedDay'));
-    if (params.has('docIssuedMonthYear')) row.setAttribute('data-doc-issued-month-year', params.get('docIssuedMonthYear'));
-    if (params.has('docCaptainName')) row.setAttribute('data-doc-captain-name', params.get('docCaptainName'));
-    if (params.has('docOrNumber')) row.setAttribute('data-doc-or-number', params.get('docOrNumber'));
-    if (params.has('docDateIssued')) row.setAttribute('data-doc-date-issued', params.get('docDateIssued'));
-    if (params.has('docPurpose')) row.setAttribute('data-doc-purpose', params.get('docPurpose'));
-    if (params.has('docNbNote')) row.setAttribute('data-doc-nb-note', params.get('docNbNote'));
-  }
-
-  // ─── Save document image to Supabase (Save button) ────────────────────────
-  async function saveProcessedDocument() {
-    if (!currentDocId) return;
-
-    const element = document.getElementById('printable-area').firstElementChild;
-    if (!element) return;
-
-    const saveBtn = document.getElementById('saveDocumentBtn');
-    if (saveBtn) { saveBtn.innerHTML = '<span class="loading-spinner"></span> Saving...'; saveBtn.disabled = true; }
-
-    try {
-      const canvas = await html2canvas(element, { scale: 3, backgroundColor: '#ffffff', logging: false, useCORS: true, allowTaint: false });
-      const imageData = canvas.toDataURL('image/png');
-      const uploadedUrl = await uploadReadiedDocumentToSupabase(imageData, currentDocId);
-
-      const response = await fetch(`/requests-document/${currentDocId}/save-document-only`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `documentUrl=${encodeURIComponent(uploadedUrl)}`
-      });
-      const result = await response.json();
-      if (!result.success) throw new Error(result.message || 'Failed to save document');
-
-      showSuccess('Document saved successfully!');
-
-    } catch (error) {
-      console.error('Error saving document:', error);
-      showConfirm(`Error saving document: ${error.message}`, 'Error', function() {});
-    } finally {
-      if (saveBtn) { saveBtn.innerHTML = '<i class="bi bi-save"></i> Save Document'; saveBtn.disabled = false; }
-    }
-  }
-
-  // ─── Generate document HTML (used by markAsReady) ─────────────────────────
-  function generateDocumentHTML(data, readOnly) {
-    const safeFullName       = escapeHtml(data.name);
-    const safeContactNumber  = escapeHtml(data.phone);
-    const safeAddress        = escapeHtml(data.address);
-    const safeEmergencyName  = escapeHtml(data.emergencyName);
-    const safeEmergencyAddr  = escapeHtml(data.emergencyAddress);
-    const safeEmergencyPhone = escapeHtml(data.emergencyContact);
-    const photoUrl           = isValidUrl(data.photo) ? data.photo : '';
-    const birthdate          = escapeHtml(data.birthdate);
-    const documentType       = data.type.trim();
-    const ro  = readOnly ? 'readonly' : '';
-    const wm  = readOnly ? 'with-watermark' : '';
-    const isClearance = documentType.replace(/\s+/g, '_').toLowerCase().includes('barangay_clearance');
-    const today = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
-    
-    const docAge = escapeHtml(data.docAge || '');
-    const docCivilStatus = escapeHtml(data.docCivilStatus || '');
-    const docGender = escapeHtml(data.docGender || '');
-    const docIssuedDay = escapeHtml(data.docIssuedDay || '');
-    const docIssuedMonthYear = escapeHtml(data.docIssuedMonthYear || '');
-    const docCaptainName = escapeHtml(data.docCaptainName || '');
-    const docOrNumber = escapeHtml(data.docOrNumber || '');
-    const docDateIssued = escapeHtml(data.docDateIssued || '');
-    const docPurpose = escapeHtml(data.docPurpose || data.purpose || '');
-    const docNbNote = escapeHtml(data.docNbNote || '');
-    const docResCertNo = escapeHtml(data.docResCertNo || '');
-    const docIssuedAt = escapeHtml(data.docIssuedAt || '');
-    const docIssuedOn = escapeHtml(data.docIssuedOn || '');
-    
-    // Extract name parts from full_name for Barangay ID template
-    const nameParts = data.name.trim().split(/\s+/);
-    const firstName = escapeHtml(nameParts[0] || '');
-    const middleName = escapeHtml(nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '');
-    const lastName = escapeHtml(nameParts.length > 1 ? nameParts[nameParts.length - 1] : '');
-
-    if (documentType.toLowerCase().includes('barangay indigency')) {
-      let genderHtml = `<select ${ro} style="border:none;border-bottom:1px solid #000;font-size:13px;font-family:'Times New Roman',serif;background:transparent;padding:0 2px;">`;
-      genderHtml += `<option value="">female/male</option>`;
-      ['female', 'male'].forEach(opt => {
-        genderHtml += `<option value="${opt}" ${docGender === opt ? 'selected' : ''}>${opt}</option>`;
-      });
-      genderHtml += `</select>`;
-      
-      let civilHtml = `<select ${ro} style="border:none;border-bottom:1px solid #000;font-size:13px;font-family:'Times New Roman',serif;background:transparent;padding:0 2px;">`;
-      civilHtml += `<option value="">civil status</option>`;
-      ['single', 'married', 'widow', 'widower', 'separated'].forEach(opt => {
-        civilHtml += `<option value="${opt}" ${docCivilStatus === opt ? 'selected' : ''}>${opt}</option>`;
-      });
-      civilHtml += `</select>`;
-      
-      return `<div class="doc-template ${wm}" style="font-family:'Times New Roman',serif; width:210mm; min-height:297mm; margin:0 auto; padding:30px 55px 50px 55px; box-sizing:border-box; background:white; color:#000; position:relative; overflow:hidden;">
-        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:320px; height:320px; pointer-events:none; z-index:0;">
-          <img src="/images/sansebastianlogo.png" style="width:100%; height:100%; object-fit:contain; opacity:0.08;" alt="San Sebastian Seal" onerror="this.style.display='none'"/>
-        </div>
-        <div style="display:flex; align-items:center; gap:0; margin-bottom:6px; position:relative; z-index:1;">
-          <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-            <img src="/images/sansebastianlogo.png" style="width:68px;height:68px;object-fit:contain;" alt="San Sebastian Logo" onerror="this.style.display='none'"/>
-            <img src="/images/bayanngkawitlogo.png" style="width:68px;height:68px;object-fit:contain;" alt="Bayan ng Kawit Logo" onerror="this.style.display='none'"/>
-            <img src="/images/Bagong_Pilipinas_logo.png" style="width:68px;height:68px;object-fit:contain;" alt="Bagong Pilipinas Logo" onerror="this.style.display='none'"/>
-          </div>
-          <div style="flex:1; text-align:right; font-size:12px; line-height:1.6; font-family:Arial,sans-serif; font-weight:bold; text-transform:uppercase;">
-            <div>Republic of the Philippines</div>
-            <div>Province of Cavite</div>
-            <div>Municipality of Kawit</div>
-            <div style="font-size:14px;">BARANGAY SAN SEBASTIAN</div>
-            <div style="font-size:10px; font-weight:normal; text-transform:none;">CELLPHONE NO.: 0945-577-9766</div>
-          </div>
-        </div>
-        <div style="display:flex; height:6px; margin-bottom:2px; position:relative; z-index:1;">
-          <div style="flex:1; background:#0038A8;"></div>
-          <div style="flex:1; background:#CE1126;"></div>
-        </div>
-        <div style="height:4px; background:#FCD116; position:relative; z-index:1;"></div>
-        <div style="height:40px;"></div>
-        <div style="text-align:center; margin-bottom:28px; position:relative; z-index:1;">
-          <span style="font-size:22px; font-weight:bold; text-decoration:underline; letter-spacing:1px; font-family:'Times New Roman',serif;">BARANGAY INDIGENCY</span>
-        </div>
-        <p style="font-size:13px; font-weight:bold; margin-bottom:22px; position:relative; z-index:1;">To Whom It May Concern,</p>
-        <p style="font-size:13px; line-height:2.3; text-align:justify; margin-bottom:18px; text-indent:48px; position:relative; z-index:1;">
-          This is to certify that
-          <strong><input type="text" value="${safeFullName}" ${ro} style="width:200px;display:inline;border:none;border-bottom:1.5px solid #000;font-size:13px;font-weight:bold;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/></strong>
-          is a resident of
-          <input type="text" value="${safeAddress}" ${ro} placeholder="complete address" style="width:260px;display:inline;border:none;border-bottom:1px solid #000;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/>. He/She is personally known to the undersigned to be a member of an indigent family.
-        </p>
-        <p style="font-size:13px; line-height:2.3; text-align:justify; margin-bottom:18px; text-indent:48px; position:relative; z-index:1;">
-          This certification is issued upon request of
-          <strong><input type="text" value="${safeFullName}" ${ro} style="width:200px;display:inline;border:none;border-bottom:1.5px solid #000;font-size:13px;font-weight:bold;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/></strong>
-          for <span style="text-decoration:underline;"><strong>
-          <input type="text" value="${docPurpose}" ${ro} placeholder="Medical Assistance/Financial Assistance" style="width:300px;display:inline;border:none;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;font-weight:bold;text-decoration:underline;"/></strong></span>.
-        </p>
-        <p style="font-size:13px; line-height:2.3; text-align:justify; text-indent:48px; position:relative; z-index:1;">
-          Issued on this
-          <input type="text" value="${docIssuedDay}" ${ro} placeholder="__" style="width:28px;display:inline;border:none;border-bottom:1px solid #000;font-size:13px;padding:0 2px;text-align:center;font-family:'Times New Roman',serif;background:transparent;"/><sup>th</sup>
-          day of
-          <input type="text" value="${docIssuedMonthYear}" ${ro} placeholder="Month, Year" style="width:130px;display:inline;border:none;border-bottom:1px solid #000;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/>
-          at <strong>Brgy. San Sebastian Kawit, Cavite</strong>.
-        </p>
-        <div style="text-align:right; margin-top:70px; margin-right:30px; position:relative; z-index:1;">
-          <div style="display:inline-block; text-align:center;">
-            <div style="height:56px;"></div>
-            <div style="border-top:1.5px solid #000; padding-top:5px; min-width:240px;">
-              <input type="text" value="HON. DAVE C. LONTOC" ${ro} placeholder="Punong Barangay Full Name" style="border:none;font-size:13px;font-weight:bold;text-align:center;width:240px;font-family:'Times New Roman',serif;background:transparent;"/>
-            </div>
-            <div style="font-size:13px; font-weight:bold; margin-top:2px; text-transform:uppercase;">Punong Barangay</div>
-          </div>
-        </div>
-        <div style="margin-top:40px; font-size:10px; font-style:italic; color:#555; text-align:center; position:relative; z-index:1;">
-          NOTE: DO NOT ACCEPT WITHOUT OFFICIAL BARANGAY SEAL.
-        </div>
-      </div>`;
-    }
-    else if (isClearance) {
-      let civilHtml = `<select ${ro} style="border:none;border-bottom:1px solid #333;font-size:13px;">`;
-      civilHtml += `<option value="">Civil Status</option>`;
-      ['Single', 'Married', 'Widowed', 'Separated'].forEach(opt => {
-        civilHtml += `<option value="${opt}" ${docCivilStatus === opt ? 'selected' : ''}>${opt}</option>`;
-      });
-      civilHtml += `</select>`;
-      
-      return `<div class="doc-template ${wm}" style="font-family:'Times New Roman',serif; width:210mm; min-height:297mm; margin:0 auto; padding:30px 55px 50px 55px; box-sizing:border-box; background:white; color:#000; position:relative; overflow:hidden;">
-        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:320px; height:320px; pointer-events:none; z-index:0;">
-          <img src="/images/sansebastianlogo.png" style="width:100%; height:100%; object-fit:contain; opacity:0.08;" alt="San Sebastian Seal" onerror="this.style.display='none'"/>
-        </div>
-        <div style="display:flex; align-items:center; gap:0; margin-bottom:6px; position:relative; z-index:1;">
-          <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-            <img src="/images/sansebastianlogo.png" style="width:68px;height:68px;object-fit:contain;" alt="San Sebastian Logo" onerror="this.style.display='none'"/>
-            <img src="/images/bayanngkawitlogo.png" style="width:68px;height:68px;object-fit:contain;" alt="Bayan ng Kawit Logo" onerror="this.style.display='none'"/>
-            <img src="/images/Bagong_Pilipinas_logo.png" style="width:68px;height:68px;object-fit:contain;" alt="Bagong Pilipinas Logo" onerror="this.style.display='none'"/>
-          </div>
-          <div style="flex:1; text-align:right; font-size:12px; line-height:1.6; font-family:Arial,sans-serif; font-weight:bold; text-transform:uppercase;">
-            <div>Republic of the Philippines</div>
-            <div>Province of Cavite</div>
-            <div>Municipality of Kawit</div>
-            <div style="font-size:14px;">BARANGAY SAN SEBASTIAN</div>
-            <div style="font-size:10px; font-weight:normal; text-transform:none;">CELLPHONE NO.: 0945-577-9766</div>
-          </div>
-        </div>
-        <div style="display:flex; height:6px; margin-bottom:2px; position:relative; z-index:1;">
-          <div style="flex:1; background:#0038A8;"></div>
-          <div style="flex:1; background:#CE1126;"></div>
-        </div>
-        <div style="height:4px; background:#FCD116; position:relative; z-index:1;"></div>
-        <div style="height:40px;"></div>
-        <div style="text-align:center; margin-bottom:28px; position:relative; z-index:1;">
-          <span style="font-size:22px; font-weight:bold; text-decoration:underline; letter-spacing:1px; font-family:'Times New Roman',serif;">BARANGAY CLEARANCE</span>
-        </div>
-        <p style="font-size:13px; font-weight:bold; margin-bottom:22px; position:relative; z-index:1;">TO WHOM IT MAY CONCERN:</p>
-        <p style="font-size:13px; line-height:2.0; text-align:justify; margin-bottom:18px; text-indent:48px; position:relative; z-index:1;">
-          This is to certify that
-          <strong><input type="text" value="${safeFullName}" ${ro} style="width:220px;display:inline;border:none;border-bottom:1.5px solid #000;font-size:13px;font-weight:bold;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/></strong>
-          is a resident of
-          <input type="text" value="${safeAddress}" ${ro} placeholder="complete address" style="width:300px;display:inline;border:none;border-bottom:1px solid #000;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/>.
-          He/She is personally known to the undersigned to be a peaceful and law-abiding citizen and to the best of my knowledge and belief he/she has never been convicted to any crime or misdemeanor.
-        </p>
-        <p style="font-size:13px; line-height:2.0; text-align:justify; margin-bottom:18px; text-indent:48px; position:relative; z-index:1;">
-          This certification is issued for <span style="text-decoration:underline;font-weight:bold;">
-          <input type="text" value="${docPurpose}" ${ro} placeholder="state purpose here" style="width:300px;display:inline;border:none;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;font-weight:bold;"/></span>.
-        </p>
-        <p style="font-size:13px; line-height:2.0; text-align:justify; text-indent:48px; position:relative; z-index:1;">
-          Issued this
-          <input type="text" value="${docIssuedDay}" ${ro} placeholder="__" style="width:28px;display:inline;border:none;border-bottom:1px solid #000;font-size:13px;padding:0 2px;text-align:center;font-family:'Times New Roman',serif;background:transparent;"/><sup>th</sup>
-          day of
-          <input type="text" value="${docIssuedMonthYear}" ${ro} placeholder="Month, Year" style="width:130px;display:inline;border:none;border-bottom:1px solid #000;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/>
-          at <strong>Brgy. San Sebastian Kawit, Cavite.</strong>
-        </p>
-        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:70px; position:relative; z-index:1;">
-          <div style="text-align:left;">
-            <div style="border-top:1.5px solid #000; padding-top:5px; min-width:200px; margin-bottom:4px;"></div>
-            <div style="font-size:12px; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;">Applicant's Signature</div>
-            <div style="margin-top:18px; font-size:12px; line-height:2.2;">
-              <div>Res. Cert. No. <input type="text" value="${docResCertNo || ''}" ${ro} style="width:140px;border:none;border-bottom:1px solid #aaa;font-size:12px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/></div>
-              <div>Issued at: <input type="text" value="${docIssuedAt || ''}" ${ro} style="width:150px;border:none;border-bottom:1px solid #aaa;font-size:12px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/></div>
-              <div>Issued on: <input type="text" value="${docIssuedOn || ''}" ${ro} style="width:150px;border:none;border-bottom:1px solid #aaa;font-size:12px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/></div>
-            </div>
-          </div>
-          <div style="text-align:center;">
-            <div style="height:56px;"></div>
-            <div style="border-top:1.5px solid #000; padding-top:5px; min-width:240px;">
-              <input type="text" value="HON. DAVE C. LONTOC" ${ro} placeholder="Punong Barangay Full Name" style="border:none;font-size:13px;font-weight:bold;text-align:center;width:240px;font-family:'Times New Roman',serif;background:transparent;"/>
-            </div>
-            <div style="font-size:13px; font-weight:bold; margin-top:2px; text-transform:uppercase;">Punong Barangay</div>
-            <div style="font-size:10px; font-style:italic; color:#555; margin-top:4px;">NOTE: DO NOT ACCEPT WITHOUT OFFICIAL BARANGAY SEAL.</div>
-          </div>
-        </div>
-      </div>`;
-    }
-    else {
-      const hasPhoto  = isValidUrl(photoUrl);
-
-      return `<div class="doc-template ${wm}" style="font-family:Arial,sans-serif; width:340px; margin:0 auto; border-radius:12px; overflow:hidden; box-shadow:0 4px 18px rgba(0,0,0,0.18);">
-        <div style="background:linear-gradient(135deg,#1a3a8c 0%,#2255b8 60%,#1a6eb5 100%); padding:10px 12px 8px 12px; position:relative; overflow:hidden;">
-          <div style="position:absolute;top:0;right:0;width:120px;height:100%;background:linear-gradient(135deg,rgba(206,17,38,0.7),rgba(206,17,38,0.3));clip-path:polygon(40% 0,100% 0,100% 100%,0% 100%);"></div>
-          <div style="position:absolute;top:0;right:0;width:80px;height:100%;background:linear-gradient(135deg,rgba(255,255,255,0.15),rgba(255,255,255,0.05));clip-path:polygon(60% 0,100% 0,100% 100%,20% 100%);"></div>
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;position:relative;z-index:2;">
-            <img src="/images/sansebastianlogo.png" style="width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4));" onerror="this.style.display='none'"/>
-            <img src="/images/kawit.jpg" style="width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4));" onerror="this.style.display='none'"/>
-            <div style="flex:1;text-align:center;">
-              <div style="font-size:7px;color:rgba(255,255,255,0.85);letter-spacing:0.5px;">REPUBLIC OF THE PHILIPPINES</div>
-              <div style="font-size:7px;color:rgba(255,255,255,0.85);">PROVINCE OF CAVITE</div>
-              <div style="font-size:7px;color:rgba(255,255,255,0.85);">MUNICIPALITY OF KAWIT</div>
-              <div style="font-size:11px;font-weight:bold;color:#fff;letter-spacing:0.5px;line-height:1.3;">BARANGAY SAN SEBASTIAN</div>
-              <div style="font-size:7px;color:rgba(255,255,255,0.75);">OFFICE OF THE SANGGUNIANG BARANGAY</div>
-              <div style="font-size:7px;color:rgba(255,255,255,0.75);">Cel: 0945-577-9766</div>
-            </div>
-            <img src="/images/brgy.png" style="width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4));" onerror="this.style.display='none'"/>
-          </div>
-          <div style="display:flex;height:4px;border-radius:2px;overflow:hidden;margin-top:4px;position:relative;z-index:2;">
-            <div style="flex:1;background:#0038A8;"></div>
-            <div style="flex:1;background:#CE1126;"></div>
-            <div style="flex:2;background:#FCD116;"></div>
-          </div>
-        </div>
-        <div style="background:#fff;padding:10px 12px;">
-          <div style="font-size:8px;font-weight:bold;color:#333;margin-bottom:8px;letter-spacing:0.5px;">CONTROL NO: <input type="text" value="${docOrNumber}" ${ro} style="border:none;border-bottom:1px solid #aaa;font-size:8px;width:80px;padding:0 2px;font-family:Arial,sans-serif;background:transparent;font-weight:bold;"/></div>
-          <div style="display:flex;gap:10px;align-items:flex-start;">
-            <div style="flex-shrink:0;width:72px;height:88px;border:1.5px solid #aaa;background:#f0f0f0;display:flex;align-items:center;justify-content:center;overflow:hidden;">
-              ${hasPhoto ? `<img src="${escapeHtml(photoUrl)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
-              <div style="text-align:center;color:#bbb;display:${hasPhoto ? 'none' : 'flex'};flex-direction:column;align-items:center;">
-                <i class="bi bi-person" style="font-size:32px;"></i>
-                <div style="font-size:8px;">Photo</div>
-              </div>
-            </div>
-            <div style="flex:1;font-size:9px;color:#111;line-height:1.9;">
-              <div style="font-size:11px;font-weight:bold;color:#111;margin-bottom:4px;border-bottom:1px solid #ddd;padding-bottom:2px;">${safeFullName}</div>
-              <div><strong>ADDRESS:</strong> <input type="text" value="${safeAddress}" ${ro} style="border:none;border-bottom:1px solid #ccc;font-size:9px;width:160px;padding:0 2px;font-family:Arial,sans-serif;background:transparent;"/></div>
-              <div><strong>BIRTHDATE:</strong> <input type="text" value="${birthdate}" ${ro} style="border:none;border-bottom:1px solid #ccc;font-size:9px;width:120px;padding:0 2px;font-family:Arial,sans-serif;background:transparent;"/></div>
-              <div><strong>CONTACT NO:</strong> <input type="text" value="${safeContactNumber}" ${ro} style="border:none;border-bottom:1px solid #ccc;font-size:9px;width:110px;padding:0 2px;font-family:Arial,sans-serif;background:transparent;"/></div>
-            </div>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px;">
-            <div style="text-align:center;">
-              <div style="width:120px;border-bottom:1px solid #333;min-height:28px;"></div>
-              <div style="font-size:7px;color:#555;margin-top:2px;text-transform:uppercase;letter-spacing:0.5px;">Holder's Signature</div>
-            </div>
-            <div style="text-align:center;">
-              <div style="height:28px;"></div>
-              <div style="border-top:1px solid #333;padding-top:2px;min-width:100px;">
-                <input type="text" value="${docCaptainName}" ${ro} style="border:none;font-size:8px;font-weight:bold;text-align:center;width:110px;font-family:Arial,sans-serif;background:transparent;"/>
-              </div>
-              <div style="font-size:7px;color:#555;text-transform:uppercase;">Barangay Chairman</div>
-            </div>
-          </div>
-        </div>
-        <div style="background:linear-gradient(90deg,#1a3a8c,#2255b8); padding:6px; text-align:center;">
-          <div style="font-size:10px;font-weight:bold;color:#fff;letter-spacing:2px;text-transform:uppercase;">BARANGAY IDENTIFICATION CARD</div>
-        </div>
-      </div>`;
-    }
-  }
-
-  // ─── Mark as Ready ─────────────────────────────────────────────────────────
-  async function markAsReady(button) {
-    const docId           = button.getAttribute('data-id');
-    const fullName        = button.getAttribute('data-name')              || '';
-    const contactNumber   = button.getAttribute('data-phone')             || '';
-    const documentType    = button.getAttribute('data-type')              || '';
-    const photoUrl        = button.getAttribute('data-photo')             || '';
-    const address         = button.getAttribute('data-address')           || '';
-    const birthdate       = button.getAttribute('data-birthdate')         || '';
-    const emergencyName   = button.getAttribute('data-emergency-name')    || '';
-    const emergencyAddress= button.getAttribute('data-emergency-address') || '';
-    const emergencyContact= button.getAttribute('data-emergency-contact') || '';
-    const purpose         = button.getAttribute('data-purpose')           || '';
-    
-    const docAge = button.getAttribute('data-doc-age') || '';
-    const docCivilStatus = button.getAttribute('data-doc-civil-status') || '';
-    const docGender = button.getAttribute('data-doc-gender') || '';
-    const docIssuedDay = button.getAttribute('data-doc-issued-day') || '';
-    const docIssuedMonthYear = button.getAttribute('data-doc-issued-month-year') || '';
-    const docCaptainName = button.getAttribute('data-doc-captain-name') || '';
-    const docOrNumber = button.getAttribute('data-doc-or-number') || '';
-    const docDateIssued = button.getAttribute('data-doc-date-issued') || '';
-    const docPurpose = button.getAttribute('data-doc-purpose') || purpose;
-    const docNbNote = button.getAttribute('data-doc-nb-note') || '';
-
-    const tempData = { 
-      id: docId, name: fullName, phone: contactNumber, type: documentType, 
-      photo: photoUrl, address, birthdate, emergencyName, emergencyAddress, emergencyContact, purpose,
-      docAge, docCivilStatus, docGender, docIssuedDay, docIssuedMonthYear,
-      docCaptainName, docOrNumber, docDateIssued, docPurpose, docNbNote
-    };
-
-    let hiddenContainer = document.getElementById('hidden-capture-container');
-    if (!hiddenContainer) {
-      hiddenContainer = document.createElement('div');
-      hiddenContainer.id = 'hidden-capture-container';
-      hiddenContainer.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:1100px;z-index:-1;';
-      document.body.appendChild(hiddenContainer);
-    }
-
-    hiddenContainer.innerHTML = generateDocumentHTML(tempData, true);
-    await new Promise(resolve => setTimeout(resolve, 200));
-
-    const element = hiddenContainer.firstElementChild;
-    if (!element) { showSuccess('Could not generate document preview'); return; }
-
-    const originalText = button.innerHTML;
-    button.innerHTML = '<span class="loading-spinner"></span> Saving...';
-    button.disabled = true;
-    pollSuppressed = true;
-
-    try {
-      const canvas = await html2canvas(element, { scale: 3, backgroundColor: '#ffffff', logging: false, useCORS: true, allowTaint: false });
-      const imageData = canvas.toDataURL('image/png');
-      const uploadedUrl = await uploadReadiedDocumentToSupabase(imageData, docId);
-
-      const response = await fetch(`/requests-document/${docId}/save-readied-document`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `documentUrl=${encodeURIComponent(uploadedUrl)}`
-      });
-      const result = await response.json();
-      if (result.success) {
-        hiddenContainer.innerHTML = '';
-        showSuccess('Request marked as ready!');
-      } else {
-        throw new Error(result.message || 'Failed to save document');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      showError(`Error saving document: ${error.message}`);
-      hiddenContainer.innerHTML = '';
-      pollSuppressed = false;
-    } finally {
-      button.innerHTML = originalText;
-      button.disabled = false;
-    }
-  }
-
-  // ─── Open doc modal from row ───────────────────────────────────────────────
-  function openDocModalFromRow(button, readOnly) {
-    const row = button.closest('tr');
-    const data = {
-        id:               row.getAttribute('data-id')                || '',
-        name:             row.getAttribute('data-name')              || '',
-        phone:            row.getAttribute('data-contact')           || '',
-        type:             row.getAttribute('data-type')              || '',
-        photo:            row.getAttribute('data-photo')             || '',
-        address:          row.getAttribute('data-address')           || '',
-        birthdate:        row.getAttribute('data-birthdate')         || '',
-        emergencyName:    row.getAttribute('data-emergency-name')    || '',
-        emergencyAddress: row.getAttribute('data-emergency-address') || '',
-        emergencyContact: row.getAttribute('data-emergency-contact') || '',
-        purpose:          row.getAttribute('data-purpose')           || '',
-        docAge:             row.getAttribute('data-doc-age')              || '',
-        docCivilStatus:     row.getAttribute('data-doc-civil-status')     || '',
-        docGender:          row.getAttribute('data-doc-gender')           || '',
-        docIssuedDay:       row.getAttribute('data-doc-issued-day')       || '',
-        docIssuedMonthYear: row.getAttribute('data-doc-issued-month-year')|| '',
-        docCaptainName:     row.getAttribute('data-doc-captain-name')     || '',
-        docOrNumber:        row.getAttribute('data-doc-or-number')        || '',
-        docDateIssued:      row.getAttribute('data-doc-date-issued')      || '',
-        docPurpose:         row.getAttribute('data-doc-purpose')          || '',
-        docNbNote:          row.getAttribute('data-doc-nb-note')          || '',
-    };
-    renderDocModal(data, readOnly);
-  }
-
-  // ─── Render doc modal ──────────────────────────────────────────────────────
-  function renderDocModal(data, readOnly) {
-    currentDocId      = data.id;
-    currentIsReadOnly = readOnly;
-    currentDocType    = data.type.trim();
-
-    const docAge             = escapeHtml(data.docAge             || '');
-    const docCivilStatus     = escapeHtml(data.docCivilStatus     || '');
-    const docGender          = escapeHtml(data.docGender          || '');
-    const docIssuedDay       = escapeHtml(data.docIssuedDay       || '');
-    const docIssuedMonthYear = escapeHtml(data.docIssuedMonthYear || '');
-    const docCaptainName     = escapeHtml(data.docCaptainName     || '');
-    const docOrNumber        = escapeHtml(data.docOrNumber        || '');
-    const docDateIssued      = escapeHtml(data.docDateIssued      || '');
-    const docPurpose         = escapeHtml(data.docPurpose || data.purpose || '');
-    const docNbNote          = escapeHtml(data.docNbNote          || '');
-    const docResCertNo       = escapeHtml(data.docResCertNo       || '');
-    const docIssuedAt        = escapeHtml(data.docIssuedAt        || '');
-    const docIssuedOn        = escapeHtml(data.docIssuedOn        || '');
-
-    const safeFullName       = escapeHtml(data.name);
-    const safeContactNumber  = escapeHtml(data.phone);
-    const safeAddress        = escapeHtml(data.address);
-    const safeEmergencyName  = escapeHtml(data.emergencyName);
-    const safeEmergencyAddr  = escapeHtml(data.emergencyAddress);
-    const safeEmergencyPhone = escapeHtml(data.emergencyContact);
-    const photoUrl           = isValidUrl(data.photo) ? data.photo : '';
-    const birthdate          = escapeHtml(data.birthdate);
-    const today = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
-    const ro  = readOnly ? 'readonly' : '';
-    const wm  = readOnly ? 'with-watermark' : '';
-
-    // Extract name parts from full_name for Barangay ID template
-    const nameParts = data.name.trim().split(/\s+/);
-    const firstName = escapeHtml(nameParts[0] || '');
-    const middleName = escapeHtml(nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '');
-    const lastName = escapeHtml(nameParts.length > 1 ? nameParts[nameParts.length - 1] : '');
-
-    document.getElementById('docModalTitle').textContent = (readOnly ? 'View: ' : 'Process: ') + currentDocType.replace(/_/g, ' ');
-
-    const isClearance = currentDocType.replace(/\s+/g, '_').toLowerCase().includes('barangay_clearance');
-    const priceLabel  = document.getElementById('priceLabel');
-    priceLabel.style.display = (!readOnly && isClearance) ? 'flex' : 'none';
-
-    const saveBtn = document.getElementById('saveDocumentBtn');
-    if (saveBtn) saveBtn.style.display = !readOnly ? 'inline-flex' : 'none';
-
-    let html = '';
-
-    if (currentDocType.toLowerCase().includes('barangay indigency')) {
-      let genderHtml = `<select ${ro} style="border:none;border-bottom:1px solid #000;font-size:13px;font-family:'Times New Roman',serif;background:transparent;padding:0 2px;">`;
-      genderHtml += `<option value="">female/male</option>`;
-      ['female', 'male'].forEach(opt => {
-        genderHtml += `<option value="${opt}" ${docGender === opt ? 'selected' : ''}>${opt}</option>`;
-      });
-      genderHtml += `</select>`;
-      
-      let civilHtml = `<select ${ro} style="border:none;border-bottom:1px solid #000;font-size:13px;font-family:'Times New Roman',serif;background:transparent;padding:0 2px;">`;
-      civilHtml += `<option value="">civil status</option>`;
-      ['single', 'married', 'widow', 'widower', 'separated'].forEach(opt => {
-        civilHtml += `<option value="${opt}" ${docCivilStatus === opt ? 'selected' : ''}>${opt}</option>`;
-      });
-      civilHtml += `</select>`;
-      
-      html = `<div class="doc-template ${wm}" style="font-family:'Times New Roman',serif; width:210mm; min-height:297mm; margin:0 auto; padding:30px 55px 50px 55px; box-sizing:border-box; background:white; color:#000; position:relative; overflow:hidden;">
-        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:320px; height:320px; pointer-events:none; z-index:0;">
-          <img src="/images/sansebastianlogo.png" style="width:100%; height:100%; object-fit:contain; opacity:0.08;" alt="San Sebastian Seal" onerror="this.style.display='none'"/>
-        </div>
-        <div style="display:flex; align-items:center; gap:0; margin-bottom:6px; position:relative; z-index:1;">
-          <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-            <img src="/images/sansebastianlogo.png" style="width:68px;height:68px;object-fit:contain;" alt="San Sebastian Logo" onerror="this.style.display='none'"/>
-            <img src="/images/bayanngkawitlogo.png" style="width:68px;height:68px;object-fit:contain;" alt="Bayan ng Kawit Logo" onerror="this.style.display='none'"/>
-            <img src="/images/Bagong_Pilipinas_logo.png" style="width:68px;height:68px;object-fit:contain;" alt="Bagong Pilipinas Logo" onerror="this.style.display='none'"/>
-          </div>
-          <div style="flex:1; text-align:right; font-size:12px; line-height:1.6; font-family:Arial,sans-serif; font-weight:bold; text-transform:uppercase;">
-            <div>Republic of the Philippines</div>
-            <div>Province of Cavite</div>
-            <div>Municipality of Kawit</div>
-            <div style="font-size:14px;">BARANGAY SAN SEBASTIAN</div>
-            <div style="font-size:10px; font-weight:normal; text-transform:none;">CELLPHONE NO.: 0945-577-9766</div>
-          </div>
-        </div>
-        <div style="display:flex; height:6px; margin-bottom:2px; position:relative; z-index:1;">
-          <div style="flex:1; background:#0038A8;"></div>
-          <div style="flex:1; background:#CE1126;"></div>
-        </div>
-        <div style="height:4px; background:#FCD116; position:relative; z-index:1;"></div>
-        <div style="height:40px;"></div>
-        <div style="text-align:center; margin-bottom:28px; position:relative; z-index:1;">
-          <span style="font-size:22px; font-weight:bold; text-decoration:underline; letter-spacing:1px; font-family:'Times New Roman',serif;">BARANGAY INDIGENCY</span>
-        </div>
-        <p style="font-size:13px; font-weight:bold; margin-bottom:22px; position:relative; z-index:1;">To Whom It May Concern,</p>
-        <p style="font-size:13px; line-height:2.3; text-align:justify; margin-bottom:18px; text-indent:48px; position:relative; z-index:1;">
-          This is to certify that
-          <strong><input type="text" value="${safeFullName}" ${ro} style="width:200px;display:inline;border:none;border-bottom:1.5px solid #000;font-size:13px;font-weight:bold;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/></strong>
-          is a resident of
-          <input type="text" value="${safeAddress}" ${ro} placeholder="complete address" style="width:260px;display:inline;border:none;border-bottom:1px solid #000;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/>. He/She is personally known to the undersigned to be a member of an indigent family.
-        </p>
-        <p style="font-size:13px; line-height:2.3; text-align:justify; margin-bottom:18px; text-indent:48px; position:relative; z-index:1;">
-          This certification is issued upon request of
-          <strong><input type="text" value="${safeFullName}" ${ro} style="width:200px;display:inline;border:none;border-bottom:1.5px solid #000;font-size:13px;font-weight:bold;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/></strong>
-          for <span style="text-decoration:underline;"><strong>
-          <input type="text" value="${docPurpose}" ${ro} placeholder="Medical Assistance/Financial Assistance" style="width:300px;display:inline;border:none;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;font-weight:bold;text-decoration:underline;"/></strong></span>.
-        </p>
-        <p style="font-size:13px; line-height:2.3; text-align:justify; text-indent:48px; position:relative; z-index:1;">
-          Issued on this
-          <input type="text" value="${docIssuedDay}" ${ro} placeholder="__" style="width:28px;display:inline;border:none;border-bottom:1px solid #000;font-size:13px;padding:0 2px;text-align:center;font-family:'Times New Roman',serif;background:transparent;"/><sup>th</sup>
-          day of
-          <input type="text" value="${docIssuedMonthYear}" ${ro} placeholder="Month, Year" style="width:130px;display:inline;border:none;border-bottom:1px solid #000;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/>
-          at <strong>Brgy. San Sebastian Kawit, Cavite</strong>.
-        </p>
-        <div style="text-align:right; margin-top:70px; margin-right:30px; position:relative; z-index:1;">
-          <div style="display:inline-block; text-align:center;">
-            <div style="height:56px;"></div>
-            <div style="border-top:1.5px solid #000; padding-top:5px; min-width:240px;">
-              <input type="text" value="HON. DAVE C. LONTOC" ${ro} placeholder="Punong Barangay Full Name" style="border:none;font-size:13px;font-weight:bold;text-align:center;width:240px;font-family:'Times New Roman',serif;background:transparent;"/>
-            </div>
-            <div style="font-size:13px; font-weight:bold; margin-top:2px; text-transform:uppercase;">Punong Barangay</div>
-          </div>
-        </div>
-        <div style="margin-top:40px; font-size:10px; font-style:italic; color:#555; text-align:center; position:relative; z-index:1;">
-          NOTE: DO NOT ACCEPT WITHOUT OFFICIAL BARANGAY SEAL.
-        </div>
-      </div>`;
-    }
-    else if (isClearance) {
-      let civilHtml = `<select ${ro} style="border:none;border-bottom:1px solid #333;font-size:13px;">`;
-      civilHtml += `<option value="">Civil Status</option>`;
-      ['Single', 'Married', 'Widowed', 'Separated'].forEach(opt => {
-        civilHtml += `<option value="${opt}" ${docCivilStatus === opt ? 'selected' : ''}>${opt}</option>`;
-      });
-      civilHtml += `</select>`;
-      
-      html = `<div class="doc-template ${wm}" style="font-family:'Times New Roman',serif; width:210mm; min-height:297mm; margin:0 auto; padding:30px 55px 50px 55px; box-sizing:border-box; background:white; color:#000; position:relative; overflow:hidden;">
-        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:320px; height:320px; pointer-events:none; z-index:0;">
-          <img src="/images/sansebastianlogo.png" style="width:100%; height:100%; object-fit:contain; opacity:0.08;" alt="San Sebastian Seal" onerror="this.style.display='none'"/>
-        </div>
-        <div style="display:flex; align-items:center; gap:0; margin-bottom:6px; position:relative; z-index:1;">
-          <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-            <img src="/images/sansebastianlogo.png" style="width:68px;height:68px;object-fit:contain;" alt="San Sebastian Logo" onerror="this.style.display='none'"/>
-            <img src="/images/bayanngkawitlogo.png" style="width:68px;height:68px;object-fit:contain;" alt="Bayan ng Kawit Logo" onerror="this.style.display='none'"/>
-            <img src="/images/Bagong_Pilipinas_logo.png" style="width:68px;height:68px;object-fit:contain;" alt="Bagong Pilipinas Logo" onerror="this.style.display='none'"/>
-          </div>
-          <div style="flex:1; text-align:right; font-size:12px; line-height:1.6; font-family:Arial,sans-serif; font-weight:bold; text-transform:uppercase;">
-            <div>Republic of the Philippines</div>
-            <div>Province of Cavite</div>
-            <div>Municipality of Kawit</div>
-            <div style="font-size:14px;">BARANGAY SAN SEBASTIAN</div>
-            <div style="font-size:10px; font-weight:normal; text-transform:none;">CELLPHONE NO.: 0945-577-9766</div>
-          </div>
-        </div>
-        <div style="display:flex; height:6px; margin-bottom:2px; position:relative; z-index:1;">
-          <div style="flex:1; background:#0038A8;"></div>
-          <div style="flex:1; background:#CE1126;"></div>
-        </div>
-        <div style="height:4px; background:#FCD116; position:relative; z-index:1;"></div>
-        <div style="height:40px;"></div>
-        <div style="text-align:center; margin-bottom:28px; position:relative; z-index:1;">
-          <span style="font-size:22px; font-weight:bold; text-decoration:underline; letter-spacing:1px; font-family:'Times New Roman',serif;">BARANGAY CLEARANCE</span>
-        </div>
-        <p style="font-size:13px; font-weight:bold; margin-bottom:22px; position:relative; z-index:1;">TO WHOM IT MAY CONCERN:</p>
-        <p style="font-size:13px; line-height:2.0; text-align:justify; margin-bottom:18px; text-indent:48px; position:relative; z-index:1;">
-          This is to certify that
-          <strong><input type="text" value="${safeFullName}" ${ro} style="width:220px;display:inline;border:none;border-bottom:1.5px solid #000;font-size:13px;font-weight:bold;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/></strong>
-          is a resident of
-          <input type="text" value="${safeAddress}" ${ro} placeholder="complete address" style="width:300px;display:inline;border:none;border-bottom:1px solid #000;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/>.
-          He/She is personally known to the undersigned to be a peaceful and law-abiding citizen and to the best of my knowledge and belief he/she has never been convicted to any crime or misdemeanor.
-        </p>
-        <p style="font-size:13px; line-height:2.0; text-align:justify; margin-bottom:18px; text-indent:48px; position:relative; z-index:1;">
-          This certification is issued for <span style="text-decoration:underline;font-weight:bold;">
-          <input type="text" value="${docPurpose}" ${ro} placeholder="state purpose here" style="width:300px;display:inline;border:none;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;font-weight:bold;"/></span>.
-        </p>
-        <p style="font-size:13px; line-height:2.0; text-align:justify; text-indent:48px; position:relative; z-index:1;">
-          Issued this
-          <input type="text" value="${docIssuedDay}" ${ro} placeholder="__" style="width:28px;display:inline;border:none;border-bottom:1px solid #000;font-size:13px;padding:0 2px;text-align:center;font-family:'Times New Roman',serif;background:transparent;"/><sup>th</sup>
-          day of
-          <input type="text" value="${docIssuedMonthYear}" ${ro} placeholder="Month, Year" style="width:130px;display:inline;border:none;border-bottom:1px solid #000;font-size:13px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/>
-          at <strong>Brgy. San Sebastian Kawit, Cavite.</strong>
-        </p>
-        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:70px; position:relative; z-index:1;">
-          <div style="text-align:left;">
-            <div style="border-top:1.5px solid #000; padding-top:5px; min-width:200px; margin-bottom:4px;"></div>
-            <div style="font-size:12px; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;">Applicant's Signature</div>
-            <div style="margin-top:18px; font-size:12px; line-height:2.2;">
-              <div>Res. Cert. No. <input type="text" value="${docResCertNo || ''}" ${ro} style="width:140px;border:none;border-bottom:1px solid #aaa;font-size:12px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/></div>
-              <div>Issued at: <input type="text" value="${docIssuedAt || ''}" ${ro} style="width:150px;border:none;border-bottom:1px solid #aaa;font-size:12px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/></div>
-              <div>Issued on: <input type="text" value="${docIssuedOn || ''}" ${ro} style="width:150px;border:none;border-bottom:1px solid #aaa;font-size:12px;padding:0 4px;font-family:'Times New Roman',serif;background:transparent;"/></div>
-            </div>
-          </div>
-          <div style="text-align:center;">
-            <div style="height:56px;"></div>
-            <div style="border-top:1.5px solid #000; padding-top:5px; min-width:240px;">
-              <input type="text" value="HON. DAVE C. LONTOC" ${ro} placeholder="Punong Barangay Full Name" style="border:none;font-size:13px;font-weight:bold;text-align:center;width:240px;font-family:'Times New Roman',serif;background:transparent;"/>
-            </div>
-            <div style="font-size:13px; font-weight:bold; margin-top:2px; text-transform:uppercase;">Punong Barangay</div>
-            <div style="font-size:10px; font-style:italic; color:#555; margin-top:4px;">NOTE: DO NOT ACCEPT WITHOUT OFFICIAL BARANGAY SEAL.</div>
-          </div>
-        </div>
-      </div>`;
-    }
-    else {
-      const hasPhoto  = isValidUrl(photoUrl);
-
-      html = `<div class="doc-template ${wm}" style="font-family:Arial,sans-serif; width:480px; margin:0 auto; border-radius:10px; overflow:hidden; box-shadow:0 4px 18px rgba(0,0,0,0.18);">
-        <div style="background:linear-gradient(135deg,#1a3a8c 0%,#2255b8 60%,#1a6eb5 100%); padding:8px 14px 6px 14px; position:relative; overflow:hidden;">
-          <div style="position:absolute;top:0;right:0;width:160px;height:100%;background:linear-gradient(135deg,rgba(206,17,38,0.7),rgba(206,17,38,0.3));clip-path:polygon(40% 0,100% 0,100% 100%,0% 100%);"></div>
-          <div style="position:absolute;top:0;right:0;width:100px;height:100%;background:linear-gradient(135deg,rgba(255,255,255,0.15),rgba(255,255,255,0.05));clip-path:polygon(60% 0,100% 0,100% 100%,20% 100%);"></div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;position:relative;z-index:2;">
-            <img src="/images/bayanngkawitlogo.png" style="width:40px;height:40px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4));" onerror="this.style.display='none'"/>
-            <div style="flex:1;text-align:center;">
-              <div style="font-size:7px;color:rgba(255,255,255,0.85);letter-spacing:0.5px;">REPUBLIC OF THE PHILIPPINES</div>
-              <div style="font-size:7px;color:rgba(255,255,255,0.85);">PROVINCE OF CAVITE</div>
-              <div style="font-size:7px;color:rgba(255,255,255,0.85);">MUNICIPALITY OF KAWIT</div>
-              <div style="font-size:12px;font-weight:bold;color:#fff;letter-spacing:0.5px;line-height:1.3;">BARANGAY SAN SEBASTIAN</div>
-              <div style="font-size:7px;color:rgba(255,255,255,0.75);">OFFICE OF THE SANGGUNIANG BARANGAY</div>
-              <div style="font-size:7px;color:rgba(255,255,255,0.75);">Cel: 0945-577-9766</div>
-            </div>
-            <img src="/images/sansebastianlogo.png" style="width:40px;height:40px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4));" onerror="this.style.display='none'"/>
-          </div>
-          <div style="display:flex;height:4px;border-radius:2px;overflow:hidden;margin-top:4px;position:relative;z-index:2;">
-            <div style="flex:1;background:#0038A8;"></div>
-            <div style="flex:1;background:#CE1126;"></div>
-            <div style="flex:2;background:#FCD116;"></div>
-          </div>
-        </div>
-        <div style="background:#fff;padding:8px 14px;">
-          <div style="font-size:8px;font-weight:bold;color:#333;margin-bottom:6px;letter-spacing:0.5px;">CONTROL NO: <input type="text" value="${docOrNumber}" ${ro} style="border:none;border-bottom:1px solid #aaa;font-size:8px;width:90px;padding:0 2px;font-family:Arial,sans-serif;background:transparent;font-weight:bold;"/></div>
-          <div style="display:flex;gap:12px;align-items:flex-start;">
-            <div style="flex-shrink:0;width:72px;height:88px;border:1.5px solid #aaa;background:#f0f0f0;display:flex;align-items:center;justify-content:center;overflow:hidden;">
-              ${hasPhoto ? `<img src="${escapeHtml(photoUrl)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
-              <div style="text-align:center;color:#bbb;display:${hasPhoto ? 'none' : 'flex'};flex-direction:column;align-items:center;">
-                <i class="bi bi-person" style="font-size:32px;"></i>
-                <div style="font-size:8px;">Photo</div>
-              </div>
-            </div>
-            <div style="flex:1;font-size:9px;color:#111;line-height:1.9;">
-              <div style="font-size:12px;font-weight:bold;color:#111;margin-bottom:4px;border-bottom:1px solid #ddd;padding-bottom:2px;">${safeFullName}</div>
-              <div><strong>ADDRESS:</strong> <input type="text" value="${safeAddress}" ${ro} style="border:none;border-bottom:1px solid #ccc;font-size:9px;width:240px;padding:0 2px;font-family:Arial,sans-serif;background:transparent;"/></div>
-              <div><strong>BIRTHDATE:</strong> <input type="text" value="${birthdate}" ${ro} style="border:none;border-bottom:1px solid #ccc;font-size:9px;width:180px;padding:0 2px;font-family:Arial,sans-serif;background:transparent;"/></div>
-              <div><strong>CONTACT NO:</strong> <input type="text" value="${safeContactNumber}" ${ro} style="border:none;border-bottom:1px solid #ccc;font-size:9px;width:160px;padding:0 2px;font-family:Arial,sans-serif;background:transparent;"/></div>
-            </div>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:10px;">
-            <div style="text-align:center;">
-              <div style="width:140px;border-bottom:1px solid #333;min-height:24px;"></div>
-              <div style="font-size:7px;color:#555;margin-top:2px;text-transform:uppercase;letter-spacing:0.5px;">Holder's Signature</div>
-            </div>
-            <div style="text-align:center;">
-              <div style="width:140px;border-bottom:1px solid #333;min-height:24px;display:flex;align-items:flex-end;justify-content:center;">
-                <input type="text" value="${docCaptainName}" ${ro} style="border:none;font-size:8px;font-weight:bold;text-align:center;width:140px;font-family:Arial,sans-serif;background:transparent;"/>
-              </div>
-              <div style="font-size:7px;color:#555;text-transform:uppercase;margin-top:2px;">Barangay Chairman</div>
-            </div>
-          </div>
-        </div>
-        <div style="background:linear-gradient(90deg,#1a3a8c,#2255b8); padding:5px; text-align:center;">
-          <div style="font-size:10px;font-weight:bold;color:#fff;letter-spacing:2px;text-transform:uppercase;">BARANGAY IDENTIFICATION CARD</div>
-        </div>
-      </div>`;
-    }
-
-    document.getElementById('printable-area').innerHTML = html;
-    document.getElementById('docModalOverlay').style.display = 'block';
-  }
-
-  // ─── Close doc modal (auto-saves field edits if in edit mode) ─────────────
-  function closeDocModal() {
-    if (!currentIsReadOnly && currentDocId) {
-      saveFieldEdits().finally(() => {
-        document.getElementById('docModalOverlay').style.display = 'none';
-        document.getElementById('printable-area').innerHTML = '';
-        currentDocId = null;
-        currentDocType = null;
-        currentIsReadOnly = false;
-      });
-      return;
-    }
-    document.getElementById('docModalOverlay').style.display = 'none';
-    document.getElementById('printable-area').innerHTML = '';
-    currentDocId = null;
-    currentDocType = null;
-    currentIsReadOnly = false;
-  }
-
-  // ─── Print ─────────────────────────────────────────────────────────────────
-  function printDocument() {
-    const content = document.getElementById('printable-area').innerHTML;
-    const win = window.open('', '_blank');
-    win.document.write(`<html><head><title>Print Document</title>
-  <style>
-    body { font-family:'Times New Roman',serif; margin:40px; }
-    .doc-template { border:2px solid #2d4a44; padding:30px; position:relative; }
-    .doc-template.with-watermark::before { content:'READY FOR PICKUP'; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-35deg); font-size:72px; font-weight:900; color:rgba(231,76,60,0.15); white-space:nowrap; pointer-events:none; z-index:10; letter-spacing:4px; font-family:Arial,sans-serif; }
-    .doc-field { margin-bottom:14px; }
-    .doc-field label { display:block; font-size:11px; font-weight:bold; color:#888; text-transform:uppercase; margin-bottom:3px; }
-    .doc-field input, .doc-field select, .doc-field textarea { width:100%; border:none; border-bottom:1px solid #aaa; font-size:14px; font-family:'Times New Roman',serif; background:transparent; padding:5px 2px; box-sizing:border-box; }
-    .doc-row { display:flex; gap:20px; }
-    select { -webkit-appearance: none; appearance: none; background-image: none; }
-  </style>
-</head><body>${content}</body></html>`);
-    win.document.close();
-    win.focus();
-    setTimeout(() => { win.print(); win.close(); }, 400);
-  }
-
-  // ─── Download PDF ──────────────────────────────────────────────────────────
-  async function downloadPDF() {
-    const area = document.getElementById('printable-area');
-    const title = document.getElementById('docModalTitle').textContent;
-    const downloadBtn = document.querySelector('.btn-download');
-    const originalText = downloadBtn.innerHTML;
-    downloadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating PDF...';
-    downloadBtn.disabled = true;
-    try {
-      const element = area.firstElementChild;
-      if (!element) return;
-      const canvas = await html2canvas(element, { scale: 3, backgroundColor: '#ffffff', logging: false, useCORS: true });
-      const { jsPDF } = window.jspdf;
-      const imgData = canvas.toDataURL('image/png');
-      const imgWidth = 190, pageHeight = 277;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight, position = 0;
-      const orientation = imgWidth > imgHeight ? 'landscape' : 'portrait';
-      const doc = new jsPDF({ orientation, unit: 'mm', format: 'a4' });
-      doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight; doc.addPage();
-        doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-      doc.save(title.replace(/[\s:]+/g, '_') + '.pdf');
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      showConfirm('Error generating PDF. Please try again.', 'Error', function() {});
-    } finally {
-      downloadBtn.innerHTML = originalText;
-      downloadBtn.disabled = false;
-    }
-  }
-
-    // ─── Export table to PDF ───────────────────────────────────────────────────
-  function exportToPDF() {
-    const exportedBy = document.getElementById('currentUserName')?.value || 'Unknown User';
-    const activePanel = document.querySelector('.panel-inner:not(.d-none)');
-    if (!activePanel) return;
-
-    const table = activePanel.querySelector('table');
-    if (!table) return;
-
-    const title = activePanel.querySelector('.panel-header').innerText;
-
-    // Exclude "File" (button, not data) and "Actions" (buttons) columns
-    const excludedHeaders = ['File', 'Actions'];
-
-    const headerCellsAll = table.querySelectorAll('thead th');
-    const includedIndexes = [];
-    const headers = [];
-    headerCellsAll.forEach((th, idx) => {
-        const text = th.textContent.trim().replace(/⇅|↑|↓/g, '').trim();
-        if (!excludedHeaders.includes(text)) {
-            includedIndexes.push(idx);
-            headers.push(text);
-        }
-    });
-
-    const rows = [];
-    const bodyRows = table.querySelectorAll('tbody tr');
-    bodyRows.forEach(tr => {
-        if (tr.style.display === 'none') return;
-        if (tr.querySelector('td[colspan]')) return; // skip "no requests" row
-        const cells = tr.querySelectorAll('td');
-        const rowData = [];
-        includedIndexes.forEach(i => {
-            rowData.push(cells[i] ? cells[i].textContent.trim() : '');
-        });
-        rows.push(rowData);
-    });
-
-    // Columns that need to wrap instead of clip
-    const wideColumns = ['Name', 'Request Type', 'Date/TimeStamp Created'];
-
-    let tableHtml = `
-    <div style="position:relative;text-align:center;padding-bottom:12px;margin-bottom:20px;border-bottom:3px solid #2d4a44;">
-        <div style="position:absolute;left:-30px;top:-25px;display:flex;align-items:center;gap:5px;">
-            <img src="/images/seal1.png" alt="Barangay Seal" style="width:16px;height:16px;object-fit:contain;">
-            <span style="font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#888;white-space:nowrap;">CivilAccess Web System</span>
-        </div>
-        <div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">${title}</div>
-        <div style="font-size:13px;color:#555;">${new Date().toLocaleString()}</div>
-        <div style="font-size:11px;color:#888;margin-top:2px;">Exported by: <strong style="color:#2d4a44;">${exportedBy}</strong></div>
-    </div>`;
-
-    tableHtml += `
-    <div style="font-size:13px;font-weight:bold;color:#2d4a44;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #ddd;">
-        ${title} <span style="font-weight:normal;font-size:11px;color:#888;">(${rows.length} record${rows.length !== 1 ? 's' : ''})</span>
-    </div>`;
-
-    if (rows.length === 0) {
-        tableHtml += `<p style="color:#888;text-align:center;padding:20px 0;">No data to display.</p>`;
-    } else {
-        let headerRowHtml = '';
-        headers.forEach(h => {
-            const isWide = wideColumns.includes(h);
-            headerRowHtml += `<th style="background-color:#2d4a44 !important;color:white !important;padding:8px;font-size:11px !important;border:1px solid #1a3530;${isWide ? 'min-width:140px;' : 'white-space:nowrap;'}">${h}</th>`;
-        });
-
-        let tableRowsHtml = '';
-        rows.forEach((row, i) => {
-            const bg = i % 2 === 0 ? 'white' : '#f5faf8';
-            tableRowsHtml += `<tr style="background-color:${bg} !important;">`;
-            row.forEach((cell, idx) => {
-                const isWide = wideColumns.includes(headers[idx]);
-                tableRowsHtml += `<td style="border:1px solid #ddd;padding:7px 8px;font-size:11px !important;vertical-align:top;${isWide ? 'white-space:normal;word-break:break-word;' : 'white-space:nowrap;'}">${cell}</td>`;
-            });
-            tableRowsHtml += `</tr>`;
-        });
-
-        tableHtml += `
-        <table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;table-layout:auto;">
-            <thead><tr>${headerRowHtml}</tr></thead>
-            <tbody>${tableRowsHtml}</tbody>
-        </table>`;
-    }
-
-    tableHtml += `<div style="margin-top:20px;padding-top:10px;border-top:1px solid #e0e0e0;text-align:center;font-size:9px;color:#aaa;">Official document from Brgy. San Sebastian &nbsp;|&nbsp; Confidential</div>`;
-
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'font-family:Arial,sans-serif;padding:36px;background:white;color:#222;';
-    wrapper.innerHTML = tableHtml;
-
-    const opt = {
-        margin: [0.3, 0.3, 0.3, 0.3],
-        filename: `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-    };
-
-    const exportBtn = document.getElementById('export-pdf-btn');
-    const originalText = exportBtn ? exportBtn.innerHTML : 'Export';
-    if (exportBtn) {
-        exportBtn.innerHTML = 'Generating...';
-        exportBtn.disabled = true;
-    }
-
-    html2pdf().set(opt).from(wrapper).save()
-        .then(() => {
-            if (exportBtn) {
-                exportBtn.innerHTML = originalText;
-                exportBtn.disabled = false;
-            }
-        })
-        .catch(error => {
-            console.error('PDF generation error:', error);
-            showConfirm('Error generating PDF. Please try again.', 'Error', function() {});
-            if (exportBtn) {
-                exportBtn.innerHTML = originalText;
-                exportBtn.disabled = false;
-            }
-        });
-  }
-
-  // ─── On load ───────────────────────────────────────────────────────────────
-  window.onload = function() {
-    const status = document.getElementById('accountStatus')?.value;
-    if (status === 'New' || status === 'Newly Updated') {
-      document.getElementById('forcePasswordModal').style.display = 'block';
-      document.body.style.overflow = 'hidden';
-    }
-  };
-
-  function redirectToPassword() { window.location.href = '/user-profile'; }
-
-  // ─── Polling ───────────────────────────────────────────────────────────────
-  (function() {
-    let lastSnapshot = '';
-    function isModalOpen() {
-      if (pollSuppressed) return true;
-      if (document.getElementById('docModalOverlay')?.style.display === 'block') return true;
-      if (document.getElementById('viewFileModalOverlay')?.style.display === 'block') return true;
-      const logoutModal = document.getElementById('logoutModal');
-      if (logoutModal && (logoutModal.style.display === 'block' || logoutModal.style.display === 'flex')) return true;
-      var dynamicModals = document.querySelectorAll('[id^="dynamicConfirmModal_"]');
-      for (var i = 0; i < dynamicModals.length; i++) {
-        if (dynamicModals[i].classList.contains('show')) return true;
-      }
-      var successModal = document.getElementById('successModal');
-      if (successModal && successModal.classList.contains('show')) return true;
-      var errorModal = document.getElementById('errorModal');
-      if (errorModal && errorModal.classList.contains('show')) return true;
-      return false;
-    }
-    function poll() {
-      if (isModalOpen()) return;
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', '/requests-document/api/poll?t=' + Date.now(), true);
-      xhr.onload = function() {
-        if (xhr.status === 200) {
-          try {
-            const data = JSON.parse(xhr.responseText);
-            const snapshot = JSON.stringify(data);
-            if (data.counts) {
-              const map = { incoming: 'badge-incoming', processing: 'badge-processing', ready: 'badge-ready', archive: 'badge-archive' };
-              Object.keys(map).forEach(key => {
-                const el = document.getElementById(map[key]);
-                if (el && data.counts[key] !== undefined) el.textContent = data.counts[key];
-              });
-            }
-            if (lastSnapshot === '') lastSnapshot = snapshot;
-            else if (snapshot !== lastSnapshot) location.reload();
-          } catch(e) {}
-        }
-      };
-      xhr.send();
-    }
-    poll();
-    setInterval(poll, 5000);
-  })();
-
-function sortByDate(th) {
-    const table = th.closest('table');
-    const tbody = table.querySelector('tbody');
-    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('td[colspan]'));
-    const noDataRow = tbody.querySelector('tr td[colspan]')?.parentElement;
-
-    const currentDir = th.getAttribute('data-sort-dir') || 'none';
-    const newDir = currentDir === 'asc' ? 'desc' : 'asc';
-
-    table.querySelectorAll('.sortable-th').forEach(h => {
-        h.removeAttribute('data-sort-dir');
-        const icon = h.querySelector('.sort-icon');
-        if (icon) icon.textContent = '⇅';
-    });
-
-    th.setAttribute('data-sort-dir', newDir);
-    const icon = th.querySelector('.sort-icon');
-    if (icon) icon.textContent = newDir === 'asc' ? '↑' : '↓';
-
-    rows.sort((a, b) => {
-        const idA = parseInt(a.getAttribute('data-id'), 10) || 0;
-        const idB = parseInt(b.getAttribute('data-id'), 10) || 0;
-        return newDir === 'asc' ? idA - idB : idB - idA;
-    });
-
-    rows.forEach(row => tbody.appendChild(row));
-    if (noDataRow) tbody.appendChild(noDataRow);
-}
-
-</script>
-
+<script src="/js/requests-document.js"></script>
 </body>
 </html>

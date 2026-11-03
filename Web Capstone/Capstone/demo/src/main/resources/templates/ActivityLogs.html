@@ -1,905 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<style>
-    body { 
-      margin: 0; 
-      font-family: Arial, sans-serif; 
-    }
-
-    .layout {
-      display: flex; 
-      height: 100vh; 
-      overflow: hidden;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brgy. San Sebastian Activity Logs: View User Activity Logs">
     
-    .content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-    }
-
-    .top-header {
-        background-color: #2d4a44;
-        display: flex;
-        border-bottom: 2px solid #FED734;
-    }
-    .top-header-tab {
-        flex: 1;
-        color: white;
-        text-align: center;
-        padding: 16px 20px;
-        font-size: 16px;
-        font-weight: bold;
-        cursor: pointer;
-    }
-
-    .search-bar-area {
-        padding: 16px 20px 10px 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background-color: #f5f5f5;
-    }
-    .search-input-wrap { flex: 1; position: relative; }
-    .search-input-wrap input {
-        width: 100%;
-        padding: 9px 14px 9px 38px;
-        border: 1px solid #d0d5dd;
-        border-radius: 6px;
-        font-size: 14px;
-        background: white;
-        box-sizing: border-box;
-    }
-    .search-icon {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #aaa;
-    }
-    .filter-btn {
-        padding: 9px 16px;
-        border: 1px solid #d0d5dd;
-        border-radius: 6px;
-        background: white;
-        font-size: 14px;
-        cursor: pointer;
-        color: #444;
-    }
-    .export-btn {
-        padding: 9px 20px;
-        border: none;
-        border-radius: 6px;
-        background: #FED734;
-        font-size: 14px;
-        font-weight: bold;
-        cursor: pointer;
-        color: #2d4a44;
-    }
-    .add-btn {
-        padding: 9px 20px;
-        border: none;
-        border-radius: 6px;
-        background: #44C375;
-        font-size: 14px;
-        font-weight: bold;
-        cursor: pointer;
-        color: white;
-    }
-
-    .tabbar {
-        display: flex;
-        background-color: white;
-        border-bottom: 1px solid #e0e0e0;
-        padding: 0 20px;
-        gap: 4px;
-    }
-    .tab {
-        padding: 12px 18px;
-        color: #666;
-        cursor: pointer;
-        font-size: 14px;
-        border-bottom: 3px solid transparent;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .tab.active {
-        background-color: #2d4a44;
-        color: white;
-        border-radius: 6px 6px 0 0;
-        font-weight: bold;
-    }
-
-    .panel {
-        padding: 20px;
-        background-color: #f5f5f5;
-        flex: 1;
-        overflow-y: auto;
-    }
-    .panel-inner {
-        background: white;
-        border-radius: 8px;
-        border: 1px solid #e0e0e0;
-        overflow: hidden;
-    }
-    .panel-header {
-        background-color: #3d5f58;
-        color: white;
-        padding: 14px 20px;
-        font-weight: bold;
-        font-size: 15px;
-    }
-    .panel-content { padding: 16px 20px; }
-
-    th {
-        background-color: #eaf2f0 !important;
-        color: #2d4a44 !important;
-        font-size: 12px !important;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        padding: 10px 14px !important;
-    }
-    td {
-        padding: 12px 14px !important;
-        vertical-align: middle !important;
-    }
-
-    .status-open {
-        display: inline-block;
-        padding: 3px 12px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-        background-color: #f0fff4;
-        color: #27ae60;
-        border: 1px solid #b0e0c0;
-    }
-    .status-closed {
-        display: inline-block;
-        padding: 3px 12px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-        background-color: #fff0f0;
-        color: #e74c3c;
-        border: 1px solid #f5c6c6;
-    }
-    .status-available {
-        display: inline-block;
-        padding: 3px 12px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-        background-color: #e8f5f0;
-        color: #2d7a5f;
-        border: 1px solid #b8ddd0;
-    }
-
-    .contact-btn {
-        background-color: #3498db;
-        color: white;
-        padding: 6px 14px;
-        border: none;
-        border-radius: 5px;
-        font-size: 13px;
-        cursor: pointer;
-        font-weight: bold;
-    }
-    .contact-btn:hover { background-color: #2176ae; }
-
-    .update-btn {
-        background-color: #f1c40f;
-        color: #30534D;
-        padding: 6px 14px;
-        border: none;
-        border-radius: 5px;
-        font-size: 13px;
-        cursor: pointer;
-        font-weight: bold;
-    }
-    .update-btn:hover { background-color: #d4ac0d; }
-
-    .delete-btn {
-        background-color: #e74c3c;
-        color: white;
-        padding: 6px 14px;
-        border: none;
-        border-radius: 5px;
-        font-size: 13px;
-        cursor: pointer;
-        font-weight: bold;
-    }
-    .delete-btn:hover { background-color: #c0392b; }
-
-    .table-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px 16px;
-        border-top: 1px solid #e0e0e0;
-        font-size: 13px;
-        color: #888;
-    }
-    .page-item.active .page-link { background-color: #2d4a44; border-color: #2d4a44; }
-    .page-link { color: #2d4a44; }
-
-    .facility-name { font-weight: bold; font-size: 14px; }
-    .facility-address { font-size: 12px; color: #888; margin-top: 2px; }
-
-    .status-success {
-        display: inline-block;
-        padding: 3px 12px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-        background-color: #f0fff4;
-        color: #27ae60;
-        border: 1px solid #b0e0c0;
-    }
-    .status-failed {
-        display: inline-block;
-        padding: 3px 12px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-        background-color: #fff0f0;
-        color: #e74c3c;
-        border: 1px solid #f5c6c6;
-    }
-    .status-pending {
-        display: inline-block;
-        padding: 3px 12px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-        background-color: #fffbe6;
-        color: #d4a017;
-        border: 1px solid #f0d88a;
-    }
-    .user-role {
-        font-size: 11px;
-        color: #888;
-        margin-top: 2px;
-    }
-    .action-badge {
-        display: inline-block;
-        padding: 2px 10px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 600;
-        background-color: #eaf2f0;
-        color: #2d4a44;
-    }
-    /* ══════════════════════════════════════
-       FORCE MODAL
-    ══════════════════════════════════════ */
-    .force-modal {
-        display: none;
-        position: fixed; z-index: 9999;
-        left: 0; top: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.55);
-        backdrop-filter: blur(2px);
-    }
-    .force-modal-content {
-        background: white;
-        width: 440px;
-        padding: 44px;
-        border-radius: var(--radius-lg);
-        text-align: center;
-        margin: 18% auto;
-        box-shadow: var(--shadow-lg);
-    }
-    .force-modal-content h2 { color: var(--green-900); margin-bottom: 12px; font-size: 22px; font-weight: 700; }
-    .force-modal-content p { font-size: 15px; color: var(--gray-500); }
-    .force-modal-content button {
-        margin-top: 22px;
-        padding: 13px 32px;
-        background: var(--green-700);
-        color: white;
-        border: none;
-        border-radius: var(--radius-sm);
-        cursor: pointer;
-        font-size: 15px;
-        font-weight: 600;
-        font-family: var(--font);
-        transition: background 0.2s;
-    }
-    .force-modal-content button:hover { background: var(--green-900); }
-</style>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Brgy. San Sebastian Activity Logs: View User Activity Logs">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">   
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<title>Activity Logs</title>
+    <link rel="stylesheet" href="/css/activity-logs.css">
+
+    <!-- External JS (Libraries) -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <title>Activity Logs</title>
 </head>
 <body>
     <script src="/js/notif.js"></script>
-<div class="toast-container" id="toastContainer"></div>
-<div class="layout">
-<input type="hidden" id="accountStatus" th:value="${currentstatus}">
-<input type="hidden" id="currentUserName" th:value="${currentUser}">
-      <div id="forcePasswordModal" class="force-modal">
-    <div class="force-modal-content">
-        <h2>First Login Detected</h2>
-        <p>You must change your password before using the system.</p>
-        <button onclick="redirectToPassword()">Change Password</button>
-    </div>
-</div>
-
-
-
-  <!-- Sidebar -->
-<div th:replace="~{fragments/sidebar :: sidebar}"></div>
-<!-- Sidebar -->
-
-
-
-  <div class="content">
-
-    <!-- Top header -->
-    <div class="top-header">
-      <div class="top-header-tab">Activity Logs</div>
-    </div>
-
+    <div class="toast-container" id="toastContainer"></div>
     
-    <!-- Search bar -->
-    <div class="search-bar-area">
-      <div class="search-input-wrap">
-        <span class="search-icon"><i class="bi bi-search"></i></span>
-        <input type="text" id="contact-search" placeholder="Search activity by name, action, or module...">
-      </div>
-      <!-- REPLACE the existing filter-btn button with this entire block -->
-<div style="position: relative; display: inline-block;">
-    <button class="filter-btn" id="filterToggleBtn" onclick="toggleFilterPanel()">
-        <i class="bi bi-funnel"></i> Filters
-        <span id="activeFilterCount" style="display:none; background:#2d4a44; color:white; border-radius:50%; padding:1px 6px; font-size:11px; margin-left:4px;">0</span>
-    </button>
-
-    <div id="filterPanel" style="display:none; position:absolute; top:calc(100% + 6px); left:-200px; z-index:999;
-         background:white; border:1px solid #d0d5dd; border-radius:8px; padding:16px; width:340px;
-         box-shadow: 0 4px 16px rgba(0,0,0,0.12);">
-
-        <div style="font-weight:bold; font-size:13px; color:#2d4a44; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.05em;">Filter Logs</div>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-            <div>
-                <label style="font-size:12px; color:#555; display:block; margin-bottom:4px;">Date From</label>
-                <input type="date" id="filter-date-from" style="width:100%; padding:7px 10px; border:1px solid #d0d5dd; border-radius:6px; font-size:13px; box-sizing:border-box;">
-            </div>
-            <div>
-                <label style="font-size:12px; color:#555; display:block; margin-bottom:4px;">Date To</label>
-                <input type="date" id="filter-date-to" style="width:100%; padding:7px 10px; border:1px solid #d0d5dd; border-radius:6px; font-size:13px; box-sizing:border-box;">
-            </div>
-        </div>
-
-        <div style="margin-bottom:10px;">
-            <label style="font-size:12px; color:#555; display:block; margin-bottom:4px;">Status</label>
-            <select id="filter-status" style="width:100%; padding:7px 10px; border:1px solid #d0d5dd; border-radius:6px; font-size:13px;">
-                <option value="">All Statuses</option>
-                <option value="Success">Success</option>
-                <option value="Failed">Failed</option>
-                <option value="Pending">Pending</option>
-            </select>
-        </div>
-
-        <div style="margin-bottom:10px;">
-            <label style="font-size:12px; color:#555; display:block; margin-bottom:4px;">Action</label>
-            <select id="filter-action" style="width:100%; padding:7px 10px; border:1px solid #d0d5dd; border-radius:6px; font-size:13px;">
-                <option value="">All Actions</option>
-            </select>
-        </div>
-
-        <div style="margin-bottom:14px;">
-            <label style="font-size:12px; color:#555; display:block; margin-bottom:4px;">Role</label>
-            <select id="filter-role" style="width:100%; padding:7px 10px; border:1px solid #d0d5dd; border-radius:6px; font-size:13px;">
-                <option value="">All Roles</option>
-            </select>
-        </div>
-
-        <div style="display:flex; gap:8px;">
-            <button onclick="applyFilters()" style="flex:1; padding:8px; background:#2d4a44; color:white; border:none; border-radius:6px; font-size:13px; font-weight:bold; cursor:pointer;">Apply</button>
-            <button onclick="clearFilters()" style="flex:1; padding:8px; background:white; color:#2d4a44; border:1px solid #2d4a44; border-radius:6px; font-size:13px; font-weight:bold; cursor:pointer;">Clear</button>
-        </div>
-    </div>
-</div>
-      <button class="export-btn" id="export-pdf-btn" onclick="exportToPDF()">Export</button>
-    </div>
-
-  
-
-   <div class="panel" role="main">
-
-      <!-- Activity Log Table -->
-      <div id="tab-police" class="panel-inner">
-        <div class="panel-header">Employee Activity Log</div>
-        <div class="panel-content">
-          <table class="table table-bordered table-hover mb-0" id="activity-log-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>User</th>
-                <th>Action</th>
-                <th>Module</th>
-                <th>Details</th>
-                <th>IP Address</th>
-                <th>Status</th>
-                <th>Timestamp</th>
-              </tr>
-            </thead>
-            <tbody>
-              
-                <tr th:each="log : ${activityLogs}">
-                  <td th:text="${log.id}">1</td>
-                  <td>
-                    <div class="facility-name" th:text="${log.userName}">John Smith</div>
-                    <div class="user-role" th:text="${log.userRole}">Admin</div>
-                  </td>
-                  <td><span class="action-badge" th:text="${log.action}">LOGIN</span></td>
-                  <td th:text="${log.module}">Dashboard</td>
-                  <td th:text="${log.details}">User logged in successfully</td>
-                  <td th:text="${log.ipAddress}">192.168.1.1</td>
-                  <td>
-                    <span th:classappend="${log.status == 'Success'} ? 'status-success' : (${log.status == 'Failed'} ? 'status-failed' : 'status-pending')"
-                          class="status-success" th:text="${log.status}">Success</span>
-                  </td>
-                  <td th:text="${#temporals.format(log.timestamp, 'MMM dd, yyyy HH:mm')}">Jan 01, 2025 08:00</td>
-                </tr>
-                
-            </tbody>
-          </table>
-          <div class="table-footer" id="footer-logs">
-            <span>Showing recent activities</span>
-            <nav>
-              <ul class="pagination pagination-sm mb-0">
-                <li class="page-item disabled"><a class="page-link" href="#"><i class="bi bi-arrow-left"></i> Prev</a></li>
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item disabled"><a class="page-link" href="#">Next <i class="bi bi-arrow-right"></i></a></li>
-              </ul>
-            </nav>
-          </div>
-        </div>
-      </div>
-      
-
-    </div>
-
-  </div>
-</div>
-<!-- Logout Modal -->
-<div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
-
-<!-- Logout modal -->
- 
-<script>
-    // ── Force password modal ──────────────────────────────────
-    window.onload = function () {
-
-        populateFilterDropdowns();
-    };
-
-    function redirectToPassword() { window.location.href = "/user-profile"; }
-
-    // ── Search ────────────────────────────────────────────────
-    document.getElementById('contact-search').addEventListener('keyup', function () {
-        applyFilters();
-    });
-
-    // ── Filter panel toggle ───────────────────────────────────
-    function toggleFilterPanel() {
-        const panel = document.getElementById('filterPanel');
-        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-    }
-
-    // Close filter panel when clicking outside
-    document.addEventListener('click', function (e) {
-        const panel  = document.getElementById('filterPanel');
-        const btn    = document.getElementById('filterToggleBtn');
-        if (panel.style.display === 'block' && !panel.contains(e.target) && !btn.contains(e.target)) {
-            panel.style.display = 'none';
-        }
-    });
-
-    // ── Populate Action + Role dropdowns from actual table data ─
-    function populateFilterDropdowns() {
-        const rows = document.querySelectorAll('#tab-police tbody tr');
-        const actions = new Set();
-        const roles   = new Set();
-
-        rows.forEach(function (row) {
-            const actionEl = row.querySelector('td:nth-child(3) .action-badge');
-            const roleEl   = row.querySelector('td:nth-child(2) .user-role');
-            if (actionEl && actionEl.textContent.trim()) actions.add(actionEl.textContent.trim());
-            if (roleEl   && roleEl.textContent.trim())   roles.add(roleEl.textContent.trim());
-        });
-
-        const actionSel = document.getElementById('filter-action');
-        actions.forEach(function (a) {
-            const opt = document.createElement('option');
-            opt.value = a; opt.textContent = a;
-            actionSel.appendChild(opt);
-        });
-
-        const roleSel = document.getElementById('filter-role');
-        roles.forEach(function (r) {
-            const opt = document.createElement('option');
-            opt.value = r; opt.textContent = r;
-            roleSel.appendChild(opt);
-        });
-    }
-
-    // ── Core filter logic ─────────────────────────────────────
-    function applyFilters() {
-        const search   = document.getElementById('contact-search').value.toLowerCase().trim();
-        const status   = document.getElementById('filter-status').value;
-        const action   = document.getElementById('filter-action').value;
-        const role     = document.getElementById('filter-role').value;
-        const dateFrom = document.getElementById('filter-date-from').value;
-        const dateTo   = document.getElementById('filter-date-to').value;
-
-        let visibleCount = 0;
-
-        document.querySelectorAll('#tab-police tbody tr').forEach(function (row) {
-            const cells      = row.querySelectorAll('td');
-            const rowText    = row.textContent.toLowerCase();
-            const rowStatus  = cells[6] ? cells[6].textContent.trim() : '';
-            const rowAction  = cells[2] ? cells[2].textContent.trim() : '';
-            const rowRole    = row.querySelector('.user-role') ? row.querySelector('.user-role').textContent.trim() : '';
-            const rowTsRaw   = cells[7] ? cells[7].textContent.trim() : '';  // e.g. "Jan 01, 2025 08:00"
-            const rowDate    = rowTsRaw ? new Date(rowTsRaw) : null;
-
-            // Search match
-            const matchSearch = !search || rowText.includes(search);
-
-            // Status match
-            const matchStatus = !status || rowStatus === status;
-
-            // Action match
-            const matchAction = !action || rowAction === action;
-
-            // Role match
-            const matchRole = !role || rowRole === role;
-
-            // Date range match
-            let matchDate = true;
-            if (dateFrom && rowDate) matchDate = matchDate && rowDate >= new Date(dateFrom);
-            if (dateTo   && rowDate) {
-                const toEnd = new Date(dateTo);
-                toEnd.setHours(23, 59, 59, 999);
-                matchDate = matchDate && rowDate <= toEnd;
-            }
-
-            const visible = matchSearch && matchStatus && matchAction && matchRole && matchDate;
-            row.style.display = visible ? '' : 'none';
-            if (visible) visibleCount++;
-        });
-
-        updateFilterBadge();
-        updateRowCount(visibleCount);
-    }
-
-    function clearFilters() {
-        document.getElementById('filter-status').value    = '';
-        document.getElementById('filter-action').value    = '';
-        document.getElementById('filter-role').value      = '';
-        document.getElementById('filter-date-from').value = '';
-        document.getElementById('filter-date-to').value   = '';
-        applyFilters();
-        document.getElementById('filterPanel').style.display = 'none';
-    }
-
-    // Show a count badge on the button when filters are active
-    function updateFilterBadge() {
-        const status   = document.getElementById('filter-status').value;
-        const action   = document.getElementById('filter-action').value;
-        const role     = document.getElementById('filter-role').value;
-        const dateFrom = document.getElementById('filter-date-from').value;
-        const dateTo   = document.getElementById('filter-date-to').value;
-        const count    = [status, action, role, dateFrom, dateTo].filter(Boolean).length;
-        const badge    = document.getElementById('activeFilterCount');
-        badge.textContent    = count;
-        badge.style.display  = count > 0 ? 'inline' : 'none';
-    }
-
-    // Update the "Showing X results" footer text
-    function updateRowCount(count) {
-        const footer = document.querySelector('.table-footer span');
-        if (footer) footer.textContent = 'Showing ' + count + ' result' + (count !== 1 ? 's' : '');
-    }
-
-    // ── Export PDF ────────────────────────────────────────────
-  
-    function exportToPDF() {
-    const exportedBy = document.getElementById('currentUserName')?.value || 'Unknown User';
-    const panel = document.querySelector('.panel-inner:not(.d-none)');
-    if (!panel) return;
-    const table = panel.querySelector('table');
-    if (!table) return;
-
-    const title = panel.querySelector('.panel-header').innerText.trim();
-
-    // No columns excluded here — all columns (ID, User, Action, Module, Details, IP Address, Status, Timestamp) are kept
-    const excludedHeaders = [];
-
-    const headerCellsAll = table.querySelectorAll('thead th');
-    const includedIndexes = [];
-    const headers = [];
-    headerCellsAll.forEach((th, idx) => {
-        const text = th.textContent.trim();
-        if (!excludedHeaders.includes(text)) {
-            includedIndexes.push(idx);
-            headers.push(text);
-        }
-    });
-
-    const rows = [];
-    const bodyRows = table.querySelectorAll('tbody tr');
-    bodyRows.forEach(tr => {
-        // Skip rows hidden by filtering (data-filtered='hidden' or style.display none via filter)
-        if (tr.getAttribute('data-filtered') === 'hidden') return;
-        if (tr.querySelector('td[colspan]')) return;
-
-        const cells = tr.querySelectorAll('td');
-        const rowData = [];
-        includedIndexes.forEach(i => {
-            const cell = cells[i];
-            let text = '';
-            if (cell) {
-                // "User" column has name + role in separate divs
-                const nameDiv = cell.querySelector('.facility-name');
-                const roleDiv = cell.querySelector('.user-role');
-                if (nameDiv) {
-                    text = nameDiv.textContent.trim() + (roleDiv ? ' — ' + roleDiv.textContent.trim() : '');
-                } else {
-                    text = cell.textContent.trim();
-                }
-            }
-            rowData.push(text);
-        });
-        rows.push(rowData);
-    });
-
-    // Limit to first 10 rows
-    const limitedRows = rows.slice(0, 8);
-
-    // Columns that need to wrap instead of clip
-    const wideColumns = ['User', 'Details'];
-
-    // Page header — same layout as Blotter Records export
-     let tableHtml = `
-    <div style="position:relative;text-align:center;padding-bottom:12px;margin-bottom:20px;border-bottom:3px solid #2d4a44;">
-        <div style="position:absolute;left:-30px;top:-25px;display:flex;align-items:center;gap:5px;">
-            <img src="/images/seal1.png" alt="Barangay Seal" style="width:16px;height:16px;object-fit:contain;">
-            <span style="font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#888;white-space:nowrap;">CivilAccess Web System</span>
-        </div>
-        <div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">${title}</div>
-        <div style="font-size:13px;color:#555;">${new Date().toLocaleString()}</div>
-        <div style="font-size:11px;color:#888;margin-top:2px;">Exported by: <strong style="color:#2d4a44;">${exportedBy}</strong></div>
-    </div>`;
-
-    tableHtml += `
-    <div style="font-size:13px;font-weight:bold;color:#2d4a44;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #ddd;">
-        ${title} <span style="font-weight:normal;font-size:11px;color:#888;">(${limitedRows.length} record${limitedRows.length !== 1 ? 's' : ''})</span>
-    </div>`;
-
-    if (limitedRows.length === 0) {
-        tableHtml += `<p style="color:#888;text-align:center;padding:20px 0;">No data to display.</p>`;
-    } else {
-        let headerRowHtml = '';
-        headers.forEach(h => {
-            const isWide = wideColumns.includes(h);
-            headerRowHtml += `<th style="background-color:#2d4a44 !important;color:white !important;padding:8px;font-size:11px !important;border:1px solid #1a3530;${isWide ? 'min-width:160px;' : 'white-space:nowrap;'}">${h}</th>`;
-        });
-
-        let tableRowsHtml = '';
-        limitedRows.forEach((row, i) => {
-            const bg = i % 2 === 0 ? 'white' : '#f5faf8';
-            tableRowsHtml += `<tr style="background-color:${bg} !important;">`;
-            row.forEach((cell, idx) => {
-                const isWide = wideColumns.includes(headers[idx]);
-                tableRowsHtml += `<td style="border:1px solid #ddd;padding:7px 8px;font-size:11px !important;vertical-align:top;${isWide ? 'white-space:normal;word-break:break-word;' : 'white-space:nowrap;'}">${cell}</td>`;
-            });
-            tableRowsHtml += `</tr>`;
-        });
-
-        tableHtml += `
-        <table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;table-layout:auto;">
-            <thead><tr>${headerRowHtml}</tr></thead>
-            <tbody>${tableRowsHtml}</tbody>
-        </table>`;
-    }
-
-    tableHtml += `<div style="margin-top:20px;padding-top:10px;border-top:1px solid #e0e0e0;text-align:center;font-size:9px;color:#aaa;">Official document from Brgy. San Sebastian &nbsp;|&nbsp; Confidential</div>`;
-
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'font-family:Arial,sans-serif;padding:36px;background:white;color:#222;';
-    wrapper.innerHTML = tableHtml;
-
-    const opt = {
-        margin: [0.3, 0.3, 0.3, 0.3],
-        filename: `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-    };
-
-    const exportBtn = document.getElementById('export-pdf-btn');
-    const originalText = exportBtn ? exportBtn.innerHTML : 'Export';
-    if (exportBtn) {
-        exportBtn.innerHTML = 'Generating...';
-        exportBtn.disabled = true;
-    }
-
-    html2pdf().set(opt).from(wrapper).save()
-        .then(() => {
-            if (exportBtn) {
-                exportBtn.innerHTML = originalText;
-                exportBtn.disabled = false;
-            }
-        })
-        .catch(error => {
-            console.error('PDF generation error:', error);
-            alert('Error generating PDF. Please try again.');
-            if (exportBtn) {
-                exportBtn.innerHTML = originalText;
-                exportBtn.disabled = false;
-            }
-        });
-}
-
-
-    function toggleDropdown(el) {
-        const dropdown = document.getElementById('requests-dropdown');
-        const arrow    = el.querySelector('.dropdown-arrow');
-        const isOpen   = dropdown.style.display === 'block';
-        dropdown.style.display = isOpen ? 'none' : 'block';
-        arrow.classList.toggle('open', !isOpen);
-    }
-</script>
-<script>
-(function() {
-  const PAGE_SIZE = 10;
-
-  function initPagination(tableId, footerId) {
-    const tbody = document.querySelector('#' + tableId + ' tbody');
-    const footer = document.getElementById(footerId);
-    if (!tbody || !footer) return;
-
-    let currentPage = 1;
-
-    function getVisibleRows() {
-      return Array.from(tbody.querySelectorAll('tr')).filter(r => r.getAttribute('data-filtered') !== 'hidden');
-    }
-
-    function render() {
-      const all = getVisibleRows();
-      const total = all.length;
-      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-      if (currentPage > totalPages) currentPage = totalPages;
-
-      const start = (currentPage - 1) * PAGE_SIZE;
-      const end   = start + PAGE_SIZE;
-
-      // Show/hide rows for current page
-      Array.from(tbody.querySelectorAll('tr')).forEach(r => {
-        if (r.getAttribute('data-filtered') === 'hidden') {
-          r.style.display = 'none';
-          return;
-        }
-        const idx = all.indexOf(r);
-        r.style.display = (idx >= start && idx < end) ? '' : 'none';
-      });
-
-      // Build footer
-      const fromNum = total === 0 ? 0 : start + 1;
-      const toNum   = Math.min(end, total);
-
-      let paginationHtml = '<ul class="pagination pagination-sm mb-0">';
-
-      // Prev — hidden on first page
-      if (currentPage > 1) {
-        paginationHtml += `<li class="page-item">
-          <a class="page-link" href="#" data-action="prev"><i class="bi bi-arrow-left"></i> Prev</a>
-        </li>`;
-      }
-
-      // Page numbers
-      for (let p = 1; p <= totalPages; p++) {
-        paginationHtml += `<li class="page-item${p === currentPage ? ' active' : ''}">
-          <a class="page-link" href="#" data-action="goto" data-page="${p}">${p}</a>
-        </li>`;
-      }
-
-      // Next — hidden on last page
-      if (currentPage < totalPages) {
-        paginationHtml += `<li class="page-item">
-          <a class="page-link" href="#" data-action="next">Next <i class="bi bi-arrow-right"></i></a>
-        </li>`;
-      }
-
-      paginationHtml += '</ul>';
-
-      footer.innerHTML = `<span>Showing ${fromNum}–${toNum} of ${total}</span><nav>${paginationHtml}</nav>`;
-    }
-
-    // Single delegated listener on the footer — no re-attachment on render
-    footer.addEventListener('click', function(e) {
-      e.preventDefault();
-      const link = e.target.closest('a[data-action]');
-      if (!link) return;
-
-      const all = getVisibleRows();
-      const totalPages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
-      const action = link.getAttribute('data-action');
-
-      if (action === 'prev' && currentPage > 1) currentPage--;
-      else if (action === 'next' && currentPage < totalPages) currentPage++;
-      else if (action === 'goto') currentPage = parseInt(link.getAttribute('data-page'));
-
-      render();
-    });
-
-    // Watch for filter changes — use data-filtered attribute instead of style
-    new MutationObserver(() => {
-      currentPage = 1;
-      render();
-    }).observe(tbody, { attributes: true, subtree: true, attributeFilter: ['data-filtered'] });
-
-    render();
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    initPagination('activity-log-table',      'footer-logs');
-  });
-})();
-</script>
-<script>
-(function() {
-    var lastSnapshot = '';
-    
-    function isModalOpen() {
-        var forceModal = document.getElementById('forcePasswordModal');
-        if (forceModal && forceModal.style.display === 'block') return true;
-        var logoutModal = document.getElementById('logoutModal');
-        if (logoutModal && (logoutModal.style.display === 'block' || logoutModal.style.display === 'flex')) return true;
-        return false;
-    }
-    
-    function poll() {
-        if (isModalOpen()) return;
+    <div class="layout">
+        <input type="hidden" id="accountStatus" th:value="${currentstatus}">
+        <input type="hidden" id="currentUserName" th:value="${currentUser}">
         
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', '/Activity-logs/api/poll?t=' + Date.now(), true);
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                try {
-                    var data = JSON.parse(xhr.responseText);
-                    var snapshot = JSON.stringify(data);
-                    if (lastSnapshot === '') {
-                        lastSnapshot = snapshot;
-                    } else if (snapshot !== lastSnapshot) {
-                        location.reload();
-                    }
-                } catch(e) {}
-            }
-        };
-        xhr.send();
-    }
+        <div id="forcePasswordModal" class="force-modal">
+            <div class="force-modal-content">
+                <h2>First Login Detected</h2>
+                <p>You must change your password before using the system.</p>
+                <button id="redirectPasswordBtn">Change Password</button>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+        <!-- Sidebar -->
+
+        <div class="content">
+            <!-- Top header -->
+            <div class="top-header">
+                <div class="top-header-tab">Activity Logs</div>
+            </div>
+
+            <!-- Search bar -->
+            <div class="search-bar-area">
+                <div class="search-input-wrap">
+                    <span class="search-icon"><i class="bi bi-search"></i></span>
+                    <input type="text" id="contact-search" placeholder="Search activity by name, action, or module...">
+                </div>
+                
+                <div style="position: relative; display: inline-block;">
+                    <button class="filter-btn" id="filterToggleBtn">
+                        <i class="bi bi-funnel"></i> Filters
+                        <span id="activeFilterCount" style="display:none; background:#2d4a44; color:white; border-radius:50%; padding:1px 6px; font-size:11px; margin-left:4px;">0</span>
+                    </button>
+
+                    <div id="filterPanel" style="display:none; position:absolute; top:calc(100% + 6px); left:-200px; z-index:999; background:white; border:1px solid #d0d5dd; border-radius:8px; padding:16px; width:340px; box-shadow: 0 4px 16px rgba(0,0,0,0.12);">
+                        <div style="font-weight:bold; font-size:13px; color:#2d4a44; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.05em;">Filter Logs</div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                            <div>
+                                <label style="font-size:12px; color:#555; display:block; margin-bottom:4px;">Date From</label>
+                                <input type="date" id="filter-date-from" style="width:100%; padding:7px 10px; border:1px solid #d0d5dd; border-radius:6px; font-size:13px; box-sizing:border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size:12px; color:#555; display:block; margin-bottom:4px;">Date To</label>
+                                <input type="date" id="filter-date-to" style="width:100%; padding:7px 10px; border:1px solid #d0d5dd; border-radius:6px; font-size:13px; box-sizing:border-box;">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:10px;">
+                            <label style="font-size:12px; color:#555; display:block; margin-bottom:4px;">Status</label>
+                            <select id="filter-status" style="width:100%; padding:7px 10px; border:1px solid #d0d5dd; border-radius:6px; font-size:13px;">
+                                <option value="">All Statuses</option>
+                                <option value="Success">Success</option>
+                                <option value="Failed">Failed</option>
+                                <option value="Pending">Pending</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom:10px;">
+                            <label style="font-size:12px; color:#555; display:block; margin-bottom:4px;">Action</label>
+                            <select id="filter-action" style="width:100%; padding:7px 10px; border:1px solid #d0d5dd; border-radius:6px; font-size:13px;">
+                                <option value="">All Actions</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom:14px;">
+                            <label style="font-size:12px; color:#555; display:block; margin-bottom:4px;">Role</label>
+                            <select id="filter-role" style="width:100%; padding:7px 10px; border:1px solid #d0d5dd; border-radius:6px; font-size:13px;">
+                                <option value="">All Roles</option>
+                            </select>
+                        </div>
+
+                        <div style="display:flex; gap:8px;">
+                            <button id="applyFiltersBtn" style="flex:1; padding:8px; background:#2d4a44; color:white; border:none; border-radius:6px; font-size:13px; font-weight:bold; cursor:pointer;">Apply</button>
+                            <button id="clearFiltersBtn" style="flex:1; padding:8px; background:white; color:#2d4a44; border:1px solid #2d4a44; border-radius:6px; font-size:13px; font-weight:bold; cursor:pointer;">Clear</button>
+                        </div>
+                    </div>
+                </div>
+                <button class="export-btn" id="export-pdf-btn">Export</button>
+            </div>
+
+            <div class="panel" role="main">
+                <!-- Activity Log Table -->
+                <div id="tab-police" class="panel-inner">
+                    <div class="panel-header">Employee Activity Log</div>
+                    <div class="panel-content">
+                        <table class="table table-bordered table-hover mb-0" id="activity-log-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Module</th>
+                                    <th>Details</th>
+                                    <th>IP Address</th>
+                                    <th>Status</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="log : ${activityLogs}">
+                                    <td th:text="${log.id}">1</td>
+                                    <td>
+                                        <div class="facility-name" th:text="${log.userName}">John Smith</div>
+                                        <div class="user-role" th:text="${log.userRole}">Admin</div>
+                                    </td>
+                                    <td><span class="action-badge" th:text="${log.action}">LOGIN</span></td>
+                                    <td th:text="${log.module}">Dashboard</td>
+                                    <td th:text="${log.details}">User logged in successfully</td>
+                                    <td th:text="${log.ipAddress}">192.168.1.1</td>
+                                    <td>
+                                        <span th:classappend="${log.status == 'Success'} ? 'status-success' : (${log.status == 'Failed'} ? 'status-failed' : 'status-pending')"
+                                              class="status-success" th:text="${log.status}">Success</span>
+                                    </td>
+                                    <td th:text="${#temporals.format(log.timestamp, 'MMM dd, yyyy HH:mm')}">Jan 01, 2025 08:00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="table-footer" id="footer-logs">
+                            <span>Showing recent activities</span>
+                            <nav>
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><a class="page-link" href="#"><i class="bi bi-arrow-left"></i> Prev</a></li>
+                                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                    <li class="page-item disabled"><a class="page-link" href="#">Next <i class="bi bi-arrow-right"></i></a></li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     
-    poll();
-    setInterval(poll, 5000);
-})();
-</script>   
+    <!-- Logout Modal -->
+    <div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
+
+    <!-- External App JS -->
+    <script src="/js/activity-logs.js"></script>
 </body>
 </html>

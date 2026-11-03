@@ -1,1187 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Brgy. San Sebastian Resident Login: Login to your Resident Account">
-<title>Resident Login - Brgy. San Sebastian</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<style>
-  *, *::before, *::after {
-    margin: 0; padding: 0; box-sizing: border-box;
-    font-family: "DM Sans", "Segoe UI", Arial, sans-serif;
-  }
-
-  :root {
-    --teal-dark:  #14504a;
-    --teal-mid:   #1e5a50;
-    --teal-light: #3ca08c;
-    --gold:       #f4c542;
-    --gold-hover: #f5d06a;
-    --text-dark:  #1a3a30;
-  }
-
-  body {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 28px;
-    background: var(--teal-dark);
-    position: relative;
-    overflow: auto;
-    font-size: 17px;
-  }
-
-  body::before {
-    content: "";
-    position: fixed; top: -120px; right: -120px;
-    width: 560px; height: 560px;
-    background: rgba(60, 160, 140, 0.16);
-    border-radius: 50%;
-    pointer-events: none;
-  }
-
-  body::after {
-    content: "";
-    position: fixed; bottom: -140px; left: -90px;
-    width: 480px; height: 480px;
-    background: rgba(244, 197, 66, 0.08);
-    border-radius: 50%;
-    pointer-events: none;
-  }
-
-  .bg-blob-mid {
-    position: fixed; top: 50%; left: 40%;
-    transform: translate(-50%, -50%);
-    width: 720px; height: 720px;
-    background: rgba(30, 90, 80, 0.25);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .login-container {
-    position: relative; z-index: 1;
-    display: flex;
-    background: rgba(255,255,255,0.04);
-    border-radius: 28px;
-    overflow: auto;
-    box-shadow: 0 32px 80px rgba(0,0,0,0.45);
-    max-width: 990px;
-    width: 100%;
-    height: 640px;
-    backdrop-filter: blur(4px);
-  }
-
-  .left-panel {
-    background-image: url('/images/kawit.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    padding: 48px 40px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    position: relative;
-  }
-
-  .left-panel::before {
-    content: "";
-    position: absolute; inset: 0;
-    background: linear-gradient(
-      to bottom,
-      rgba(20, 80, 70, 0.42) 0%,
-      rgba(30, 90, 80, 0.32) 50%,
-      rgba(20, 70, 60, 0.42) 100%
-    );
-    mix-blend-mode: normal;
-    z-index: 0;
-  }
-
-  .left-panel::after {
-    content: "";
-    position: absolute; inset: 0;
-    background: rgba(60, 160, 140, 0.2);
-    z-index: 0;
-  }
-
-  .left-panel > * { position: relative; z-index: 1; }
-
-  .backbutton {
-    position: relative;
-    text-decoration: none;
-    color: rgba(255,255,255,0.85);
-    font-size: 0.95rem;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
-    z-index: 20;
-    background: rgba(0,0,0,0.3);
-    padding: 8px 16px;
-    border-radius: 40px;
-    backdrop-filter: blur(4px);
-    margin: 0 0 20px 0;
-  }
-
-  .backbutton:hover {
-    color: var(--gold);
-    background: rgba(0,0,0,0.5);
-  }
-
-  .brgy-title {
-    color: #fff;
-    font-size: 1.5rem;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-bottom: 32px;
-    position: relative; z-index: 1;
-  }
-
-  .logo {
-    width: 140px; height: 140px;
-    margin-bottom: 32px;
-    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.3));
-    position: relative; z-index: 1;
-  }
-
-  .welcome-title {
-    color: #fff;
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 14px;
-    position: relative; z-index: 2;
-  }
-
-  .welcome-subtitle {
-    color: #fff;
-    font-size: 1rem;
-    line-height: 1.6;
-    position: relative; z-index: 5;
-  }
-
-  .left-accent {
-    width: 48px; height: 4px;
-    background: var(--gold);
-    border-radius: 3px;
-    margin: 22px auto;
-    position: relative; z-index: 1;
-  }
-
-  .resident-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(244,197,66,0.18);
-    border: 1px solid rgba(244,197,66,0.45);
-    color: var(--gold);
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 5px 14px;
-    border-radius: 40px;
-    margin-bottom: 20px;
-    position: relative; z-index: 1;
-  }
-
-  .right-panel {
-    background: rgba(255,255,255,0.06);
-    padding: 48px 56px;
-    flex: 1.1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    overflow: hidden;
-  }
-
-  .login-header { margin-bottom: 28px; text-align: center;}
-
-  .login-title {
-    color: #fff;
-    font-size: 2.8rem;
-    font-weight: 700;
-    margin-bottom: 10px;
-    line-height: 1.2;
-  }
-
-  .login-subtitle {
-    color: rgba(255,255,255,0.45);
-    font-size: 1rem;
-  }
-
-  .form-group { margin-bottom: 20px; margin-top: -8px; }
-
-  label {
-    display: block;
-    color: rgba(255,255,255,0.75);
-    font-size: 0.95rem;
-    font-weight: 600;
-    letter-spacing: 0.4px;
-    margin-bottom: 10px;
-  }
-
-  #loginForm input[type="email"],
-  #loginForm input[type="password"],
-  #loginForm input[type="text"]{
-    width: 100%;
-    padding: 15px 20px;
-    background: rgba(255,255,255,0.07);
-    border: 1.5px solid rgba(255,255,255,0.15);
-    border-radius: 12px;
-    color: #fff;
-    font-size: 1rem;
-    font-family: inherit;
-    transition: border 0.2s, background 0.2s;
-  }
-
-  #loginForm input::placeholder { color: rgba(255,255,255,0.28); font-size: 0.95rem; }
-
-  #loginForm input:focus {
-    outline: none;
-    border-color: var(--teal-light);
-    background: rgba(255,255,255,0.11);
-  }
-
-  #loginForm input.valid   { border-color: #4ade80; }
-  #loginForm input.invalid { border-color: #ff6b6b; }
-
-  .field-error { color: #ff8a8a; font-size: 0.82rem; margin-top: 5px; display: none; }
-  .field-error.show { display: block; }
-
-  .forgot-password {
-    text-align: right;
-    margin-top: -10px;
-    margin-bottom: 28px;
-  }
-
-  .forgot-password a, .forgot-password span {
-    color: rgba(255,255,255,0.45);
-    font-size: 0.9rem;
-    text-decoration: none;
-    transition: color 0.2s;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .forgot-password a:hover, .forgot-password span:hover { color: var(--gold); }
-
-  .login-button {
-    width: 100%;
-    padding: 16px;
-    background: var(--gold);
-    color: var(--text-dark);
-    font-size: 1.1rem;
-    font-weight: 700;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    font-family: inherit;
-    transition: background 0.25s, transform 0.2s, box-shadow 0.25s;
-    letter-spacing: 0.3px;
-  }
-
-  .login-button:hover {
-    background: var(--gold-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(244, 197, 66, 0.35);
-  }
-
-  .login-button:active  { transform: translateY(0); }
-
-  .login-button:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-  }
-
-  .error-message {
-    color: #ff8a8a;
-    text-align: center;
-    margin-top: 18px;
-    font-size: 0.9rem;
-    display: none;
-  }
-
-  .error-message.show { display: block; }
-
-  .password-wrapper { position: relative; }
-  .password-wrapper input { padding-right: 56px; }
-
-  .toggle-password {
-    position: absolute;
-    right: 16px; top: 50%;
-    transform: translateY(-50%);
-    background: none; border: none;
-    cursor: pointer;
-    color: rgba(255,255,255,0.35);
-    padding: 0; display: flex; align-items: center;
-    transition: color 0.2s;
-    z-index: 5;
-  }
-
-  .toggle-password:hover { color: rgba(255,255,255,0.7); }
-
-  .footer-links {
-    margin-top: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .footer-links p {
-    color: rgba(255,255,255,0.5);
-    font-size: 0.9rem;
-    margin: 0;
-    text-align: center;
-  }
-
-  .footer-links a {
-    color: var(--gold);
-    font-weight: 600;
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-
-  .footer-links a:hover { color: var(--gold-hover); text-decoration: underline; }
-
-  .divider {
-    width: 100%;
-    height: 1px;
-    background: rgba(255,255,255,0.1);
-    margin: 2px 0;
-  }
-
-  .staff-link-text {
-    color: rgba(255,255,255,0.38);
-    font-size: 0.84rem;
-  }
-
-  .staff-link-text a {
-    color: rgba(255,255,255,0.6);
-    font-weight: 600;
-    text-decoration: underline;
-  }
-
-  .staff-link-text a:hover { color: #fff; }
-
-  /* Modal Styles */
-  .fp-modal-overlay {
-    display: none; 
-    position: fixed; 
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.7); 
-    z-index: 9999;
-    justify-content: center; 
-    align-items: center;
-  }
-  
-  .fp-modal-overlay.show { 
-    display: flex !important; 
-  }
-
-  .fp-modal {
-    background: #fff; 
-    border-radius: 24px;
-    padding: 32px 28px; 
-    max-width: 500px; 
-    width: 90%;
-    max-height: 90vh; 
-    overflow-y: auto;
-    box-shadow: 0 28px 72px rgba(0,0,0,0.35);
-    position: relative;
-  }
-
-  .fp-modal-close {
-    position: absolute; top: 15px; right: 20px;
-    background: none; border: none;
-    font-size: 28px; color: #7a9d94;
-    cursor: pointer; line-height: 1;
-    z-index: 10;
-  }
-  .fp-modal-close:hover { color: #2d5049; }
-
-  .fp-modal-icon-circle {
-    width: 60px; height: 60px;
-    background: linear-gradient(135deg, #5ab5a0, #4a9d8c);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 14px; font-size: 30px;
-  }
-
-  .fp-modal-title {
-    color: #2d5049; font-size: 1.4rem; font-weight: 700;
-    text-align: center; margin-bottom: 6px;
-  }
-
-  .fp-modal-subtitle {
-    color: #5a7872; font-size: 0.9rem; text-align: center;
-    line-height: 1.55; margin-bottom: 16px;
-  }
-
-  .fp-modal-label {
-    color: #2d5049; font-size: 0.88rem; font-weight: 600;
-    margin-bottom: 5px; margin-top: 12px; display: block;
-  }
-
-  .fp-modal-input {
-    width: 100%; padding: 11px 14px;
-    background: #f5f5f5; border: 2px solid #e0e0e0;
-    border-radius: 11px; color: #2d5049;
-    font-size: 0.92rem; transition: all 0.2s;
-  }
-  .fp-modal-input:focus { outline: none; border-color: #5ab5a0; background: #fff; }
-
-  .fp-modal-pw-wrapper { position: relative; }
-  .fp-modal-pw-wrapper .fp-modal-input { padding-right: 46px; }
-
-  .fp-modal-eye {
-    position: absolute; right: 13px; top: 50%;
-    transform: translateY(-50%);
-    background: none; border: none;
-    cursor: pointer; color: #888; padding: 5px;
-    transition: color 0.2s;
-    z-index: 5;
-  }
-  .fp-modal-eye:hover { color: #2d5049; }
-
-  .fp-modal-btn {
-    width: 100%; padding: 12px;
-    background: #3D6D66; color: #fff;
-    font-size: 1rem; font-weight: 700;
-    border: none; border-radius: 11px;
-    cursor: pointer; font-family: inherit;
-    transition: all 0.25s; margin-top: 14px;
-  }
-  .fp-modal-btn:hover { background: #2d5049; }
-  .fp-modal-btn:disabled { background: #b8d4cd; cursor: not-allowed; }
-
-  .fp-modal-error {
-    background: #fde8e8; color: #c0392b; border-radius: 8px;
-    padding: 10px; font-size: 0.88rem; text-align: center;
-    margin-bottom: 10px; display: none;
-  }
-  .fp-modal-success {
-    background: #e8f5e9; color: #27ae60; border-radius: 8px;
-    padding: 10px; font-size: 0.88rem; text-align: center;
-    margin-bottom: 10px; display: none;
-  }
-  .fp-modal-error.show, .fp-modal-success.show { display: block; }
-
-  .fp-otp-row { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
-  .fp-otp-box {
-    width: 46px; height: 54px;
-    border: 2px solid #ddd; border-radius: 10px;
-    background: #f5f5f5; font-size: 22px;
-    font-weight: 700; color: #2d5049;
-    text-align: center; outline: none;
-    transition: border-color 0.2s;
-  }
-  .fp-otp-box:focus { border-color: #5ab5a0; background: #fff; }
-
-  .fp-resend-row { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 14px; }
-  .fp-resend-text { color: #7a9d94; font-size: 0.88rem; }
-  .fp-resend-link { color: #3D6D66; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
-  .fp-resend-link:hover { text-decoration: underline; }
-  .fp-resend-link.disabled { color: #b8d4cd; cursor: not-allowed; pointer-events: none; }
-
-  .fp-step { display: none; }
-  .fp-step.active { display: block; }
-
-  .sys-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.72);
-    z-index: 99999;
-    justify-content: center; align-items: center;
-  }
-  .sys-overlay.show { display: flex; }
-
-  @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
-  @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-  .sys-modal-box {
-    border-radius: 16px; overflow: hidden;
-    min-width: 300px; max-width: 420px; width: 90%;
-    box-shadow: 0 28px 72px rgba(0,0,0,0.45);
-    animation: slideUp 0.25s ease;
-  }
-
-  .sys-modal-box.success { background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%); }
-  .sys-modal-box.error   { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
-
-  .sys-modal-body { text-align: center; padding: 32px 28px 20px; }
-  .sys-modal-icon { font-size: 56px; margin-bottom: 12px; }
-  .sys-modal-body h5 { color: #fff; font-size: 1.05rem; font-weight: 600; margin: 0; }
-  .sys-modal-footer { display: flex; justify-content: center; padding: 0 28px 28px; }
-
-  .sys-btn-ok {
-    background: rgba(255,255,255,0.2); color: #fff;
-    border: 2px solid rgba(255,255,255,0.5);
-    padding: 9px 32px; border-radius: 8px;
-    font-size: 0.95rem; font-weight: 700;
-    cursor: pointer; font-family: inherit;
-  }
-  .sys-btn-ok:hover { background: rgba(255,255,255,0.35); }
-
-  .deact-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.72); z-index: 99999;
-    justify-content: center; align-items: center;
-  }
-  .deact-overlay.show { display: flex; }
-
-  .deact-box {
-    background: #fff; border-radius: 20px;
-    padding: 40px 32px; max-width: 400px; width: 90%;
-    text-align: center;
-    box-shadow: 0 28px 72px rgba(0,0,0,0.35);
-  }
-
-  .deact-icon  { font-size: 52px; margin-bottom: 14px; }
-  .deact-title { color: #c0392b; font-size: 1.4rem; font-weight: 700; margin-bottom: 10px; }
-  .deact-msg   { color: #555; font-size: 0.95rem; line-height: 1.6; margin-bottom: 24px; }
-
-  .deact-btn {
-    background: #e74c3c; color: #fff;
-    border: none; border-radius: 10px;
-    padding: 12px 32px; font-size: 1rem;
-    font-weight: 700; cursor: pointer;
-    font-family: inherit;
-  }
-  .deact-btn:hover { background: #c0392b; }
-
-  @media (max-width: 768px) {
-    .login-container { flex-direction: column; height: auto; max-width: 100%; }
-    .left-panel      { padding: 48px 32px; }
-    .right-panel     { padding: 42px 32px; }
-    .login-title     { font-size: 2.2rem; }
-    .welcome-title   { font-size: 1.7rem; }
-    .backbutton      { font-size: 0.85rem; padding: 6px 14px; }
-    .logo            { width: 110px; height: 110px; }
-    body             { font-size: 15px; padding: 20px; }
-    .login-container { border-radius: 24px; }
-  }
-
-  @media (max-width: 480px) {
-    .right-panel { padding: 32px 24px; }
-    .login-title { font-size: 1.9rem; }
-    .welcome-title { font-size: 1.5rem; }
-    .fp-modal { padding: 28px 20px; }
-    .fp-otp-box { width: 40px; height: 48px; font-size: 18px; }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brgy. San Sebastian Resident Login: Login to your Resident Account">
+    
+    <!-- External CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/resident-login.css">
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <title>Resident Login - Brgy. San Sebastian</title>
 </head>
 <body>
 
 <!-- System overlays -->
 <div class="sys-overlay" id="sysSuccessOverlay">
-  <div class="sys-modal-box success">
-    <div class="sys-modal-body">
-      <div class="sys-modal-icon"><i class="bi bi-check-circle-fill"></i></div>
-      <h5 id="sysSuccessMessage">Success!</h5>
+    <div class="sys-modal-box success">
+        <div class="sys-modal-body">
+            <div class="sys-modal-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <h5 id="sysSuccessMessage">Success!</h5>
+        </div>
+        <div class="sys-modal-footer">
+            <button class="sys-btn-ok" id="sysSuccessOkBtn">OK</button>
+        </div>
     </div>
-    <div class="sys-modal-footer">
-      <button class="sys-btn-ok" onclick="document.getElementById('sysSuccessOverlay').classList.remove('show')">OK</button>
-    </div>
-  </div>
 </div>
 
 <div class="sys-overlay" id="sysErrorOverlay">
-  <div class="sys-modal-box error">
-    <div class="sys-modal-body">
-      <div class="sys-modal-icon"><i class="bi bi-x-circle-fill"></i></div>
-      <h5 id="sysErrorMessage">An error occurred.</h5>
+    <div class="sys-modal-box error">
+        <div class="sys-modal-body">
+            <div class="sys-modal-icon"><i class="bi bi-x-circle-fill"></i></div>
+            <h5 id="sysErrorMessage">An error occurred.</h5>
+        </div>
+        <div class="sys-modal-footer">
+            <button class="sys-btn-ok" id="sysErrorOkBtn">OK</button>
+        </div>
     </div>
-    <div class="sys-modal-footer">
-      <button class="sys-btn-ok" onclick="document.getElementById('sysErrorOverlay').classList.remove('show')">OK</button>
-    </div>
-  </div>
 </div>
 
 <div class="deact-overlay" id="deactivatedOverlay">
-  <div class="deact-box">
-    <div class="deact-icon">⚠️</div>
-    <div class="deact-title">Account Deactivated</div>
-    <div class="deact-msg">
-      Your account has been deactivated.<br>
-      Please contact your barangay to reactivate your account.
+    <div class="deact-box">
+        <div class="deact-icon">⚠️</div>
+        <div class="deact-title">Account Deactivated</div>
+        <div class="deact-msg">
+            Your account has been deactivated.<br>
+            Please contact your barangay to reactivate your account.
+        </div>
+        <button class="deact-btn" id="deactOkBtn">OK</button>
     </div>
-    <button class="deact-btn" onclick="document.getElementById('deactivatedOverlay').classList.remove('show')">OK</button>
-  </div>
 </div>
 
 <!-- Forgot Password Modal -->
 <div class="fp-modal-overlay" id="fpModalOverlay">
-  <div class="fp-modal">
-    <button class="fp-modal-close" id="fpModalClose">&times;</button>
+    <div class="fp-modal">
+        <button class="fp-modal-close" id="fpModalClose">&times;</button>
 
-    <!-- Step 1: Enter Email -->
-    <div class="fp-step active" id="fpStep1">
-      <div class="fp-modal-icon-circle">✉️</div>
-      <h2 class="fp-modal-title">Forgot Password?</h2>
-      <p class="fp-modal-subtitle">Enter your registered email and we'll send you a 6-digit verification code.</p>
-      <div class="fp-modal-error" id="fp1Error"></div>
-      <div class="fp-modal-success" id="fp1Success"></div>
-      <label class="fp-modal-label" for="fpEmailInput">Email Address</label>
-      <input class="fp-modal-input" type="email" id="fpEmailInput" placeholder="your@email.com" autocomplete="off">
-      <button class="fp-modal-btn" id="fpSendOtpBtn">Send 6-Digit Code</button>
-    </div>
+        <!-- Step 1: Enter Email -->
+        <div class="fp-step active" id="fpStep1">
+            <div class="fp-modal-icon-circle">✉️</div>
+            <h2 class="fp-modal-title">Forgot Password?</h2>
+            <p class="fp-modal-subtitle">Enter your registered email and we'll send you a 6-digit verification code.</p>
+            <div class="fp-modal-error" id="fp1Error"></div>
+            <div class="fp-modal-success" id="fp1Success"></div>
+            <label class="fp-modal-label" for="fpEmailInput">Email Address</label>
+            <input class="fp-modal-input" type="email" id="fpEmailInput" placeholder="your@email.com" autocomplete="off">
+            <button class="fp-modal-btn" id="fpSendOtpBtn">Send 6-Digit Code</button>
+        </div>
 
-    <!-- Step 2: Enter OTP -->
-    <div class="fp-step" id="fpStep2">
-      <div class="fp-modal-icon-circle">🔐</div>
-      <h2 class="fp-modal-title">Enter Verification Code</h2>
-      <p class="fp-modal-subtitle">We sent a 6-digit code to <strong id="fpStep2Email"></strong></p>
-      <div class="fp-modal-error" id="fp2Error"></div>
-      <div class="fp-modal-success" id="fp2Success"></div>
-      <div class="fp-otp-row" id="fpOtpRow">
-        <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="0">
-        <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="1">
-        <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="2">
-        <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="3">
-        <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="4">
-        <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="5">
-      </div>
-      <button class="fp-modal-btn" id="fpVerifyOtpBtn">Verify Code</button>
-      <div class="fp-resend-row">
-        <span class="fp-resend-text">Didn't receive code?</span>
-        <span class="fp-resend-link" id="fpResendLink">Resend</span>
-        <span class="fp-resend-text" id="fpResendTimer" style="display:none;">&nbsp;(<span id="fpResendCountdown">60</span>s)</span>
-      </div>
-    </div>
+        <!-- Step 2: Enter OTP -->
+        <div class="fp-step" id="fpStep2">
+            <div class="fp-modal-icon-circle">🔐</div>
+            <h2 class="fp-modal-title">Enter Verification Code</h2>
+            <p class="fp-modal-subtitle">We sent a 6-digit code to <strong id="fpStep2Email"></strong></p>
+            <div class="fp-modal-error" id="fp2Error"></div>
+            <div class="fp-modal-success" id="fp2Success"></div>
+            <div class="fp-otp-row" id="fpOtpRow">
+                <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="0">
+                <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="1">
+                <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="2">
+                <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="3">
+                <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="4">
+                <input class="fp-otp-box" type="text" inputmode="numeric" maxlength="1" data-index="5">
+            </div>
+            <button class="fp-modal-btn" id="fpVerifyOtpBtn">Verify Code</button>
+            <div class="fp-resend-row">
+                <span class="fp-resend-text">Didn't receive code?</span>
+                <span class="fp-resend-link" id="fpResendLink">Resend</span>
+                <span class="fp-resend-text" id="fpResendTimer" style="display:none;">&nbsp;(<span id="fpResendCountdown">60</span>s)</span>
+            </div>
+        </div>
 
-    <!-- Step 3: New Password -->
-    <div class="fp-step" id="fpStep3">
-      <div class="fp-modal-icon-circle">🔑</div>
-      <h2 class="fp-modal-title">Reset Password</h2>
-      <p class="fp-modal-subtitle">Enter your new password below. It must be at least 8 characters.</p>
-      <div class="fp-modal-error" id="fp3Error"></div>
-      <div class="fp-modal-success" id="fp3Success"></div>
-      <label class="fp-modal-label" for="fpNewPassword">New Password</label>
-      <div class="fp-modal-pw-wrapper">
-        <input class="fp-modal-input" type="password" id="fpNewPassword" placeholder="At least 8 characters" autocomplete="new-password">
-        <button class="fp-modal-eye" type="button" data-target="fpNewPassword"><i class="bi bi-eye"></i></button>
-      </div>
-      <label class="fp-modal-label" for="fpConfirmPassword">Confirm Password</label>
-      <div class="fp-modal-pw-wrapper">
-        <input class="fp-modal-input" type="password" id="fpConfirmPassword" placeholder="Re-enter new password" autocomplete="new-password">
-        <button class="fp-modal-eye" type="button" data-target="fpConfirmPassword"><i class="bi bi-eye"></i></button>
-      </div>
-      <button class="fp-modal-btn" id="fpResetBtn">Reset Password</button>
+        <!-- Step 3: New Password -->
+        <div class="fp-step" id="fpStep3">
+            <div class="fp-modal-icon-circle">🔑</div>
+            <h2 class="fp-modal-title">Reset Password</h2>
+            <p class="fp-modal-subtitle">Enter your new password below. It must be at least 8 characters.</p>
+            <div class="fp-modal-error" id="fp3Error"></div>
+            <div class="fp-modal-success" id="fp3Success"></div>
+            <label class="fp-modal-label" for="fpNewPassword">New Password</label>
+            <div class="fp-modal-pw-wrapper">
+                <input class="fp-modal-input" type="password" id="fpNewPassword" placeholder="At least 8 characters" autocomplete="new-password">
+                <button class="fp-modal-eye" type="button" data-target="fpNewPassword"><i class="bi bi-eye"></i></button>
+            </div>
+            <label class="fp-modal-label" for="fpConfirmPassword">Confirm Password</label>
+            <div class="fp-modal-pw-wrapper">
+                <input class="fp-modal-input" type="password" id="fpConfirmPassword" placeholder="Re-enter new password" autocomplete="new-password">
+                <button class="fp-modal-eye" type="button" data-target="fpConfirmPassword"><i class="bi bi-eye"></i></button>
+            </div>
+            <button class="fp-modal-btn" id="fpResetBtn">Reset Password</button>
+        </div>
     </div>
-  </div>
 </div>
 
 <div class="bg-blob-mid"></div>
 
 <div class="login-container" role="main">
-  <div class="left-panel">
-    <a href="/landing-page" class="backbutton">&larr; Back to Landing Page</a>
-    <div class="brgy-title">Brgy. San Sebastian</div>
-    <img src="/images/seal.png" alt="Barangay Seal" class="logo" onerror="this.style.display='none'">
-    <div class="welcome-title">Welcome Back</div>
-    <div class="left-accent"></div>
-    <div class="welcome-subtitle">Sign in to access your<br>resident portal</div>
-  </div>
-
-  <div class="right-panel">
-    <div class="login-header">
-      <div class="resident-badge">
-        <i class="bi bi-person-check-fill"></i> Resident Portal
-      </div>
-      <h1 class="login-title">Login</h1>
-      <p class="login-subtitle">Enter your credentials to continue</p>
+    <div class="left-panel">
+        <a href="/landing-page" class="backbutton">&larr; Back to Landing Page</a>
+        <div class="brgy-title">Brgy. San Sebastian</div>
+        <img src="/images/seal.png" alt="Barangay Seal" class="logo" id="logoImg">
+        <div class="welcome-title">Welcome Back</div>
+        <div class="left-accent"></div>
+        <div class="welcome-subtitle">Sign in to access your<br>resident portal</div>
     </div>
 
-    <form id="loginForm">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" placeholder="your.email@example.com" required autocomplete="email">
-        <div class="field-error" id="email-error">Please enter a valid email address</div>
-      </div>
-
-      <div class="form-group">
-        <label for="password">Password</label>
-        <div class="password-wrapper">
-          <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
-          <button type="button" class="toggle-password" id="togglePassword" aria-label="Toggle password visibility">
-            <i class="bi bi-eye" id="eyeIcon" style="font-size:22px;"></i>
-          </button>
+    <div class="right-panel">
+        <div class="login-header">
+            <div class="resident-badge">
+                <i class="bi bi-person-check-fill"></i> Resident Portal
+            </div>
+            <h1 class="login-title">Login</h1>
+            <p class="login-subtitle">Enter your credentials to continue</p>
         </div>
-        <div class="field-error" id="password-error">Password is required</div>
-      </div>
 
-      <div class="forgot-password">
-        <span id="forgotPasswordLink">Forgot Password?</span>
-      </div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="your.email@example.com" required autocomplete="email">
+                <div class="field-error" id="email-error">Please enter a valid email address</div>
+            </div>
 
-      <button type="submit" class="login-button" id="loginButton">Sign In</button>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+                    <button type="button" class="toggle-password" id="togglePassword" aria-label="Toggle password visibility">
+                        <i class="bi bi-eye" id="eyeIcon" style="font-size:22px;"></i>
+                    </button>
+                </div>
+                <div class="field-error" id="password-error">Password is required</div>
+            </div>
 
-      <div class="error-message" id="loginErrorMsg"></div>
-    </form>
+            <div class="forgot-password">
+                <span id="forgotPasswordLink">Forgot Password?</span>
+            </div>
 
-    <div class="footer-links">
-      <p>Don't have an account? <a href="/resident/register">Sign Up</a></p>
-      <div class="divider"></div>
-      <p class="staff-link-text">Are you Barangay Staff? <a href="/staff-login">Login here</a></p>
+            <button type="submit" class="login-button" id="loginButton">Sign In</button>
+
+            <div class="error-message" id="loginErrorMsg"></div>
+        </form>
+
+        <div class="footer-links">
+            <p>Don't have an account? <a href="/resident/register">Sign Up</a></p>
+            <div class="divider"></div>
+            <p class="staff-link-text">Are you Barangay Staff? <a href="/staff-login">Login here</a></p>
+        </div>
     </div>
-  </div>
 </div>
 
-<script>
-  // This script runs immediately, before DOMContentLoaded
-  // to ensure the click handler is attached as soon as possible
-  
-  // Show forgot password modal function
-  function showForgotPasswordModal() {
-    console.log('showForgotPasswordModal called');
-    var modal = document.getElementById('fpModalOverlay');
-    if (modal) {
-      modal.classList.add('show');
-      console.log('Modal shown');
-    } else {
-      console.error('Modal element not found!');
-    }
-  }
-
-  // Hide forgot password modal function
-  function hideForgotPasswordModal() {
-    var modal = document.getElementById('fpModalOverlay');
-    if (modal) {
-      modal.classList.remove('show');
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded');
-    
-    if (typeof window.supabase === 'undefined') {
-      alert('Failed to load authentication service. Please refresh the page.');
-      return;
-    }
-    
-    const SUPABASE_URL = 'https://upfrofppponiqffbssqb.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_tZyxrTJrpd_OD5-TKUkT8Q__DnuY0tj';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    // ============ FORGOT PASSWORD LINK ============
-    var forgotLink = document.getElementById('forgotPasswordLink');
-    console.log('Forgot password link:', forgotLink);
-    
-    if (forgotLink) {
-      // Method 1: addEventListener
-      forgotLink.addEventListener('click', function(e) {
-        console.log('Forgot password clicked via addEventListener');
-        e.preventDefault();
-        showForgotPasswordModal();
-      });
-      
-      // Method 2: onclick attribute as backup
-      forgotLink.onclick = function(e) {
-        console.log('Forgot password clicked via onclick');
-        e.preventDefault();
-        showForgotPasswordModal();
-        return false;
-      };
-      
-      // Make sure cursor is pointer
-      forgotLink.style.cursor = 'pointer';
-    }
-
-    // Close modal
-    var closeBtn = document.getElementById('fpModalClose');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', hideForgotPasswordModal);
-    }
-
-    // Close on overlay click
-    var overlay = document.getElementById('fpModalOverlay');
-    if (overlay) {
-      overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) {
-          hideForgotPasswordModal();
-        }
-      });
-    }
-
-    // ============ PASSWORD TOGGLE - MAIN FORM ============
-    var passwordInput = document.getElementById('password');
-    var togglePassword = document.getElementById('togglePassword');
-    var eyeIcon = document.getElementById('eyeIcon');
-
-    if (togglePassword && passwordInput) {
-      togglePassword.addEventListener('click', function(e) {
-        e.preventDefault();
-        var show = passwordInput.type === 'password';
-        passwordInput.type = show ? 'text' : 'password';
-        eyeIcon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
-      });
-    }
-
-    // ============ PASSWORD TOGGLE - MODAL ============
-    document.addEventListener('click', function(e) {
-      var eyeBtn = e.target.closest('.fp-modal-eye');
-      if (!eyeBtn) return;
-      
-      e.preventDefault();
-      e.stopPropagation();
-      
-      var targetId = eyeBtn.getAttribute('data-target');
-      if (!targetId) return;
-      
-      var input = document.getElementById(targetId);
-      if (!input) return;
-      
-      var isPassword = input.type === 'password';
-      input.type = isPassword ? 'text' : 'password';
-      
-      var icon = eyeBtn.querySelector('i');
-      if (icon) {
-        icon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
-      }
-    });
-
-    // ============ FORGOT PASSWORD STEPS ============
-    var fpCurrentEmail = '';
-    var resendTimerRef = null;
-    var fpStep1 = document.getElementById('fpStep1');
-    var fpStep2 = document.getElementById('fpStep2');
-    var fpStep3 = document.getElementById('fpStep3');
-
-    function showFpStep(n) {
-      [fpStep1, fpStep2, fpStep3].forEach(function(s) { if (s) s.classList.remove('active'); });
-      var step = document.getElementById('fpStep' + n);
-      if (step) step.classList.add('active');
-    }
-
-    // Send OTP
-    var fpSendOtpBtn = document.getElementById('fpSendOtpBtn');
-    if (fpSendOtpBtn) {
-      fpSendOtpBtn.addEventListener('click', async function() {
-        var emailInput = document.getElementById('fpEmailInput');
-        var email = emailInput ? emailInput.value.trim().toLowerCase() : '';
-        if (!emailRegex.test(email)) {
-          document.getElementById('fp1Error').textContent = 'Please enter a valid email address.';
-          document.getElementById('fp1Error').classList.add('show');
-          return;
-        }
-        
-        this.disabled = true;
-        this.textContent = 'Sending...';
-        
-        try {
-          var { data: residentCheck, error: checkError } = await supabase
-            .from('residents').select('email').eq('email', email).single();
-          
-          if (checkError || !residentCheck) {
-            throw new Error('Email not found in our records.');
-          }
-          
-          var { error } = await supabase.auth.signInWithOtp({
-            email: email,
-            options: { shouldCreateUser: false }
-          });
-          
-          if (error) throw error;
-          
-          fpCurrentEmail = email;
-          document.getElementById('fpStep2Email').textContent = email;
-          showFpStep(2);
-          startResendTimer();
-          
-        } catch (err) {
-          document.getElementById('fp1Error').textContent = err.message || 'Failed to send code.';
-          document.getElementById('fp1Error').classList.add('show');
-        } finally {
-          this.disabled = false;
-          this.textContent = 'Send 6-Digit Code';
-        }
-      });
-    }
-
-    // OTP boxes
-    var otpBoxes = document.querySelectorAll('.fp-otp-box');
-    otpBoxes.forEach(function(box, i) {
-      box.addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '');
-        if (this.value && i < 5) otpBoxes[i + 1].focus();
-      });
-      box.addEventListener('keydown', function(e) {
-        if (e.key === 'Backspace' && !this.value && i > 0) otpBoxes[i - 1].focus();
-      });
-    });
-
-    function getOtp() {
-      var otp = '';
-      otpBoxes.forEach(function(b) { otp += b.value; });
-      return otp;
-    }
-
-    // Verify OTP
-    var fpVerifyOtpBtn = document.getElementById('fpVerifyOtpBtn');
-    if (fpVerifyOtpBtn) {
-      fpVerifyOtpBtn.addEventListener('click', async function() {
-        var otp = getOtp();
-        if (otp.length !== 6) {
-          document.getElementById('fp2Error').textContent = 'Please enter the complete 6-digit code.';
-          document.getElementById('fp2Error').classList.add('show');
-          return;
-        }
-        
-        this.disabled = true;
-        this.textContent = 'Verifying...';
-        
-        try {
-          var { error } = await supabase.auth.verifyOtp({
-            email: fpCurrentEmail,
-            token: otp,
-            type: 'email'
-          });
-          
-          if (error) throw error;
-          
-          if (resendTimerRef) clearInterval(resendTimerRef);
-          showFpStep(3);
-          
-        } catch (err) {
-          document.getElementById('fp2Error').textContent = err.message || 'Invalid or expired code.';
-          document.getElementById('fp2Error').classList.add('show');
-        } finally {
-          this.disabled = false;
-          this.textContent = 'Verify Code';
-        }
-      });
-    }
-
-    // Reset password
-    var fpResetBtn = document.getElementById('fpResetBtn');
-    if (fpResetBtn) {
-      fpResetBtn.addEventListener('click', async function() {
-        var newPw = document.getElementById('fpNewPassword').value;
-        var confPw = document.getElementById('fpConfirmPassword').value;
-        
-        if (!newPw || newPw.length < 8) {
-          document.getElementById('fp3Error').textContent = 'Password must be at least 8 characters.';
-          document.getElementById('fp3Error').classList.add('show');
-          return;
-        }
-        if (newPw !== confPw) {
-          document.getElementById('fp3Error').textContent = 'Passwords do not match.';
-          document.getElementById('fp3Error').classList.add('show');
-          return;
-        }
-        
-        this.disabled = true;
-        this.textContent = 'Resetting...';
-        
-        try {
-          var { error } = await supabase.auth.updateUser({ password: newPw });
-          if (error) throw error;
-          
-          try {
-            await supabase.from('residents').update({ valid_id: newPw }).eq('email', fpCurrentEmail);
-          } catch (e) {}
-          
-          document.getElementById('fp3Success').textContent = 'Password reset successfully!';
-          document.getElementById('fp3Success').classList.add('show');
-          
-          setTimeout(function() {
-            hideForgotPasswordModal();
-            supabase.auth.signOut();
-            // Reset modal state
-            setTimeout(function() {
-              showFpStep(1);
-              document.getElementById('fpEmailInput').value = '';
-              document.getElementById('fpNewPassword').value = '';
-              document.getElementById('fpConfirmPassword').value = '';
-              otpBoxes.forEach(function(b) { b.value = ''; });
-              document.querySelectorAll('.fp-modal-error, .fp-modal-success').forEach(function(el) {
-                el.textContent = '';
-                el.classList.remove('show');
-              });
-            }, 300);
-          }, 1800);
-          
-        } catch (err) {
-          document.getElementById('fp3Error').textContent = err.message || 'Failed to reset password.';
-          document.getElementById('fp3Error').classList.add('show');
-        } finally {
-          this.disabled = false;
-          this.textContent = 'Reset Password';
-        }
-      });
-    }
-
-    function startResendTimer() {
-      var countdown = 60;
-      var link = document.getElementById('fpResendLink');
-      var timerTxt = document.getElementById('fpResendTimer');
-      var counter = document.getElementById('fpResendCountdown');
-      
-      if (link) link.classList.add('disabled');
-      if (timerTxt) timerTxt.style.display = 'inline';
-      if (counter) counter.textContent = countdown;
-      
-      if (resendTimerRef) clearInterval(resendTimerRef);
-      resendTimerRef = setInterval(function() {
-        countdown--;
-        if (counter) counter.textContent = countdown;
-        if (countdown <= 0) {
-          clearInterval(resendTimerRef);
-          if (link) link.classList.remove('disabled');
-          if (timerTxt) timerTxt.style.display = 'none';
-        }
-      }, 1000);
-    }
-
-    var resendLink = document.getElementById('fpResendLink');
-    if (resendLink) {
-      resendLink.addEventListener('click', async function() {
-        if (this.classList.contains('disabled')) return;
-        
-        try {
-          var { error } = await supabase.auth.signInWithOtp({
-            email: fpCurrentEmail,
-            options: { shouldCreateUser: false }
-          });
-          
-          if (error) throw error;
-          
-          otpBoxes.forEach(function(b) { b.value = ''; });
-          if (otpBoxes[0]) otpBoxes[0].focus();
-          document.getElementById('fp2Success').textContent = 'New code sent successfully!';
-          document.getElementById('fp2Success').classList.add('show');
-          startResendTimer();
-          
-        } catch (err) {
-          document.getElementById('fp2Error').textContent = 'Failed to resend code.';
-          document.getElementById('fp2Error').classList.add('show');
-        }
-      });
-    }
-
-    // ============ LOGIN FORM ============
-    var emailInput = document.getElementById('email');
-    var loginButton = document.getElementById('loginButton');
-
-    if (loginButton) {
-      loginButton.disabled = true;
-      loginButton.style.opacity = '0.55';
-    }
-
-    if (emailInput) {
-      emailInput.addEventListener('input', function() {
-        var valid = emailRegex.test(this.value.trim());
-        this.classList.toggle('valid', valid);
-        this.classList.toggle('invalid', !valid && this.value.trim() !== '');
-        if (loginButton) {
-          loginButton.disabled = !valid;
-          loginButton.style.opacity = valid ? '1' : '0.55';
-        }
-      });
-    }
-
-    // Clear existing session
-    (async function() {
-      try {
-        var { data: { session } } = await supabase.auth.getSession();
-        if (session) await supabase.auth.signOut();
-      } catch (e) {}
-    })();
-
-    var loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-      loginForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        var email = emailInput.value.trim().toLowerCase();
-        var password = passwordInput.value;
-        
-        if (!password) return;
-        
-        loginButton.textContent = 'Verifying...';
-        loginButton.disabled = true;
-        
-        try {
-          var checkRes = await fetch('/resident-check-status?email=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(password));
-          if (!checkRes.ok) {
-            document.getElementById('loginErrorMsg').textContent = await checkRes.text();
-            document.getElementById('loginErrorMsg').classList.add('show');
-            resetLoginButton();
-            return;
-          }
-          
-          var result = await checkRes.text();
-          var isAdmin = result === 'OK_ADMIN';
-          var authData = null;
-          
-          if (!isAdmin) {
-            var { data, error: authError } = await supabase.auth.signInWithPassword({ email: email, password: password });
-            if (authError) {
-              document.getElementById('loginErrorMsg').textContent = 'Invalid email or password.';
-              document.getElementById('loginErrorMsg').classList.add('show');
-              resetLoginButton();
-              return;
-            }
-            authData = data;
-          }
-          
-          var { data: residentData } = await supabase.from('residents').select('account_status, first_name, last_name, id').eq('email', email).single();
-          
-          if (residentData && residentData.account_status === 'DEACTIVATED') {
-            document.getElementById('deactivatedOverlay').classList.add('show');
-            resetLoginButton();
-            return;
-          }
-          
-          localStorage.setItem('userEmail', email);
-          if (authData?.user?.id) localStorage.setItem('userId', authData.user.id);
-          if (residentData) {
-            localStorage.setItem('residentName', (residentData.first_name + ' ' + residentData.last_name).trim() || email);
-          }
-          
-          var formData = new URLSearchParams();
-          formData.append('email', email);
-          formData.append('password', password);
-          
-          var sessionRes = await fetch('/resident-login', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: formData });
-          
-          if (sessionRes.redirected) {
-            window.location.href = '/resident/announcements';
-          } else {
-            window.location.href = '/resident/announcements';
-          }
-        } catch (err) {
-          document.getElementById('loginErrorMsg').textContent = 'A connection error occurred.';
-          document.getElementById('loginErrorMsg').classList.add('show');
-          resetLoginButton();
-        }
-      });
-    }
-
-    function resetLoginButton() {
-      loginButton.textContent = 'Sign In';
-      loginButton.disabled = false;
-      loginButton.style.opacity = emailRegex.test(emailInput.value.trim()) ? '1' : '0.55';
-    }
-
-    console.log('Initialization complete. Click "Forgot Password?" to test.');
-  });
-</script>
-
+<script src="/js/resident-login.js"></script>
 </body>
 </html>

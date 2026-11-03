@@ -1,1279 +1,275 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-<style>
-    body { margin: 0; font-family: Arial, sans-serif; }
-    .layout { display: flex; height: 100vh; overflow: hidden; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brgy. San Sebastian Chat Assistance : Manage Chat Assistance requests from Residents">
     
-    .content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-    }
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">   
+    <link rel="stylesheet" href="/css/contact.css">
 
-    .top-header {
-        background-color: #2d4a44;
-        display: flex;
-        border-bottom: 2px solid #FED734;
-    }
-    .top-header-tab {
-        flex: 1;
-        color: white;
-        text-align: center;
-        padding: 16px 20px;
-        font-size: 16px;
-        font-weight: bold;
-    }
-
-    .search-bar-area {
-        padding: 16px 20px 10px 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background-color: #f5f5f5;
-    }
-    .search-input-wrap { flex: 1; position: relative; }
-    .search-input-wrap input {
-        width: 100%;
-        padding: 9px 14px 9px 38px;
-        border: 1px solid #d0d5dd;
-        border-radius: 6px;
-        font-size: 14px;
-        background: white;
-        box-sizing: border-box;
-    }
-    .search-icon {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #aaa;
-    }
-    .filter-btn {
-        padding: 9px 16px;
-        border: 1px solid #d0d5dd;
-        border-radius: 6px;
-        background: white;
-        font-size: 14px;
-        cursor: pointer;
-        color: #444;
-    }
-
-    .tabbar {
-        display: flex;
-        background-color: white;
-        border-bottom: 1px solid #e0e0e0;
-        padding: 0 20px;
-        gap: 4px;
-    }
-    .tab {
-        padding: 12px 18px;
-        color: #666;
-        cursor: pointer;
-        font-size: 14px;
-        border-bottom: 3px solid transparent;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .tab.active {
-        background-color: #2d4a44;
-        color: white;
-        border-radius: 6px 6px 0 0;
-        font-weight: bold;
-    }
-    .tab-badge {
-        background-color: #FED734;
-        color: #2d4a44;
-        border-radius: 10px;
-        padding: 1px 7px;
-        font-size: 12px;
-        font-weight: bold;
-    }
-
-    .panel {
-        padding: 20px;
-        background-color: #f5f5f5;
-        flex: 1;
-        overflow-y: auto;
-    }
-    .panel-inner {
-        background: white;
-        border-radius: 8px;
-        border: 1px solid #e0e0e0;
-        overflow: hidden;
-    }
-    .panel-header {
-        background-color: #3d5f58;
-        color: white;
-        padding: 14px 20px;
-        font-weight: bold;
-        font-size: 15px;
-    }
-    .panel-content { padding: 0; }
-
-    /* List styles matching announcements - ENLARGED */
-    .contact-list {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .contact-row {
-        display: flex;
-        align-items: center;
-        padding: 0 20px;
-        height: 68px;
-        border-bottom: 1px solid #f0f0f0;
-        cursor: default;
-        transition: background 0.12s;
-        gap: 0;
-        position: relative;
-        box-sizing: border-box;
-    }
-    .contact-row:hover {
-        background-color: #f2f6f5;
-        box-shadow: inset 3px 0 0 #2d4a44;
-    }
-
-    /* Column header - ENLARGED */
-    .list-header {
-        display: flex;
-        align-items: center;
-        padding: 0 20px;
-        height: 42px;
-        border-bottom: 2px solid #e8f0ee;
-        background-color: #f9fafb;
-        gap: 0;
-        box-sizing: border-box;
-    }
-    .list-header-name { width: 160px; flex-shrink: 0; font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-    .list-header-type { width: 110px; flex-shrink: 0; font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-    .list-header-status { width: 90px; flex-shrink: 0; font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-    .list-header-message { flex: 1; font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; min-width: 0; }
-    .list-header-resolved { width: 120px; flex-shrink: 0; font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-    .list-header-date { width: 150px; flex-shrink: 0; font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; text-align: right; padding-right: 10px; }
-
-    /* Row columns - ENLARGED */
-    .row-name {
-        width: 160px;
-        flex-shrink: 0;
-        font-weight: 600;
-        font-size: 15px;
-        color: #1a1a1a;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        padding-right: 12px;
-    }
-    .row-type {
-        width: 110px;
-        flex-shrink: 0;
-    }
-    .row-status {
-        width: 90px;
-        flex-shrink: 0;
-    }
-    .row-message {
-        flex: 1;
-        font-size: 14px;
-        color: #777;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        min-width: 0;
-        padding-right: 12px;
-    }
-    .row-resolved {
-        width: 120px;
-        flex-shrink: 0;
-    }
-    .row-date {
-    width: 150px;
-    flex-shrink: 0;
-    font-size: 13px;
-    color: #999;
-    text-align: right;
-    padding-right: 0px;
-    white-space: nowrap;
-}
-    .row-actions {
-        display: none;
-        align-items: center;
-        gap: 8px;
-        flex-shrink: 0;
-        position: absolute;
-        right: 14px;
-        background: inherit;
-    }
-    .contact-row:hover .row-actions {
-        display: flex;
-    }
-    .contact-row:hover .row-date {
-        visibility: hidden;
-    }
-
-    /* Badge styles - ENLARGED */
-    .badge-type {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-        background-color: #e8f5f0;
-        color: #2d7a5f;
-        border: 1px solid #b8ddd0;
-        white-space: nowrap;
-    }
-    .status-incoming {
-        background-color: #fff8ec;
-        color: #e67e22;
-        border: 1px solid #f5ddb0;
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-    .status-resolved {
-        background-color: #f0fff4;
-        color: #27ae60;
-        border: 1px solid #b0e0c0;
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-    .status-archived {
-        background-color: #f5f5f5;
-        color: #888;
-        border: 1px solid #ddd;
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-    .new-msg-badge {
-        background-color: #e74c3c;
-        color: white;
-        font-size: 11px;
-        font-weight: bold;
-        padding: 3px 8px;
-        border-radius: 10px;
-        display: inline-block;
-        margin-left: 8px;
-        white-space: nowrap;
-    }
-    .resolved-by-text {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: 600;
-        background-color: #6c757d;
-        color: white;
-        white-space: nowrap;
-    }
-    .resolved-by-text i {
-        font-size: 10px;
-    }
-
-    /* Button styles - ENLARGED */
-    .view-btn, .resolve-btn, .archive-btn {
-        padding: 6px 14px;
-        border: none;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .view-btn { background-color: #3498db; color: white; }
-    .view-btn:hover { background-color: #2176ae; }
-    .resolve-btn { background-color: #f1c40f; color: #30534D; }
-    .resolve-btn:hover { background-color: #d4ac0d; }
-    .archive-btn { background-color: #e74c3c; color: white; }
-    .archive-btn:hover { background-color: #b93e30; }
-
-    .table-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px 24px;
-        font-size: 14px;
-        color: #888;
-        border-top: 1px solid #e0e0e0;
-        background: #fafafa;
-    }
-
-    /* Chat Modal Styles */
-    .chat-modal .modal-dialog { max-width: 520px; margin: 1.75rem auto; }
-    .chat-modal .modal-content { border-radius: 14px; overflow: hidden; height: 82vh; max-height: 640px; display: flex; flex-direction: column; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
-    .chat-modal .modal-body { padding: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .chat-header { background-color: #2d4a44; color: white; padding: 14px 18px; font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 12px; border-bottom: 3px solid #FED734; flex-shrink: 0; }
-    .chat-header-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #FED734; flex-shrink: 0; background: #3d5f58; }
-    .chat-header-avatar-placeholder { width: 40px; height: 40px; border-radius: 50%; background-color: #44C375; border: 2px solid #FED734; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; }
-    .chat-header-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-    .chat-header-name { font-size: 15px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .chat-header-sub { font-size: 12px; color: #b0ccc8; font-weight: normal; }
-    .chat-status-dot { width: 9px; height: 9px; background-color: #44C375; border-radius: 50%; flex-shrink: 0; }
-    .chat-status-dot.disabled { background-color: #aaa; }
-    .chat-disabled-badge { display: inline-block; background-color: #e74c3c; color: white; font-size: 11px; padding: 2px 8px; border-radius: 12px; }
-    .request-info { background-color: #f0f7f5; padding: 10px 16px; border-bottom: 1px solid #d8ede8; font-size: 12.5px; flex-shrink: 0; color: #444; line-height: 1.6; }
-    .request-info strong { color: #2d4a44; }
-    .chat-messages { flex: 1; overflow-y: auto; padding: 16px 16px 8px 16px; display: flex; flex-direction: column; gap: 2px; background-color: #f7f8fa; }
-    .date-separator { display: flex; align-items: center; gap: 10px; margin: 12px 0 8px 0; }
-    .date-separator-line { flex: 1; height: 1px; background: #ddd; }
-    .date-separator-label { font-size: 11px; color: #999; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; background: #f7f8fa; padding: 0 4px; }
-    .bubble-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 2px; }
-    .bubble-row.admin { flex-direction: row-reverse; }
-    .bubble-row.resident { flex-direction: row; }
-    .bubble-row.resident > .bubble-avatar, .bubble-row.resident > .bubble-avatar-placeholder { margin-top: 14px; }
-    .bubble-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1.5px solid #e0e0e0; background: #ddd; }
-    .bubble-avatar-placeholder { width: 32px; height: 32px; border-radius: 50%; background-color: #44C375; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 13px; border: 1.5px solid #e0e0e0; }
-    .bubble-avatar-spacer { width: 32px; height: 32px; flex-shrink: 0; visibility: hidden; }
-    .bubble-col { display: flex; flex-direction: column; gap: 3px; max-width: 68%; }
-    .bubble-col.admin { align-items: flex-end; }
-    .bubble-col.resident { align-items: flex-start; }
-    .bubble-sender-name { font-size: 11px; color: #888; font-weight: 600; padding: 0 4px; margin-bottom: 1px; }
-    .chat-bubble { padding: 9px 14px; border-radius: 18px; font-size: 14px; line-height: 1.5; word-wrap: break-word; word-break: break-word; max-width: 100%; position: relative; }
-    .chat-bubble.admin { background-color: #2d4a44; color: white; border-bottom-right-radius: 5px; }
-    .chat-bubble.resident { background-color: #e5e7eb; color: #1a1a1a; border-bottom-left-radius: 5px; }
-    .bubble-time { font-size: 10.5px; color: #bbb; padding: 0 4px; margin-top: 1px; }
-    .bubble-col.admin .bubble-time { text-align: right; }
-    .bubble-col.resident .bubble-time { text-align: left; }
-    .empty-chat { text-align: center; color: #999; padding: 40px; font-size: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; flex: 1; }
-    .chat-input-area { padding: 12px 14px; border-top: 1px solid #e0e0e0; display: flex; gap: 8px; background-color: white; flex-shrink: 0; align-items: center; }
-    .chat-input-area.disabled { background-color: #f5f5f5; opacity: 0.7; }
-    .chat-input { flex: 1; min-height: 42px; max-height: 120px; border: 1.5px solid #d0d5dd; border-radius: 22px; padding: 10px 16px; font-size: 14px; box-sizing: border-box; background: #f7f8fa; transition: border-color 0.2s; resize: none; overflow-y: auto; word-wrap: break-word; word-break: break-word; white-space: pre-wrap; font-family: inherit; line-height: 1.4; }
-    .chat-input:focus { outline: none; border-color: #2d4a44; background: white; }
-    .chat-input:disabled { background-color: #f0f0f0; cursor: not-allowed; }
-    .chat-send-btn { width: 42px; height: 42px; padding: 0; background-color: #2d4a44; color: white; border: none; border-radius: 50%; font-size: 16px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
-    .chat-send-btn:disabled { background-color: #bbb; cursor: not-allowed; }
-    .chat-send-btn:hover:not(:disabled) { background-color: #1a3330; }
-    /* ══════════════════════════════════════
-       FORCE MODAL
-    ══════════════════════════════════════ */
-    .force-modal {
-        display: none;
-        position: fixed; z-index: 9999;
-        left: 0; top: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.55);
-        backdrop-filter: blur(2px);
-    }
-    .force-modal-content {
-        background: white;
-        width: 440px;
-        padding: 44px;
-        border-radius: var(--radius-lg);
-        text-align: center;
-        margin: 18% auto;
-        box-shadow: var(--shadow-lg);
-    }
-    .force-modal-content h2 { color: var(--green-900); margin-bottom: 12px; font-size: 22px; font-weight: 700; }
-    .force-modal-content p { font-size: 15px; color: var(--gray-500); }
-    .force-modal-content button {
-        margin-top: 22px;
-        padding: 13px 32px;
-        background: var(--green-700);
-        color: white;
-        border: none;
-        border-radius: var(--radius-sm);
-        cursor: pointer;
-        font-size: 15px;
-        font-weight: 600;
-        font-family: var(--font);
-        transition: background 0.2s;
-    }
-    .force-modal-content button:hover { background: var(--green-900); }
-    .type-filter-dropdown { display: none; position: absolute; right: 0; top: 110%; background: white; border: 1px solid #d0d5dd; border-radius: 8px; min-width: 180px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 6px 0; }
-    .type-option { padding: 10px 16px; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-    .type-option:hover { background-color: #f5f5f5; }
-    .type-check { color: #2d4a44; display: none; }
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
     
-    /* Custom Modals */
-    .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: none; justify-content: center; align-items: center; }
-    .custom-modal { background: white; border-radius: 12px; width: 380px; max-width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: modalFadeIn 0.2s ease; overflow: hidden; }
-    .custom-modal-header { padding: 18px 24px 0 24px; font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 12px; }
-    .custom-modal-body { padding: 16px 24px; font-size: 15px; color: #444; line-height: 1.5; }
-    .custom-modal-footer { padding: 16px 24px 24px 24px; display: flex; justify-content: flex-end; gap: 12px; }
-    .custom-btn { padding: 8px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-    .custom-btn-primary { background-color: #2d4a44; color: white; }
-    .custom-btn-primary:hover { background-color: #1f3631; }
-    .custom-btn-secondary { background-color: #e0e0e0; color: #333; }
-    .custom-btn-secondary:hover { background-color: #d0d0d0; }
-    .custom-btn-danger { background-color: #e74c3c; color: white; }
-    .custom-btn-danger:hover { background-color: #c0392b; }
-    .success-icon { color: #27ae60; font-size: 28px; }
-    .warning-icon { color: #e67e22; font-size: 28px; }
-    @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-</style>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Brgy. San Sebastian Chat Assistance : Manage Chat Assistance requests from Residents">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link rel="stylesheet" th:href="@{/css/sidebar.css}">   
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
-<title>Contact Help</title>
+    <title>Contact Help</title>
 </head>
 <body>
     <script src="/js/notif.js"></script>
-<div class="toast-container" id="toastContainer"></div>
-<div class="layout">
-
-<input type="hidden" id="accountStatus" th:value="${currentstatus}">
-<div id="forcePasswordModal" class="force-modal">
-    <div class="force-modal-content">
-        <h2>🔒 First Login Detected</h2>
-        <p>You must change your password before using the system.</p>
-        <button onclick="redirectToPassword()">Change Password</button>
-    </div>
-</div>
-
-<!-- Sidebar -->
-<div th:replace="~{fragments/sidebar :: sidebar}"></div>
-
-<div class="content">
-    <div class="top-header">
-        <div class="top-header-tab">Contact Help</div>
-    </div>
-
-    <div class="search-bar-area">
-        <div class="search-input-wrap">
-            <span class="search-icon"><i class="bi bi-search"></i></span>
-            <input type="text" id="contact-search" placeholder="Search contacts by name, message, or type...">
-        </div>
-        <div style="position: relative;">
-            <button class="filter-btn" onclick="toggleTypeFilter(event)">
-                <i class="bi bi-funnel"></i> <span id="filterLabel">All Types</span> <i class="bi bi-chevron-down" style="font-size:11px;"></i>
-            </button>
-            <div id="typeFilterDropdown" class="type-filter-dropdown">
-                <div class="type-option" onclick="filterByType('', 'All Types')">All Types <i class="bi bi-check type-check"></i></div>
-                <div class="type-option" onclick="filterByType('General Inquiry', 'General Inquiry')">General Inquiry <i class="bi bi-check type-check"></i></div>
-                <div class="type-option" onclick="filterByType('Health Services', 'Health Services')">Health Services <i class="bi bi-check type-check"></i></div>
-                <div class="type-option" onclick="filterByType('Infrastructure', 'Infrastructure')">Infrastructure <i class="bi bi-check type-check"></i></div>
-                <div class="type-option" onclick="filterByType('Safety Concern', 'Safety Concern')">Safety Concern <i class="bi bi-check type-check"></i></div>
-                <div class="type-option" onclick="filterByType('Other', 'Other')">Other <i class="bi bi-check type-check"></i></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="tabbar">
-        <div class="tab" th:classappend="${currentTab == 'incoming' ? 'active' : ''}" onclick="window.location.href='/contact-help?tab=incoming'">Incoming <span class="tab-badge" th:text="${incomingCount}">0</span></div>
-        <div class="tab" th:classappend="${currentTab == 'resolved' ? 'active' : ''}" onclick="window.location.href='/contact-help?tab=resolved'">Resolved <span class="tab-badge" th:text="${resolvedCount}">0</span></div>
-        <div class="tab" th:classappend="${currentTab == 'archive' ? 'active' : ''}" onclick="window.location.href='/contact-help?tab=archive'">Archive <span class="tab-badge" th:text="${archivedCount}">0</span></div>
-    </div>
-
-    <div class="panel">
-        <!-- Incoming Panel -->
-        <div id="tab-incoming" class="panel-inner" th:classappend="${currentTab != 'incoming' ? 'd-none' : ''}">
-            <div class="panel-header">Incoming Contacts</div>
-            <div class="panel-content">
-                <div th:if="${not #lists.isEmpty(incomingRequests)}">
-                    <div class="list-header">
-                        <div class="list-header-name">Name</div>
-                        <div class="list-header-type">Type</div>
-                        <div class="list-header-status">Status</div>
-                        <div class="list-header-message">Message</div>
-                        <div class="list-header-date" style="padding-right: 50px;">Date</div>
-                    </div>
-                    <div class="contact-list">
-                        <div class="contact-row" th:each="request : ${incomingRequests}" th:attr="data-request-id=${request.id}">
-                            <div class="row-name" th:text="${request.name != null ? request.name : 'Unknown'}">Juan dela Cruz</div>
-                            <div class="row-type">
-                                <span class="badge-type" th:text="${request.type != null ? request.type : 'General Inquiry'}">General Inquiry</span>
-                            </div>
-                            <div class="row-status">
-                                <span class="status-incoming">Incoming</span>
-                            </div>
-                            <div class="row-message" th:text="${request.message != null ? request.message : 'No message provided'}">I would like to ask about the barangay clearance requirements.</div>
-                            
-                            <div class="row-date">
-                                <span th:text="${request.createdAt != null ? #temporals.format(request.createdAt, 'MMM dd, yyyy hh:mm a') : 'No date'}">Mar 15, 2026 02:30 PM</span>
-                               
-                            </div>
-                             <span class="new-msg-badge" th:style="${unreadStatus[request.id]} ? 'display: inline-block;' : 'display: none;'">NEW</span>
-                            <div class="row-actions">
-                                <button class="view-btn" th:onclick="'openChatModal(' + ${request.id} + ', \'incoming\')'">View</button>
-                                <button class="resolve-btn" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" th:onclick="'showConfirmModal(' + ${request.id} + ', \'RESOLVED\')'">Resolve</button>
-                                <button class="archive-btn" th:if="${currentrole == 'ADMIN'}" th:onclick="'showConfirmModal(' + ${request.id} + ', \'ARCHIVED\')'">Archive</button>
-                                <button class="archive-btn" th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
-                      onclick="openAssistanceModal()">Archive</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="text-center p-4" th:if="${#lists.isEmpty(incomingRequests)}">
-                    <p class="text-muted">No incoming requests</p>
-                </div>
-                <div class="table-footer" th:if="${not #lists.isEmpty(incomingRequests)}">
-                    <span th:text="'Showing ' + ${#lists.size(incomingRequests)} + ' incoming requests'">Showing requests</span>
-                </div>
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <div class="layout">
+        <input type="hidden" id="accountStatus" th:value="${currentstatus}">
+        
+        <div id="forcePasswordModal" class="force-modal">
+            <div class="force-modal-content">
+                <h2>🔒 First Login Detected</h2>
+                <p>You must change your password before using the system.</p>
+                <button id="redirectPasswordBtn">Change Password</button>
             </div>
         </div>
 
-        <!-- Resolved Panel -->
-        <div id="tab-resolved" class="panel-inner" th:classappend="${currentTab != 'resolved' ? 'd-none' : ''}">
-            <div class="panel-header">Resolved Contacts</div>
-            <div class="panel-content">
-                <div th:if="${not #lists.isEmpty(resolvedRequests)}">
-                    <div class="list-header">
-                        <div class="list-header-name">Name</div>
-                        <div class="list-header-type">Type</div>
-                        <div class="list-header-status">Status</div>
-                        <div class="list-header-message">Message</div>
-                        <div class="list-header-resolved">Resolved By</div>
-                        <div class="list-header-date">Resolved Date</div>
-                    </div>
-                    <div class="contact-list">
-                        <div class="contact-row" th:each="request : ${resolvedRequests}" th:attr="data-request-id=${request.id}">
-                            <div class="row-name" th:text="${request.name != null ? request.name : 'Unknown'}">Carlos Reyes</div>
-                            <div class="row-type">
-                                <span class="badge-type" th:text="${request.type != null ? request.type : 'General Inquiry'}">General Inquiry</span>
-                            </div>
-                            <div class="row-status">
-                                <span class="status-resolved">Resolved</span>
-                            </div>
-                            <div class="row-message" th:text="${request.message != null ? request.message : 'No message provided'}">Asked about health services schedule.</div>
-                            <div class="row-resolved">
-                                <span th:if="${request.resolvedBy != null}" class="resolved-by-text"><i class="bi bi-person-check"></i> <span th:text="${request.resolvedBy}"></span></span>
-                                <span th:unless="${request.resolvedBy != null}" class="resolved-by-text">—</span>
-                            </div>
-                            <div class="row-date" th:text="${request.resolvedAt != null ? #temporals.format(request.resolvedAt, 'MMM dd, yyyy hh:mm a') : (request.createdAt != null ? #temporals.format(request.createdAt, 'MMM dd, yyyy hh:mm a') : 'No date')}">Mar 10, 2026 03:45 PM</div>
-                            <div class="row-actions">
-                                <button class="view-btn" th:onclick="'openChatModal(' + ${request.id} + ', \'resolved\')'">View</button>
-                                <button class="archive-btn" th:if="${currentrole == 'ADMIN'}" th:onclick="'showConfirmModal(' + ${request.id} + ', \'ARCHIVED\')'">Archive</button>
-                                <button class="archive-btn" th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" th:onclick="openAssistanceModal()">Archive</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="text-center p-4" th:if="${#lists.isEmpty(resolvedRequests)}">
-                    <p class="text-muted">No resolved requests</p>
-                </div>
-                <div class="table-footer" th:if="${not #lists.isEmpty(resolvedRequests)}">
-                    <span th:text="'Showing ' + ${#lists.size(resolvedRequests)} + ' resolved requests'">Showing requests</span>
-                </div>
-            </div>
-        </div>
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
-        <!-- Archive Panel -->
-        <div id="tab-archive" class="panel-inner" th:if="${currentrole == 'ADMIN'}" th:classappend="${currentTab != 'archive' ? 'd-none' : ''}">
-            <div class="panel-header">Archived Contacts</div>
-            <div class="panel-content">
-                <div th:if="${not #lists.isEmpty(archivedRequests)}">
-                    <div class="list-header">
-                        <div class="list-header-name">Name</div>
-                        <div class="list-header-type">Type</div>
-                        <div class="list-header-status">Status</div>
-                        <div class="list-header-message">Message</div>
-                        <div class="list-header-resolved">Archived By</div>
-                        <div class="list-header-date">Archived Date</div>
-                    </div>
-                    <div class="contact-list">
-                        <div class="contact-row" th:each="request : ${archivedRequests}" th:attr="data-request-id=${request.id}">
-                            <div class="row-name" th:text="${request.name != null ? request.name : 'Unknown'}">Ramon Santos</div>
-                            <div class="row-type">
-                                <span class="badge-type" th:text="${request.type != null ? request.type : 'Request'}">Request</span>
-                            </div>
-                            <div class="row-status">
-                                <span class="status-archived">Archived</span>
-                            </div>
-                            <div class="row-message" th:text="${request.message != null ? request.message : 'No message provided'}">Requested a copy of the barangay blotter report.</div>
-                            <div class="row-resolved">
-                                <span th:if="${request.resolvedBy != null}" class="resolved-by-text"><i class="bi bi-person-check"></i> <span th:text="${request.resolvedBy}"></span></span>
-                                <span th:unless="${request.resolvedBy != null}" class="resolved-by-text">—</span>
-                            </div>
-                            <div class="row-date" th:text="${request.resolvedAt != null ? #temporals.format(request.resolvedAt, 'MMM dd, yyyy hh:mm a') : (request.createdAt != null ? #temporals.format(request.createdAt, 'MMM dd, yyyy hh:mm a') : 'No date')}">Mar 1, 2026 09:15 AM</div>
-                            <div class="row-actions">
-                                <button class="view-btn" th:onclick="'openChatModal(' + ${request.id} + ', \'archive\')'">View</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="text-center p-4" th:if="${#lists.isEmpty(archivedRequests)}">
-                    <p class="text-muted">No archived requests</p>
-                </div>
-                <div class="table-footer" th:if="${not #lists.isEmpty(archivedRequests)}">
-                    <span th:text="'Showing ' + ${#lists.size(archivedRequests)} + ' archived requests'">Showing requests</span>
-                </div>
+        <div class="content">
+            <div class="top-header">
+                <div class="top-header-tab">Contact Help</div>
             </div>
-        </div>
-    </div>
-</div>
-</div>
 
-<!-- Chat Modal -->
-<div class="modal fade chat-modal" id="chatModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="chat-header">
-                <div id="chatHeaderAvatar" class="chat-header-avatar-placeholder">?</div>
-                <div class="chat-header-info">
-                    <div class="chat-header-name" id="chatTitle">Conversation</div>
-                    <div class="chat-header-sub" id="chatHeaderSub">Loading...</div>
+            <div class="search-bar-area">
+                <div class="search-input-wrap">
+                    <span class="search-icon"><i class="bi bi-search"></i></span>
+                    <input type="text" id="contact-search" placeholder="Search contacts by name, message, or type...">
                 </div>
-                <div class="chat-status-dot" id="chatStatusDot"></div>
-                <span id="chatDisabledBadge" class="chat-disabled-badge" style="display: none;">Read Only</span>
-                <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="request-info" id="chatRequestInfo"></div>
-                <div class="chat-messages" id="chatMessages">
-                    <div class="empty-chat" id="emptyChat">
-                        <i class="bi bi-chat-dots"></i>
-                        <p>No messages yet</p>
-                        <small>Type your message to start the conversation</small>
-                    </div>
-                </div>
-                <div class="chat-input-area" id="chatInputArea">
-                    <textarea class="chat-input" id="chatInput" placeholder="Type a message..." rows="1" onkeypress="handleChatKeyPress(event)"></textarea>
-                    <button class="chat-send-btn" id="chatSendBtn" onclick="sendMessage()" title="Send">
-                        <i class="bi bi-send-fill"></i>
+                <div style="position: relative;">
+                    <button class="filter-btn" id="filterToggleBtn">
+                        <i class="bi bi-funnel"></i> <span id="filterLabel">All Types</span> <i class="bi bi-chevron-down" style="font-size:11px;"></i>
                     </button>
+                    <div id="typeFilterDropdown" class="type-filter-dropdown">
+                        <div class="type-option" data-type="" data-label="All Types">All Types <i class="bi bi-check type-check"></i></div>
+                        <div class="type-option" data-type="General Inquiry" data-label="General Inquiry">General Inquiry <i class="bi bi-check type-check"></i></div>
+                        <div class="type-option" data-type="Health Services" data-label="Health Services">Health Services <i class="bi bi-check type-check"></i></div>
+                        <div class="type-option" data-type="Infrastructure" data-label="Infrastructure">Infrastructure <i class="bi bi-check type-check"></i></div>
+                        <div class="type-option" data-type="Safety Concern" data-label="Safety Concern">Safety Concern <i class="bi bi-check type-check"></i></div>
+                        <div class="type-option" data-type="Other" data-label="Other">Other <i class="bi bi-check type-check"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tabbar">
+                <div class="tab" th:classappend="${currentTab == 'incoming' ? 'active' : ''}" data-tab="incoming">Incoming <span class="tab-badge" th:text="${incomingCount}">0</span></div>
+                <div class="tab" th:classappend="${currentTab == 'resolved' ? 'active' : ''}" data-tab="resolved">Resolved <span class="tab-badge" th:text="${resolvedCount}">0</span></div>
+                <div class="tab" th:classappend="${currentTab == 'archive' ? 'active' : ''}" data-tab="archive">Archive <span class="tab-badge" th:text="${archivedCount}">0</span></div>
+            </div>
+
+            <div class="panel">
+                <!-- Incoming Panel -->
+                <div id="tab-incoming" class="panel-inner" th:classappend="${currentTab != 'incoming' ? 'd-none' : ''}">
+                    <div class="panel-header">Incoming Contacts</div>
+                    <div class="panel-content">
+                        <div th:if="${not #lists.isEmpty(incomingRequests)}">
+                            <div class="list-header">
+                                <div class="list-header-name">Name</div>
+                                <div class="list-header-type">Type</div>
+                                <div class="list-header-status">Status</div>
+                                <div class="list-header-message">Message</div>
+                                <div class="list-header-date" style="padding-right: 50px;">Date</div>
+                            </div>
+                            <div class="contact-list">
+                                <div class="contact-row" th:each="request : ${incomingRequests}" th:attr="data-request-id=${request.id}">
+                                    <div class="row-name" th:text="${request.name != null ? request.name : 'Unknown'}">Juan dela Cruz</div>
+                                    <div class="row-type">
+                                        <span class="badge-type" th:text="${request.type != null ? request.type : 'General Inquiry'}">General Inquiry</span>
+                                    </div>
+                                    <div class="row-status">
+                                        <span class="status-incoming">Incoming</span>
+                                    </div>
+                                    <div class="row-message" th:text="${request.message != null ? request.message : 'No message provided'}">I would like to ask about the barangay clearance requirements.</div>
+                                    
+                                    <div class="row-date">
+                                        <span th:text="${request.createdAt != null ? #temporals.format(request.createdAt, 'MMM dd, yyyy hh:mm a') : 'No date'}">Mar 15, 2026 02:30 PM</span>
+                                    </div>
+                                    <span class="new-msg-badge" th:style="${unreadStatus[request.id]} ? 'display: inline-block;' : 'display: none;'">NEW</span>
+                                    <div class="row-actions">
+                                        <button class="view-btn btn-open-chat" th:attr="data-id=${request.id}" data-tab="incoming">View</button>
+                                        <button class="resolve-btn btn-resolve" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" th:attr="data-id=${request.id}" data-status="RESOLVED">Resolve</button>
+                                        <button class="archive-btn btn-archive" th:if="${currentrole == 'ADMIN'}" th:attr="data-id=${request.id}" data-status="ARCHIVED">Archive</button>
+                                        <button class="archive-btn btn-assistance-archive" th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">Archive</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center p-4" th:if="${#lists.isEmpty(incomingRequests)}">
+                            <p class="text-muted">No incoming requests</p>
+                        </div>
+                        <div class="table-footer" th:if="${not #lists.isEmpty(incomingRequests)}">
+                            <span th:text="'Showing ' + ${#lists.size(incomingRequests)} + ' incoming requests'">Showing requests</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resolved Panel -->
+                <div id="tab-resolved" class="panel-inner" th:classappend="${currentTab != 'resolved' ? 'd-none' : ''}">
+                    <div class="panel-header">Resolved Contacts</div>
+                    <div class="panel-content">
+                        <div th:if="${not #lists.isEmpty(resolvedRequests)}">
+                            <div class="list-header">
+                                <div class="list-header-name">Name</div>
+                                <div class="list-header-type">Type</div>
+                                <div class="list-header-status">Status</div>
+                                <div class="list-header-message">Message</div>
+                                <div class="list-header-resolved">Resolved By</div>
+                                <div class="list-header-date">Resolved Date</div>
+                            </div>
+                            <div class="contact-list">
+                                <div class="contact-row" th:each="request : ${resolvedRequests}" th:attr="data-request-id=${request.id}">
+                                    <div class="row-name" th:text="${request.name != null ? request.name : 'Unknown'}">Carlos Reyes</div>
+                                    <div class="row-type">
+                                        <span class="badge-type" th:text="${request.type != null ? request.type : 'General Inquiry'}">General Inquiry</span>
+                                    </div>
+                                    <div class="row-status">
+                                        <span class="status-resolved">Resolved</span>
+                                    </div>
+                                    <div class="row-message" th:text="${request.message != null ? request.message : 'No message provided'}">Asked about health services schedule.</div>
+                                    <div class="row-resolved">
+                                        <span th:if="${request.resolvedBy != null}" class="resolved-by-text"><i class="bi bi-person-check"></i> <span th:text="${request.resolvedBy}"></span></span>
+                                        <span th:unless="${request.resolvedBy != null}" class="resolved-by-text">—</span>
+                                    </div>
+                                    <div class="row-date" th:text="${request.resolvedAt != null ? #temporals.format(request.resolvedAt, 'MMM dd, yyyy hh:mm a') : (request.createdAt != null ? #temporals.format(request.createdAt, 'MMM dd, yyyy hh:mm a') : 'No date')}">Mar 10, 2026 03:45 PM</div>
+                                    <div class="row-actions">
+                                        <button class="view-btn btn-open-chat" th:attr="data-id=${request.id}" data-tab="resolved">View</button>
+                                        <button class="archive-btn btn-archive" th:if="${currentrole == 'ADMIN'}" th:attr="data-id=${request.id}" data-status="ARCHIVED">Archive</button>
+                                        <button class="archive-btn btn-assistance-archive" th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">Archive</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center p-4" th:if="${#lists.isEmpty(resolvedRequests)}">
+                            <p class="text-muted">No resolved requests</p>
+                        </div>
+                        <div class="table-footer" th:if="${not #lists.isEmpty(resolvedRequests)}">
+                            <span th:text="'Showing ' + ${#lists.size(resolvedRequests)} + ' resolved requests'">Showing requests</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Archive Panel -->
+                <div id="tab-archive" class="panel-inner" th:if="${currentrole == 'ADMIN'}" th:classappend="${currentTab != 'archive' ? 'd-none' : ''}">
+                    <div class="panel-header">Archived Contacts</div>
+                    <div class="panel-content">
+                        <div th:if="${not #lists.isEmpty(archivedRequests)}">
+                            <div class="list-header">
+                                <div class="list-header-name">Name</div>
+                                <div class="list-header-type">Type</div>
+                                <div class="list-header-status">Status</div>
+                                <div class="list-header-message">Message</div>
+                                <div class="list-header-resolved">Archived By</div>
+                                <div class="list-header-date">Archived Date</div>
+                            </div>
+                            <div class="contact-list">
+                                <div class="contact-row" th:each="request : ${archivedRequests}" th:attr="data-request-id=${request.id}">
+                                    <div class="row-name" th:text="${request.name != null ? request.name : 'Unknown'}">Ramon Santos</div>
+                                    <div class="row-type">
+                                        <span class="badge-type" th:text="${request.type != null ? request.type : 'Request'}">Request</span>
+                                    </div>
+                                    <div class="row-status">
+                                        <span class="status-archived">Archived</span>
+                                    </div>
+                                    <div class="row-message" th:text="${request.message != null ? request.message : 'No message provided'}">Requested a copy of the barangay blotter report.</div>
+                                    <div class="row-resolved">
+                                        <span th:if="${request.resolvedBy != null}" class="resolved-by-text"><i class="bi bi-person-check"></i> <span th:text="${request.resolvedBy}"></span></span>
+                                        <span th:unless="${request.resolvedBy != null}" class="resolved-by-text">—</span>
+                                    </div>
+                                    <div class="row-date" th:text="${request.resolvedAt != null ? #temporals.format(request.resolvedAt, 'MMM dd, yyyy hh:mm a') : (request.createdAt != null ? #temporals.format(request.createdAt, 'MMM dd, yyyy hh:mm a') : 'No date')}">Mar 1, 2026 09:15 AM</div>
+                                    <div class="row-actions">
+                                        <button class="view-btn btn-open-chat" th:attr="data-id=${request.id}" data-tab="archive">View</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center p-4" th:if="${#lists.isEmpty(archivedRequests)}">
+                            <p class="text-muted">No archived requests</p>
+                        </div>
+                        <div class="table-footer" th:if="${not #lists.isEmpty(archivedRequests)}">
+                            <span th:text="'Showing ' + ${#lists.size(archivedRequests)} + ' archived requests'">Showing requests</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Confirmation Modal -->
-<div id="confirmModal" class="custom-modal-overlay">
-    <div class="custom-modal">
-        <div class="custom-modal-header">
-            <i class="bi bi-exclamation-triangle-fill warning-icon"></i>
-            <span>Confirm Action</span>
-        </div>
-        <div class="custom-modal-body" id="confirmModalBody">Are you sure you want to proceed?</div>
-        <div class="custom-modal-footer">
-            <button class="custom-btn custom-btn-secondary" onclick="closeConfirmModal()">Cancel</button>
-            <button class="custom-btn custom-btn-primary" id="confirmActionBtn">Confirm</button>
-        </div>
-    </div>
-</div>
-
-<!-- Success Modal -->
-<div id="successModal" class="custom-modal-overlay">
-    <div class="custom-modal">
-        <div class="custom-modal-header">
-            <i class="bi bi-check-circle-fill success-icon"></i>
-            <span>Success</span>
-        </div>
-        <div class="custom-modal-body" id="successModalBody">Action completed successfully!</div>
-        <div class="custom-modal-footer">
-            <button class="custom-btn custom-btn-primary" onclick="closeSuccessModalAndReload()">OK</button>
-        </div>
-    </div>
-</div>
-
-<!-- Logout Modal -->
-<div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
-
-<script>
-    let currentRequest = null;
-    let pollInterval = null;
-    let lastMessageId = 0;
-    let isChatDisabled = false;
-    let lastMessageInfo = {};
-    let knownRequestIds = new Set();
-    let isInitialLoad = true;
-    let activeTypeFilter = '';
-    let residentAvatarUrl = null;
-    let residentName = '';
-    
-    let pendingAction = { id: null, status: null };
-
-    function syncBadges() {
-        Object.keys(lastMessageInfo).forEach(requestId => {
-            const row = document.querySelector(`.contact-row[data-request-id="${requestId}"]`);
-            if (!row) return;
-            const badge = row.querySelector('.new-msg-badge');
-            if (!badge) return;
-            badge.style.display = lastMessageInfo[requestId].hasUnread ? 'inline-block' : 'none';
-        });
-    }
-    
-    function reorderCards() {
-        const list = document.querySelector('#tab-incoming .contact-list');
-        if (!list) return;
-        const rows = Array.from(list.querySelectorAll('.contact-row'));
-        const unreadRows = rows.filter(row => {
-            const id = row.getAttribute('data-request-id');
-            return lastMessageInfo[id] && lastMessageInfo[id].hasUnread;
-        });
-        const readRows = rows.filter(row => {
-            const id = row.getAttribute('data-request-id');
-            return !lastMessageInfo[id] || !lastMessageInfo[id].hasUnread;
-        });
-        const fragment = document.createDocumentFragment();
-        [...unreadRows, ...readRows].forEach(row => fragment.appendChild(row));
-        list.innerHTML = '';
-        list.appendChild(fragment);
-    }
-
-    function markAsRead(requestId) {
-        fetch('/contact-help/' + requestId + '/mark-read', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        }).then(response => {
-            if (response.ok) {
-                if (lastMessageInfo[requestId]) lastMessageInfo[requestId].hasUnread = false;
-                syncBadges();
-                reorderCards();
-            }
-        }).catch(err => console.error('Error marking as read:', err));
-    }
-
-    function showConfirmModal(id, status) {
-        pendingAction = { id: id, status: status };
-        const modalBody = document.getElementById('confirmModalBody');
-        const actionText = status === 'RESOLVED' ? 'resolve' : 'archive';
-        modalBody.innerHTML = `Are you sure you want to ${actionText} this contact request? This action cannot be undone.`;
-        document.getElementById('confirmModal').style.display = 'flex';
-    }
-    
-    function closeConfirmModal() {
-        document.getElementById('confirmModal').style.display = 'none';
-        pendingAction = { id: null, status: null };
-    }
-    
-    function showSuccessModal(message) {
-        document.getElementById('successModalBody').textContent = message;
-        document.getElementById('successModal').style.display = 'flex';
-    }
-    
-    function closeSuccessModalAndReload() {
-        document.getElementById('successModal').style.display = 'none';
-        window.location.reload();
-    }
-    
-    function executePendingAction() {
-        if (!pendingAction.id || !pendingAction.status) return;
-        const id = pendingAction.id;
-        const status = pendingAction.status;
-        
-        fetch('/contact-help/' + id + '/status?status=' + status, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' }
-        }).then(response => {
-            if (response.ok) {
-                closeConfirmModal();
-                const successMsg = status === 'RESOLVED' ? 'Request resolved successfully!' : 'Request archived successfully!';
-                showSuccessModal(successMsg);
-            } else {
-                alert('Error updating status');
-                closeConfirmModal();
-            }
-        }).catch(() => {
-            alert('Error updating status');
-            closeConfirmModal();
-        });
-    }
-    
-    document.getElementById('confirmActionBtn').addEventListener('click', executePendingAction);
-
-    function updateStatus(id, status) {
-        fetch('/contact-help/' + id + '/status?status=' + status, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' }
-        }).then(response => {
-            if (response.ok) window.location.reload();
-            else alert('Error updating status');
-        });
-    }
-
-    function toggleTypeFilter(event) {
-        event.stopPropagation();
-        const dd = document.getElementById('typeFilterDropdown');
-        dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
-    }
-
-    function filterByType(type, label) {
-        activeTypeFilter = type;
-        document.getElementById('filterLabel').textContent = label || 'All Types';
-        document.querySelectorAll('.type-option').forEach(opt => {
-            const check = opt.querySelector('.type-check');
-            check.style.display = opt.textContent.trim() === (label || 'All Types') ? 'inline' : 'none';
-        });
-        document.getElementById('typeFilterDropdown').style.display = 'none';
-        document.querySelectorAll('.panel-inner:not(.d-none) .contact-row').forEach(row => {
-            const typeEl = row.querySelector('.badge-type');
-            const rowType = typeEl ? typeEl.textContent.trim() : '';
-            row.style.display = (!type || rowType === type) ? '' : 'none';
-        });
-    }
-
-    function autoResizeTextarea() {
-        const textarea = document.getElementById('chatInput');
-        if (textarea) {
-            textarea.style.height = 'auto';
-            textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
-        }
-    }
-
-    function openChatModal(id, tabType) {
-        markAsRead(id);
-        currentRequest = null;
-        lastMessageId = 0;
-        residentAvatarUrl = null;
-        isChatDisabled = (tabType === 'resolved' || tabType === 'archive');
-
-        const headerAvatar = document.getElementById('chatHeaderAvatar');
-        headerAvatar.className = 'chat-header-avatar-placeholder';
-        headerAvatar.textContent = '?';
-
-        const chatModalEl = document.getElementById('chatModal');
-        const chatModal = new bootstrap.Modal(chatModalEl);
-        chatModal.show();
-
-        chatModalEl.addEventListener('hidden.bs.modal', function onClose() {
-            chatModalEl.removeEventListener('hidden.bs.modal', onClose);
-            stopPolling();
-            syncBadges();
-            reorderCards();
-        });
-
-        fetch('/contact-help/' + id)
-            .then(response => response.json())
-            .then(data => {
-                currentRequest = data;
-                residentName = data.name || 'Resident';
-                const initials = getInitials(residentName);
-
-                document.getElementById('chatTitle').textContent = residentName;
-                document.getElementById('chatHeaderSub').textContent = (data.type || 'General Inquiry') + ' · ' + (data.phoneNumber || 'N/A');
-
-                const hav = document.getElementById('chatHeaderAvatar');
-                hav.className = 'chat-header-avatar-placeholder';
-                hav.textContent = initials;
-
-                const statusDot = document.getElementById('chatStatusDot');
-                const disabledBadge = document.getElementById('chatDisabledBadge');
-                const chatInput = document.getElementById('chatInput');
-                const sendBtn = document.getElementById('chatSendBtn');
-                const inputArea = document.getElementById('chatInputArea');
-
-                if (isChatDisabled) {
-                    statusDot.classList.add('disabled');
-                    disabledBadge.style.display = 'inline-block';
-                    chatInput.disabled = true;
-                    sendBtn.disabled = true;
-                    inputArea.classList.add('disabled');
-                } else {
-                    statusDot.classList.remove('disabled');
-                    disabledBadge.style.display = 'none';
-                    chatInput.disabled = false;
-                    sendBtn.disabled = false;
-                    inputArea.classList.remove('disabled');
-                }
-
-                document.getElementById('chatRequestInfo').innerHTML = `
-                    <strong>${escapeHtml(residentName)}</strong> &nbsp;|&nbsp;
-                    <i class="bi bi-telephone"></i> ${escapeHtml(data.phoneNumber || 'N/A')} &nbsp;|&nbsp;
-                    <i class="bi bi-envelope"></i> ${escapeHtml(data.email || 'N/A')}<br>
-                    <small><strong>Issue:</strong> ${escapeHtml(data.type || 'General Inquiry')}</small>
-                    <div class="mt-1"><strong>Initial Message:</strong> "${escapeHtml(data.message || 'No message')}"</div>
-                    ${data.resolvedBy ? `<div class="mt-1"><strong>Resolved By:</strong> ${escapeHtml(data.resolvedBy)}</div>` : ''}
-                `;
-
-                const msgsDiv = document.getElementById('chatMessages');
-                msgsDiv.innerHTML = '<div class="empty-chat"><i class="bi bi-chat-dots"></i><p>Loading…</p></div>';
-
-                fetch('/contact-help/' + id + '/resident-avatar')
-                    .then(r => r.ok ? r.json() : null)
-                    .then(avatarData => {
-                        if (avatarData && avatarData.avatar_url && avatarData.avatar_url !== '') {
-                            residentAvatarUrl = avatarData.avatar_url;
-                            const currentHav = document.getElementById('chatHeaderAvatar');
-                            const img = document.createElement('img');
-                            img.src = residentAvatarUrl;
-                            img.className = 'chat-header-avatar';
-                            img.alt = residentName;
-                            img.id = 'chatHeaderAvatar';
-                            img.onerror = () => {
-                                residentAvatarUrl = '';
-                                img.className = 'chat-header-avatar-placeholder';
-                                img.alt = '';
-                                const fallback = document.createElement('div');
-                                fallback.className = 'chat-header-avatar-placeholder';
-                                fallback.textContent = initials;
-                                fallback.id = 'chatHeaderAvatar';
-                                img.replaceWith(fallback);
-                            };
-                            currentHav.replaceWith(img);
-                        } else {
-                            residentAvatarUrl = '';
-                        }
-                    })
-                    .catch(() => { residentAvatarUrl = ''; })
-                    .finally(() => {
-                        loadMessages();
-                        if (!isChatDisabled) {
-                            if (pollInterval) clearInterval(pollInterval);
-                            pollInterval = setInterval(loadMessages, 3000);
-                        }
-                        const textarea = document.getElementById('chatInput');
-                        if (textarea) {
-                            textarea.focus();
-                            textarea.addEventListener('input', autoResizeTextarea);
-                        }
-                    });
-            })
-            .catch(() => alert('Error loading conversation'));
-    }
-
-    function stopPolling() {
-        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-        currentRequest = null;
-        lastMessageId = 0;
-    }
-
-    function loadMessages() {
-        if (!currentRequest) return;
-        fetch('/contact-help/' + currentRequest.id + '/messages')
-            .then(r => r.json())
-            .then(messages => {
-                const msgsDiv = document.getElementById('chatMessages');
-                if (messages.length === 0) {
-                    msgsDiv.innerHTML = `<div class="empty-chat" id="emptyChat"><i class="bi bi-chat-dots"></i><p>No messages yet</p><small>Type your message to start the conversation</small></div>`;
-                    lastMessageId = 0;
-                    return;
-                }
-                messages.sort((a, b) => a.id - b.id);
-                if (lastMessageId === 0) {
-                    msgsDiv.innerHTML = '';
-                    renderMessagesWithDates(messages, msgsDiv);
-                    lastMessageId = messages[messages.length - 1].id;
-                    scrollChatToBottom();
-                    return;
-                }
-                const newMsgs = messages.filter(m => m.id > lastMessageId).sort((a, b) => a.id - b.id);
-                if (newMsgs.length > 0) {
-                    appendMessagesWithDates(newMsgs, msgsDiv);
-                    lastMessageId = newMsgs[newMsgs.length - 1].id;
-                    scrollChatToBottom();
-                }
-            })
-            .catch(err => console.error('Poll error:', err));
-    }
-
-    function getDateLabel(dateStr) {
-        if (!dateStr) return '';
-        const d = new Date(dateStr);
-        const today = new Date();
-        const yesterday = new Date();
-        yesterday.setDate(today.getDate() - 1);
-        const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-        if (sameDay(d, today)) return 'Today';
-        if (sameDay(d, yesterday)) return 'Yesterday';
-        return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    }
-
-    function renderMessagesWithDates(messages, container) {
-        let lastDateLabel = null;
-        messages.forEach(msg => {
-            const label = getDateLabel(msg.createdAt);
-            if (label && label !== lastDateLabel) {
-                container.appendChild(makeDateSeparator(label));
-                lastDateLabel = label;
-            }
-            renderBubble(msg, container);
-        });
-    }
-
-    function appendMessagesWithDates(newMsgs, container) {
-        const separators = container.querySelectorAll('.date-separator');
-        let lastRenderedLabel = separators.length > 0 ? separators[separators.length - 1].querySelector('.date-separator-label').textContent : null;
-        newMsgs.forEach(msg => {
-            const label = getDateLabel(msg.createdAt);
-            if (label && label !== lastRenderedLabel) {
-                container.appendChild(makeDateSeparator(label));
-                lastRenderedLabel = label;
-            }
-            renderBubble(msg, container);
-        });
-    }
-
-    function makeDateSeparator(label) {
-        const sep = document.createElement('div');
-        sep.className = 'date-separator';
-        sep.innerHTML = `<div class="date-separator-line"></div><span class="date-separator-label">${escapeHtml(label)}</span><div class="date-separator-line"></div>`;
-        return sep;
-    }
-
-    function renderBubble(msg, container) {
-        const msgsDiv = container || document.getElementById('chatMessages');
-        const isAdmin = msg.senderType === 'ADMIN';
-        const side = isAdmin ? 'admin' : 'resident';
-
-        let timeStr = '';
-        if (msg.createdAt) {
-            try {
-                const d = new Date(msg.createdAt);
-                timeStr = d.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-            } catch(e) {}
-        }
-
-        const senderName = isAdmin ? (msg.senderName || 'Staff') : (msg.senderName || residentName || 'Resident');
-
-        const prevRow = msgsDiv.lastElementChild;
-        const isSameGroup = prevRow && prevRow.classList && prevRow.classList.contains('bubble-row') && prevRow.getAttribute('data-side') === side;
-
-        if (isSameGroup) {
-            const prevCol = prevRow.querySelector('.bubble-col');
-            if (prevCol) {
-                const prevTime = prevCol.querySelector('.bubble-time');
-                if (prevTime) prevTime.remove();
-            }
-        }
-
-        const row = document.createElement('div');
-        row.className = 'bubble-row ' + side;
-        row.setAttribute('data-side', side);
-
-        if (!isAdmin) {
-            if (!isSameGroup) {
-                const avatar = makeResidentAvatar(senderName);
-                row.appendChild(avatar);
-            } else {
-                const spacer = document.createElement('div');
-                spacer.className = 'bubble-avatar-spacer';
-                row.appendChild(spacer);
-            }
-        }
-
-        const col = document.createElement('div');
-        col.className = 'bubble-col ' + side;
-
-        if (!isAdmin && !isSameGroup) {
-            const nameEl = document.createElement('div');
-            nameEl.className = 'bubble-sender-name';
-            nameEl.textContent = senderName;
-            col.appendChild(nameEl);
-        }
-
-        const bubble = document.createElement('div');
-        bubble.className = 'chat-bubble ' + side;
-        bubble.textContent = msg.message;
-        col.appendChild(bubble);
-
-        const timeEl = document.createElement('div');
-        timeEl.className = 'bubble-time';
-        timeEl.textContent = timeStr;
-        col.appendChild(timeEl);
-
-        row.appendChild(col);
-
-        if (isAdmin) {
-            const spacer = document.createElement('div');
-            spacer.className = 'bubble-avatar-spacer';
-            row.appendChild(spacer);
-        }
-
-        msgsDiv.appendChild(row);
-    }
-
-    function makeResidentAvatar(name) {
-        if (residentAvatarUrl && residentAvatarUrl !== '') {
-            const img = document.createElement('img');
-            img.src = residentAvatarUrl;
-            img.className = 'bubble-avatar';
-            img.alt = name;
-            img.onerror = () => {
-                const placeholder = document.createElement('div');
-                placeholder.className = 'bubble-avatar-placeholder';
-                placeholder.textContent = getInitials(name);
-                img.replaceWith(placeholder);
-            };
-            return img;
-        } else {
-            const placeholder = document.createElement('div');
-            placeholder.className = 'bubble-avatar-placeholder';
-            placeholder.textContent = getInitials(name);
-            return placeholder;
-        }
-    }
-
-    function getInitials(name) {
-        if (!name) return '?';
-        const parts = name.trim().split(' ');
-        if (parts.length === 1) return parts[0][0].toUpperCase();
-        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-
-    function sendMessage() {
-        if (isChatDisabled) { alert('This conversation is resolved/archived and cannot be modified.'); return; }
-        const input = document.getElementById('chatInput');
-        const text = input.value.trim();
-        if (!text || !currentRequest) return;
-        input.value = '';
-        autoResizeTextarea();
-        fetch('/contact-help/' + currentRequest.id + '/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: text })
-        }).then(r => r.json()).then(saved => {
-            const msgsDiv = document.getElementById('chatMessages');
-            const emptyEl = msgsDiv.querySelector('.empty-chat');
-            if (emptyEl) emptyEl.remove();
-            const label = getDateLabel(saved.createdAt);
-            const separators = msgsDiv.querySelectorAll('.date-separator');
-            const lastLabel = separators.length > 0 ? separators[separators.length - 1].querySelector('.date-separator-label').textContent : null;
-            if (label && label !== lastLabel) msgsDiv.appendChild(makeDateSeparator(label));
-            renderBubble(saved, msgsDiv);
-            if (saved.id > lastMessageId) lastMessageId = saved.id;
-            scrollChatToBottom();
-        }).catch(() => alert('Failed to send message. Please try again.'));
-    }
-
-    function handleChatKeyPress(event) { if (event.key === 'Enter' && !event.shiftKey && !isChatDisabled) { event.preventDefault(); sendMessage(); } }
-    function scrollChatToBottom() { const msgsDiv = document.getElementById('chatMessages'); msgsDiv.scrollTop = msgsDiv.scrollHeight; }
-    function escapeHtml(text) { if (text == null) return ''; const d = document.createElement('div'); d.textContent = String(text); return d.innerHTML; }
-    function redirectToPassword() { window.location.href = '/change-password'; }
-
-    document.getElementById('contact-search').addEventListener('keyup', function() {
-        const searchValue = this.value.toLowerCase();
-        document.querySelectorAll('.panel-inner:not(.d-none) .contact-row').forEach(row => {
-            const text = row.textContent.toLowerCase();
-            const typeEl = row.querySelector('.badge-type');
-            const rowType = typeEl ? typeEl.textContent.trim() : '';
-            const matchesSearch = text.includes(searchValue);
-            const matchesType = !activeTypeFilter || rowType === activeTypeFilter;
-            row.style.display = (matchesSearch && matchesType) ? '' : 'none';
-        });
-    });
-
-    document.addEventListener('click', function() { const dd = document.getElementById('typeFilterDropdown'); if (dd) dd.style.display = 'none'; });
-
-    function buildAndInjectNewCard(req) {
-        const list = document.querySelector('#tab-incoming .contact-list');
-        if (!list) return;
-        const emptyText = document.querySelector('#tab-incoming .text-center');
-        if (emptyText && emptyText.style.display !== 'none') emptyText.style.display = 'none';
-        const dateStr = req.createdAt ? new Date(req.createdAt).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : 'No date';
-        const row = document.createElement('div');
-        row.className = 'contact-row';
-        row.setAttribute('data-request-id', req.id);
-        row.innerHTML = `
-            <div class="row-name">${escapeHtml(req.name || 'Unknown')}</div>
-            <div class="row-type"><span class="badge-type">${escapeHtml(req.type || 'General Inquiry')}</span></div>
-            <div class="row-status"><span class="status-incoming">Incoming</span></div>
-            <div class="row-message">${escapeHtml(req.message || 'No message provided')}</div>
-            <div class="row-date"><span>${escapeHtml(dateStr)}</span><span class="new-msg-badge" style="display: inline-block;">NEW</span></div>
-            <div class="row-actions">
-                <button class="view-btn" onclick="openChatModal(${req.id}, 'incoming')">View</button>
-                <button class="resolve-btn"  onclick="showConfirmModal(${req.id}, 'RESOLVED')">Resolve</button>
-                <button class="archive-btn" onclick="showConfirmModal(${req.id}, 'ARCHIVED')">Archive</button>
+    <!-- Chat Modal -->
+    <div class="modal fade chat-modal" id="chatModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="chat-header">
+                    <div id="chatHeaderAvatar" class="chat-header-avatar-placeholder">?</div>
+                    <div class="chat-header-info">
+                        <div class="chat-header-name" id="chatTitle">Conversation</div>
+                        <div class="chat-header-sub" id="chatHeaderSub">Loading...</div>
+                    </div>
+                    <div class="chat-status-dot" id="chatStatusDot"></div>
+                    <span id="chatDisabledBadge" class="chat-disabled-badge" style="display: none;">Read Only</span>
+                    <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="request-info" id="chatRequestInfo"></div>
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="empty-chat" id="emptyChat">
+                            <i class="bi bi-chat-dots"></i>
+                            <p>No messages yet</p>
+                            <small>Type your message to start the conversation</small>
+                        </div>
+                    </div>
+                    <div class="chat-input-area" id="chatInputArea">
+                        <textarea class="chat-input" id="chatInput" placeholder="Type a message..." rows="1"></textarea>
+                        <button class="chat-send-btn" id="chatSendBtn" title="Send">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
-        `;
-        list.prepend(row);
-        lastMessageInfo[req.id] = { hasUnread: true };
-        reorderCards();
-        if (activeTypeFilter && (req.type || 'General Inquiry') !== activeTypeFilter) row.style.display = 'none';
-        const tabBadge = document.querySelector('.tabbar .tab:first-child .tab-badge');
-        if (tabBadge) tabBadge.textContent = parseInt(tabBadge.textContent || '0') + 1;
-    }
+        </div>
+    </div>
 
-    function checkForNewRequests() {
-        fetch('/contact-help/api/incoming-requests').then(r => r.json()).then(requests => {
-            requests.forEach(req => { const id = String(req.id); if (!knownRequestIds.has(id)) { knownRequestIds.add(id); lastMessageInfo[id] = { hasUnread: true }; buildAndInjectNewCard(req); } });
-        }).catch(err => console.error('Error checking new requests:', err));
-    }
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="custom-modal-overlay">
+        <div class="custom-modal">
+            <div class="custom-modal-header">
+                <i class="bi bi-exclamation-triangle-fill warning-icon"></i>
+                <span>Confirm Action</span>
+            </div>
+            <div class="custom-modal-body" id="confirmModalBody">Are you sure you want to proceed?</div>
+            <div class="custom-modal-footer">
+                <button class="custom-btn custom-btn-secondary" id="btnCloseConfirm">Cancel</button>
+                <button class="custom-btn custom-btn-primary" id="confirmActionBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
 
-    function initMessageInfo() {
-        const promises = [];
-        document.querySelectorAll('.contact-row').forEach(row => {
-            const requestId = row.getAttribute('data-request-id');
-            if (!requestId) return;
-            knownRequestIds.add(requestId);
-            const promise = fetch('/contact-help/' + requestId + '/unread-status').then(r => r.json()).then(status => {
-                const badge = row.querySelector('.new-msg-badge');
-                lastMessageInfo[requestId] = { hasUnread: status.hasUnread };
-                if (badge) badge.style.display = status.hasUnread ? 'inline-block' : 'none';
-            }).catch(err => console.error('Error getting unread status:', err));
-            promises.push(promise);
-        });
-        Promise.all(promises).then(() => { reorderCards(); isInitialLoad = false; });
-    }
+    <!-- Success Modal -->
+    <div id="successModal" class="custom-modal-overlay">
+        <div class="custom-modal">
+            <div class="custom-modal-header">
+                <i class="bi bi-check-circle-fill success-icon"></i>
+                <span>Success</span>
+            </div>
+            <div class="custom-modal-body" id="successModalBody">Action completed successfully!</div>
+            <div class="custom-modal-footer">
+                <button class="custom-btn custom-btn-primary" id="btnCloseSuccess">OK</button>
+            </div>
+        </div>
+    </div>
 
-    function checkNewMessages() {
-        if (isInitialLoad) return;
-        document.querySelectorAll('.contact-row').forEach(row => {
-            const requestId = row.getAttribute('data-request-id');
-            if (!requestId) return;
-            fetch('/contact-help/' + requestId + '/check-new-messages').then(r => r.json()).then(data => {
-                if (data.hasNewResidentMessage && lastMessageInfo[requestId] && !lastMessageInfo[requestId].hasUnread) {
-                    lastMessageInfo[requestId].hasUnread = true;
-                    syncBadges();
-                    reorderCards();
-                }
-            }).catch(err => console.error('Error checking new messages:', err));
-        });
-    }
+    <!-- Logout Modal -->
+    <div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
 
-    setInterval(checkForNewRequests, 3000);
-    setInterval(checkNewMessages, 5000);
-    document.addEventListener('DOMContentLoaded', function() { initMessageInfo(); });
-    window.onload = function() {
-        const status = document.getElementById("accountStatus").value;
-        if (status === "New" || status === 'Newly Updated') { document.getElementById("forcePasswordModal").style.display = "block"; document.body.style.overflow = "hidden"; }
-    };
-</script>
-<script>
-// ============================================
-// POLLING - Reload on external data changes
-// ============================================
-(function() {
-    var lastSnapshot = '';
-    
-    function isModalOpen() {
-        var chatModal = document.getElementById('chatModal');
-        if (chatModal && chatModal.classList.contains('show')) return true;
-        var confirmModal = document.getElementById('confirmModal');
-        if (confirmModal && confirmModal.style.display === 'flex') return true;
-        var successModal = document.getElementById('successModal');
-        if (successModal && successModal.style.display === 'flex') return true;
-        var forceModal = document.getElementById('forcePasswordModal');
-        if (forceModal && forceModal.style.display === 'block') return true;
-        var logoutModal = document.getElementById('logoutModal');
-        if (logoutModal && (logoutModal.style.display === 'block' || logoutModal.style.display === 'flex')) return true;
-        return false;
-    }
-    
-    function poll() {
-        if (isModalOpen()) return;
-        
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', '/contact-help/api/counts?t=' + Date.now(), true);
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                try {
-                    var data = JSON.parse(xhr.responseText);
-                    var snapshot = JSON.stringify(data);
-                    
-                    if (lastSnapshot === '') {
-                        lastSnapshot = snapshot;
-                    } else if (snapshot !== lastSnapshot) {
-                        location.reload();
-                    }
-                } catch(e) {}
-            }
-        };
-        xhr.send();
-    }
-    
-    poll();
-    setInterval(poll, 5000);
-})();
-</script>
+    <!-- External App JS -->
+    <script src="/js/contact.js"></script>
 </body>
 </html>
