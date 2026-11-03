@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brgy. San Sebastian Documents: Manage Document Requests">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">   
+    <link rel="stylesheet" href="/css/requests-document.css">
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <title>Requests</title>
+</head>
+<body>
+  <input type="hidden" id="currentUserName" th:value="${currentUser}">
+  <input type="hidden" id="accountStatus" th:value="${currentstatus}">
+  <script src="/js/notif.js"></script>
+  <div class="toast-container" id="toastContainer"></div>
+
+<div class="layout">
+    <!-- Success Modal -->
+    <div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0"></div>
+                <div class="modal-body">
+                    <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                    <h5 id="successMessage">Success!</h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" id="successOkBtn">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade error-toast-modal" id="errorModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0"></div>
+                <div class="modal-body">
+                    <div class="error-icon"><i class="bi bi-x-circle-fill"></i></div>
+                    <h5 id="errorMessage">Error!</h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" id="errorOkBtn" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="content">
+        <div class="top-header">
+            <div class="top-header-tab">Document Requests</div>
+        </div>
+
+        <div class="search-bar-area">
+            <div class="search-input-wrap">
+                <span class="search-icon"><i class="bi bi-search"></i></span>
+                <input type="text" id="request-search" placeholder="Search by name, type, or ID...">
+            </div>
+            <select id="filter-type" class="filter-select" aria-label="Filter by document type">
+                <option value="all">All Document Types</option>
+                <option value="Barangay_ID">Barangay ID</option>
+                <option value="Barangay_Clearance">Barangay Clearance</option>
+                <option value="Barangay Indigency">Certificate of Indigency</option>
+            </select>
+            <button class="export-btn" id="export-pdf-btn">Export</button>
+        </div>
+
+        <div class="tabbar">
+            <div class="tab active" data-tab="incoming">
+                Incoming <span class="tab-badge" id="badge-incoming" th:text="${incomingCount}">0</span>
+            </div>
+            <div class="tab" data-tab="processing">
+                Processing <span class="tab-badge" id="badge-processing" th:text="${processingCount}">0</span>
+            </div>
+            <div class="tab" data-tab="ready">
+                Ready <span class="tab-badge" id="badge-ready" th:text="${readyCount}">0</span>
+            </div>
+            <div class="tab" th:if="${currentrole == 'ADMIN'}" data-tab="archive">
+                Archive <span class="tab-badge" id="badge-archive" th:text="${archivedCount}">0</span>
+            </div>
+        </div>
+
+        <div class="panel" role="main">
+            <!-- Incoming -->
+            <div id="tab-incoming" class="panel-inner">
+                <div class="panel-header">Incoming Document Requests</div>
+                <div class="panel-content">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead>
+                            <tr><th>Request ID</th>
+                              <th class="sortable-th" onclick="sortByDate(this)" style="cursor:pointer; user-select:none;">
+                                Date/TimeStamp Created <span class="sort-icon">⇅</span>
+                              </th>
+                            <th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="req : ${incomingRequests}"
+                                th:attr="data-name=${req.fullName},
+                                         data-validid=${req.validIdUrl},
+                                         data-type=${req.documentType},
+                                         data-purpose=${req.purposeOfRequest},
+                                         data-photo=${req.photo2x2Url},
+                                         data-residency=${req.residencyProofUrl},
+                                         data-id=${req.id},
+                                         data-timestamp=${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
+                                         data-address=${req.address},
+                                         data-birthdate=${req.birthdate},
+                                         data-emergency-name=${req.emergencyName},
+                                         data-emergency-address=${req.emergencyAddress},
+                                         data-emergency-contact=${req.emergencyContact},
+                                         data-doc-age=${req.docAge},
+                                        data-doc-civil-status=${req.docCivilStatus},
+                                        data-doc-gender=${req.docGender},
+                                        data-doc-issued-day=${req.docIssuedDay},
+                                        data-doc-issued-month-year=${req.docIssuedMonthYear},
+                                        data-doc-captain-name=${req.docCaptainName},
+                                        data-doc-or-number=${req.docOrNumber},
+                                        data-doc-date-issued=${req.docDateIssued},
+                                        data-doc-purpose=${req.docPurpose},
+                                        data-doc-nb-note=${req.docNbNote},
+                                        data-middle-name=${req.middleName}">
+                                <td th:text="${req.id}"></td>
+                                <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd hh:mm a') : 'N/A'}"></td> 
+                                <td th:text="${req.fullName}"></td>
+                                <td th:text="${req.contactNumber}"></td>
+                                <td><button type="button" class="viewfile-btn btn-view-file">View File</button></td>
+                                <td th:text="${req.documentType}"></td>
+                                <td><div class="action-buttons">
+                                    <button class="approve-btn btn-approve" type="button"
+                                    th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}"
+                                        th:data-id="${req.id}">Approve</button>
+                                    <button class="archive-btn btn-archive-doc" type="button"
+                                        th:if="${currentrole == 'ADMIN'}"
+                                        th:data-id="${req.id}">Archive</button>
+                                    <button class="archive-btn btn-assistance-archive" type="button"
+                                      th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">Archive</button>
+                                </div></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(incomingRequests)}">
+                                <td colspan="7" style="text-align:center; color:#999;">No incoming requests</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Processing -->
+            <div id="tab-processing" class="panel-inner d-none">
+                <div class="panel-header">Processing Document Requests</div>
+                <div class="panel-content">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead>
+                            <tr><th>Request ID</th>
+                              <th class="sortable-th" onclick="sortByDate(this)" style="cursor:pointer; user-select:none;">
+                              Date/TimeStamp Created <span class="sort-icon">⇅</span>
+                              </th><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="req : ${processingRequests}"
+                                th:attr="data-name=${req.fullName},
+                                         data-validid=${req.validIdUrl},
+                                         data-type=${req.documentType},
+                                         data-purpose=${req.purposeOfRequest},
+                                         data-photo=${req.photo2x2Url},
+                                         data-residency=${req.residencyProofUrl},
+                                         data-id=${req.id},
+                                         data-timestamp=${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
+                                         data-address=${req.address},
+                                         data-birthdate=${req.birthdate},
+                                         data-emergency-name=${req.emergencyName},
+                                         data-emergency-address=${req.emergencyAddress},
+                                         data-emergency-contact=${req.emergencyContact},
+                                         data-contact=${req.contactNumber},
+                                         data-emergency-contact=${req.emergencyContact},
+                                         data-doc-age=${req.docAge},
+                                        data-doc-civil-status=${req.docCivilStatus},
+                                        data-doc-gender=${req.docGender},
+                                        data-doc-issued-day=${req.docIssuedDay},
+                                        data-doc-issued-month-year=${req.docIssuedMonthYear},
+                                        data-doc-captain-name=${req.docCaptainName},
+                                        data-doc-or-number=${req.docOrNumber},
+                                        data-doc-date-issued=${req.docDateIssued},
+                                        data-doc-purpose=${req.docPurpose},
+                                        data-doc-nb-note=${req.docNbNote},
+                                        data-middle-name=${req.middleName}">
+                                <td th:text="${req.id}"></td>
+                                <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd hh:mm a') : 'N/A'}"></td>  
+                                <td th:text="${req.fullName}"></td>
+                                <td th:text="${req.contactNumber}"></td>
+                                <td><button type="button" class="viewfile-btn btn-view-file">View File</button></td>
+                                <td th:text="${req.documentType}"></td>
+                                <td><div class="action-buttons">
+                                    <button type="button" class="process-btn btn-open-doc-edit"
+                                    th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">Process</button>
+                                    <button type="button" class="ready-btn btn-mark-ready" 
+                                        th:data-id="${req.id}"
+                                        th:data-name="${req.fullName}"
+                                        th:data-phone="${req.contactNumber}"
+                                        th:data-type="${req.documentType}"
+                                        th:data-photo="${req.photo2x2Url}"
+                                        th:data-address="${req.address}"
+                                        th:data-birthdate="${req.birthdate}"
+                                        th:data-emergency-name="${req.emergencyName}"
+                                        th:data-emergency-address="${req.emergencyAddress}"
+                                        th:data-emergency-contact="${req.emergencyContact}"
+                                        th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">Mark Ready</button>
+                                    <button class="archive-btn btn-archive-doc" type="button"
+                                        th:data-id="${req.id}"
+                                        th:if="${currentrole == 'ADMIN'}">Archive</button>
+                                    <button class="archive-btn btn-assistance-archive" type="button"
+                                     th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">Archive</button>   
+                                </div></td>
+                             </tr>
+                            <tr th:if="${#lists.isEmpty(processingRequests)}">
+                                <td colspan="7" style="text-align:center; color:#999;">No processing requests</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Ready -->
+            <div id="tab-ready" class="panel-inner d-none">
+                <div class="panel-header">Ready Document Requests</div>
+                <div class="panel-content">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead>
+                            <tr><th>Request ID</th>
+                              <th class="sortable-th" onclick="sortByDate(this)" style="cursor:pointer; user-select:none;">
+                              Date/TimeStamp Created <span class="sort-icon">⇅</span>
+                            </th><th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="req : ${readyRequests}"
+                                th:attr="data-name=${req.fullName},
+                                         data-validid=${req.validIdUrl},
+                                         data-type=${req.documentType},
+                                         data-purpose=${req.purposeOfRequest},
+                                         data-photo=${req.photo2x2Url},
+                                         data-residency=${req.residencyProofUrl},
+                                         data-id=${req.id},
+                                         data-timestamp=${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
+                                         data-address=${req.address},
+                                         data-birthdate=${req.birthdate},
+                                         data-emergency-name=${req.emergencyName},
+                                         data-emergency-address=${req.emergencyAddress},
+                                         data-emergency-contact=${req.emergencyContact},
+                                         data-contact=${req.contactNumber},
+                                         data-emergency-contact=${req.emergencyContact},
+                                         data-doc-age=${req.docAge},
+                                        data-doc-civil-status=${req.docCivilStatus},
+                                        data-doc-gender=${req.docGender},
+                                        data-doc-issued-day=${req.docIssuedDay},
+                                        data-doc-issued-month-year=${req.docIssuedMonthYear},
+                                        data-doc-captain-name=${req.docCaptainName},
+                                        data-doc-or-number=${req.docOrNumber},
+                                        data-doc-date-issued=${req.docDateIssued},
+                                        data-doc-purpose=${req.docPurpose},
+                                        data-doc-nb-note=${req.docNbNote},
+                                        data-middle-name=${req.middleName}">
+                                <td th:text="${req.id}"></td>
+                                <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd hh:mm a') : 'N/A'}"></td>  
+                                <td th:text="${req.fullName}"></td>
+                                <td th:text="${req.contactNumber}"></td>
+                                <td><button type="button" class="viewfile-btn btn-view-file">View File</button></td>
+                                <td th:text="${req.documentType}"></td>
+                                <td><div class="action-buttons">
+                                    <button type="button" class="view-btn btn-open-doc-view">View</button>
+                                    <button class="archive-btn btn-archive-doc" type="button"
+                                    th:if="${currentrole == 'ADMIN'}"
+                                        th:data-id="${req.id}">Archive</button>
+                                </div></td>
+                             </tr>
+                            <tr th:if="${#lists.isEmpty(readyRequests)}">
+                                <td colspan="7" style="text-align:center; color:#999;">No ready requests</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Archive -->
+            <div id="tab-archive" class="panel-inner d-none">
+                <div class="panel-header">Archived Document Requests</div>
+                <div class="panel-content">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead>
+                            <tr><th>Request ID</th><th class="sortable-th" onclick="sortByDate(this)" style="cursor:pointer; user-select:none;">
+                              Date/TimeStamp Created <span class="sort-icon">⇅</span>
+                            </th>
+                            <th>Name</th><th>Phone Number</th><th>File</th><th>Request Type</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="req : ${archivedRequests}"
+                                th:attr="data-name=${req.fullName},
+                                         data-validid=${req.validIdUrl},
+                                         data-type=${req.documentType},
+                                         data-purpose=${req.purposeOfRequest},
+                                         data-photo=${req.photo2x2Url},
+                                         data-residency=${req.residencyProofUrl},
+                                         data-id=${req.id},
+                                         data-timestamp=${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd''T''HH:mm:ss') : ''},
+                                         data-address=${req.address},
+                                         data-birthdate=${req.birthdate},
+                                         data-emergency-name=${req.emergencyName},
+                                         data-emergency-address=${req.emergencyAddress},
+                                         data-emergency-contact=${req.emergencyContact},
+                                         data-contact=${req.contactNumber},
+                                         data-middle-name=${req.middleName}">
+                                <td th:text="${req.id}"></td>
+                                <td th:text="${req.dateSubmitted != null ? #temporals.format(req.dateSubmitted, 'yyyy-MM-dd hh:mm a') : 'N/A'}"></td> 
+                                <td th:text="${req.fullName}"></td>
+                                <td th:text="${req.contactNumber}"></td>
+                                <td><button type="button" class="viewfile-btn btn-view-file">View File</button></td>
+                                <td th:text="${req.documentType}"></td>
+                                <td><div class="action-buttons">
+                                    <button type="button" class="view-btn btn-open-doc-view">View Document</button>
+                                </div></td>
+                             </tr>
+                            <tr th:if="${#lists.isEmpty(archivedRequests)}">
+                                <td colspan="7" style="text-align:center; color:#999;">No archived requests</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Modal -->
+<div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
+<script src="/js/sidebar.js"></script>
+
+<!-- View File Modal -->
+<div id="viewFileModalOverlay" class="viewfile-modal-overlay">
+    <div class="viewfile-modal-box">
+        <div class="viewfile-modal-header">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <button class="close-x" id="btnCloseViewFileModal">&times;</button>
+                <div>
+                    <p style="color:#9fd4c8; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; margin:0 0 2px;">Barangay San Sebastian</p>
+                    <p style="color:white; font-size:15px; font-weight:500; margin:0;">Document Request Files</p>
+                </div>
+                <div style="background:#FED734; border-radius:4px; padding:4px 12px; margin-right:28px;">
+                    <p style="font-size:14px; font-weight:600; color:#2d4a44; margin:0;" id="vf-doctype">BARANGAY ID</p>
+                </div>
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:14px; margin-top:16px; padding-bottom:16px;">
+                <div style="width:54px; height:54px; border-radius:50%; background:#3d6b63; border:2px solid #9fd4c8; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="#9fd4c8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8" stroke="#9fd4c8" stroke-width="2" fill="none"/></svg>
+                </div>
+                <div>
+                    <p style="color:white; font-size:17px; font-weight:500; margin:0;" id="vf-name">Juan dela Cruz</p>
+                    <p style="color:#9fd4c8; font-size:12px; margin:3px 0 0;" id="vf-purpose-label">Purpose: —</p>
+                </div>
+            </div>
+        </div>
+        <div class="viewfile-modal-body">
+            <div style="display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-bottom:20px;">
+                <div class="vf-doc-card">
+                    <h4><i class="bi bi-person-square" style="margin-right:5px;"></i>1×1 / 2×2 Photo</h4>
+                    <div class="vf-doc-img-wrap" id="vf-photo-wrap">
+                        <span style="color:#aaa; font-size:13px;">No photo uploaded</span>
+                    </div>
+                </div>
+                <div class="vf-doc-card">
+                    <h4><i class="bi bi-card-text" style="margin-right:5px;"></i>Valid ID</h4>
+                    <div class="vf-doc-img-wrap" id="vf-validid-wrap">
+                        <span style="color:#aaa; font-size:13px;">No ID uploaded</span>
+                    </div>
+                </div>
+                <div class="vf-doc-card">
+                    <h4><i class="bi bi-house-door" style="margin-right:5px;"></i>Residency Proof</h4>
+                    <div class="vf-doc-img-wrap" id="vf-residency-wrap">
+                        <span style="color:#aaa; font-size:13px;">No proof uploaded</span>
+                    </div>
+                </div>
+            </div>
+            <div style="background:#f0f8f5; border:1px solid #c3e0d8; border-radius:8px; padding:14px 18px;">
+                <p style="font-size:11px; font-weight:bold; color:#2d4a44; text-transform:uppercase; letter-spacing:0.07em; margin:0 0 6px;">Purpose of Request</p>
+                <p style="font-size:15px; color:#333; margin:0;" id="vf-purpose-text">—</p>
+            </div>
+            <div style="text-align:right; margin-top:18px;">
+                <button class="btn-cancel" id="btnCloseViewFileModalFooter">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Enlarge overlay -->
+<div id="imgEnlargeOverlay" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.88); cursor:zoom-out;">
+    <img id="imgEnlargeSrc" src="" style="max-width:90%; max-height:90vh; object-fit:contain; border-radius:8px; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);">
+</div>
+
+<!-- Document Modal (process/view) -->
+<div id="docModalOverlay" class="doc-modal-overlay">
+    <div class="doc-modal-box">
+        <div class="doc-modal-header">
+            <h4 id="docModalTitle">Document Template</h4>
+            <button class="doc-modal-close" id="btnCloseDocModal">&times;</button>
+        </div>
+        <div class="doc-modal-body">
+            <div id="printable-area"></div>
+        </div>
+        <div class="doc-modal-footer">
+            <div id="priceLabel" style="flex:1; display:none; align-items:center;">
+                <span style="font-family:'Arial', sans-serif; font-size:17px; font-weight:bold; color:#e74c3c; letter-spacing:0.5px;">Price: &#8369;30</span>
+            </div>
+            <button class="btn-cancel" id="btnCloseDocModalFooter">Close</button>
+            <button id="saveDocumentBtn" class="btn-save-document" style="display:none;"><i class="bi bi-save"></i> Save Document</button>
+            <button class="btn-download" id="btnDownloadDocPDF"><i class="bi bi-download"></i> Download PDF</button>
+            <button class="btn-print" id="btnPrintDoc"><i class="bi bi-printer"></i> Print</button>
+        </div>
+    </div>
+</div>
+
+<script src="/js/requests-document.js"></script>
+</body>
+</html>
