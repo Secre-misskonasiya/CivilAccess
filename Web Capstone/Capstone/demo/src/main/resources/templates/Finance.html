@@ -351,7 +351,11 @@
                     <form th:action="@{/finance/income/save}" method="post" id="incomeForm">
                         <input type="hidden" name="collectedBy" th:value="${currentAdminNumericId}">
                         <div class="row g-3">
-                            <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="incomeDate" class="form-control" required></div>
+                            <div class="col-md-3">
+                                 <label class="form-label">Date</label>
+                                <input type="date" name="incomeDate" class="form-control" required
+                                    th:attr="max=${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}">
+                            </div>
                             <div class="col-md-3">
                                 <label class="form-label">Income Type</label>
                                 <select name="incomeType" class="form-select" id="incomeTypeSelect" required onchange="toggleIncomeFields()">
@@ -448,7 +452,11 @@
                     <form th:action="@{/finance/expenses/save}" method="post" id="expenseForm">
                         <input type="hidden" name="createdBy" th:value="${currentAdminNumericId}">
                         <div class="row g-3">
-                            <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="expenseDate" class="form-control" required></div>
+                            <div class="col-md-3">
+                                <label class="form-label">Date</label>
+                                <input type="date" name="expenseDate" class="form-control" required
+                                    th:attr="max=${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}">
+                            </div>>
                             <div class="col-md-3">
                                 <label class="form-label">Expense Type</label>
                                 <select name="expenseType" class="form-select" required>
@@ -809,6 +817,28 @@
     // ============================================================
     // MODAL SYSTEM
     // ============================================================
+
+    (function () {
+        function pad(n) { return String(n).padStart(2, '0'); }
+
+        function applyMaxToday() {
+            var d = new Date();
+            var today = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+            ['incomeDate', 'expenseDate'].forEach(function (fieldName) {
+                document.querySelectorAll('input[name="' + fieldName + '"]').forEach(function (input) {
+                    input.setAttribute('max', today);
+                    // If the browser autofilled a future date, clear it
+                    if (input.value && input.value > today) input.value = '';
+                });
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', applyMaxToday);
+        } else {
+            applyMaxToday();
+        }
+    })();
 
     function showSuccess(message) {
         var successMessageEl = document.getElementById('successMessage');

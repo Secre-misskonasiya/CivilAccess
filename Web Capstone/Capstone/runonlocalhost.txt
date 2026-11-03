@@ -1,2 +1,2 @@
 cd Capstone/demo
-mvnw.cmd -o spring-boot:run
+.\mvnw.cmd "-o" spring-boot:run

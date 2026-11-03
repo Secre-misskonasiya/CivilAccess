@@ -1280,7 +1280,10 @@
 
   let currentDate = new Date();
   currentDate.setDate(1);
-  const isAdmin = document.getElementById('dataCurrentRole')?.value === 'ADMIN';
+    const isAdmin = document.getElementById('dataCurrentRole')?.value === 'ADMIN';
+    const isStaff = ['SECRETARY', 'SECRETARIAT STAFF', 'TREASURER', 'BARANGAY-CAPTAIN'].includes(
+        document.getElementById('dataCurrentRole')?.value
+    );
 
   // ============================================
   // FETCH BUDGET FROM DATABASE (like Planner page)
@@ -1518,7 +1521,7 @@
             </div>
             <div style="display: flex; gap: 5px; flex-shrink: 0;">
                 <button class="btn-blue" onclick="showEventsForDay('${e.eventDate}')">View</button>
-                ${isAdmin ? `<button class="btn-red" onclick="deleteEventFromList(${e.id}, '${e.eventDate}')" aria-label="Delete event"><i class="bi bi-trash"></i></button>` : ''}
+                ${isAdmin ? `<button class="btn-red" onclick="deleteEventFromList(${e.id}, '${e.eventDate}')" aria-label="Delete event"><i class="bi bi-trash"></i></button>` : (isStaff ? `<button class="btn-red" onclick="openAssistanceModal()" aria-label="Delete event"><i class="bi bi-trash"></i></button>` : '')}
             </div>
         </div>
     `}).join('');
@@ -1585,7 +1588,11 @@
                     <button class="btn-red" onclick="event.stopPropagation(); deleteEvent(${e.id}, '${dateKey}')" style="padding: 4px 12px;">
                         <i class="bi bi-trash"></i> Delete
                     </button>
-                </div>` : ''}
+                </div>` : (isStaff ? `<div class="event-detail" style="margin-top: 10px;">
+                    <button class="btn-red" onclick="event.stopPropagation(); openAssistanceModal()" style="padding: 4px 12px;">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </div>` : '')}
             </div>
         `}).join('');
 

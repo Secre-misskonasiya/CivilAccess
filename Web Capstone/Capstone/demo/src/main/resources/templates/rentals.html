@@ -578,6 +578,16 @@
     const canManage = ['ADMIN', 'SECRETARY', 'SECRETARIAT STAFF', 'TREASURER', 'BARANGAY-CAPTAIN'].includes(
         document.getElementById('dataCurrentRole')?.value
     );
+    const isStaff = ['SECRETARY', 'SECRETARIAT STAFF', 'TREASURER', 'BARANGAY-CAPTAIN'].includes(
+        document.getElementById('dataCurrentRole')?.value
+    );
+
+    // Admin archives directly; secretary/staff get the assistance modal
+    function archiveBtn(id) {
+        if (isAdmin) return `<button class="btn-sm btn-archive" onclick="openArchiveConfirm(${id})">Archive</button>`;
+        if (isStaff) return `<button class="btn-sm btn-archive" onclick="openAssistanceModal()">Archive</button>`;
+        return '';
+    }
 
     // Helper function to calculate days overdue correctly
     function calculateDaysOverdue(expectedReturnDate) {
@@ -771,7 +781,7 @@
                         <td>
                             ${canManage ? `<button class="btn-sm btn-approve" onclick="openApproveConfirm(${r.id})">Approve</button>` : ''}
                             <button class="btn-sm btn-view" onclick="viewRental(${r.id})">View</button>
-                            ${isAdmin ? `<button class="btn-sm btn-archive" onclick="openArchiveConfirm(${r.id})">Archive</button>` : ''}
+                            ${archiveBtn(r.id)}
                         </td>
                     </tr>`;
             }
@@ -791,7 +801,7 @@
                         <td>
                             ${canManage ? `<button class="btn-sm btn-return" onclick="openReturnConfirm(${r.id})">Mark as Returned</button>` : ''}
                             <button class="btn-sm btn-view" onclick="viewRental(${r.id})">View</button>
-                            ${isAdmin ? `<button class="btn-sm btn-archive" onclick="openArchiveConfirm(${r.id})">Archive</button>` : ''}
+                            ${archiveBtn(r.id)}
                         </td>
                     </tr>`;
             }
@@ -812,7 +822,7 @@
                         <td>
                             ${canManage ? `<button class="btn-sm btn-return" onclick="openReturnConfirm(${r.id})">Mark as Returned</button>` : ''}
                             <button class="btn-sm btn-view" onclick="viewRental(${r.id})">View</button>
-                            ${isAdmin ? `<button class="btn-sm btn-archive" onclick="openArchiveConfirm(${r.id})">Archive</button>` : ''}
+                            ${archiveBtn(r.id)}
                         </td>
                     </tr>`;
             }
@@ -829,7 +839,7 @@
                         <td>₱${(r.totalPrice || 0).toFixed(2)}</td>
                         <td>
                             <button class="btn-sm btn-view" onclick="viewRental(${r.id})">View</button>
-                            ${isAdmin ? `<button class="btn-sm btn-archive" onclick="openArchiveConfirm(${r.id})">Archive</button>` : ''}
+                            ${archiveBtn(r.id)}
                         </td>
                     </tr>`;
             }
