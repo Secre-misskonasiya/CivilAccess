@@ -8,10 +8,22 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentImageUrl = null;
     let otpVerified = false;
 
-    const serverData = window.PROFILE_DATA || {};
-    window.usernameList = (serverData.usernameList || []).map(u => u.toLowerCase());
-    window.emailList    = (serverData.emailList    || []).map(e => e.toLowerCase());
-    window.phoneList    = (serverData.phoneList    || []);
+    // ============================================
+    // READ SERVER DATA FROM DATA ATTRIBUTES
+    // ============================================
+    const dataContainer = document.getElementById('serverDataContainer');
+    
+    const parseList = (str) => {
+        if (!str) return [];
+        // Clean up brackets if Thymeleaf renders the list as "[a, b, c]"
+        let cleanStr = str.replace(/^\[|\]$/g, '').trim();
+        if (!cleanStr) return [];
+        return cleanStr.split(',').map(s => s.trim());
+    };
+
+    window.usernameList = parseList(dataContainer?.getAttribute('data-usernames')).map(u => u.toLowerCase());
+    window.emailList    = parseList(dataContainer?.getAttribute('data-emails')).map(e => e.toLowerCase());
+    window.phoneList    = parseList(dataContainer?.getAttribute('data-phones'));
 
     // ============================================
     // MODAL HELPERS

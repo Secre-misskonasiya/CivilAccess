@@ -15,21 +15,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-    <!-- Pass Data to JS -->
-    <script th:inline="javascript">
-        window._th_success         = /*[[${success}]]*/ null;
-        window._th_error           = /*[[${error}]]*/ null;
-        window._th_incomeList      = /*[[${incomeList}]]*/ [];
-        window._th_expenseList     = /*[[${expenseList}]]*/ [];
-        window._th_monthIncome     = /*[[${monthIncome}]]*/ 0;
-        window._th_monthExpenses   = /*[[${monthExpenses}]]*/ 0;
-        window._th_totalIncomeAll  = /*[[${totalIncomeAll}]]*/ 0;
-        window._th_totalExpensesAll= /*[[${totalExpensesAll}]]*/ 0;
-        window._th_incomeByType    = /*[[${incomeByType}]]*/ null;
-        window._th_expenseByType   = /*[[${expenseByType}]]*/ null;
-        window._th_totalBudget     = /*[[${totalBudget}]]*/ 0;
-    </script>
-
     <title>Financial Management - CivilAccess</title>
 </head>
 <body>
@@ -614,6 +599,21 @@
     </div>
 
     <div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
+
+    <!-- Hidden container to pass server data to JS (CSP compliant) -->
+    <div id="financeDataContainer" style="display:none;"
+         th:attr="data-success=${success},
+                  data-error=${error},
+                  data-income-list=${incomeList},
+                  data-expense-list=${expenseList},
+                  data-month-income=${monthIncome},
+                  data-month-expenses=${monthExpenses},
+                  data-total-income-all=${totalIncomeAll},
+                  data-total-expenses-all=${totalExpensesAll},
+                  data-income-by-type=${incomeByType},
+                  data-expense-by-type=${expenseByType},
+                  data-total-budget=${totalBudget}">
+    </div>
 
     <script src="/js/finance.js"></script>
 </body>

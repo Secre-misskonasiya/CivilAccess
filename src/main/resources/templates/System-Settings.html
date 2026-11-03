@@ -106,9 +106,10 @@
     <div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
 
     <!-- Pass Server Data to JS -->
-    <script th:inline="javascript">
-        window.APP_SETTINGS = /*[[${settings}]]*/ {};
-    </script>
+    <div id="settingsDataContainer" 
+         style="display: none;" 
+         th:attr="data-settings=${settings}">
+    </div>
     
     <!-- External App JS -->
     <script src="/js/system-settings.js"></script>

@@ -1,8 +1,22 @@
 document.addEventListener('DOMContentLoaded', function() {
     // ============================================
-    // GLOBALS
+    // READ SERVER DATA FROM DATA ATTRIBUTES
     // ============================================
-    const savedSettings = window.APP_SETTINGS || {};
+    const dataContainer = document.getElementById('settingsDataContainer');
+    let savedSettings = {};
+    
+    try {
+        const rawSettings = dataContainer?.getAttribute('data-settings');
+        if (rawSettings) {
+            // Thymeleaf might encode quotes and ampersands as HTML entities.
+            // We decode them before parsing the JSON.
+            const decoded = rawSettings.replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+            savedSettings = JSON.parse(decoded);
+        }
+    } catch (e) {
+        console.error("Failed to parse settings data:", e);
+    }
+
     const SECTIONS = ["Dashboard","Accounts","Blotter","Documents","Announcements","SoS Monitoring","Safety Reports","Program Planner","System Settings"];
 
     let isDirty = false;

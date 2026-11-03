@@ -1,4 +1,32 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // ============================================
+    // READ SERVER DATA FROM DATA ATTRIBUTES
+    // ============================================
+    const container = document.getElementById('financeDataContainer');
+    
+    // Helper to safely decode Thymeleaf-rendered strings
+    function decodeData(str, isJson = false) {
+        if (!str || str === 'null' || str === '') return isJson ? [] : null;
+        let decoded = str.replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+        if (isJson) {
+            try { return JSON.parse(decoded); } catch(e) { return []; }
+        }
+        return decoded;
+    }
+
+    // Map the data attributes to global variables expected by the rest of the script
+    window._th_success         = decodeData(container?.getAttribute('data-success'));
+    window._th_error           = decodeData(container?.getAttribute('data-error'));
+    window._th_incomeList      = decodeData(container?.getAttribute('data-income-list'), true);
+    window._th_expenseList     = decodeData(container?.getAttribute('data-expense-list'), true);
+    window._th_monthIncome     = parseFloat(container?.getAttribute('data-month-income')) || 0;
+    window._th_monthExpenses   = parseFloat(container?.getAttribute('data-month-expenses')) || 0;
+    window._th_totalIncomeAll  = parseFloat(container?.getAttribute('data-total-income-all')) || 0;
+    window._th_totalExpensesAll= parseFloat(container?.getAttribute('data-total-expenses-all')) || 0;
+    window._th_incomeByType    = decodeData(container?.getAttribute('data-income-by-type'), true);
+    window._th_expenseByType   = decodeData(container?.getAttribute('data-expense-by-type'), true);
+    window._th_totalBudget     = parseFloat(container?.getAttribute('data-total-budget')) || 0;
+
     // --- Modal Helpers ---
     window.showSuccess = function(message) {
         var successMessageEl = document.getElementById('successMessage');

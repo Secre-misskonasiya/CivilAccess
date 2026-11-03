@@ -1,8 +1,12 @@
 document.addEventListener('DOMContentLoaded', function () {
     
-    // Global Config (populated by Thymeleaf in the HTML head)
-    const currentRole = window.APP_CONFIG.currentRole || '';
-    const currentTab = window.APP_CONFIG.currentTab || 'announcements';
+    // ============================================
+    // READ SERVER DATA FROM DATA ATTRIBUTES
+    // ============================================
+    const dataContainer = document.getElementById('announcementDataContainer');
+    
+    const currentRole = dataContainer?.getAttribute('data-current-role') || '';
+    const currentTab  = dataContainer?.getAttribute('data-current-tab') || 'announcements';
 
     function canEditAnnouncements() {
         return currentRole === 'ADMIN' || currentRole === 'SECRETARY' || currentRole === 'SECRETARIAT STAFF';

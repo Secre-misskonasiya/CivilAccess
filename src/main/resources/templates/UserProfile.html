@@ -242,13 +242,12 @@
     <div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
     
     <!-- Server Data -->
-    <script th:inline="javascript">
-        window.PROFILE_DATA = {
-            usernameList: /*[[${usernameList}]]*/ [],
-            emailList: /*[[${emailList}]]*/ [],
-            phoneList: /*[[${phoneList}]]*/ []
-        };
-    </script>
+    <div id="serverDataContainer" 
+         style="display: none;"
+         th:attr="data-usernames=${usernameList}, 
+                  data-emails=${emailList}, 
+                  data-phones=${phoneList}">
+    </div>
 
     <!-- External App JS -->
     <script src="/js/sidebar.js"></script>
