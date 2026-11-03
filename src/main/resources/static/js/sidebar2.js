@@ -1,9 +1,15 @@
 // sidebar2.js - Resident Sidebar Functionality
 
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   1. LOGOUT MODAL
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 function openLogoutModal() {
   const modal = document.getElementById('logoutModal');
   if (modal) modal.classList.add('open');   // CSS would handle display
 }
+
 function closeLogoutModal() {
   const modal = document.getElementById('logoutModal');
   if (modal) modal.classList.remove('open');
@@ -14,15 +20,25 @@ function confirmLogout() {
     window.location.href = '/resident-logout';
 }
 
+window.onclick = function(event) {
+    const modal = document.getElementById('logoutModal');
+    if (event.target === modal) closeLogoutModal();
+};
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2. MOBILE MENU TOGGLE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 function toggleMobileMenu() {
     const sidebar = document.getElementById('mainSidebar');
     if (sidebar) sidebar.classList.toggle('mobile-open');
 }
 
-window.onclick = function(event) {
-    const modal = document.getElementById('logoutModal');
-    if (event.target === modal) closeLogoutModal();
-};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3. ACTIVE MENU HIGHLIGHT
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 document.addEventListener('DOMContentLoaded', function () {
     const path = window.location.pathname;

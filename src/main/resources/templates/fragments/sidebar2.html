@@ -6,7 +6,9 @@
 </head>
 <body>
 
-<!-- Logout Modal Fragment -->
+<!-- ═══════════════════════════════════════════════════════════════════════
+     FRAGMENT: logoutModal
+     ═══════════════════════════════════════════════════════════════════════ -->
 <div th:fragment="logoutModal" class="logout-modal" id="logoutModal">
     <div class="logout-modal-content">
         <h3><i class="bi bi-box-arrow-right"></i> Confirm Logout</h3>
@@ -18,7 +20,10 @@
     </div>
 </div>
 
-<!-- Sidebar Fragment -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     FRAGMENT: sidebar
+     ═══════════════════════════════════════════════════════════════════════ -->
 <div th:fragment="sidebar" class="sidebar" id="mainSidebar">
 
     <div class="header">
@@ -63,10 +68,10 @@
 
 </div>
 
-<!-- Mobile menu toggle button — kept as its OWN fragment, not nested inside
-     .sidebar. It must stay a sibling: .sidebar slides off-screen with
-     transform:translateX(-100%) on mobile, and if this button were a child
-     it would slide off-screen with it, making it impossible to reopen. -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     FRAGMENT: mobileToggle
+     ═══════════════════════════════════════════════════════════════════════ -->
 <button th:fragment="mobileToggle" class="menu-toggle" onclick="toggleMobileMenu()" id="menuToggle">
     <i class="bi bi-list"></i>
 </button>

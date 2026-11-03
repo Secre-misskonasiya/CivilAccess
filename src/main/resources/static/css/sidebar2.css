@@ -1,11 +1,15 @@
 /* =====================================================================
    CivilAccess — Resident Sidebar
-   Same pine-green + muted-gold civic identity as the admin sidebar,
-   adapted here for Bootstrap Icons, the mobile toggle button, and the
-   logout confirmation modal.
+   Pine-green + muted-gold civic identity, Bootstrap Icons, mobile
+   toggle button, and the logout confirmation modal.
    ===================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+
+/* ───────────────────────────────────────────────────────────────────────
+   1. SIDEBAR NAVIGATION
+   ─────────────────────────────────────────────────────────────────────── */
 
 .sidebar {
     --sb-bg: #17302B;
@@ -40,7 +44,7 @@
 .sidebar::-webkit-scrollbar-thumb { background: #3A5E56; border-radius: 4px; }
 .sidebar::-webkit-scrollbar-thumb:hover { background: var(--sb-gold); }
 
-/* ── Header / brand ── */
+/* Header / brand */
 .header {
     font-family: 'Manrope', sans-serif;
     font-size: 15px;
@@ -103,7 +107,7 @@
     letter-spacing: 0.4px;
 }
 
-/* ── Menu ── */
+/* Menu */
 .menu {
     list-style: none;
     padding: 14px 0 4px;
@@ -175,7 +179,7 @@
     opacity: 1;
 }
 
-/* ── Divider + logout ── */
+/* Divider + logout */
 .sidebar-divider {
     border: none;
     border-top: 1px solid var(--sb-line);
@@ -213,7 +217,7 @@
     opacity: 1;
 }
 
-/* ── Mobile toggle button ── */
+/* Mobile toggle button */
 .menu-toggle {
     display: none;
     position: fixed;
@@ -251,7 +255,11 @@
     }
 }
 
-/* ── Logout confirmation modal ── */
+
+/* ───────────────────────────────────────────────────────────────────────
+   2. LOGOUT MODAL
+   ─────────────────────────────────────────────────────────────────────── */
+
 .logout-modal {
     position: fixed;
     inset: 0;
@@ -264,7 +272,7 @@
 }
 
 .logout-modal.open {
-  display: flex;
+    display: flex;
 }
 
 .logout-modal-content {

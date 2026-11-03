@@ -1,4 +1,4 @@
-// ─── Section & submenu toggles ────────────────────────────────────────────────
+// ─── 1. Section & submenu toggles ────────────────────────────────────────────
 
 function toggleSection(btn, sectionId) {
     const body = document.getElementById(sectionId);
@@ -15,7 +15,7 @@ function toggleSubMenu(li, subMenuId) {
     if (arrow) arrow.classList.toggle('open', !isOpen);
 }
 
-// ─── Logout ───────────────────────────────────────────────────────────────────
+// ─── 2. Logout ───────────────────────────────────────────────────────────────
 
 function openLogoutModal() {
     document.getElementById('logoutModal').style.display = 'block';
@@ -35,7 +35,7 @@ window.onclick = function (event) {
     if (event.target === logoutModal) closeLogoutModal();
 };
 
-// ─── Active section & submenu on page load ────────────────────────────────────
+// ─── 3. Active section & submenu on page load ────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function () {
     setInterval(pollAssistanceDot, 15000);
 });
 
-// ─── Sidebar notification badges ──────────────────────────────────────────────
+// ─── 4. Sidebar notification badges ──────────────────────────────────────────
 //
 // Backend endpoint: GET /api/sidebar/counts
 // Expected response shape:
@@ -169,7 +169,7 @@ window.SidebarBadges = {
     set:    setSidebarBadge,
 };
 
-// ─── Program Notification Polling ────────────────────────────────────────────
+// ─── 5. Program Notification Polling ────────────────────────────────────────
 
 (function() {
     // Avoid duplicate script execution
@@ -314,8 +314,6 @@ window.SidebarBadges = {
         return `${h}:${mins.padStart(2, '0')} ${ampm}`;
     }
 
-
-
     // ---- Start on page load ----
     window.addEventListener('DOMContentLoaded', () => {
         requestBrowserNotification();
@@ -324,7 +322,7 @@ window.SidebarBadges = {
     });
 })();
 
-// ─── Admin Assistance Requests ─────────────────────────────────────────────
+// ─── 6. Admin Assistance Requests ─────────────────────────────────────────
 
 function openAssistanceModal() {
     var modalEl = document.getElementById('assistanceModal');
@@ -511,7 +509,8 @@ function fetchPendingRequestsForCurrentModal() {
         });
 }
 
-// Add this to your sidebar.js or a new script
+// ─── 7. Move modals from sidebar to body (avoid CSS conflicts) ─────────────
+
 document.addEventListener('DOMContentLoaded', function() {
     // Move modals from sidebar to body to avoid CSS conflicts
     const assistanceModal = document.getElementById('assistanceModal');
