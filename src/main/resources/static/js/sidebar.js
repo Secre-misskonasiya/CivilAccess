@@ -1,0 +1,525 @@
+// ─── 1. Section & submenu toggles ────────────────────────────────────────────
+
+function toggleSection(btn, sectionId) {
+    const body = document.getElementById(sectionId);
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    btn.classList.toggle('open', !isOpen);
+}
+
+function toggleSubMenu(li, subMenuId) {
+    const sub = document.getElementById(subMenuId);
+    const arrow = li.querySelector('.dropdown-arrow');
+    const isOpen = sub.classList.contains('open');
+    sub.classList.toggle('open', !isOpen);
+    if (arrow) arrow.classList.toggle('open', !isOpen);
+}
+
+// ─── 2. Logout ───────────────────────────────────────────────────────────────
+
+function openLogoutModal() {
+    document.getElementById('logoutModal').style.display = 'block';
+}
+
+function closeLogoutModal() {
+    document.getElementById('logoutModal').style.display = 'none';
+}
+
+function confirmLogout() {
+    localStorage.removeItem('lastSeenProgramEventId');
+    window.location.href = '/logout';
+}
+
+window.onclick = function (event) {
+    const logoutModal = document.getElementById('logoutModal');
+    if (event.target === logoutModal) closeLogoutModal();
+};
+
+// ─── 3. Active section & submenu on page load ────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const path = window.location.pathname;
+
+    const sectionMap = [
+        { match: ['/home', '/announcements'],                                    section: 'sec-main' },
+        { match: ['/account', '/user-profile', '/Resident-census', '/finance', '/finance#dashboard', '/finance#income', '/finance#expenses', '/finance#budget'],              section: 'sec-management' },
+        { match: ['/requests-document', '/requests-blotter', '/reservations', '/rentals'],                    section: 'sec-resident', sub: 'sub-requests' },
+        { match: ['/contact-help', '/facilities'],                               section: 'sec-resident' },
+        { match: ['/safety-reports', '/emergency-alerts', '/sos-monitoring'],    section: 'sec-safety' },
+        { match: ['/program-calendar', '/program-planner'],                      section: 'sec-programs' },
+        { match: ['/Activity-logs', '/system-settings'],                                             section: 'sec-system' },
+    ];
+
+    sectionMap.forEach(function (entry) {
+        if (entry.match.some(function (route) { return path.startsWith(route); })) {
+
+            const sectionBody = document.getElementById(entry.section);
+            if (sectionBody) {
+                sectionBody.classList.add('open');
+                const toggle = sectionBody.previousElementSibling;
+                if (toggle && toggle.classList.contains('section-toggle')) {
+                    toggle.classList.add('open');
+                }
+            }
+
+            if (entry.sub) {
+                const subMenu = document.getElementById(entry.sub);
+                if (subMenu) {
+                    subMenu.classList.add('open');
+                    subMenu.style.display = 'block';
+                }
+                const parentLi = subMenu ? subMenu.previousElementSibling : null;
+                if (parentLi) {
+                    const arrow = parentLi.querySelector('.dropdown-arrow');
+                    if (arrow) arrow.classList.add('open');
+                }
+            }
+        }
+    });
+
+    // Start sidebar notification badge polling immediately, then every 15 s
+    pollSidebarCounts();
+    pollAssistanceDot();     
+    setInterval(pollSidebarCounts, 15000);
+    setInterval(pollAssistanceDot, 15000);
+});
+
+// ─── 4. Sidebar notification badges ──────────────────────────────────────────
+//
+// Backend endpoint: GET /api/sidebar/counts
+// Expected response shape:
+// {
+//   "announcements":  2,
+//   "accounts":       1,
+//   "requests":       3,
+//   "documents":      3,
+//   "facilities":     0,
+//   "safety-reports": 5,
+//   "sos":            1,
+//   "programs":       0,
+//   "activity-logs":  0
+// }
+
+// Maps each badge ID to which section dot should light up
+const SIDEBAR_SECTION_MAP = {
+    'badge-announcements':  'dot-main',
+    'badge-accounts':       'dot-management',
+    'badge-requests':       'dot-resident',
+    'badge-documents':      'dot-resident',
+    'badge-blotter':        'dot-resident',
+    'badge-facilities':     'dot-resident',
+    'badge-safety-reports': 'dot-safety',
+    'badge-sos':            'dot-safety',
+    'badge-programs':       'dot-programs',
+    'badge-activity-logs':  'dot-system',
+};
+
+function setSidebarBadge(id, count) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (count > 0) {
+        el.textContent = count > 99 ? '99+' : count;
+        el.classList.add('visible');
+    } else {
+        el.textContent = '';
+        el.classList.remove('visible');
+    }
+}
+
+function updateSidebarDots(counts) {
+    // Reset all dots first
+    document.querySelectorAll('.section-notif-dot').forEach(d => d.classList.remove('visible'));
+
+    // Light up a dot if any badge in its section has a count > 0
+    Object.entries(counts).forEach(([key, count]) => {
+        if (count > 0) {
+            const dotId = SIDEBAR_SECTION_MAP['badge-' + key];
+            if (dotId) {
+                const dot = document.getElementById(dotId);
+                if (dot) dot.classList.add('visible');
+            }
+        }
+    });
+}
+
+function updateSidebarBadges(counts) {
+    Object.entries(counts).forEach(([key, count]) => {
+        setSidebarBadge('badge-' + key, count);
+    });
+    updateSidebarDots(counts);
+}
+
+async function pollSidebarCounts() {
+    try {
+        const res = await fetch('/api/sidebar/counts?t=' + Date.now());
+        if (!res.ok) return;
+        const data = await res.json();
+        updateSidebarBadges(data);
+    } catch (e) {
+        // Non-critical — fail silently
+    }
+}
+
+// Allow any page or realtime script to push counts directly without waiting for next poll:
+//   SidebarBadges.update({ 'safety-reports': 3, 'sos': 1 });
+//   SidebarBadges.set('badge-accounts', 2);
+window.SidebarBadges = {
+    update: updateSidebarBadges,
+    set:    setSidebarBadge,
+};
+
+// ─── 5. Program Notification Polling ────────────────────────────────────────
+
+(function() {
+    // Avoid duplicate script execution
+    if (window.__programNotifInitialized) return;
+    window.__programNotifInitialized = true;
+
+    // ---- Create toast element if not present ----
+    function ensureToastElement() {
+        let toast = document.getElementById('global-program-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'global-program-toast';
+            toast.style.cssText = `
+                position: fixed; bottom: 30px; right: 30px;
+                background-color: #2d4a44; color: white;
+                padding: 14px 20px; border-radius: 8px;
+                border-left: 4px solid #FED734;
+                font-size: 14px; font-weight: bold;
+                z-index: 99999; display: none;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                animation: slideIn 0.3s ease-out;
+                max-width: 350px;
+            `;
+            document.body.appendChild(toast);
+
+            // Add keyframes if not already present
+            if (!document.getElementById('program-toast-style')) {
+                const style = document.createElement('style');
+                style.id = 'program-toast-style';
+                style.textContent = `
+                    @keyframes slideIn {
+                        from { transform: translateX(100px); opacity: 0; }
+                        to   { transform: translateX(0);     opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+        return toast;
+    }
+
+    const toast = ensureToastElement();
+    let toastTimer = null;
+
+    function showToast(message) {
+        toast.innerHTML = `📅 <span>${message}</span>`;
+        toast.style.display = 'block';
+        toast.style.animation = 'none';
+        void toast.offsetWidth; // restart animation
+        toast.style.animation = 'slideIn 0.3s ease-out';
+
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+            toast.style.display = 'none';
+        }, 6000);
+    }
+
+    // ---- Optional gentle sound ----
+    function playChime() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const now = audioCtx.currentTime;
+
+            const playBeep = (freq, start, duration) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.3, start);
+                gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(start);
+                osc.stop(start + duration + 0.05);
+            };
+
+            playBeep(880, now, 0.15);
+            playBeep(1108.73, now + 0.2, 0.15);
+        } catch (e) { /* Audio not available */ }
+    }
+
+    // ---- Browser Notification (optional) ----
+    function requestBrowserNotification() {
+        if ('Notification' in window && Notification.permission !== 'granted') {
+            Notification.requestPermission();
+        }
+    }
+
+    function showBrowserNotification(message) {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('📅 Upcoming Program', { body: message });
+        }
+    }
+
+    // ---- Polling logic ----
+    const STORAGE_KEY = 'lastSeenProgramEventId';
+    const POLL_INTERVAL = 30000; // 30 seconds
+
+    function getLastSeenId() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? parseInt(stored, 10) : 0;
+    }
+
+    function setLastSeenId(id) {
+        localStorage.setItem(STORAGE_KEY, id);
+    }
+
+    async function pollUpcomingPrograms() {
+        try {
+            const lastId = getLastSeenId();
+            const response = await fetch(`/api/calendar/upcoming?minutes=10080&lastId=${lastId}&t=${Date.now()}`);
+            if (!response.ok) return;
+
+            const events = await response.json();
+            if (events && events.length > 0) {
+                // Update last seen ID
+                const maxId = Math.max(...events.map(e => e.id));
+                setLastSeenId(maxId);
+
+                // Show toast for each new event (or combine)
+                events.forEach(event => {
+                    const message = `${event.programName || 'Community Program'} starts at ${formatTime(event.startTime)} on ${event.eventDate}`;
+                    showToast(message);
+                    showBrowserNotification(message);
+                });
+
+                // Play sound only once per batch
+                if (events.length > 0) playChime();
+            }
+        } catch (err) {
+            console.error('Error polling upcoming programs:', err);
+        }
+    }
+
+    // Helper to format time (HH:MM -> 12-hour)
+    function formatTime(timeStr) {
+        if (!timeStr) return 'N/A';
+        const [hrs, mins] = timeStr.split(':');
+        let h = parseInt(hrs, 10);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        return `${h}:${mins.padStart(2, '0')} ${ampm}`;
+    }
+
+    // ---- Start on page load ----
+    window.addEventListener('DOMContentLoaded', () => {
+        requestBrowserNotification();
+        pollUpcomingPrograms(); // immediate first poll
+        setInterval(pollUpcomingPrograms, POLL_INTERVAL);
+    });
+})();
+
+// ─── 6. Admin Assistance Requests ─────────────────────────────────────────
+
+function openAssistanceModal() {
+    var modalEl = document.getElementById('assistanceModal');
+    var modal = new bootstrap.Modal(modalEl);
+    
+    // Auto-fill template when modal opens
+    modalEl.addEventListener('shown.bs.modal', function() {
+        var textarea = document.getElementById('assistanceMessage');
+        if (textarea && textarea.value === '') {
+            textarea.value = "Choose one Archive|Restore \nModule: \nData description: (Name|Date)";
+        }
+    });
+    
+    modal.show();
+}
+
+function sendAssistanceRequest() {
+    var messageBox = document.getElementById('assistanceMessage');
+    var message = messageBox.value.trim();
+
+    if (message === "") {
+        alert("Please type a message before sending.");
+        return;
+    }
+
+    var formData = new URLSearchParams();
+    formData.append('message', message);
+
+    fetch('/system-logs/request-assistance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.success) {
+            alert("Your request has been sent to the admin.");
+            messageBox.value = "";
+            var modalEl = document.getElementById('assistanceModal');
+            var modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+        } else {
+            alert(data.message || "Something went wrong.");
+        }
+    })
+    .catch(function(error) {
+        console.error("Error sending assistance request:", error);
+        alert("Something went wrong sending your request.");
+    });
+}
+
+function pollAssistanceDot() {
+    var dot = document.getElementById('dot-assistance');
+    if (!dot) return; // not admin, dot doesn't exist on this page
+
+    fetch('/system-logs/api/pending?t=' + Date.now())
+        .then(function(response) { return response.json(); })
+        .then(function(requests) {
+            if (requests.length > 0) {
+                // Update the badge with the count
+                dot.textContent = requests.length > 99 ? '99+' : requests.length;
+                dot.classList.add('visible');
+                
+                // Make sure the badge is styled as a notification badge
+                dot.style.display = 'inline-block';
+                dot.style.backgroundColor = '#e74c3c';
+                dot.style.color = 'white';
+                dot.style.fontSize = '10px';
+                dot.style.fontWeight = '700';
+                dot.style.padding = '1px 6px';
+                dot.style.borderRadius = '10px';
+                dot.style.minWidth = '18px';
+                dot.style.textAlign = 'center';
+                dot.style.lineHeight = '16px';
+            } else {
+                // Hide and clear the badge when no requests
+                dot.textContent = '';
+                dot.classList.remove('visible');
+                dot.style.display = 'none';
+            }
+        })
+        .catch(function() {
+            // Non-critical — fail silently, same convention as pollSidebarCounts
+        });
+}
+
+function openPendingRequestsModal() {
+    var modalEl = document.getElementById('pendingRequestsModal');
+    
+    // Check if modal already has an instance
+    var existingModal = bootstrap.Modal.getInstance(modalEl);
+    
+    fetch('/system-logs/api/pending')
+        .then(function(response) { return response.json(); })
+        .then(function(requests) {
+            renderPendingRequestsList(requests);
+            
+            if (existingModal) {
+                // If modal is already open, just update the content
+                if (!modalEl.classList.contains('show')) {
+                    existingModal.show();
+                }
+            } else {
+                // Create new instance only if one doesn't exist
+                var modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            }
+        })
+        .catch(function(error) {
+            console.error("Error loading pending requests:", error);
+        });
+}
+
+function formatRequestTime(timestamp) {
+    if (!timestamp) return '—';
+    try {
+        const date = typeof timestamp === 'number' ? new Date(timestamp) : new Date(timestamp);
+        if (isNaN(date.getTime())) return String(timestamp);
+
+        const months = ['Jan','Feb','Mar','Apr','May','Jun',
+                        'Jul','Aug','Sep','Oct','Nov','Dec'];
+        const mm   = months[date.getMonth()];
+        const dd   = String(date.getDate()).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        let h      = date.getHours();
+        const mins = String(date.getMinutes()).padStart(2, '0');
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+
+        return `${mm} ${dd}, ${yyyy} · ${h}:${mins} ${ampm}`;
+    } catch (e) {
+        return String(timestamp);
+    }
+}
+
+function renderPendingRequestsList(requests) {
+    var container = document.getElementById('pendingRequestsList');
+    container.innerHTML = "";
+
+    if (requests.length === 0) {
+        container.innerHTML = "<p>No pending requests.</p>";
+        return;
+    }
+
+    for (var i = 0; i < requests.length; i++) {
+        var req = requests[i];
+        var card = document.createElement('div');
+        card.className = "assistance-request-card";
+
+        card.innerHTML =
+            "<strong>" + req.requesterName + "</strong>" +
+            " (" + req.requesterRole + ")" +
+            "<br><span>" + req.description + "</span>" +
+            "<br><small><i class='bi bi-clock'></i> " + formatRequestTime(req.timestamp) + "</small>" +
+            "<br><button class='btn btn-sm btn-success mt-2' onclick='resolveRequest(" + req.id + ")'>Mark Resolved</button>";
+
+        container.appendChild(card);
+    }
+}
+
+function resolveRequest(id) {
+    fetch('/system-logs/resolve/' + id, { method: 'POST' })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                // Don't reopen the modal, just refresh the list and badge
+                fetchPendingRequestsForCurrentModal();
+                pollAssistanceDot();
+            }
+        })
+        .catch(function(error) {
+            console.error("Error resolving request:", error);
+        });
+}
+
+function fetchPendingRequestsForCurrentModal() {
+    fetch('/system-logs/api/pending')
+        .then(function(response) { return response.json(); })
+        .then(function(requests) {
+            renderPendingRequestsList(requests);
+        })
+        .catch(function(error) {
+            console.error("Error refreshing pending requests:", error);
+        });
+}
+
+// ─── 7. Move modals from sidebar to body (avoid CSS conflicts) ─────────────
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Move modals from sidebar to body to avoid CSS conflicts
+    const assistanceModal = document.getElementById('assistanceModal');
+    const pendingModal = document.getElementById('pendingRequestsModal');
+    
+    if (assistanceModal) {
+        document.body.appendChild(assistanceModal);
+    }
+    if (pendingModal) {
+        document.body.appendChild(pendingModal);
+    }
+});

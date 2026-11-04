@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brgy. San Sebastian Blotter: Manage Blotter Records">
+    <title>Blotter Records</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; background-color: #f5f5f5; }
+        .layout { display: flex; height: 100vh; overflow: hidden; }
+        .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-header { background-color: #2d4a44; padding: 16px 20px; border-bottom: 2px solid #FED734; }
+        .top-header-tab { color: white; font-size: 18px; font-weight: bold; }
+        .search-bar-area { padding: 16px 20px; display: flex; gap: 10px; background-color: #f5f5f5; }
+        .search-input-wrap { flex: 1; position: relative; }
+        .search-input-wrap input { width: 100%; padding: 9px 14px 9px 38px; border: 1px solid #d0d5dd; border-radius: 6px; }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); }
+        .filter-select, .export-btn, .add-blotter-btn { padding: 9px 16px; border-radius: 6px; cursor: pointer; }
+        .export-btn { background: #FED734; border: none; font-weight: bold; }
+        .add-blotter-btn { background: #44C375; border: none; color: white; font-weight: bold; }
+        .panel { padding: 20px; flex: 1; overflow-y: auto; }
+        .panel-inner { background: white; border-radius: 8px; border: 1px solid #e0e0e0; overflow: hidden; }
+        .panel-header { background-color: #3d5f58; color: white; padding: 14px 20px; font-weight: bold; font-size: 16px; }
+        .panel-content { overflow-x: auto; }
+        
+        /* Table styling - matching announcements */
+        table { width: 100%; border-collapse: collapse; }
+        th { background-color: #eaf2f0; color: #2d4a44; padding: 12px 14px; text-align: left; font-weight: bold; }
+        td { padding: 12px 14px; border-bottom: 1px solid #e0e0e0; }
+        
+        /* Row hover effect - light gray background like announcements */
+        .blotter-row {
+            transition: background 0.12s;
+            position: relative;
+        }
+        .blotter-row:hover {
+            background-color: #f2f6f5;
+        }
+        
+        /* Status column hidden */
+        .status-column, th.status-column, td.status-column {
+            display: none;
+        }
+        
+        /* Actions cell - no width change on hover */
+        .actions-column {
+            position: relative;
+            text-align: right;
+            padding-right: 14px;
+        }
+        
+        /* Action buttons - absolutely positioned like announcements */
+        .row-actions {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: inherit;
+            z-index: 10;
+        }
+        
+        .blotter-row:hover .row-actions {
+            display: flex;
+        }
+        
+        /* Button styling - matching announcements exactly */
+        .view-btn {
+            background-color: #3498db;
+            color: white;
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .view-btn:hover { background-color: #2176ae; }
+        
+        .edit-btn {
+            background-color: #f1c40f;
+            color: #30534D;
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .edit-btn:hover { background-color: #d4ac0d; }
+        
+        /* Modal styles */
+        .modal-overlay { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); overflow-y: auto; }
+        .modal-box { background: white; margin: 30px auto; border-radius: 10px; width: 600px; max-width: 95%; overflow: hidden; }
+        .modal-header { background-color: #2d4a44; color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h4 { margin: 0; font-size: 18px; }
+        .modal-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+        .modal-close:hover { opacity: 0.8; }
+        .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #e0e0e0; display: flex; justify-content: flex-end; gap: 10px; background: #f9f9f9; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 12px; font-weight: bold; color: #2d4a44; margin-bottom: 5px; text-transform: uppercase; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 9px 12px; border: 1px solid #d0d5dd; border-radius: 6px; font-size: 14px; }
+        .form-group input[readonly], .form-group textarea[readonly] { background-color: #f5f5f5; cursor: default; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        
+        .btn-submit { background: #2d4a44; color: white; border: none; padding: 9px 22px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-submit:hover { background: #3d6b63; }
+        .btn-cancel { background: #f0f0f0; color: #444; border: none; padding: 9px 22px; border-radius: 6px; cursor: pointer; }
+        .btn-cancel:hover { background: #e0e0e0; }
+        
+        .field-error { color: #e74c3c; font-size: 12px; margin-top: 4px; display: none; }
+        .input-error { border-color: #e74c3c !important; background-color: #fff5f5; }
+        
+        .modal-section-title { font-size: 13px; font-weight: bold; color: #2d4a44; text-transform: uppercase; border-bottom: 2px solid #eaf2f0; padding-bottom: 6px; margin: 20px 0 14px 0; }
+        
+        .force-modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); }
+        .force-modal-content { background: white; width: 400px; padding: 30px; border-radius: 8px; text-align: center; margin: 15% auto; }
+        .table-footer { padding: 12px 16px; border-top: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #666; }
+
+        /* Success Toast Modal - matching announcements */
+        .success-toast-modal .modal-content {
+            background: linear-gradient(135deg, #44C375 0%, #2ea05e 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+        }
+        .success-toast-modal .modal-header {
+            background: transparent;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .success-toast-modal .modal-body {
+            text-align: center;
+            padding: 20px;
+        }
+        .success-toast-modal .modal-footer {
+            border-top: none;
+            justify-content: center;
+            padding-top: 0;
+            background: transparent;
+        }
+        .success-icon {
+            font-size: 60px;
+            margin-bottom: 12px;
+        }
+
+        /* System Error Modal - matching announcements */
+        .sys-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.72);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            animation: sysFadeIn 0.2s ease;
+        }
+        .sys-overlay.show { display: flex; }
+
+        @keyframes sysFadeIn { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes sysSlideUp {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .sys-modal-box {
+            border-radius: 16px;
+            overflow: hidden;
+            min-width: 300px;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 28px 72px rgba(0,0,0,0.45);
+            animation: sysSlideUp 0.25s ease;
+        }
+
+        .sys-modal-box.error {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .sys-modal-body {
+            text-align: center;
+            padding: 32px 28px 20px;
+        }
+
+        .sys-modal-icon {
+            font-size: 56px;
+            margin-bottom: 12px;
+            color: white;
+        }
+
+        .sys-modal-body h5 {
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .sys-modal-footer {
+            display: flex;
+            justify-content: center;
+            padding: 0 28px 28px;
+            gap: 10px;
+        }
+
+        .sys-btn-ok {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.5);
+            padding: 9px 32px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+        .sys-btn-ok:hover { background: rgba(255,255,255,0.35); }
+
+    </style>
+</head>
+<body>
+<input type="hidden" id="currentUserName" th:value="${currentUser}">
+<div class="layout">
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="content">
+        <div class="top-header">
+            <div class="top-header-tab">Blotter Records</div>
+        </div>
+
+        <div class="search-bar-area">
+            <div class="search-input-wrap">
+                <span class="search-icon"><i class="bi bi-search"></i></span>
+                <input type="text" id="request-search" placeholder="Search by complainant, respondent, incident type, or location...">
+            </div>
+            <select id="filter-type" class="filter-select" aria-label="Filter by incident type">
+                <option value="all">All Incident Types</option>
+                <option value="Theft">Theft</option>
+                <option value="Physical Injury">Physical Injury</option>
+                <option value="Verbal Abuse">Verbal Abuse</option>
+                <option value="Vandalism">Vandalism</option>
+                <option value="Disturbance">Disturbance</option>
+                <option value="Others">Others</option>
+            </select>
+            <button class="add-blotter-btn" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" onclick="openAddBlotterModal()">
+                <i class="bi bi-plus-lg"></i> Add Blotter
+            </button>
+            <button class="export-btn" onclick="exportToPDF()">Export</button>
+        </div>
+
+        <div class="panel" role="main">
+            <div class="panel-inner">
+                <div class="panel-header">
+                    <i class="bi bi-journal-bookmark-fill me-2"></i> All Blotter Records
+                </div>
+                <div class="panel-content">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Complainant</th>
+                                <th>Contact</th>
+                                <th>Respondent</th>
+                                <th>Incident Type</th>
+                                <th>Incident Date</th>
+                                <th>Location</th>
+                                <th class="status-column">Status</th>
+                                <th class="actions-column"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="blotter-table-body">
+                            <tr th:each="blotter : ${allBlotters}" class="blotter-row">
+                                <td th:text="${blotter.id}">-</td>
+                                <td th:text="${blotter.complainantName}">-</td>
+                                <td th:text="${blotter.contactInfo}">-</td>
+                                <td th:text="${blotter.respondentName}">-</td>
+                                <td th:text="${blotter.incidentType}">-</td>
+                                <td th:text="${#temporals.format(blotter.incidentDate, 'MMM dd, yyyy')}">-</td>
+                                <td th:text="${blotter.incidentLocation}">-</td>
+                                <td class="status-column">-</td>
+                                <td class="actions-column">
+                                    <div class="row-actions">
+                                        <button type="button" class="view-btn" onclick="viewBlotterDetails(this)"
+                                            th:attr="data-id=${blotter.id}, data-complainant=${blotter.complainantName}, data-contact=${blotter.contactInfo}, data-respondent=${blotter.respondentName}, data-type=${blotter.incidentType}, data-date=${#temporals.format(blotter.incidentDate, 'yyyy-MM-dd')}, data-location=${blotter.incidentLocation}, data-narrative=${blotter.narrative}, data-remarks=${blotter.remarks}">
+                                            View
+                                        </button>
+                                        <button type="button" class="edit-btn" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" onclick="openEditModal(this)"
+                                            th:attr="data-id=${blotter.id}, data-complainant=${blotter.complainantName}, data-contact=${blotter.contactInfo}, data-respondent=${blotter.respondentName}, data-type=${blotter.incidentType}, data-date=${#temporals.format(blotter.incidentDate, 'yyyy-MM-dd')}, data-location=${blotter.incidentLocation}, data-narrative=${blotter.narrative}, data-remarks=${blotter.remarks}">
+                                            Edit
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(allBlotters)}">
+                                <td colspan="8" style="text-align:center; padding: 40px; color:#999;">
+                                    <i class="bi bi-inbox" style="font-size: 48px;"></i><br>
+                                    No blotter records found
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-footer">
+                    <span>Total Records: <span th:text="${totalCount}">0</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Blotter Modal -->
+<div id="viewModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h4><i class="bi bi-eye me-2"></i>Blotter Report Details</h4>
+            <button class="modal-close" onclick="closeViewModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="viewModalBody"></div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeViewModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Blotter Modal -->
+<div id="editModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h4><i class="bi bi-pencil-square me-2"></i>Edit Blotter Record</h4>
+            <button class="modal-close" onclick="closeEditModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="editForm" method="post">
+                <input type="hidden" id="edit-id" name="id">
+                
+                <div class="modal-section-title">Complainant Information</div>
+                <div class="form-group">
+                    <label>Complainant Name *</label>
+                    <input type="text" id="edit-complainant" name="complainantName">
+                    <div class="field-error" id="err-edit-complainant">Required field</div>
+                </div>
+                <div class="form-group">
+                    <label>Contact Information *</label>
+                    <input type="text" id="edit-contact" name="contactInfo">
+                    <div class="field-error" id="err-edit-contact">Required field</div>
+                </div>
+
+                <div class="modal-section-title">Respondent</div>
+                <div class="form-group">
+                    <label>Respondent Name *</label>
+                    <input type="text" id="edit-respondent" name="respondentName">
+                    <div class="field-error" id="err-edit-respondent">Required field</div>
+                </div>
+
+                <div class="modal-section-title">Incident Information</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Incident Type *</label>
+                        <select id="edit-type" name="incidentType" aria-label="Incident type">
+                            <option value="">Select type</option>
+                            <option value="Theft">Theft</option>
+                            <option value="Physical Injury">Physical Injury</option>
+                            <option value="Verbal Abuse">Verbal Abuse</option>
+                            <option value="Vandalism">Vandalism</option>
+                            <option value="Disturbance">Disturbance</option>
+                            <option value="Others">Others</option>
+                        </select>
+                        <div class="field-error" id="err-edit-type">Required field</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Incident Date *</label>
+                        <input type="date" id="edit-date" name="incidentDate">
+                        <div class="field-error" id="err-edit-date">Required field</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Incident Location *</label>
+                    <input type="text" id="edit-location" name="incidentLocation">
+                    <div class="field-error" id="err-edit-location">Required field</div>
+                </div>
+                <div class="form-group">
+                    <label>Narrative *</label>
+                    <textarea id="edit-narrative" name="narrative" rows="3"></textarea>
+                    <div class="field-error" id="err-edit-narrative">Required field</div>
+                </div>
+
+                <div class="modal-section-title">Employee Notes</div>
+                <div class="form-group">
+                    <label>Remarks</label>
+                    <textarea id="edit-remarks" name="remarks" rows="2" placeholder="Optional remarks..."></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+            <button class="btn-submit" onclick="submitEditForm()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Blotter Modal -->
+<div id="addModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h4><i class="bi bi-plus-circle me-2"></i>Add New Blotter Record</h4>
+            <button class="modal-close" onclick="closeAddModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="addForm">
+                <div class="modal-section-title">Complainant Information</div>
+                <div class="form-group">
+                    <label>Complainant Name *</label>
+                    <input type="text" id="add-complainant" name="complainantName">
+                    <div class="field-error" id="err-add-complainant">Required field</div>
+                </div>
+                <div class="form-group">
+                    <label>Contact Information *</label>
+                    <input type="text" id="add-contact" name="contactInfo" placeholder="Phone number or email address">
+                    <div class="field-error" id="err-add-contact">Required field</div>
+                </div>
+
+                <div class="modal-section-title">Respondent</div>
+                <div class="form-group">
+                    <label>Respondent Name *</label>
+                    <input type="text" id="add-respondent" name="respondentName">
+                    <div class="field-error" id="err-add-respondent">Required field</div>
+                </div>
+
+                <div class="modal-section-title">Incident Information</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Incident Type *</label>
+                        <select id="add-type" name="incidentType" aria-label="Incident type">
+                            <option value="">Select type</option>
+                            <option value="Theft">Theft</option>
+                            <option value="Physical Injury">Physical Injury</option>
+                            <option value="Verbal Abuse">Verbal Abuse</option>
+                            <option value="Vandalism">Vandalism</option>
+                            <option value="Disturbance">Disturbance</option>
+                            <option value="Others">Others</option>
+                        </select>
+                        <div class="field-error" id="err-add-type">Required field</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Incident Date *</label>
+                        <input type="date" id="add-date" name="incidentDate">
+                        <div class="field-error" id="err-add-date">Required field</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Incident Location *</label>
+                    <input type="text" id="add-location" name="incidentLocation">
+                    <div class="field-error" id="err-add-location">Required field</div>
+                </div>
+                <div class="form-group">
+                    <label>Narrative *</label>
+                    <textarea id="add-narrative" name="narrative" rows="3"></textarea>
+                    <div class="field-error" id="err-add-narrative">Required field</div>
+                </div>
+
+                <div class="modal-section-title">Employee Notes</div>
+                <div class="form-group">
+                    <label>Remarks</label>
+                    <textarea id="add-remarks" name="remarks" rows="2" placeholder="Optional remarks..."></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+            <button class="btn-submit" onclick="submitAddForm()">Submit Blotter</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0"></div>
+            <div class="modal-body">
+                <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <h5 id="successMessage">Success!</h5>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" id="successOkBtn">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="sys-overlay" id="sysErrorOverlay">
+    <div class="sys-modal-box error">
+        <div class="sys-modal-body">
+            <div class="sys-modal-icon">
+                <i class="bi bi-x-circle-fill"></i>
+            </div>
+            <h5 id="sysErrorMessage">An error occurred.</h5>
+        </div>
+        <div class="sys-modal-footer">
+            <button class="sys-btn-ok" onclick="closeSysError()">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Force Password Modal -->
+<div id="forcePasswordModal" class="force-modal">
+    <div class="force-modal-content">
+        <h2>First Login Detected</h2>
+        <p>You must change your password before using the system.</p>
+        <button onclick="redirectToPassword()">Change Password</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+
+<input type="hidden" id="accountStatus" th:value="${currentstatus}">
+<input type="hidden" id="currentUserName" th:value="${currentUser}">
+
+<script>
+    // Prevents the background poller from reloading the page while an
+    // edit/add action is in flight or its result modal is still showing.
+    let pollSuppressed = false;
+
+    // Search and filter
+    function applyFilters() {
+        const searchValue = document.getElementById('request-search').value.toLowerCase();
+        const filterType = document.getElementById('filter-type').value;
+        const rows = document.querySelectorAll('#blotter-table-body tr');
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+            if (row.querySelector('td[colspan]')) { row.style.display = ''; return; }
+            const complainant = row.cells[1]?.textContent.toLowerCase() || '';
+            const contact = row.cells[2]?.textContent.toLowerCase() || '';
+            const respondent = row.cells[3]?.textContent.toLowerCase() || '';
+            const incidentType = row.cells[4]?.textContent.toLowerCase() || '';
+            const location = row.cells[6]?.textContent.toLowerCase() || '';
+            
+            const searchText = `${complainant} ${contact} ${respondent} ${incidentType} ${location}`;
+            const matchesSearch = searchValue === '' || searchText.includes(searchValue);
+            const matchesFilter = filterType === 'all' || incidentType === filterType.toLowerCase();
+            
+            if (matchesSearch && matchesFilter) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        const noDataRow = document.querySelector('#blotter-table-body tr td[colspan]')?.parentElement;
+        if (noDataRow) {
+            if (visibleCount === 0 && (searchValue !== '' || filterType !== 'all')) {
+                noDataRow.style.display = '';
+                const td = noDataRow.querySelector('td');
+                if (td) td.innerHTML = '<i class="bi bi-search"></i><br>No matching blotter records found';
+            } else if (visibleCount === 0) {
+                noDataRow.style.display = '';
+            } else {
+                noDataRow.style.display = 'none';
+            }
+        }
+    }
+
+    document.getElementById('request-search')?.addEventListener('keyup', applyFilters);
+    document.getElementById('filter-type')?.addEventListener('change', applyFilters);
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // View Blotter Details
+    function viewBlotterDetails(button) {
+        const id = button.getAttribute('data-id');
+        const complainant = button.getAttribute('data-complainant') || 'N/A';
+        const contact = button.getAttribute('data-contact') || 'N/A';
+        const respondent = button.getAttribute('data-respondent') || 'N/A';
+        const incidentType = button.getAttribute('data-type') || 'N/A';
+        const incidentDate = button.getAttribute('data-date') || 'N/A';
+        const location = button.getAttribute('data-location') || 'N/A';
+        const narrative = button.getAttribute('data-narrative') || 'No narrative provided';
+        const remarks = button.getAttribute('data-remarks') || '—';
+        
+        const formattedDate = incidentDate !== 'N/A' 
+            ? new Date(incidentDate + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+            : 'N/A';
+        
+        const html = `
+            <div class="modal-section-title">Complainant Information</div>
+            <div class="form-group">
+                <label>Complainant Name</label>
+                <input type="text" value="${escapeHtml(complainant)}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Contact Information</label>
+                <input type="text" value="${escapeHtml(contact)}" readonly>
+            </div>
+
+            <div class="modal-section-title">Respondent</div>
+            <div class="form-group">
+                <label>Respondent Name</label>
+                <input type="text" value="${escapeHtml(respondent)}" readonly>
+            </div>
+
+            <div class="modal-section-title">Incident Information</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Incident Type</label>
+                    <input type="text" value="${escapeHtml(incidentType)}" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Incident Date</label>
+                    <input type="text" value="${escapeHtml(formattedDate)}" readonly>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Incident Location</label>
+                <input type="text" value="${escapeHtml(location)}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Narrative</label>
+                <textarea rows="3" readonly>${escapeHtml(narrative)}</textarea>
+            </div>
+
+            <div class="modal-section-title">Employee Notes</div>
+            <div class="form-group">
+                <label>Remarks</label>
+                <textarea rows="2" readonly placeholder="No remarks">${escapeHtml(remarks)}</textarea>
+            </div>
+        `;
+        document.getElementById('viewModalBody').innerHTML = html;
+        document.getElementById('viewModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeViewModal() {
+        document.getElementById('viewModal').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    // Edit Blotter
+    function openEditModal(button) {
+        const id = button.getAttribute('data-id');
+        const complainant = button.getAttribute('data-complainant') || '';
+        const contact = button.getAttribute('data-contact') || '';
+        const respondent = button.getAttribute('data-respondent') || '';
+        const type = button.getAttribute('data-type') || '';
+        const date = button.getAttribute('data-date') || '';
+        const location = button.getAttribute('data-location') || '';
+        const narrative = button.getAttribute('data-narrative') || '';
+        const remarks = button.getAttribute('data-remarks') || '';
+
+        document.getElementById('edit-id').value = id;
+        document.getElementById('edit-complainant').value = complainant;
+        document.getElementById('edit-contact').value = contact;
+        document.getElementById('edit-respondent').value = respondent;
+        document.getElementById('edit-type').value = type;
+        document.getElementById('edit-date').value = date;
+        document.getElementById('edit-location').value = location;
+        document.getElementById('edit-narrative').value = narrative;
+        document.getElementById('edit-remarks').value = remarks;
+
+        // Clear any previous validation errors
+        document.querySelectorAll('#editForm .field-error').forEach(e => e.style.display = 'none');
+        document.querySelectorAll('#editForm .input-error').forEach(e => e.classList.remove('input-error'));
+
+        document.getElementById('editModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    function submitEditForm() {
+        const required = [
+            { id: 'edit-complainant', err: 'err-edit-complainant' },
+            { id: 'edit-contact', err: 'err-edit-contact' },
+            { id: 'edit-respondent', err: 'err-edit-respondent' },
+            { id: 'edit-type', err: 'err-edit-type' },
+            { id: 'edit-date', err: 'err-edit-date' },
+            { id: 'edit-location', err: 'err-edit-location' },
+            { id: 'edit-narrative', err: 'err-edit-narrative' }
+        ];
+        let valid = true;
+        required.forEach(f => {
+            const el = document.getElementById(f.id);
+            const err = document.getElementById(f.err);
+            if (!el.value.trim()) {
+                el.classList.add('input-error');
+                err.style.display = 'block';
+                valid = false;
+            } else {
+                el.classList.remove('input-error');
+                err.style.display = 'none';
+            }
+        });
+        if (valid) {
+            const form = document.getElementById('editForm');
+            const id = document.getElementById('edit-id').value;
+            const formData = new FormData(form);
+            
+            // Show loading state
+            const submitBtn = document.querySelector('#editModal .btn-submit');
+            submitBtn.textContent = 'Saving...';
+            submitBtn.disabled = true;
+            pollSuppressed = true;
+            
+            fetch('/requests-blotter/' + id + '/update', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    closeEditModal();
+                    showSuccess('Blotter record updated successfully!');
+                } else {
+                    showError('Failed to update blotter record. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('Failed to update blotter record. Please try again.');
+            })
+            .finally(() => {
+                submitBtn.textContent = 'Save Changes';
+                submitBtn.disabled = false;
+            });
+        }
+    }
+
+    // Add Blotter
+    function openAddBlotterModal() {
+        document.getElementById('addForm').reset();
+        document.querySelectorAll('#addForm .field-error').forEach(e => e.style.display = 'none');
+        document.querySelectorAll('#addForm .input-error').forEach(e => e.classList.remove('input-error'));
+        document.getElementById('addModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeAddModal() {
+        document.getElementById('addModal').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    function submitAddForm() {
+        const required = [
+            { id: 'add-complainant', err: 'err-add-complainant' },
+            { id: 'add-contact', err: 'err-add-contact' },
+            { id: 'add-respondent', err: 'err-add-respondent' },
+            { id: 'add-type', err: 'err-add-type' },
+            { id: 'add-date', err: 'err-add-date' },
+            { id: 'add-location', err: 'err-add-location' },
+            { id: 'add-narrative', err: 'err-add-narrative' }
+        ];
+        let valid = true;
+        required.forEach(f => {
+            const el = document.getElementById(f.id);
+            const err = document.getElementById(f.err);
+            if (!el.value.trim()) {
+                el.classList.add('input-error');
+                err.style.display = 'block';
+                valid = false;
+            } else {
+                el.classList.remove('input-error');
+                err.style.display = 'none';
+            }
+        });
+        if (valid) {
+            const form = document.getElementById('addForm');
+            const formData = new FormData(form);
+            
+            // Show loading state
+            const submitBtn = document.querySelector('#addModal .btn-submit');
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+            pollSuppressed = true;
+            
+            fetch('/requests-blotter/submit', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    closeAddModal();
+                    showSuccess('Blotter record created successfully!');
+                } else {
+                    showError('Failed to create blotter record. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('Failed to create blotter record. Please try again.');
+            })
+            .finally(() => {
+                submitBtn.textContent = 'Submit Blotter';
+                submitBtn.disabled = false;
+            });
+        }
+    }
+
+       // Export to PDF
+    function exportToPDF() {
+        const exportedBy = document.getElementById('currentUserName')?.value || 'Unknown User';
+        const table = document.querySelector('table');
+        if (!table) return;
+
+        const title = 'Blotter Records';
+
+        // Columns to exclude: Status (hidden) and Actions (buttons)
+        const excludedHeaders = ['Status', ''];
+
+        const headerCellsAll = table.querySelectorAll('thead th');
+        const includedIndexes = [];
+        const headers = [];
+        headerCellsAll.forEach((th, idx) => {
+            const text = th.textContent.trim();
+            if (!excludedHeaders.includes(text)) {
+                includedIndexes.push(idx);
+                headers.push(text);
+            }
+        });
+
+        const rows = [];
+        const bodyRows = document.querySelectorAll('#blotter-table-body tr');
+        bodyRows.forEach(tr => {
+            if (tr.style.display === 'none') return;
+            if (tr.querySelector('td[colspan]')) return; // skip "no records" row
+            const cells = tr.querySelectorAll('td');
+            const rowData = [];
+            includedIndexes.forEach(i => {
+                rowData.push(cells[i] ? cells[i].textContent.trim() : '');
+            });
+            rows.push(rowData);
+        });
+
+        // Columns that need to wrap instead of clip
+        const wideColumns = ['Location'];
+
+        // Page header — same layout as Program Calendar / Accounts export
+         let tableHtml = `
+    <div style="position:relative;text-align:center;padding-bottom:12px;margin-bottom:20px;border-bottom:3px solid #2d4a44;">
+        <div style="position:absolute;left:-30px;top:-25px;display:flex;align-items:center;gap:5px;">
+            <img src="/images/seal1.png" alt="Barangay Seal" style="width:16px;height:16px;object-fit:contain;">
+            <span style="font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#888;white-space:nowrap;">CivilAccess Web System</span>
+        </div>
+        <div style="font-size:22px;font-weight:bold;color:#2d4a44;margin-bottom:4px;">${title}</div>
+        <div style="font-size:13px;color:#555;">${new Date().toLocaleString()}</div>
+        <div style="font-size:11px;color:#888;margin-top:2px;">Exported by: <strong style="color:#2d4a44;">${exportedBy}</strong></div>
+    </div>`;
+
+        tableHtml += `
+        <div style="font-size:13px;font-weight:bold;color:#2d4a44;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #ddd;">
+            ${title} <span style="font-weight:normal;font-size:11px;color:#888;">(${rows.length} record${rows.length !== 1 ? 's' : ''})</span>
+        </div>`;
+
+        if (rows.length === 0) {
+            tableHtml += `<p style="color:#888;text-align:center;padding:20px 0;">No data to display.</p>`;
+        } else {
+            let headerRowHtml = '';
+            headers.forEach(h => {
+                const isWide = wideColumns.includes(h);
+                headerRowHtml += `<th style="background-color:#2d4a44 !important;color:white !important;padding:8px;font-size:11px !important;border:1px solid #1a3530;${isWide ? 'min-width:160px;' : 'white-space:nowrap;'}">${h}</th>`;
+            });
+
+            let tableRowsHtml = '';
+            rows.forEach((row, i) => {
+                const bg = i % 2 === 0 ? 'white' : '#f5faf8';
+                tableRowsHtml += `<tr style="background-color:${bg} !important;">`;
+                row.forEach((cell, idx) => {
+                    const isWide = wideColumns.includes(headers[idx]);
+                    tableRowsHtml += `<td style="border:1px solid #ddd;padding:7px 8px;font-size:11px !important;vertical-align:top;${isWide ? 'white-space:normal;word-break:break-word;' : 'white-space:nowrap;'}">${cell}</td>`;
+                });
+                tableRowsHtml += `</tr>`;
+            });
+
+            tableHtml += `
+            <table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;table-layout:auto;">
+                <thead><tr>${headerRowHtml}</tr></thead>
+                <tbody>${tableRowsHtml}</tbody>
+            </table>`;
+        }
+
+        tableHtml += `<div style="margin-top:20px;padding-top:10px;border-top:1px solid #e0e0e0;text-align:center;font-size:9px;color:#aaa;">Official document from Brgy. San Sebastian &nbsp;|&nbsp; Confidential</div>`;
+
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'font-family:Arial,sans-serif;padding:36px;background:white;color:#222;';
+        wrapper.innerHTML = tableHtml;
+
+        const opt = {
+            margin: [0.3, 0.3, 0.3, 0.3],
+            filename: `Blotter_Records_${new Date().toISOString().split('T')[0]}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+        };
+
+        const exportBtn = document.querySelector('.export-btn');
+        const originalText = exportBtn ? exportBtn.innerHTML : 'Export';
+        if (exportBtn) {
+            exportBtn.innerHTML = 'Generating...';
+            exportBtn.disabled = true;
+        }
+
+        html2pdf().set(opt).from(wrapper).save()
+            .then(() => {
+                if (exportBtn) {
+                    exportBtn.innerHTML = originalText;
+                    exportBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('PDF generation error:', error);
+                showError('Error generating PDF. Please try again.');
+                if (exportBtn) {
+                    exportBtn.innerHTML = originalText;
+                    exportBtn.disabled = false;
+                }
+            });
+    }
+
+    // Success Modal - only reloads the page once the user clicks OK (no timer)
+    function showSuccess(message) {
+        document.getElementById('successMessage').innerHTML = message;
+        const successModalEl = document.getElementById('successModal');
+        const successModal = new bootstrap.Modal(successModalEl);
+
+        const okButton = document.getElementById('successOkBtn');
+        const newOkButton = okButton.cloneNode(true);
+        okButton.parentNode.replaceChild(newOkButton, okButton);
+
+        newOkButton.addEventListener('click', function() {
+            window.location.reload();
+        });
+
+        successModalEl.addEventListener('hidden.bs.modal', function onHidden() {
+            window.location.reload();
+            successModalEl.removeEventListener('hidden.bs.modal', onHidden);
+        }, { once: true });
+
+        successModal.show();
+    }
+
+    // Error Modal
+    function showError(message) {
+        document.getElementById('sysErrorMessage').innerHTML = message;
+        document.getElementById('sysErrorOverlay').classList.add('show');
+    }
+
+    // Dismiss error modal and resume polling (no data changed, so no reload needed)
+    function closeSysError() {
+        document.getElementById('sysErrorOverlay').classList.remove('show');
+        pollSuppressed = false;
+    }
+
+    // Force password change
+    window.onload = function() {
+        const status = document.getElementById('accountStatus')?.value;
+        if (status === 'New' || status === 'Newly Updated') {
+            document.getElementById('forcePasswordModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+    };
+
+    function redirectToPassword() {
+        window.location.href = '/user-profile';
+    }
+</script>
+
+<!-- Polling Script -->
+<script>
+(function() {
+    var lastSnapshot = '';
+    function isModalOpen() {
+        if (pollSuppressed) return true;
+        var modals = ['viewModal', 'editModal', 'addModal'];
+        return modals.some(function(id) {
+            var el = document.getElementById(id);
+            return el && el.style.display === 'block';
+        });
+    }
+    function poll() {
+        if (isModalOpen()) return;
+        fetch('/requests-blotter/api/poll?t=' + Date.now())
+            .then(function(res) { return res.ok ? res.json() : null; })
+            .then(function(data) {
+                if (!data) return;
+                var snapshot = JSON.stringify(data);
+                if (lastSnapshot === '') { lastSnapshot = snapshot; }
+                else if (snapshot !== lastSnapshot) { location.reload(); }
+            })
+            .catch(function() {});
+    }
+    poll();
+    setInterval(poll, 5000);
+})();
+</script>
+</body>
+</html>

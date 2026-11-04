@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="lockModal">
+  <!-- 
+    Check for account status using MULTIPLE possible variable names:
+    - currentstatus (used in home page)
+    - accountStatus (used in some pages)
+    - status (fallback)
+  -->
+  <div id="forcePasswordModal" class="force-modal"
+       th:classappend="${(
+         (currentstatus != null and (currentstatus == 'New' or currentstatus == 'Newly Updated')) or
+         (accountStatus != null and (accountStatus == 'New' or accountStatus == 'Newly Updated')) or
+         (status != null and (status == 'New' or status == 'Newly Updated'))
+       ) ? 'show' : ''}"
+       th:style="${(
+         (currentstatus != null and (currentstatus == 'New' or currentstatus == 'Newly Updated')) or
+         (accountStatus != null and (accountStatus == 'New' or accountStatus == 'Newly Updated')) or
+         (status != null and (status == 'New' or status == 'Newly Updated'))
+       ) ? 'display:block !important;' : 'display:none !important;'}">
+    <div class="force-modal-content">
+      <div class="lock-icon-wrapper">
+        <i class="bi bi-lock-fill"></i>
+      </div>
+      <h2>Password Change Required</h2>
+      <p>Your account is new. For security, please set a new password before you can continue using the system.</p>
+      <a th:href="@{/user-profile}" class="force-modal-btn">Go to Profile Settings</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,64 @@
+// sidebar2.js - Resident Sidebar Functionality
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   1. LOGOUT MODAL
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function openLogoutModal() {
+  const modal = document.getElementById('logoutModal');
+  if (modal) modal.classList.add('open');   // CSS would handle display
+}
+
+function closeLogoutModal() {
+  const modal = document.getElementById('logoutModal');
+  if (modal) modal.classList.remove('open');
+}
+
+function confirmLogout() {
+    localStorage.clear();
+    window.location.href = '/resident-logout';
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById('logoutModal');
+    if (event.target === modal) closeLogoutModal();
+};
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2. MOBILE MENU TOGGLE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function toggleMobileMenu() {
+    const sidebar = document.getElementById('mainSidebar');
+    if (sidebar) sidebar.classList.toggle('mobile-open');
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3. ACTIVE MENU HIGHLIGHT
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+document.addEventListener('DOMContentLoaded', function () {
+    const path = window.location.pathname;
+
+    const menuMap = {
+        '/resident/announcements':    'nav-announcements',
+        '/resident/my-requests':      'nav-requests',
+        '/resident/safety-reports':   'nav-safety',
+        '/resident/emergency-alerts': 'nav-alerts',
+        '/resident/contact':          'nav-contact',
+        '/resident/facilities':       'nav-facilities'
+    };
+
+    document.querySelectorAll('.menu li').forEach(item => item.classList.remove('active'));
+
+    for (const [route, id] of Object.entries(menuMap)) {
+        if (path === route || path.startsWith(route)) {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('active');
+            break;
+        }
+    }
+});

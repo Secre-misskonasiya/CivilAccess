@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brgy. San Sebastian Safety Reports: Manage Safety Reports from Residents">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="/css/safety-reports.css">
+
+    <!-- External Libraries -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <title>Safety Reports</title>
+</head>
+<body>
+<input type="hidden" id="currentUserRole" th:value="${currentrole}">
+<input type="hidden" id="currentUserName" th:value="${currentUser}">
+
+<script src="/js/notif.js"></script>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="layout">
+    <!-- Success Modal -->
+    <div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0"></div>
+                <div class="modal-body">
+                    <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                    <h5 id="successMessage">Success!</h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" id="successOkBtn">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="archiveConfirmModal" class="confirm-modal-overlay">
+        <div class="confirm-modal-content">
+            <h4 id="confirmModalTitle"><i class="bi bi-archive"></i> Confirm Action</h4>
+            <p id="confirmModalMessage">Are you sure you want to perform this action?</p>
+            <div class="confirm-modal-buttons">
+                <button class="confirm-no" id="btnCloseActionConfirm">No</button>
+                <button class="confirm-yes" id="confirmArchiveBtn">Yes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <!-- Main content -->
+    <div class="content">
+        <!-- Top header -->
+        <div class="top-header">
+            <div class="top-header-tab active" id="tabHeaderSafety">Safety Reports</div>
+            <div class="top-header-tab inactive" id="tabHeaderEmergency">Emergency Alerts</div>
+        </div>
+
+        <!-- Search / Filter / Export -->
+        <div class="search-bar-area">
+            <div class="search-input-wrap">
+                <span class="search-icon"><i class="bi bi-search"></i></span>
+                <input type="text" id="report-search" placeholder="Search reports by title, location, or reporter...">
+            </div>
+            <div class="dropdown">
+                <button class="filter-btn dropdown-toggle" type="button" id="typeFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-funnel"></i> Filter by Type
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="typeFilterDropdown" id="typeFilterMenu">
+                    <li><a class="dropdown-item" href="#" data-type="all">All Types</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" data-type="Fire Emergency">Fire Emergency</a></li>
+                    <li><a class="dropdown-item" href="#" data-type="Flood">Flood</a></li>
+                    <li><a class="dropdown-item" href="#" data-type="Earthquake">Earthquake</a></li>
+                    <li><a class="dropdown-item" href="#" data-type="Severe Weather">Severe Weather</a></li>
+                    <li><a class="dropdown-item" href="#" data-type="Medical Emergency">Medical Emergency</a></li>
+                    <li><a class="dropdown-item" href="#" data-type="Crime and Security">Crime and Security</a></li>
+                    <li><a class="dropdown-item" href="#" data-type="Infrastructure and Utilities">Infrastructure and Utilities</a></li>
+                    <li><a class="dropdown-item" href="#" data-type="Environmental Hazards">Environmental Hazards</a></li>
+                    <li><a class="dropdown-item" href="#" data-type="Public Safety">Public Safety</a></li>
+                </ul>
+            </div>
+            <button class="export-btn" id="export-pdf-btn">Export</button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabbar">
+            <div class="tab" th:classappend="${currentTab == 'incoming' ? 'active' : ''}" data-tab="incoming">Incoming <span class="tab-badge" id="badge-incoming" th:text="${incomingCount}">0</span></div>
+            <div class="tab" th:classappend="${currentTab == 'approved' ? 'active' : ''}" data-tab="approved">Approved <span class="tab-badge" id="badge-approved" th:text="${approvedCount}">0</span></div>
+            <div class="tab" th:classappend="${currentTab == 'inprogress' ? 'active' : ''}" data-tab="inprogress">In Progress <span class="tab-badge" id="badge-inprogress" th:text="${inProgressCount}">0</span></div>
+            <div class="tab" th:classappend="${currentTab == 'resolved' ? 'active' : ''}" data-tab="resolved">Resolved <span class="tab-badge" id="badge-resolved" th:text="${resolvedCount}">0</span></div>
+            <div class="tab" th:classappend="${currentTab == 'cancelled_rejected' ? 'active' : ''}" data-tab="cancelled_rejected">Cancelled / Rejected <span class="tab-badge" id="badge-cancelled_rejected" th:text="${cancelledRejectedCount}">0</span></div>
+            <div class="tab" th:classappend="${currentTab == 'incidentmap' ? 'active' : ''}" data-tab="incidentmap">
+                <i class="bi bi-map"></i> Incident Map
+            </div>
+        </div>
+
+        <!-- Panel -->
+        <div class="panel">
+            <!-- Incoming Tab -->
+            <div id="tab-incoming" class="panel-inner" th:classappend="${currentTab != 'incoming' ? 'd-none' : ''}">
+                <div class="panel-header">Incoming Safety Reports</div>
+                <div class="panel-content">
+                    <table class="table table-bordered table-hover mb-0" id="incoming-table">
+                        <thead>
+                            <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Date Submitted</th><th>Time Submitted</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="incoming-tbody">
+                            <tr th:each="report : ${incomingReports}" th:if="${not #lists.isEmpty(incomingReports)}" th:attr="data-id=${report.id}, data-reporter-id=${report.reporterId}">
+                                <td>
+                                    <div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div>
+                                    <div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div>
+                                </td>
+                                <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
+                                <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
+                                <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
+                                <td th:text="${report.timeSubmitted != null ? #temporals.format(report.timeSubmitted, 'h:mm a') : 'N/A'}"></td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <button class="view-btn btn-view-report" th:attr="data-id=${report.id}">View</button>
+                                        <th:block th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
+                                            <button class="approve-btn btn-open-approve" th:attr="data-id=${report.id}">Approve</button>
+                                            <button class="reject-btn btn-confirm-action" th:attr="data-id=${report.id}" data-action="reject">Reject</button>
+                                        </th:block>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="text-center p-4" th:if="${#lists.isEmpty(incomingReports)}">
+                        <p class="text-muted">No incoming reports</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approved Tab -->
+            <div id="tab-approved" class="panel-inner" th:classappend="${currentTab != 'approved' ? 'd-none' : ''}">
+                <div class="panel-header">Approved Safety Reports</div>
+                <div class="panel-content">
+                    <table class="table table-bordered table-hover mb-0" id="approved-table">
+                        <thead>
+                            <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date Submitted</th><th>Time Submitted</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="approved-tbody">
+                            <tr th:each="report : ${approvedReports}" th:if="${not #lists.isEmpty(approvedReports)}" th:attr="data-id=${report.id}">
+                                <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></td>
+                                <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
+                                <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
+                                <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
+                                <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
+                                <td th:text="${report.timeSubmitted != null ? #temporals.format(report.timeSubmitted, 'h:mm a') : 'N/A'}"></td>
+                                <td><div class="d-flex gap-2">
+                                    <button class="view-btn btn-view-report" th:attr="data-id=${report.id}">View</button>
+                                    <th:block th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
+                                        <button class="process-btn btn-update-status" th:attr="data-id=${report.id}" data-status="IN_PROGRESS">Process</button>
+                                        <button class="cancel-btn btn-confirm-action" th:attr="data-id=${report.id}" data-action="cancel">Cancel</button>
+                                    </th:block>
+                                </div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="text-center p-4" th:if="${#lists.isEmpty(approvedReports)}"><p class="text-muted">No approved reports</p></div>
+                </div>
+            </div>
+
+            <!-- In Progress Tab -->
+            <div id="tab-inprogress" class="panel-inner" th:classappend="${currentTab != 'inprogress' ? 'd-none' : ''}">
+                <div class="panel-header">In Progress Safety Reports</div>
+                <div class="panel-content">
+                    <table class="table table-bordered table-hover mb-0" id="inprogress-table">
+                        <thead>
+                            <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date Submitted</th><th>Time Submitted</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="inprogress-tbody">
+                            <tr th:each="report : ${inProgressReports}" th:if="${not #lists.isEmpty(inProgressReports)}" th:attr="data-id=${report.id}">
+                                <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></td>
+                                <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
+                                <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
+                                <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
+                                <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
+                                <td th:text="${report.timeSubmitted != null ? #temporals.format(report.timeSubmitted, 'h:mm a') : 'N/A'}"></td>
+                                <td><div class="d-flex gap-2">
+                                    <button class="view-btn btn-view-report" th:attr="data-id=${report.id}">View</button>
+                                    <th:block th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
+                                        <button class="resolve-btn btn-open-resolution" th:attr="data-id=${report.id}">Resolve</button>
+                                        <button class="cancel-btn btn-confirm-action" th:attr="data-id=${report.id}" data-action="cancel">Cancel</button>
+                                    </th:block>
+                                </div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="text-center p-4" th:if="${#lists.isEmpty(inProgressReports)}"><p class="text-muted">No in progress reports</p></div>
+                </div>
+            </div>
+
+            <!-- Resolved Tab -->
+            <div id="tab-resolved" class="panel-inner" th:classappend="${currentTab != 'resolved' ? 'd-none' : ''}">
+                <div class="panel-header">Resolved Safety Reports</div>
+                <div class="panel-content">
+                    <table class="table table-bordered table-hover mb-0" id="resolved-table">
+                        <thead>
+                            <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date Submitted</th><th>Time Submitted</th><th>Resolved By</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="resolved-tbody">
+                            <tr th:each="report : ${resolvedReports}" th:if="${not #lists.isEmpty(resolvedReports)}" th:attr="data-id=${report.id}">
+                                <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></td>
+                                <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
+                                <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
+                                <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
+                                <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
+                                <td th:text="${report.timeSubmitted != null ? #temporals.format(report.timeSubmitted, 'h:mm a') : 'N/A'}"></td>
+                                <td><span th:if="${report.resolvedBy != null}" class="badge-status status-resolved" th:text="${report.resolvedBy}"></span><span th:if="${report.resolvedBy == null}" class="text-muted">—</span></td>
+                                <td><div class="d-flex gap-2">
+                                    <button class="view-btn btn-view-report" th:attr="data-id=${report.id}">View</button>
+                                    <button class="view-resolution-btn btn-view-resolution" th:attr="data-id=${report.id}">View Resolution</button>
+                                </div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="text-center p-4" th:if="${#lists.isEmpty(resolvedReports)}"><p class="text-muted">No resolved reports</p></div>
+                </div>
+            </div>
+
+            <!-- Cancelled / Rejected Tab -->
+            <div id="tab-cancelled_rejected" class="panel-inner" th:classappend="${currentTab != 'cancelled_rejected' ? 'd-none' : ''}">
+                <div class="panel-header"><i class="bi bi-archive me-2"></i>Cancelled / Rejected Safety Reports</div>
+                <div class="panel-content">
+                    <table class="table table-bordered table-hover mb-0" id="cancelled_rejected-table">
+                        <thead>
+                            <tr><th>Report</th><th>Reporter</th><th>Type</th><th>Priority</th><th>Date Submitted</th><th>Status</th><th>Handled By</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="cancelled_rejected-tbody">
+                            <tr th:each="report : ${cancelledRejectedReports}" th:if="${not #lists.isEmpty(cancelledRejectedReports)}" th:attr="data-id=${report.id}">
+                                <td><div class="report-title" th:text="${report.title != null ? report.title : 'Untitled'}"></div><div class="report-location" th:text="${report.location != null ? report.location : 'No location'}"></div></td>
+                                <td th:text="${report.reporterName != null ? report.reporterName : 'N/A'}"></td>
+                                <td class="type-cell"><span class="badge-type" th:text="${report.type != null ? report.type : 'Safety'}"></span></td>
+                                <td><span class="badge-priority" th:classappend="${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')}" th:text="${report.priority != null ? report.priority : 'LOW'}"></span></td>
+                                <td th:text="${report.dateSubmitted != null ? report.dateSubmitted : 'N/A'}"></td>
+                                <td>
+                                    <span th:if="${report.status == 'REJECTED'}" class="badge-status status-rejected">Rejected</span>
+                                    <span th:if="${report.status == 'CANCELLED'}" class="badge-status status-cancelled">Cancelled</span>
+                                </td>
+                                <td><span th:if="${report.handledByName != null}" class="badge-status status-archived" th:text="${report.handledByName}"></span><span th:if="${report.handledByName == null}" class="text-muted">—</span></td>
+                                <td><div class="d-flex gap-2"><button class="view-btn btn-view-report" th:attr="data-id=${report.id}">View</button></div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="text-center p-4" th:if="${#lists.isEmpty(cancelledRejectedReports)}"><p class="text-muted">No cancelled or rejected reports</p></div>
+                </div>
+            </div>
+
+            <!-- Incident Map Tab -->
+            <div id="tab-incidentmap" class="panel-inner" th:classappend="${currentTab != 'incidentmap' ? 'd-none' : ''}">
+                <div class="panel-header"><i class="bi bi-map me-2"></i>Incident Map — All Reports</div>
+                <div class="incident-map-toolbar">
+                    <div class="map-legend">
+                        <span style="font-size:12px;font-weight:600;color:#555;margin-right:4px;">Priority:</span>
+                        <div class="map-legend-item"><span class="legend-dot" style="background:#e74c3c;"></span> High</div>
+                        <div class="map-legend-item"><span class="legend-dot" style="background:#e67e22;"></span> Medium</div>
+                        <div class="map-legend-item"><span class="legend-dot" style="background:#27ae60;"></span> Low</div>
+                        <span style="font-size:12px;font-weight:600;color:#555;margin-left:10px;margin-right:4px;">Boundary:</span>
+                        <div class="map-legend-item">
+                            <span style="display:inline-block;width:22px;height:3px;background:#2d4a44;border-radius:2px;opacity:0.7;"></span>
+                            Brgy. San Sebastian
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                        <span style="font-size:12px;font-weight:600;color:#555;margin-right:2px;">Status:</span>
+                        <button class="map-status-btn active" data-status="all" data-color="#2d4a44">All</button>
+                        <button class="map-status-btn" data-status="INCOMING" data-color="#FF9800">Incoming</button>
+                        <button class="map-status-btn" data-status="APPROVED" data-color="#e67e22">Approved</button>
+                        <button class="map-status-btn" data-status="IN_PROGRESS" data-color="#2bb6f7">In Progress</button>
+                        <button class="map-status-btn" data-status="RESOLVED" data-color="#44C375">Resolved</button>
+                        <button class="map-status-btn" data-status="REJECTED" data-color="#e74c3c">Rejected</button>
+                        <button class="map-status-btn" data-status="CANCELLED" data-color="#e67e22">Cancelled</button>
+                    </div>
+                    <span style="font-size:12px;font-weight:600;color:#555;margin-left:4px;margin-right:4px;">Residents:</span>
+                    <div class="map-legend-item">
+                        <span class="legend-dot" style="background:#FED734;border-color:#c0a000;border-radius:3px;transform:rotate(45deg);display:inline-block;width:11px;height:11px;"></span> Senior
+                    </div>
+                    <div class="map-legend-item">
+                        <span class="legend-dot" style="background:#27ae60;border-color:#1a7a3a;border-radius:3px;transform:rotate(45deg);display:inline-block;width:11px;height:11px;"></span> PWD
+                    </div>
+                    <button id="toggle-senior-btn" class="toggle-layer-btn" data-layer="senior">👴 Seniors</button>
+                    <button id="toggle-pwd-btn" class="toggle-layer-btn" data-layer="pwd">♿ PWD</button>
+                    <button id="heatmap-btn" class="toggle-layer-btn heatmap-btn">🌡 Crime Heatmap</button>
+                    <button id="fitBoundaryBtn" class="toggle-layer-btn">⤢ Reset View</button>
+                    <button id="summaryToggleBtn" class="toggle-layer-btn summary-btn">📊 Summary</button>
+                    <div class="map-stat">Showing <span id="map-visible-count">0</span> of <span id="map-total-count">0</span> reports</div>
+                </div>
+
+                <div style="position:relative;flex:1;display:flex;min-height:0;">
+                    <div id="incidentMap" style="flex:1;min-height:0;"></div>
+                    <div class="map-summary-panel" id="mapSummaryPanel">
+                        <div class="map-summary-header">
+                            <span><i class="bi bi-bar-chart-fill me-2"></i>Incident Summary</span>
+                            <button id="closeSummaryBtn" style="background:none;border:none;color:white;font-size:18px;cursor:pointer;line-height:1;">&times;</button>
+                        </div>
+                        <div class="map-summary-body" id="mapSummaryBody">
+                            <div style="text-align:center;padding:30px;color:#aaa;font-size:13px;">Loading summary...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Report Modal -->
+<div class="modal fade" id="viewReportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-file-earmark-text me-2"></i>Safety Report Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewModalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" id="modalApproveBtn" style="display: none;" th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">Approve Report</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resolution Modal -->
+<div class="modal fade" id="resolutionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Resolve Safety Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="resolutionReportId">
+                <div class="resolution-info-row">
+                    <div class="row mb-2"><div class="col-4 label">Report Title:</div><div class="col-8 value" id="infoTitle">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Location:</div><div class="col-8 value" id="infoLocation">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Type:</div><div class="col-8 value" id="infoType">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Priority:</div><div class="col-8 value" id="infoPriority">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Reporter:</div><div class="col-8 value" id="infoReporter">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Date Submitted:</div><div class="col-8 value" id="infoDate">-</div></div>
+                </div>
+                <div class="mb-3"><label class="form-label fw-bold">Response Time (Auto-calculated)</label><input type="text" class="form-control" id="resolutionResponseTime" readonly></div>
+                <div class="mb-3"><label class="form-label fw-bold">Actions Taken</label><textarea class="form-control" id="resolutionActions" rows="4" placeholder="List the specific actions taken to address this issue..."></textarea></div>
+                <div class="mb-3"><label class="form-label fw-bold">Additional Notes</label><textarea class="form-control" id="resolutionNotes" rows="3" placeholder="Any additional notes or follow-up actions..."></textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmResolveBtn">Confirm Resolution</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Resolution Modal -->
+<div class="modal fade" id="viewResolutionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Resolution Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="resolution-info-row">
+                    <div class="row mb-2"><div class="col-4 label">Report Title:</div><div class="col-8 value" id="viewInfoTitle">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Location:</div><div class="col-8 value" id="viewInfoLocation">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Type:</div><div class="col-8 value" id="viewInfoType">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Priority:</div><div class="col-8 value" id="viewInfoPriority">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Reporter:</div><div class="col-8 value" id="viewInfoReporter">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Date Submitted:</div><div class="col-8 value" id="viewInfoDate">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Resolved By:</div><div class="col-8 value" id="viewInfoResolvedBy">-</div></div>
+                    <div class="row mb-2"><div class="col-4 label">Resolved On:</div><div class="col-8 value" id="viewInfoResolvedOn">-</div></div>
+                </div>
+                <div class="readonly-field"><strong>Response Time</strong><p id="viewResponseTime">-</p></div>
+                <div class="readonly-field"><strong>Actions Taken</strong><p id="viewActionsTaken">-</p></div>
+                <div class="readonly-field"><strong>Additional Notes</strong><p id="viewAdditionalNotes">-</p></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Approve with Priority Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-check-circle me-2"></i>Approve Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:13px;color:#555;margin-bottom:14px;">Set the priority level before approving this report.</p>
+                <input type="hidden" id="approvePendingId">
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;border:1.5px solid #f5c6c6;background:#fff0f0;cursor:pointer;">
+                        <input type="radio" name="approvePriority" value="HIGH" style="accent-color:#e74c3c;">
+                        <span class="badge-priority priority-high" style="pointer-events:none;">HIGH</span>
+                        <span style="font-size:12px;color:#888;">Urgent — immediate action needed</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;border:1.5px solid #f5ddb0;background:#fff8ec;cursor:pointer;">
+                        <input type="radio" name="approvePriority" value="MEDIUM" style="accent-color:#e67e22;">
+                        <span class="badge-priority priority-medium" style="pointer-events:none;">MEDIUM</span>
+                        <span style="font-size:12px;color:#888;">Moderate — address soon</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;border:1.5px solid #b0e0c0;background:#f0fff4;cursor:pointer;">
+                        <input type="radio" name="approvePriority" value="LOW" checked style="accent-color:#27ae60;">
+                        <span class="badge-priority priority-low" style="pointer-events:none;">LOW</span>
+                        <span style="font-size:12px;color:#888;">Routine — no rush</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmApproveBtn"><i class="bi bi-check-lg me-1"></i> Approve</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Modal -->
+<div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
+
+<script src="/js/safety-reports.js"></script>
+</body>
+</html>

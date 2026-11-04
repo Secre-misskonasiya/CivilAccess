@@ -1,0 +1,377 @@
+* {
+    box-sizing: border-box !important;
+}
+
+/* ══════════════════════════════════════════════
+   SIDEBAR LAYOUT
+══════════════════════════════════════════════ */
+
+.sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    width: 250px;
+    flex-shrink: 0;
+    background-color: #30534D;
+    color: white;
+    padding: 15px;
+    position: relative;
+    z-index: 1000;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-family: Arial, sans-serif !important;
+}
+
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-track { background: #30534D; }
+.sidebar::-webkit-scrollbar-thumb { background: #52887F; border-radius: 4px; }
+
+.sidebar .menu li.active,
+.sidebar .sub-menu li.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    font-weight: bold;
+}
+
+@media (max-width: 1200px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .sidebar { width: 200px; }
+}
+
+/* ── Header ── */
+
+.header {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 0;
+    border-bottom: 1px solid #FED734;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 10px;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+}
+
+.header-user {
+    font-size: 15px;
+    font-weight: normal;
+    color: #ccc;
+    margin-top: 20px;
+    text-align: center;
+    padding-bottom: 3px;
+}
+
+.brgy {
+    max-width: 50px;
+    margin-right: 10px;
+    margin-bottom: 8px;
+    margin-left: -10px;
+}
+
+/* ══════════════════════════════════════════════
+   SECTION TOGGLE BUTTONS
+══════════════════════════════════════════════ */
+
+.section-toggle {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 8px 10px;
+    margin-top: 6px;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #998e8e;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    transition: background-color 0.2s;
+    box-sizing: border-box;
+    gap: 6px;
+}
+
+.section-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Section notification dot ── */
+
+.section-notif-dot {
+    display: none;
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    background: #e74c3c;
+    border-radius: 50%;
+    flex-shrink: 0;
+    /* sits right before the arrow — margin-left: auto on the arrow pushes both right */
+    animation: sidebar-dot-pulse 1.8s infinite;
+}
+
+.section-notif-dot.visible {
+    display: inline-block;
+}
+
+@keyframes sidebar-dot-pulse {
+    0%, 100% { opacity: 1;    transform: scale(1);    }
+    50%       { opacity: 0.5; transform: scale(1.35); }
+}
+
+/* ── Chevron arrow ── */
+
+.section-toggle .section-arrow {
+    font-size: 10px;
+    color: #FED734;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    margin-left: auto; /* pushes dot+arrow to the right when no dot is visible */
+}
+
+/* When the dot IS visible it already has margin-left:auto on itself via flex order;
+   cancel the arrow's auto so they sit flush next to each other */
+.section-notif-dot.visible ~ .section-arrow {
+    margin-left: 0;
+}
+
+.section-toggle.open .section-arrow {
+    transform: rotate(180deg);
+}
+
+/* ══════════════════════════════════════════════
+   SECTION BODY (collapsible)
+══════════════════════════════════════════════ */
+
+.section-body {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.25s ease;
+}
+
+.section-body.open {
+    max-height: 600px;
+}
+
+/* ══════════════════════════════════════════════
+   MENU ITEMS
+══════════════════════════════════════════════ */
+
+.menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.menu li {
+    padding: 9px 10px 9px 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    font-size: 14px;
+    color: #e0e0e0;
+    box-sizing: border-box;
+    gap: 0;
+}
+
+.menu li:hover {
+    background-color: #52887F;
+    color: white;
+}
+
+.icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    filter: invert(1);
+    flex-shrink: 0;
+}
+
+/* ── Count badge on menu items ── */
+
+.sidebar-count-badge {
+    display: none;
+    background: #e74c3c;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    margin-left: auto;
+    line-height: 16px;
+    min-width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.sidebar-count-badge.visible {
+    display: inline-block;
+}
+
+/* ── Dropdown arrow on expandable items ── */
+
+.dropdown-arrow {
+    font-size: 11px;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    color: #ccc;
+    /* sits after the badge; use margin-left:auto only when no badge is visible */
+    margin-left: 6px;
+}
+
+/* When there IS a visible badge, the badge already has margin-left:auto —
+   don't double-push the arrow */
+.sidebar-count-badge.visible ~ .dropdown-arrow {
+    margin-left: 0;
+}
+
+/* When there is NO visible badge, push the arrow to the far right */
+.menu li > .dropdown-arrow:not(.sidebar-count-badge ~ .dropdown-arrow) {
+    margin-left: auto;
+}
+
+.dropdown-arrow.open {
+    transform: rotate(180deg);
+}
+
+/* ══════════════════════════════════════════════
+   SUB-MENU
+══════════════════════════════════════════════ */
+
+.sub-menu {
+    list-style: none;
+    padding: 0 0 0 34px;
+    margin: 0;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.2s ease;
+}
+
+.sub-menu.open {
+    max-height: 300px;
+}
+
+.sub-menu li {
+    padding: 7px 10px;
+    font-size: 13px;
+    color: #aaa;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.sub-menu li::before {
+    content: "•";
+    color: #FED734;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.sub-menu li:hover {
+    background-color: #52887F;
+    color: white;
+}
+
+/* Badge inside sub-menu items */
+.sub-menu li .sidebar-count-badge {
+    margin-left: auto;
+}
+
+/* ══════════════════════════════════════════════
+   LOGOUT
+══════════════════════════════════════════════ */
+
+.sidebar-divider {
+    border: none;
+    border-top: 1px solid #52887F;
+    margin: 12px 0;
+}
+
+.logout-item {
+    padding: 9px 10px 9px 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #e0e0e0;
+    transition: background-color 0.2s;
+}
+
+.logout-item:hover {
+    background-color: #52887F;
+    color: white;
+}
+
+/* ══════════════════════════════════════════════
+   TOAST NOTIFICATIONS (legacy .toast-popup support)
+══════════════════════════════════════════════ */
+
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.toast-popup {
+    pointer-events: all;
+    background: white;
+    border-radius: 10px;
+    padding: 14px 18px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border-left: 4px solid #2d4a44;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 300px;
+    max-width: 380px;
+    animation: slideInRight 0.3s ease;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.toast-popup:hover { background: #f9f9f9; }
+.toast-popup.removing { animation: slideOutRight 0.3s ease forwards; }
+
+.toast-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.toast-body { flex: 1; }
+.toast-title { font-size: 13px; font-weight: bold; color: #1a1a1a; margin-bottom: 3px; }
+.toast-msg { font-size: 12px; color: #666; }
+
+.toast-close {
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    line-height: 1;
+    margin-top: 2px;
+}
+.toast-close:hover { color: #333; }
+
+@keyframes slideInRight {
+    from { transform: translateX(120%); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes slideOutRight {
+    from { transform: translateX(0);    opacity: 1; }
+    to   { transform: translateX(120%); opacity: 0; }
+}

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brgy. San Sebastian Chat Assistance : Manage Chat Assistance requests from Residents">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">   
+    <link rel="stylesheet" href="/css/contact.css">
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    
+    <title>Contact Help</title>
+</head>
+<body>
+    <script src="/js/notif.js"></script>
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <div class="layout">
+        <input type="hidden" id="accountStatus" th:value="${currentstatus}">
+        
+        <div id="forcePasswordModal" class="force-modal">
+            <div class="force-modal-content">
+                <h2>🔒 First Login Detected</h2>
+                <p>You must change your password before using the system.</p>
+                <button id="redirectPasswordBtn">Change Password</button>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+        <div class="content">
+            <div class="top-header">
+                <div class="top-header-tab">Contact Help</div>
+            </div>
+
+            <div class="search-bar-area">
+                <div class="search-input-wrap">
+                    <span class="search-icon"><i class="bi bi-search"></i></span>
+                    <input type="text" id="contact-search" placeholder="Search contacts by name, message, or type...">
+                </div>
+                <div style="position: relative;">
+                    <button class="filter-btn" id="filterToggleBtn">
+                        <i class="bi bi-funnel"></i> <span id="filterLabel">All Types</span> <i class="bi bi-chevron-down" style="font-size:11px;"></i>
+                    </button>
+                    <div id="typeFilterDropdown" class="type-filter-dropdown">
+                        <div class="type-option" data-type="" data-label="All Types">All Types <i class="bi bi-check type-check"></i></div>
+                        <div class="type-option" data-type="General Inquiry" data-label="General Inquiry">General Inquiry <i class="bi bi-check type-check"></i></div>
+                        <div class="type-option" data-type="Health Services" data-label="Health Services">Health Services <i class="bi bi-check type-check"></i></div>
+                        <div class="type-option" data-type="Infrastructure" data-label="Infrastructure">Infrastructure <i class="bi bi-check type-check"></i></div>
+                        <div class="type-option" data-type="Safety Concern" data-label="Safety Concern">Safety Concern <i class="bi bi-check type-check"></i></div>
+                        <div class="type-option" data-type="Other" data-label="Other">Other <i class="bi bi-check type-check"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tabbar">
+                <div class="tab" th:classappend="${currentTab == 'incoming' ? 'active' : ''}" data-tab="incoming">Incoming <span class="tab-badge" th:text="${incomingCount}">0</span></div>
+                <div class="tab" th:classappend="${currentTab == 'resolved' ? 'active' : ''}" data-tab="resolved">Resolved <span class="tab-badge" th:text="${resolvedCount}">0</span></div>
+                <div class="tab" th:classappend="${currentTab == 'archive' ? 'active' : ''}" data-tab="archive">Archive <span class="tab-badge" th:text="${archivedCount}">0</span></div>
+            </div>
+
+            <div class="panel">
+                <!-- Incoming Panel -->
+                <div id="tab-incoming" class="panel-inner" th:classappend="${currentTab != 'incoming' ? 'd-none' : ''}">
+                    <div class="panel-header">Incoming Contacts</div>
+                    <div class="panel-content">
+                        <div th:if="${not #lists.isEmpty(incomingRequests)}">
+                            <div class="list-header">
+                                <div class="list-header-name">Name</div>
+                                <div class="list-header-type">Type</div>
+                                <div class="list-header-status">Status</div>
+                                <div class="list-header-message">Message</div>
+                                <div class="list-header-date" style="padding-right: 50px;">Date</div>
+                            </div>
+                            <div class="contact-list">
+                                <div class="contact-row" th:each="request : ${incomingRequests}" th:attr="data-request-id=${request.id}">
+                                    <div class="row-name" th:text="${request.name != null ? request.name : 'Unknown'}">Juan dela Cruz</div>
+                                    <div class="row-type">
+                                        <span class="badge-type" th:text="${request.type != null ? request.type : 'General Inquiry'}">General Inquiry</span>
+                                    </div>
+                                    <div class="row-status">
+                                        <span class="status-incoming">Incoming</span>
+                                    </div>
+                                    <div class="row-message" th:text="${request.message != null ? request.message : 'No message provided'}">I would like to ask about the barangay clearance requirements.</div>
+                                    
+                                    <div class="row-date">
+                                        <span th:text="${request.createdAt != null ? #temporals.format(request.createdAt, 'MMM dd, yyyy hh:mm a') : 'No date'}">Mar 15, 2026 02:30 PM</span>
+                                    </div>
+                                    <span class="new-msg-badge" th:style="${unreadStatus[request.id]} ? 'display: inline-block;' : 'display: none;'">NEW</span>
+                                    <div class="row-actions">
+                                        <button class="view-btn btn-open-chat" th:attr="data-id=${request.id}" data-tab="incoming">View</button>
+                                        <button class="resolve-btn btn-resolve" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" th:attr="data-id=${request.id}" data-status="RESOLVED">Resolve</button>
+                                        <button class="archive-btn btn-archive" th:if="${currentrole == 'ADMIN'}" th:attr="data-id=${request.id}" data-status="ARCHIVED">Archive</button>
+                                        <button class="archive-btn btn-assistance-archive" th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">Archive</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center p-4" th:if="${#lists.isEmpty(incomingRequests)}">
+                            <p class="text-muted">No incoming requests</p>
+                        </div>
+                        <div class="table-footer" th:if="${not #lists.isEmpty(incomingRequests)}">
+                            <span th:text="'Showing ' + ${#lists.size(incomingRequests)} + ' incoming requests'">Showing requests</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resolved Panel -->
+                <div id="tab-resolved" class="panel-inner" th:classappend="${currentTab != 'resolved' ? 'd-none' : ''}">
+                    <div class="panel-header">Resolved Contacts</div>
+                    <div class="panel-content">
+                        <div th:if="${not #lists.isEmpty(resolvedRequests)}">
+                            <div class="list-header">
+                                <div class="list-header-name">Name</div>
+                                <div class="list-header-type">Type</div>
+                                <div class="list-header-status">Status</div>
+                                <div class="list-header-message">Message</div>
+                                <div class="list-header-resolved">Resolved By</div>
+                                <div class="list-header-date">Resolved Date</div>
+                            </div>
+                            <div class="contact-list">
+                                <div class="contact-row" th:each="request : ${resolvedRequests}" th:attr="data-request-id=${request.id}">
+                                    <div class="row-name" th:text="${request.name != null ? request.name : 'Unknown'}">Carlos Reyes</div>
+                                    <div class="row-type">
+                                        <span class="badge-type" th:text="${request.type != null ? request.type : 'General Inquiry'}">General Inquiry</span>
+                                    </div>
+                                    <div class="row-status">
+                                        <span class="status-resolved">Resolved</span>
+                                    </div>
+                                    <div class="row-message" th:text="${request.message != null ? request.message : 'No message provided'}">Asked about health services schedule.</div>
+                                    <div class="row-resolved">
+                                        <span th:if="${request.resolvedBy != null}" class="resolved-by-text"><i class="bi bi-person-check"></i> <span th:text="${request.resolvedBy}"></span></span>
+                                        <span th:unless="${request.resolvedBy != null}" class="resolved-by-text">—</span>
+                                    </div>
+                                    <div class="row-date" th:text="${request.resolvedAt != null ? #temporals.format(request.resolvedAt, 'MMM dd, yyyy hh:mm a') : (request.createdAt != null ? #temporals.format(request.createdAt, 'MMM dd, yyyy hh:mm a') : 'No date')}">Mar 10, 2026 03:45 PM</div>
+                                    <div class="row-actions">
+                                        <button class="view-btn btn-open-chat" th:attr="data-id=${request.id}" data-tab="resolved">View</button>
+                                        <button class="archive-btn btn-archive" th:if="${currentrole == 'ADMIN'}" th:attr="data-id=${request.id}" data-status="ARCHIVED">Archive</button>
+                                        <button class="archive-btn btn-assistance-archive" th:if="${currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">Archive</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center p-4" th:if="${#lists.isEmpty(resolvedRequests)}">
+                            <p class="text-muted">No resolved requests</p>
+                        </div>
+                        <div class="table-footer" th:if="${not #lists.isEmpty(resolvedRequests)}">
+                            <span th:text="'Showing ' + ${#lists.size(resolvedRequests)} + ' resolved requests'">Showing requests</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Archive Panel -->
+                <div id="tab-archive" class="panel-inner" th:if="${currentrole == 'ADMIN'}" th:classappend="${currentTab != 'archive' ? 'd-none' : ''}">
+                    <div class="panel-header">Archived Contacts</div>
+                    <div class="panel-content">
+                        <div th:if="${not #lists.isEmpty(archivedRequests)}">
+                            <div class="list-header">
+                                <div class="list-header-name">Name</div>
+                                <div class="list-header-type">Type</div>
+                                <div class="list-header-status">Status</div>
+                                <div class="list-header-message">Message</div>
+                                <div class="list-header-resolved">Archived By</div>
+                                <div class="list-header-date">Archived Date</div>
+                            </div>
+                            <div class="contact-list">
+                                <div class="contact-row" th:each="request : ${archivedRequests}" th:attr="data-request-id=${request.id}">
+                                    <div class="row-name" th:text="${request.name != null ? request.name : 'Unknown'}">Ramon Santos</div>
+                                    <div class="row-type">
+                                        <span class="badge-type" th:text="${request.type != null ? request.type : 'Request'}">Request</span>
+                                    </div>
+                                    <div class="row-status">
+                                        <span class="status-archived">Archived</span>
+                                    </div>
+                                    <div class="row-message" th:text="${request.message != null ? request.message : 'No message provided'}">Requested a copy of the barangay blotter report.</div>
+                                    <div class="row-resolved">
+                                        <span th:if="${request.resolvedBy != null}" class="resolved-by-text"><i class="bi bi-person-check"></i> <span th:text="${request.resolvedBy}"></span></span>
+                                        <span th:unless="${request.resolvedBy != null}" class="resolved-by-text">—</span>
+                                    </div>
+                                    <div class="row-date" th:text="${request.resolvedAt != null ? #temporals.format(request.resolvedAt, 'MMM dd, yyyy hh:mm a') : (request.createdAt != null ? #temporals.format(request.createdAt, 'MMM dd, yyyy hh:mm a') : 'No date')}">Mar 1, 2026 09:15 AM</div>
+                                    <div class="row-actions">
+                                        <button class="view-btn btn-open-chat" th:attr="data-id=${request.id}" data-tab="archive">View</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center p-4" th:if="${#lists.isEmpty(archivedRequests)}">
+                            <p class="text-muted">No archived requests</p>
+                        </div>
+                        <div class="table-footer" th:if="${not #lists.isEmpty(archivedRequests)}">
+                            <span th:text="'Showing ' + ${#lists.size(archivedRequests)} + ' archived requests'">Showing requests</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Modal -->
+    <div class="modal fade chat-modal" id="chatModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="chat-header">
+                    <div id="chatHeaderAvatar" class="chat-header-avatar-placeholder">?</div>
+                    <div class="chat-header-info">
+                        <div class="chat-header-name" id="chatTitle">Conversation</div>
+                        <div class="chat-header-sub" id="chatHeaderSub">Loading...</div>
+                    </div>
+                    <div class="chat-status-dot" id="chatStatusDot"></div>
+                    <span id="chatDisabledBadge" class="chat-disabled-badge" style="display: none;">Read Only</span>
+                    <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="request-info" id="chatRequestInfo"></div>
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="empty-chat" id="emptyChat">
+                            <i class="bi bi-chat-dots"></i>
+                            <p>No messages yet</p>
+                            <small>Type your message to start the conversation</small>
+                        </div>
+                    </div>
+                    <div class="chat-input-area" id="chatInputArea">
+                        <textarea class="chat-input" id="chatInput" placeholder="Type a message..." rows="1"></textarea>
+                        <button class="chat-send-btn" id="chatSendBtn" title="Send">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="custom-modal-overlay">
+        <div class="custom-modal">
+            <div class="custom-modal-header">
+                <i class="bi bi-exclamation-triangle-fill warning-icon"></i>
+                <span>Confirm Action</span>
+            </div>
+            <div class="custom-modal-body" id="confirmModalBody">Are you sure you want to proceed?</div>
+            <div class="custom-modal-footer">
+                <button class="custom-btn custom-btn-secondary" id="btnCloseConfirm">Cancel</button>
+                <button class="custom-btn custom-btn-primary" id="confirmActionBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="custom-modal-overlay">
+        <div class="custom-modal">
+            <div class="custom-modal-header">
+                <i class="bi bi-check-circle-fill success-icon"></i>
+                <span>Success</span>
+            </div>
+            <div class="custom-modal-body" id="successModalBody">Action completed successfully!</div>
+            <div class="custom-modal-footer">
+                <button class="custom-btn custom-btn-primary" id="btnCloseSuccess">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
+
+    <!-- External App JS -->
+    <script src="/js/contact.js"></script>
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brgy. San Sebastian dashboard: residents, incident reports, document requests, and upcoming programs at a glance.">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap">
+    </noscript>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" media="print" onload="this.media='all'">
+    <noscript>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    </noscript>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" media="print" onload="this.media='all'">
+    <noscript>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    </noscript>
+
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" defer></script>
+    
+    <title>Dashboard</title>
+</head>
+<body>
+    
+<div class="toast-container" id="toastContainer"></div>
+<div class="layout">
+
+    <input type="hidden" id="accountStatus"   th:value="${currentstatus}">
+    <input type="hidden" id="dataCurrentRole" th:value="${currentrole}">
+    <input type="hidden" id="dataResolved"    th:value="${resolvedIncidents != null ? resolvedIncidents : 0}">
+    <input type="hidden" id="dataUnresolved"  th:value="${unresolvedIncidents != null ? unresolvedIncidents : 0}">
+    <input type="hidden" id="dataPending"     th:value="${pendingDocuments != null ? pendingDocuments : 0}">
+    <input type="hidden" id="dataResidents"   th:value="${residents != null ? residents : 0}">
+    <input type="hidden" id="dataBlotter"     th:value="${blotterCount != null ? blotterCount : 0}">
+    <input type="hidden" id="dataBlotterPending"     th:value="${blotterPending != null ? blotterPending : 0}">
+    <input type="hidden" id="dataAllReports"  th:value="${allreports != null ? allreports : 0}">
+
+    <input type="hidden" id="dataSeniorMale" th:value="${seniorMaleCount != null ? seniorMaleCount : 0}">
+    <input type="hidden" id="dataSeniorFemale" th:value="${seniorFemaleCount != null ? seniorFemaleCount : 0}">
+    <input type="hidden" id="dataPwdChildren" th:value="${pwdChildren != null ? pwdChildren : 0}">
+    <input type="hidden" id="dataPwdAdultMales" th:value="${pwdAdultMales != null ? pwdAdultMales : 0}">
+    <input type="hidden" id="dataPwdAdultFemales" th:value="${pwdAdultFemales != null ? pwdAdultFemales : 0}">
+    <input type="hidden" id="dataPwdSeniors" th:value="${pwdSeniors != null ? pwdSeniors : 0}">
+
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="content">
+
+        <div class="top-bar">
+            <div class="welcome-text">
+                Welcome back, <span th:text="${currentrole}">Role</span>
+            </div>
+            <div class="user-info">
+                <div class="notification-bell" id="notificationBell" title="Notifications">
+                    <i class="bi bi-bell-fill"></i>
+                    <span class="badge" id="notifBadge" aria-hidden="true"></span>
+                </div>
+                <span th:text="${currentUser}">Current User</span>
+                <div class="user-avatar" id="profileAvatarBtn">
+                    <img th:if="${currentAdminId != null and currentAdminProfilePicture != null and !#strings.isEmpty(currentAdminProfilePicture)}"
+                        th:src="@{'/media/avatar/' + ${currentAdminId}}" alt="Profile" width="44" height="44" decoding="async"
+                        style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;">
+                    <span th:unless="${currentAdminId != null and currentAdminProfilePicture != null and !#strings.isEmpty(currentAdminProfilePicture)}"
+                        th:text="${currentUser != null and !#strings.isEmpty(currentUser) ? #strings.substring(currentUser, 0, 1) : 'A'}">
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel" role="main">
+            <div class="dashboard-outer">
+
+                <div class="col-left">
+
+                    <div class="row-top">
+
+                        <div class="announcements-box" id="announcementBox">
+                            <div class="announce-header">
+                                <div class="announce-header-title">
+                                    <i class="bi bi-megaphone-fill"></i> Announcement
+                                </div>
+                                <div class="announce-badge" id="announceBadge" th:if="${latestAnnouncement != null}">
+                                    <span id="announceRelativeDate" style="font-size:12px; color:white; white-space:nowrap; font-weight:600;"></span>
+                                </div>
+                            </div>
+                            <div class="announcement-content has-content" id="announcementContent"
+                                th:if="${latestAnnouncement != null}"
+                                style="overflow:hidden;">
+                                <img id="announceImage"
+                                    th:if="${latestAnnouncement.image != null and !#strings.isEmpty(latestAnnouncement.image) and latestAnnouncement.id != null}"
+                                    th:src="${#strings.startsWith(latestAnnouncement.image, 'http')} ? ${latestAnnouncement.image} : @{'/media/announcement/' + ${latestAnnouncement.id}}"
+                                    alt="Announcement image" width="640" height="360" fetchpriority="high" decoding="async"
+                                    style="width:100%; max-height:180px; object-fit:cover; display:block;">
+                                <div style="width:100%; padding:12px 14px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                        <strong id="announceTitle" th:text="${latestAnnouncement.title}" style="font-size:13px; color:#24443f; font-weight:600;"></strong>
+                                        <span id="announceOriginalDate" style="font-size:10px; color:#5a6564; white-space:nowrap; margin-left:8px;"
+                                        th:attr="data-date=${latestAnnouncement.datePosted}"
+                                        th:text="${latestAnnouncement.datePosted != null ? #temporals.format(latestAnnouncement.datePosted, 'MMM dd, yyyy') : ''}"></span>
+                                    </div>
+                                    <p id="announceContent" th:text="${latestAnnouncement.content}" style="font-size:12px; color:#4a5655; margin:0; line-height:1.6;"></p>
+                                </div>
+                            </div>
+                            <div class="announcement-content" id="noAnnouncement" th:if="${latestAnnouncement == null}">
+                                No announcements at this time
+                            </div>
+                        </div>
+
+                        <div class="weather-box">
+                            <div class="weather-header">
+                                <div class="weather-header-title">
+                                    <i class="bi bi-cloud-sun-fill"></i> Weather Forecast
+                                </div>
+                                <button class="refresh-weather" id="refreshWeatherBtn">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+                            <div id="weatherContent">
+                                <div class="weather-loading">Loading weather data...</div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div th:if="${currentrole == 'ADMIN'}" class="assistance-notif" id="assistanceNotifBtn">
+                        <img src="/icons/help.svg" class="icon" width="20" height="20" alt="Assistance requests icon">
+                        Admin Assistance Requests
+                        <span id="dot-assistance" class="badge bg-danger"></span>
+                    </div>
+
+                    <div>
+                        <div class="section-label">Overview</div>
+                        <div class="stats-grid" id="statsGrid">
+
+                            <div class="stat-card" id="statResidents">
+                                <div class="stat-icon-wrap ic-b"><i class="bi bi-people-fill"></i></div>
+                                <div class="stat-label">Total Registered Residents</div>
+                                <div class="stat-number" id="numResidents" th:text="${residents != null ? residents : 0}">0</div>
+                            </div>
+
+                            <div class="stat-card" id="statPendingDocs">
+                                <div class="stat-icon-wrap ic-r"><i class="bi bi-file-earmark-text-fill"></i></div>
+                                <div class="stat-label">Pending Document Requests</div>
+                                <div class="stat-number stat-red" id="numPendingDocs" th:text="${pendingDocuments != null ? pendingDocuments : 0}">0</div>
+                            </div>
+
+                            <div class="stat-card" id="statBudget">
+                                <div class="stat-icon-wrap ic-g"><i class="bi bi-cash-stack"></i></div>
+                                <div class="stat-label">Program Budget This Month</div>
+                                <div class="stat-number stat-green budget" id="numBudget">
+                                    ₱<span th:text="${#numbers.formatInteger(budget != null ? budget : 0, 0, 'COMMA')}">0</span>
+                                </div>
+                            </div>
+
+                            <div class="stat-card" id="statNewRequests">
+                                <div class="stat-icon-wrap ic-b"><i class="bi bi-envelope-open-fill"></i></div>
+                                <div class="stat-label">New Requests This Month</div>
+                                <div class="stat-number" id="numNewRequests" th:text="${newRequestsThisMonth != null ? newRequestsThisMonth : 0}">0</div>
+                            </div>
+
+                            <div class="stat-card" id="statSOS"
+                                 th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
+                                <div class="stat-icon-wrap ic-r"><i class="bi bi-exclamation-octagon-fill"></i></div>
+                                <div class="stat-label">SOS Alerts This Month</div>
+                                <div class="stat-number stat-red" id="numSOS" th:text="${sosAlertsThisMonth != null ? sosAlertsThisMonth : 0}">0</div>
+                            </div>
+
+                            <div class="stat-card" id="statIncidents"
+                                 th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
+                                <div class="stat-icon-wrap ic-r"><i class="bi bi-shield-exclamation"></i></div>
+                                <div class="stat-label">Total Incidents Reported</div>
+                                <div class="stat-number stat-red" id="numIncidents" th:text="${allreports != null ? allreports : 0}">0</div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-icon" style="font-size:22px; margin-bottom:6px;">📋</div>
+                                <div class="stat-label">Blotter Reports<br>Total</div>
+                                <div class="stat-number" th:text="${blotterCount}">0</div>
+                            </div>
+
+                            <div class="stat-card" id="statTotal">
+                                <div class="stat-icon-wrap ic-b"><i class="bi bi-people-fill"></i></div>
+                                <div class="stat-label">Total Barangay Residents included in Census</div>
+                                <div class="stat-number" id="numTotal" th:text="${totalResidents != null ? totalResidents : 0}">0</div>
+                            </div>
+
+                            <div class="stat-card" id="statHouseholds">
+                                <div class="stat-icon-wrap ic-b"><i class="bi bi-house-door-fill"></i></div>
+                                <div class="stat-label">Households</div>
+                                <div class="stat-number" id="numHouseholds" th:text="${householdCount != null ? householdCount : 0}">0</div>
+                            </div>
+
+                            <div class="stat-card" id="statChildren">
+                                <div class="stat-icon-wrap ic-b"><i class="bi bi-person-child-fill"></i></div>
+                                <div class="stat-label">Children (0-17)</div>
+                                <div class="stat-number" id="numChildren" th:text="${childrenCount != null ? childrenCount : 0}">0</div>
+                            </div>
+
+                            <div class="stat-card" id="statAdultMales">
+                                <div class="stat-icon-wrap ic-g"><i class="bi bi-gender-male"></i></div>
+                                <div class="stat-label">Adult Males (18-59)</div>
+                                <div class="stat-number" id="numAdultMales" th:text="${adultMalesCount != null ? adultMalesCount : 0}">0</div>
+                            </div>
+
+                            <div class="stat-card" id="statAdultFemales">
+                                <div class="stat-icon-wrap ic-p"><i class="bi bi-gender-female"></i></div>
+                                <div class="stat-label">Adult Females (18-59)</div>
+                                <div class="stat-number" id="numAdultFemales" th:text="${adultFemalesCount != null ? adultFemalesCount : 0}">0</div>
+                            </div>
+
+                            <div class="stat-card" id="statSeniors">
+                                <div class="stat-icon-wrap ic-a"><i class="bi bi-person-arms-up"></i></div>
+                                <div class="stat-label">Senior Citizens (60+)</div>
+                                <div class="stat-number" id="numSeniors" th:text="${seniorsCount != null ? seniorsCount : 0}">0</div>
+                            </div>
+
+                            <div class="stat-card" id="statPWD">
+                                <div class="stat-icon-wrap ic-r"><i class="bi bi-person-wheelchair"></i></div>
+                                <div class="stat-label">PWDs (All Ages)</div>
+                                <div class="stat-number stat-red" id="numPWD" th:text="${pwdCount != null ? pwdCount : 0}">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="chartsSection"
+                         th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}">
+                        <div class="section-label">Analytics</div>
+                        <div class="charts-row">
+
+                            <div class="chart-card">
+                                <div class="chart-title">Incident Breakdown</div>
+                                <div class="chart-sub">Resolved vs. unresolved — total</div>
+                                <div style="position:relative; height:155px;">
+                                    <canvas id="incidentDonut" role="img" aria-label="Donut chart showing resolved vs unresolved incidents"></canvas>
+                                </div>
+                                <div class="legend-row">
+                                    <div class="legend-item"><div class="legend-dot" style="background:#27ae60;"></div>Resolved</div>
+                                    <div class="legend-item"><div class="legend-dot" style="background:#e74c3c;"></div>Unresolved</div>
+                                </div>
+                            </div>
+
+                            <div class="chart-card" style="display:flex; flex-direction:column;">
+                                <div class="chart-title" style="text-align:center;">Resolution Rate</div>
+                                <div class="chart-sub" style="text-align:center;">All-time</div>
+                                <div class="rate-center" style="flex:1;">
+                                    <div style="position:relative; height:120px; width:120px;">
+                                        <canvas id="rateChart" role="img" aria-label="Donut chart showing incident resolution rate percentage"></canvas>
+                                    </div>
+                                    <div class="rate-pct" id="ratePctLabel">—</div>
+                                    <div class="rate-sub" id="rateSubLabel">calculating...</div>
+                                </div>
+                            </div>
+
+                            <div class="chart-card" style="display:flex; flex-direction:column;">
+                                <div class="chart-title">Workload Snapshot</div>
+                                <div class="chart-sub">Key pending counts</div>
+                                <div style="position:relative; flex:1; min-height:155px;">
+                                    <canvas id="workloadChart" role="img" aria-label="Horizontal bar chart of pending workload items"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-card" id="seniorGenderChart" style="margin-top:20px;">
+                                <div class="chart-title">Senior Citizen Gender Breakdown</div>
+                                <div class="chart-sub">Male vs. Female seniors (60+)</div>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; align-items:center;">
+                                    <div style="position:relative; height:140px;">
+                                        <canvas id="seniorGenderDonut" role="img" aria-label="Donut chart showing senior citizen gender breakdown"></canvas>
+                                    </div>
+                                    <div>
+                                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                                            <div style="width:12px; height:12px; background:#3498db; border-radius:3px;"></div>
+                                            <span style="font-size:14px; color:var(--gray-700);">Male Seniors: <strong id="seniorMaleDisplay" th:text="${seniorMaleCount != null ? seniorMaleCount : 0}">0</strong></span>
+                                        </div>
+                                        <div style="display:flex; align-items:center; gap:12px;">
+                                            <div style="width:12px; height:12px; background:#e74c3c; border-radius:3px;"></div>
+                                            <span style="font-size:14px; color:var(--gray-700);">Female Seniors: <strong id="seniorFemaleDisplay" th:text="${seniorFemaleCount != null ? seniorFemaleCount : 0}">0</strong></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="chart-card" style="margin-top:20px;">
+                                <div class="chart-title">PWD Distribution by Category</div>
+                                <div class="chart-sub">How PWDs are spread across age groups</div>
+                                <div style="position:relative; height:180px;">
+                                    <canvas id="pwdBreakdownChart" role="img" aria-label="Bar chart showing PWD distribution by category"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="col-right">
+
+                    <div class="widget-box">
+                        <div class="widget-header">
+                            <div class="widget-title" id="calendarTitle">
+                                <i class="bi bi-calendar3"></i> Loading...
+                            </div>
+                            <div class="calendar-nav">
+                                <button id="calPrevBtn" aria-label="Previous month"><i class="bi bi-chevron-left"></i></button>
+                                <button id="calNextBtn" aria-label="Next month"><i class="bi bi-chevron-right"></i></button>
+                            </div>
+                        </div>
+                        <div class="calendar-grid" id="calendarGrid">
+                            <div class="calendar-day-name">Mo</div>
+                            <div class="calendar-day-name">Tu</div>
+                            <div class="calendar-day-name">We</div>
+                            <div class="calendar-day-name">Th</div>
+                            <div class="calendar-day-name">Fr</div>
+                            <div class="calendar-day-name">Sa</div>
+                            <div class="calendar-day-name">Su</div>
+                        </div>
+                    </div>
+
+                    <div class="widget-box">
+                        <div class="widget-header">
+                            <div class="widget-title">
+                                <i class="bi bi-calendar-event-fill"></i> Upcoming Programs this Month
+                            </div>
+                        </div>
+                        <div id="upcomingProgramsList">
+                            <div class="no-programs">Loading...</div>
+                        </div>
+                    </div>
+
+                    <div class="widget-box" id="activityBox"
+                         th:if="${currentrole == 'ADMIN' or currentrole == 'BARANGAY-CAPTAIN' or currentrole == 'SECRETARY'}">
+                        <div class="widget-header">
+                            <div class="widget-title">
+                                <i class="bi bi-activity"></i> Latest Activity
+                            </div>
+                        </div>
+                        <div id="activityList">
+                            <div th:if="${recentLogs != null and not #lists.isEmpty(recentLogs)}">
+                                <div class="activity-item" th:each="log : ${recentLogs}">
+                                    <div class="activity-dot"></div>
+                                    <div class="activity-info">
+                                        <div class="activity-detail">
+                                            <span th:text="${log.details}"></span>
+                                            <span class="activity-by" th:text="' — By ' + ${log.UserName}"></span>
+                                        </div>
+                                        <div class="activity-time-label"
+                                             th:text="${log.timestamp != null ? #temporals.format(log.timestamp, 'MM/dd/yy · hh:mm a') : 'N/A'}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div th:if="${recentLogs == null or #lists.isEmpty(recentLogs)}" class="no-programs" id="noActivity">
+                                No recent activity
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="notificationModal" style="display:none; position:fixed; z-index:10000; top:0; left:0; width:100%; height:100%;">
+    <div style="position:absolute; top:64px; right:180px; background:white; border-radius:12px; width:400px; max-width:90vw; max-height:60vh; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.2); border:1px solid #e0e0e0;">
+        <div style="position:absolute; top:-8px; right:24px; width:16px; height:16px; background:white; transform:rotate(45deg); border-left:1px solid #e0e0e0; border-top:1px solid #e0e0e0;"></div>
+        <div style="background:#2d4a44; color:white; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #FED734;">
+            <h5 style="margin:0; font-size:14px;"><i class="bi bi-bell-fill me-2"></i>Notifications</h5>
+            <button id="closeNotifModalBtn" style="background:none; border:none; color:white; font-size:20px; cursor:pointer; line-height:1;">&times;</button>
+        </div>
+        <div id="notifList" style="max-height:350px; overflow-y:auto; padding:0;">
+            <div style="text-align:center; padding:30px; color:#aaa;">Loading...</div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/logout-modal :: logoutModal}"></div>
+
+<script src="/js/dashboard.js"></script>
+</body>
+</html>

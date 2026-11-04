@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brgy. San Sebastian Program Planner: AI-Assisted Program Planner">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" href="/css/program-planner.css">
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    
+    <title>Program Planner</title>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+<div class="layout">
+
+<div id="forcePasswordModal" class="force-modal">
+    <div class="force-modal-content">
+        <h2><i class="bi bi-lock-fill"></i> First Login Detected</h2>
+        <p>You must change your password before using the system.</p>
+        <button id="btnRedirectPassword">Change Password</button>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0"></div>
+            <div class="modal-body">
+                <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <h5 id="successMessage">Success!</h5>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+  <div class="content">
+
+    <div class="top-header">
+      <div class="top-header-tab">AI-Assisted Recommendation and Planner</div>
+    </div>
+
+    <div class="panel" role="main">
+
+      <!-- Chatbot -->
+      <div class="ai-chatbot-container">
+        <div class="chatbot-header">
+          <div class="chatbot-status-dot"></div>
+          <i class="bi bi-robot"></i>&nbsp; AI Chatbot
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+          <div class="d-flex flex-column align-items-start">
+              <div class="chat-bubble-label">AI Assistant</div>
+              <div class="chat-bubble ai">
+                  Hello! I can help you plan barangay programs. 
+                  Tell me about your community's needs and I'll suggest suitable programs and budget allocations.
+              </div>
+          </div>
+          <div class="typing-indicator" id="typing-indicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <textarea class="chat-input" id="chat-input" placeholder="Ask the AI for program recommendations..." rows="1" aria-label="Message the AI assistant"></textarea>
+          <button class="chat-send-btn" id="btnSendMessage">
+            <i class="bi bi-send"></i> Send
+          </button>
+          <button class="chat-create-btn" id="chat-create-btn" disabled>
+            <i class="bi bi-plus-circle"></i> Create
+          </button>
+        </div>
+        <div class="ai-disclaimer">
+          This AI assistant is for planning and reference purposes only, review all suggested programs and budgets before approval.
+          Gemini is AI and can make mistakes. Please double-check responses.
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="right-column">
+
+        <div class="card-white">
+          <div class="card-title">
+            <span><i class="bi bi-card-list" style="margin-right:6px;"></i>Suggested Programs</span>
+            <button class="log-open-btn" id="btnOpenLogModal">
+              <i class="bi bi-journal-text"></i> Activity Log
+            </button>
+          </div>
+          <div id="suggested-programs-list">
+            <div class="empty-programs">
+              <i class="bi bi-calendar2-x" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+              No programs yet. Ask the AI to suggest one!
+            </div>
+          </div>
+        </div>
+
+        <div class="card-white">
+          <div class="card-title" style="border: none; margin-bottom: 0;">
+            <span><i class="bi bi-wallet2" style="margin-right:6px;"></i>Current Budget</span>
+          </div>
+          <div class="budget-card-inner">
+            <div class="budget-label">Available Funds</div>
+            <div class="budget-amount">
+              <span class="budget-currency">&#8369;</span>
+              <span id="total-budget-display">Loading...</span>
+            </div>
+            <div class="budget-footer">
+              Data as of: <span th:text="${#temporals.format(#temporals.createNow(), 'MMM dd, yyyy')}">Current Date</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
+
+<!-- ===== UPDATE BUDGET MODAL ===== -->
+<div id="budgetModal" class="modal">
+  <div class="modal-shell">
+    <div class="modal-head">
+      <h3><i class="bi bi-wallet2"></i> Update Budget</h3>
+      <button class="modal-close-btn" id="btnCloseBudgetModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Enter Amount (&#8369;)</label>
+        <input type="number" id="manual-budget-amount" placeholder="0.00" min="0">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-dark" id="btnSubmitManualBudget">
+        <i class="bi bi-check-circle"></i> Save
+      </button>
+      <button class="btn-gray" id="btnCancelBudgetModal">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CREATE PROGRAM MODAL ===== -->
+<div id="createProgramModal" class="modal">
+  <div class="modal-shell wide">
+    <div class="modal-head">
+      <h3><i class="bi bi-calendar-plus"></i> Add Program to Calendar</h3>
+      <button class="modal-close-btn" id="btnCloseCreateModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Select a Suggested Program</label>
+        <select id="modal-program-select">
+          <option value="">-- Choose a program --</option>
+        </select>
+      </div>
+      <hr style="border-color:#e0e0e0; margin: 12px 0;">
+      <div class="field-group">
+        <label>Program Name</label>
+        <input type="text" id="modal-program-name" placeholder="e.g. Community Clean-up Drive">
+      </div>
+      <div class="field-row">
+        <div class="field-col">
+          <label>Date</label>
+          <input type="date" id="modal-event-date">
+        </div>
+        <div class="field-col">
+          <label>Location</label>
+          <input type="text" id="modal-location" placeholder="e.g. Barangay Hall">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-col">
+          <label>Start Time</label>
+          <input type="time" id="modal-start-time">
+        </div>
+        <div class="field-col">
+          <label>End Time</label>
+          <input type="time" id="modal-end-time">
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Notes</label>
+        <textarea id="modal-notes" rows="2" placeholder="Additional details..."></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-save" id="btnSubmitToCalendar">
+        <i class="bi bi-calendar-check"></i> Add to Calendar
+      </button>
+      <button class="btn-gray" id="btnCancelCreateModal">Cancel</button>
+    </div>
+  </div>
+</div>
+
+  <!-- ===== VIEW PROGRAM MODAL (editable) ===== -->
+  <div id="viewProgramModal" class="modal">
+    <div class="modal-shell wide two-col">
+      <div class="modal-head" style="background:#2d4a44; border-radius: 12px 12px 0 0;">
+        <h3 style="color:white;">
+          <i class="bi bi-info-circle"></i> Program Details
+        </h3>
+        <button class="modal-close-btn" style="color:rgba(255,255,255,0.7);" id="btnCloseViewModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-two-col">
+
+          <!-- LEFT: detail fields -->
+          <div class="modal-col-left">
+            <div class="detail-row">
+              <div class="detail-icon"><i class="bi bi-tag"></i></div>
+              <div class="detail-content">
+                <div class="detail-label">Program Name</div>
+                <input type="text" class="detail-input" id="view-program-name">
+              </div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-icon"><i class="bi bi-calendar3"></i></div>
+              <div class="detail-content">
+                <div class="detail-label">Date</div>
+                <input type="date" class="detail-input" id="view-program-date">
+              </div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-icon"><i class="bi bi-geo-alt"></i></div>
+              <div class="detail-content">
+                <div class="detail-label">Location</div>
+                <input type="text" class="detail-input" id="view-program-location" placeholder="e.g. Barangay Hall">
+              </div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-icon"><i class="bi bi-clock"></i></div>
+              <div class="detail-content">
+                <div class="detail-label">Start Time</div>
+                <input type="time" class="detail-input" id="view-program-start">
+              </div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-icon"><i class="bi bi-clock-history"></i></div>
+              <div class="detail-content">
+                <div class="detail-label">End Time</div>
+                <input type="time" class="detail-input" id="view-program-end">
+              </div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-icon"><i class="bi bi-cash-coin"></i></div>
+              <div class="detail-content">
+                <div class="detail-label">Estimated Budget (&#8369;)</div>
+                <input type="number" class="detail-input" id="view-program-budget" min="0">
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: notes panel -->
+          <div class="modal-col-right">
+            <div class="notes-panel-header">
+              <i class="bi bi-journal-text"></i> Notes
+            </div>
+            <div class="notes-source-tag">
+              <i class="bi bi-robot"></i> From AI Conversation
+            </div>
+            <textarea
+              class="notes-panel-textarea"
+              id="view-program-notes"
+              placeholder="Notes from the AI conversation will appear here..."></textarea>
+          </div>
+
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-save" id="btnAddToCalendarFromView">
+          <i class="bi bi-calendar-plus"></i> Add to Calendar
+        </button>
+        <button class="btn-gray" id="btnCloseViewModalFooter">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== AI GENERATE PROGRAM MODAL ===== -->
+  <div id="aiCreateProgramModal" class="modal">
+    <div class="modal-shell wide two-col">
+      <div class="modal-head">
+        <h3><i class="bi bi-robot"></i> AI Generated Program</h3>
+        <button class="modal-close-btn" id="btnCloseAICreateModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-two-col">
+
+          <!-- LEFT: form fields -->
+          <div class="modal-col-left">
+            <p style="font-size:13px; color:#888; margin-bottom:18px;">
+              Review and edit the AI-generated details below, then click <strong>Add Event</strong> to save.
+            </p>
+            <div class="field-group">
+              <label>Program Name</label>
+              <input type="text" id="ai-program-name-display">
+            </div>
+            <div class="field-row">
+              <div class="field-col">
+                <label>Date</label>
+                <input type="date" id="ai-program-date-display">
+              </div>
+              <div class="field-col">
+                <label>Location</label>
+                <input type="text" id="ai-program-location-display">
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-col">
+                <label>Start Time</label>
+                <input type="time" id="ai-program-starttime-display">
+              </div>
+              <div class="field-col">
+                <label>End Time</label>
+                <input type="time" id="ai-program-endtime-display">
+              </div>
+            </div>
+            <div class="field-group">
+              <label>Estimated Budget (&#8369;)</label>
+              <input type="number" id="ai-program-budget-display" min="0">
+            </div>
+          </div>
+
+          <!-- RIGHT: notes panel -->
+          <div class="modal-col-right">
+            <div class="notes-panel-header">
+              <i class="bi bi-journal-text"></i> AI Notes
+            </div>
+            <div class="notes-source-tag">
+              <i class="bi bi-robot"></i> From AI Conversation
+            </div>
+            <textarea
+              class="notes-panel-textarea"
+              id="ai-program-notes-display"
+              placeholder="AI-generated notes from the conversation will appear here. You can edit them before saving."></textarea>
+          </div>
+
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-save" id="btnSaveAIGeneratedProgram">
+          <i class="bi bi-save"></i> Add Event
+        </button>
+        <button class="btn-gray" id="btnCancelAICreateModal">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+<!-- ===== REVIEW SUGGESTION MODAL ===== -->
+<div id="reviewSuggestionModal" class="modal">
+  <div class="modal-shell wide">
+    <div class="modal-head">
+      <h3><i class="bi bi-clipboard-check"></i> Review Program Suggestion</h3>
+      <button class="modal-close-btn" id="btnCloseReviewModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px; color:#888; margin-bottom:14px;">
+        Review and edit the AI-suggested program before saving.
+      </p>
+      <div class="field-group">
+        <label>Program Name</label>
+        <input type="text" id="review-program-name">
+      </div>
+      <div class="field-row">
+        <div class="field-col">
+          <label>Date</label>
+          <input type="date" id="review-program-date">
+        </div>
+        <div class="field-col">
+          <label>Location</label>
+          <input type="text" id="review-program-place" placeholder="e.g. Barangay Hall">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-col">
+          <label>Start Time</label>
+          <input type="time" id="review-program-time">
+        </div>
+        <div class="field-col">
+          <label>End Time</label>
+          <input type="time" id="review-program-endtime">
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Estimated Budget (&#8369;)</label>
+        <input type="number" id="review-program-budget" min="0" placeholder="0">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-save" id="btnApproveSuggestion">
+        <i class="bi bi-check-circle"></i> Approve &amp; Save
+      </button>
+      <button class="btn-gray" id="btnCancelReviewModal">Discard</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SELECT PROGRAMS MODAL (annual plan picker) ===== -->
+<div id="selectProgramsModal" class="modal">
+  <div class="modal-shell wide" style="max-width:700px;">
+    <div class="modal-head" style="background:#2d4a44;border-radius:12px 12px 0 0;">
+      <h3 style="color:white;">
+        <i class="bi bi-calendar2-range"></i>&nbsp; Select Programs to Save
+      </h3>
+      <button class="modal-close-btn" style="color:rgba(255,255,255,0.7);" id="btnCloseSelectProgramsModal">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:0;">
+
+      <!-- Toolbar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #e0e0e0;background:#f8fdf9;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;gap:8px;">
+          <button id="btnSelectAllPrograms" style="background:#2d4a44;color:white;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:bold;cursor:pointer;">
+            <i class="bi bi-check2-all"></i> Select All
+          </button>
+          <button id="btnDeselectAllPrograms" style="background:#e0e0e0;color:#555;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:bold;cursor:pointer;">
+            <i class="bi bi-x-lg"></i> Deselect All
+          </button>
+        </div>
+        <div style="font-size:13px;color:#555;">
+          <span id="select-count-label">0 selected</span>
+          &nbsp;·&nbsp;
+          Total: <strong style="color:#2d4a44;">&#8369;<span id="select-total-label">0</span></strong>
+        </div>
+      </div>
+
+      <!-- Program list -->
+      <div id="select-programs-list" style="max-height:400px;overflow-y:auto;padding:12px 20px;display:flex;flex-direction:column;gap:8px;">
+        <!-- rows injected by JS -->
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-save" id="save-selected-btn">
+        <i class="bi bi-save"></i> Save Selected
+      </button>
+      <button class="btn-gray" id="btnCancelSelectProgramsModal">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ACTIVITY LOG MODAL ===== -->
+<div id="activityLogModal" class="modal">
+  <div class="modal-shell" style="max-width:880px; width:95%; max-height:88vh;">
+    <div class="modal-head" style="background:#2d4a44; border-radius:12px 12px 0 0; flex-shrink:0;">
+      <h3 style="color:white;">
+        <i class="bi bi-journal-text"></i>&nbsp; Program Activity Log
+      </h3>
+      <button class="modal-close-btn" style="color:rgba(255,255,255,0.7);" id="btnCloseActivityLogModal">&times;</button>
+    </div>
+
+    <!-- Filter toolbar -->
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 20px;
+                border-bottom:1px solid #e0e0e0;background:#f8fdf9;flex-shrink:0;flex-wrap:wrap;">
+      <span style="font-size:12px;color:#555;font-weight:bold;text-transform:uppercase;letter-spacing:0.3px;">Filter:</span>
+      <button class="log-filter-btn active" id="log-filter-ALL" data-filter="ALL">All</button>
+      <button class="log-filter-btn" id="log-filter-ADDED" data-filter="ADDED">
+        <i class="bi bi-calendar-check"></i> Added to Calendar
+      </button>
+      <button class="log-filter-btn" id="log-filter-DELETED" data-filter="DELETED">
+        <i class="bi bi-trash"></i> Deleted
+      </button>
+      <span style="margin-left:auto;font-size:12px;color:#888;" id="log-record-count">— records</span>
+    </div>
+
+    <!-- Table area -->
+    <div style="flex:1;overflow-y:auto;min-height:0;">
+      <div id="log-table-wrapper">
+        <div class="log-empty">
+          <i class="bi bi-arrow-repeat" style="font-size:24px;display:block;margin-bottom:10px;
+             animation:spin 1s linear infinite;"></i>
+          Loading...
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-foot" style="flex-shrink:0;">
+      <button class="btn-gray" id="btnCloseActivityLogFooter" style="max-width:120px;">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/program-planner.js"></script>
+</body>
+</html>

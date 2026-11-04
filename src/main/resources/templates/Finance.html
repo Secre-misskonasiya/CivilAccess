@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brgy. San Sebastian Expenditures: Manage Expenditure and Track Assets">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" href="/css/finance.css">
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <title>Financial Management - CivilAccess</title>
+</head>
+<body>
+    <input type="hidden" id="currentUserName" th:value="${currentUser}">
+    <div class="layout">
+        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+        <div class="toast-wrap" id="toastWrap"></div>
+
+        <div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header border-0 pb-0"></div>
+                    <div class="modal-body">
+                        <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                        <h5 id="successMessage">Success!</h5>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" id="successOkBtn" data-bs-dismiss="modal">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sys-overlay" id="sysErrorOverlay">
+          <div class="sys-modal-box error">
+            <div class="sys-modal-body">
+              <div class="sys-modal-icon">
+                <i class="bi bi-x-circle-fill text-white"></i>
+              </div>
+              <h5 id="sysErrorMessage">An error occurred.</h5>
+            </div>
+            <div class="sys-modal-footer">
+              <button class="sys-btn-ok" id="sysErrorOkBtn">OK</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="main-content">
+            <div class="top-header">
+                <div class="top-header-tab">Financial Management</div>
+            </div>
+
+            <div class="content-area">
+                <div class="finance-tabs">
+                    <button class="tab-btn active" data-tab="dashboard"><i class="bi bi-speedometer2"></i> Dashboard</button>
+                    <button class="tab-btn" data-tab="income"><i class="bi bi-cash-stack"></i> Income</button>
+                    <button class="tab-btn" data-tab="expenses"><i class="bi bi-receipt"></i> Expenses</button>
+                    <button class="tab-btn" data-tab="budget"><i class="bi bi-pie-chart"></i> Budget</button>
+                    <button class="tab-btn" data-tab="archive"><i class="bi bi-archive"></i> Archive</button>
+                </div>
+
+                <div id="tab-dashboard" class="tab-content active">
+                    <div class="period-filter-bar">
+                        <span class="period-filter-label"><i class="bi bi-funnel"></i> View by:</span>
+                        <button class="period-btn" data-period="day">Day</button>
+                        <button class="period-btn" data-period="week">Week</button>
+                        <button class="period-btn active" data-period="month">Month</button>
+                        <button class="period-btn" data-period="year">Year</button>
+                        <button class="period-btn" data-period="all">All Time</button>
+                        <button class="period-btn" data-period="custom">Custom</button>
+                        <div class="period-custom-range" id="customRangeInputs">
+                            <input type="date" id="dashCustomStart" />
+                            <span style="color:#aaa;font-size:12px;">to</span>
+                            <input type="date" id="dashCustomEnd" />
+                            <button id="btnApplyCustomRange">Apply</button>
+                        </div>
+                        <span class="dash-period-label" id="dashPeriodLabel">Showing: Current Month</span>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="stat-card income">
+                                <div class="stat-title" id="dashIncomeLabel"><i class="bi bi-graph-up"></i> Income This Month</div>
+                                <div class="stat-amount" id="dashIncomeAmt" th:text="'₱' + ${#numbers.formatDecimal(monthIncome,1,2)}">₱0.00</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card expense">
+                                <div class="stat-title" id="dashExpenseLabel"><i class="bi bi-graph-down"></i> Expenses This Month</div>
+                                <div class="stat-amount" id="dashExpenseAmt" th:text="'₱' + ${#numbers.formatDecimal(monthExpenses,1,2)}">₱0.00</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card savings">
+                                <div class="stat-title" id="dashSavingsLabel"><i class="bi bi-piggy-bank"></i> Net Savings (Month)</div>
+                                <div class="stat-amount" id="dashSavingsAmt" th:classappend="${netSavings >= 0} ? 'text-success' : 'text-danger'" th:text="'₱' + ${#numbers.formatDecimal(netSavings,1,2)}">₱0.00</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card budget">
+                                <div class="stat-title"><i class="bi bi-wallet2"></i> Remaining Budget</div>
+                                <div class="stat-amount" th:text="'₱' + ${#numbers.formatDecimal(remainingBudget,1,2)}">₱0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="stat-card income" style="border-left-color:#1abc9c;">
+                                <div class="stat-title"><i class="bi bi-file-earmark-text"></i> Document Fees (Month)</div>
+                                <div class="stat-amount" style="font-size:22px;" th:text="'₱' + ${#numbers.formatDecimal(documentFeeIncome,1,2)}">₱0.00</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card income" style="border-left-color:#f39c12;">
+                                <div class="stat-title"><i class="bi bi-house-door"></i> Rental Income (Month)</div>
+                                <div class="stat-amount" style="font-size:22px;" th:text="'₱' + ${#numbers.formatDecimal(rentalIncome,1,2)}">₱0.00</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card savings" style="border-left-color:#8e44ad;">
+                                <div class="stat-title"><i class="bi bi-calendar-range"></i> All-Time Income</div>
+                                <div class="stat-amount" style="font-size:22px;" th:text="'₱' + ${#numbers.formatDecimal(totalIncomeAll,1,2)}">₱0.00</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card expense" style="border-left-color:#c0392b;">
+                                <div class="stat-title"><i class="bi bi-calendar-range"></i> All-Time Expenses</div>
+                                <div class="stat-amount" style="font-size:22px;" th:text="'₱' + ${#numbers.formatDecimal(totalExpensesAll,1,2)}">₱0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="form-panel" style="height:320px; display:flex; flex-direction:column;">
+                                <div class="form-title" id="incomeChartTitle"><i class="bi bi-bar-chart"></i> Income Breakdown (Month)</div>
+                                <div id="incomeChartWrap" style="flex:1; position:relative;"><canvas id="incomeChart" style="position:absolute;inset:0;width:100%!important;height:100%!important;"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-panel" style="height:320px; display:flex; flex-direction:column;">
+                                <div class="form-title" id="expenseChartTitle"><i class="bi bi-bar-chart"></i> Expenses by Category (Month)</div>
+                                <div id="expenseChartWrap" style="flex:1; position:relative;"><canvas id="expenseChart" style="position:absolute;inset:0;width:100%!important;height:100%!important;"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-panel">
+                        <div class="form-title"><i class="bi bi-clock-history"></i> Pending Expenses (Need Approval)</div>
+                        <div class="table-responsive">
+                            <table class="data-table table">
+                                <thead>
+                                    <tr><th>Date</th><th>Description</th><th>Amount</th><th>Actions</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="exp : ${pendingExpensesList}">
+                                        <td th:text="${exp.expenseDate}">-</td>
+                                        <td th:text="${exp.description}">-</td>
+                                        <td class="amount-negative" th:text="'₱' + ${exp.amount}">-</td>
+                                        <td><a th:href="@{|/finance/expenses/approve/${exp.id}?approvedBy=${currentAdminNumericId}|}"
+                                            th:if="${currentrole == 'ADMIN' or currentrole == 'TREASURER'}"
+                                            class="action-btn approve btn-confirm-nav" data-msg="Approve this expense?" data-title="Approve Expense">Approve</a>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${pendingExpensesList.isEmpty()}"><td colspan="4" class="text-center text-muted">No pending expenses</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-income" class="tab-content">
+                    <div class="form-panel" th:if="${currentrole == 'ADMIN' or currentrole == 'TREASURER'}">
+                        <div class="form-title"><i class="bi bi-plus-circle"></i> Record New Income</div>
+                        <form th:action="@{/finance/income/save}" method="post" id="incomeForm">
+                            <input type="hidden" name="collectedBy" th:value="${currentAdminNumericId}">
+                            <div class="row g-3">
+                                <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="incomeDate" class="form-control" required></div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Income Type</label>
+                                    <select name="incomeType" class="form-select" id="incomeTypeSelect" required>
+                                        <option value="DOCUMENT_FEE">Document Fee</option>
+                                        <option value="RENTAL">Rental</option>
+                                        <option value="DONATION">Donation</option>
+                                        <option value="OTHER">Other Services</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3" id="documentTypeDiv">
+                                    <label class="form-label">Document Type</label>
+                                    <select name="documentType" class="form-select">
+                                        <option value="CLEARANCE">Barangay Clearance</option>
+                                        <option value="INDIGENCY">Certificate of Indigency</option>
+                                        <option value="BARANGAY_ID">Barangay ID</option>
+                                        <option value="CERTIFICATE">Certificate of Residency</option>
+                                        <option value="OTHER">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3" id="rentalItemDiv" style="display:none;">
+                                    <label class="form-label">Rental Item</label>
+                                    <input type="text" name="rentalItem" class="form-control" placeholder="e.g. Barangay Hall">
+                                </div>
+                                <div class="col-md-3"><label class="form-label">Source / Payer Name</label><input type="text" name="sourceName" class="form-control" placeholder="Resident or renter name" required></div>
+                                <div class="col-md-2"><label class="form-label">Amount (₱)</label><input type="number" name="amount" class="form-control" step="0.01" required></div>
+                                <div class="col-md-12"><button type="button" class="btn-save" id="btnSaveIncome"><i class="bi bi-save"></i> Save Income</button></div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="form-panel">
+                        <div class="form-title"><i class="bi bi-list-ul"></i> All Income Records</div>
+                        <div class="export-bar">
+                            <span class="export-bar-label">Exports visible (filtered) records</span>
+                            <button class="btn-export-pdf btn-export-table" data-tbody="incomeTableBody" data-title="Income Records" data-headers='["Date","OR#","Source","Type","Amount"]'>
+                                <i class="bi bi-file-earmark-pdf"></i> Export PDF
+                            </button>
+                        </div>
+                        <div class="search-filter">
+                            <input type="text" id="incomeSearch" class="search-input" placeholder="Search by source or OR#...">
+                            <select id="incomeTypeFilter" class="filter-select">
+                                <option value="">All Types</option>
+                                <option value="DOCUMENT_FEE">Document Fee</option>
+                                <option value="RENTAL">Rental</option>
+                                <option value="DONATION">Donation</option>
+                                <option value="OTHER">Other Services</option>
+                            </select>
+                            <select id="incomePeriodFilter" class="filter-select">
+                                <option value="all">All Time</option>
+                                <option value="day">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month" selected>This Month</option>
+                                <option value="year">This Year</option>
+                            </select>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table table">
+                                <thead>
+                                    <tr><th>Date</th><th>OR#</th><th>Source</th><th>Type</th><th>Amount</th><th>Actions</th></tr>
+                                </thead>
+                                <tbody id="incomeTableBody">
+                                    <tr th:each="inc : ${incomeList}" th:attr="data-type=${inc.incomeType.name()},data-date=${inc.incomeDate}">
+                                        <td th:text="${inc.incomeDate}">-</td>
+                                        <td><strong th:text="${inc.orNumber}">-</strong></td>
+                                        <td th:text="${inc.sourceName}">-</td>
+                                        <td><span th:classappend="${inc.incomeType.name() == 'RENTAL'} ? 'badge-rental' : 'badge-income'"
+                                                  class="badge-income" th:text="${inc.incomeType.getDisplayName()}">-</span></td>
+                                        <td class="amount-positive" th:text="'₱' + ${inc.amount}">-</td>
+                                        <td>
+                                            <a th:if="${currentrole == 'ADMIN'}"
+                                               th:href="@{|/finance/income/archive/${inc.id}|}"
+                                               class="action-btn btn-confirm-nav"
+                                               style="background:#fff3cd; color:#856404;"
+                                               data-msg="Archive this income record? It will be moved to the Archive tab and removed from active totals." data-title="Archive Income">
+                                                <i class="bi bi-archive"></i> Archive
+                                            </a>
+                                            <a th:if="${currentrole == 'TREASURER'}"
+                                               class="action-btn btn-assistance-archive"
+                                               style="background:#fff3cd; color:#856404;">
+                                                <i class="bi bi-archive"></i> Archive
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-expenses" class="tab-content">
+                    <div class="form-panel" th:if="${currentrole == 'ADMIN' or currentrole == 'TREASURER'}">
+                        <div class="form-title"><i class="bi bi-plus-circle"></i> Record New Expense</div>
+                        <form th:action="@{/finance/expenses/save}" method="post" id="expenseForm">
+                            <input type="hidden" name="createdBy" th:value="${currentAdminNumericId}">
+                            <div class="row g-3">
+                                <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="expenseDate" class="form-control" required></div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Expense Type</label>
+                                    <select name="expenseType" class="form-select" required>
+                                        <option value="PROGRAM">Program Expense</option><option value="SUPPLIES">Office Supplies</option>
+                                        <option value="UTILITIES">Utilities</option><option value="SALARY">Salary</option>
+                                        <option value="EMERGENCY">Emergency Response</option><option value="INFRASTRUCTURE">Infrastructure</option>
+                                        <option value="EVENTS">Events</option><option value="OTHER">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Fund Source</label>
+                                    <select name="fundSource" class="form-select" required>
+                                        <option value="GENERAL_FUND">General Fund</option><option value="SK_FUND">SK Fund</option>
+                                        <option value="DISASTER_FUND">Disaster Fund</option><option value="SPECIAL_FUND">Special Fund</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3"><label class="form-label">Payee</label><input type="text" name="payee" class="form-control" placeholder="Recipient name" required></div>
+                                <div class="col-md-4"><label class="form-label">Description</label><input type="text" name="description" class="form-control" placeholder="What was purchased?" required></div>
+                                <div class="col-md-2"><label class="form-label">Amount (₱)</label><input type="number" name="amount" class="form-control" step="0.01" required></div>
+                                <div class="col-md-3"><label class="form-label">Receipt Number</label><input type="text" name="receiptNumber" class="form-control" placeholder="Optional"></div>
+                                <div class="col-md-12"><button type="button" class="btn-save" id="btnSaveExpense"><i class="bi bi-save"></i> Save Expense</button></div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="form-panel">
+                        <div class="form-title"><i class="bi bi-list-ul"></i> Expense Records</div>
+                        <div class="export-bar">
+                            <span class="export-bar-label">Exports visible (filtered) records</span>
+                            <button class="btn-export-pdf btn-export-table" data-tbody="expenseTableBody" data-title="Expense Records" data-headers='["Date","Description","Type","Amount","Status"]'>
+                                <i class="bi bi-file-earmark-pdf"></i> Export PDF
+                            </button>
+                        </div>
+                        <ul class="nav nav-tabs mb-3">
+                            <li class="nav-item"><a class="nav-link active" data-status="all" href="#">All</a></li>
+                            <li class="nav-item"><a class="nav-link" data-status="PENDING" href="#">Pending</a></li>
+                            <li class="nav-item"><a class="nav-link" data-status="APPROVED" href="#">Approved</a></li>
+                        </ul>
+                        <div class="search-filter">
+                            <input type="text" id="expenseSearch" class="search-input" placeholder="Search by description...">
+                            <select id="expensePeriodFilter" class="filter-select">
+                                <option value="all">All Time</option>
+                                <option value="day">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month" selected>This Month</option>
+                                <option value="year">This Year</option>
+                            </select>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table table">
+                                <thead>
+                                    <tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+                                </thead>
+                                <tbody id="expenseTableBody">
+                                    <tr th:each="exp : ${expenseList}" th:attr="data-status=${exp.status.name()},data-date=${exp.expenseDate}">
+                                        <td th:text="${exp.expenseDate}">-</td>
+                                        <td th:text="${exp.description}">-</td>
+                                        <td th:text="${exp.expenseType.getDisplayName()}">-</td>
+                                        <td class="amount-negative" th:text="'₱' + ${exp.amount}">-</td>
+                                        <td><span th:classappend="${exp.status.name() == 'PENDING'} ? 'badge-pending' : 'badge-approved'" class="badge-pending" th:text="${exp.status.getDisplayName()}">-</span></td>
+                                        <td>
+                                            <a th:href="@{|/finance/expenses/approve/${exp.id}?approvedBy=${currentAdminNumericId}|}"
+                                            th:if="${(currentrole == 'ADMIN' or currentrole == 'TREASURER') and exp.status.name() == 'PENDING'}"
+                                            class="action-btn approve btn-confirm-nav" data-msg="Approve this expense?" data-title="Approve Expense">Approve</a>
+                                            <a th:if="${currentrole == 'ADMIN'}"
+                                               th:href="@{|/finance/expenses/archive/${exp.id}|}"
+                                               class="action-btn btn-confirm-nav"
+                                               style="background:#fff3cd; color:#856404;"
+                                               data-msg="Archive this expense? It will be moved to the Archive tab." data-title="Archive Expense">
+                                                <i class="bi bi-archive"></i> Archive
+                                            </a>
+                                            <a th:if="${currentrole == 'TREASURER'}"
+                                               class="action-btn btn-assistance-archive"
+                                               style="background:#fff3cd; color:#856404;">
+                                                <i class="bi bi-archive"></i> Archive
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-budget" class="tab-content">
+                    <div class="row g-3 mb-4" style="max-width: 900px; margin-left:auto; margin-right:auto;">
+                        <div class="col-md-6">
+                            <div class="form-panel" style="height:100%;">
+                                <div class="form-title"><i class="bi bi-wallet2"></i> Current Budget</div>
+                                <div style="background: #f0f4f3; border-radius: 10px; padding: 28px 20px; text-align: center; margin-bottom: 20px;">
+                                    <div style="font-size: 11px; font-weight: 700; color: #2d4a44; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Remaining / Available Funds</div>
+                                    <div style="font-size: 36px; font-weight: bold; color: #2d4a44;" th:text="'₱' + ${#numbers.formatDecimal(remainingBudget, 1, 2)}">&#8369;0.00</div>
+                                    <div style="margin-top: 16px; display: flex; justify-content: space-between; font-size: 12px; color: #666; border-top: 1px solid #dde; padding-top: 14px;">
+                                        <span><i class="bi bi-wallet2 me-1"></i>Total Budget<br><strong style="color:#2d4a44;" th:text="'₱' + ${#numbers.formatDecimal(totalBudget, 1, 2)}">&#8369;0.00</strong></span>
+                                        <span><i class="bi bi-dash-circle me-1 text-danger"></i>Total Spent<br><strong style="color:#e74c3c;" th:text="'₱' + ${#numbers.formatDecimal(totalBudget - remainingBudget, 1, 2)}">&#8369;0.00</strong></span>
+                                    </div>
+                                </div>
+                                <button type="button" id="btnOpenBudgetModal" th:if="${currentrole == 'ADMIN' or currentrole == 'TREASURER'}" style="width: 100%; background: #FED734; color: #2d4a44; border: none; padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <i class="bi bi-pencil-fill"></i> Change Budget
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-panel" style="height:100%; display:flex; flex-direction:column;">
+                                <div class="form-title"><i class="bi bi-activity"></i> Recent Budget Activity</div>
+                                <div style="flex:1; overflow-y:auto; max-height:340px;">
+                                    <div th:each="log, logStat : ${budgetLogs}" th:if="${logStat.index} < 6"
+                                        style="display:flex; align-items:flex-start; gap:10px; padding:12px 0; border-bottom:1px solid #f0f2f1;">
+                                        <div th:if="${log.type.name() == 'INCREASE'}"
+                                            style="width:32px;height:32px;border-radius:50%;background:#d4edda;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                            <i class="bi bi-arrow-up-short" style="color:#155724;font-size:18px;"></i>
+                                        </div>
+                                        <div th:if="${log.type.name() == 'DECREASE'}"
+                                            style="width:32px;height:32px;border-radius:50%;background:#f8d7da;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                            <i class="bi bi-arrow-down-short" style="color:#721c24;font-size:18px;"></i>
+                                        </div>
+                                        <div style="flex:1; min-width:0;">
+                                            <div style="font-size:13px; color:#2d4a44;">
+                                                Budget
+                                                <strong th:text="${log.type.name() == 'INCREASE'} ? 'increased' : 'decreased'">-</strong>
+                                                by
+                                                <strong th:classappend="${log.type.name() == 'INCREASE'} ? 'amount-positive' : 'amount-negative'"
+                                                        th:text="'₱' + ${#numbers.formatDecimal(log.amount,1,2)}">-</strong>
+                                            </div>
+                                            <div style="font-size:12px; color:#666; margin-top:2px;" th:text="${log.reason}">Reason / audit note</div>
+                                            <div style="font-size:11px; color:#999; margin-top:4px;">
+                                                <i class="bi bi-person"></i> <span th:text="${log.adjustedByName}">-</span>
+                                                &nbsp;·&nbsp;
+                                                <span th:text="${#temporals.format(log.date, 'MMM dd, yyyy hh:mm a')}">-</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div th:if="${budgetLogs == null or budgetLogs.isEmpty()}" style="text-align:center; color:#aaa; padding:40px 0;">
+                                        <i class="bi bi-inbox" style="font-size:24px; display:block; margin-bottom:8px;"></i>
+                                        No recent activity
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-archive" class="tab-content">
+                    <div th:if="${currentrole != 'ADMIN'}" class="form-panel" style="border-left: 4px solid #f39c12;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <i class="bi bi-lock-fill" style="font-size:24px; color:#f39c12;"></i>
+                            <div>
+                                <div style="font-weight:700; color:#2d4a44; font-size:15px;">View-Only Access</div>
+                                <div style="font-size:13px; color:#666; margin-top:2px;">Only the <strong>Admin</strong> can archive or restore records. You may view archived records below.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-panel" >
+                        <div class="form-title"><i class="bi bi-archive"></i> Archived Income Records</div>
+                        <div class="search-filter">
+                            <input type="text" id="archivedIncomeSearch" class="search-input" placeholder="Search archived income...">
+                            <select id="archivedIncomeTypeFilter" class="filter-select">
+                                <option value="">All Types</option>
+                                <option value="DOCUMENT_FEE">Document Fee</option>
+                                <option value="RENTAL">Rental</option>
+                                <option value="DONATION">Donation</option>
+                                <option value="OTHER">Other Services</option>
+                            </select>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>OR#</th>
+                                        <th>Source</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Archived On</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="archivedIncomeTableBody">
+                                    <tr th:each="inc : ${archivedIncomeList}"
+                                        th:attr="data-type=${inc.incomeType.name()}"
+                                        style="background:#fffbea;">
+                                        <td th:text="${inc.incomeDate}">-</td>
+                                        <td><strong th:text="${inc.orNumber}">-</strong></td>
+                                        <td th:text="${inc.sourceName}">-</td>
+                                        <td><span th:classappend="${inc.incomeType.name() == 'RENTAL'} ? 'badge-rental' : 'badge-income'"
+                                                  class="badge-income" th:text="${inc.incomeType.getDisplayName()}">-</span></td>
+                                        <td class="amount-positive" th:text="'₱' + ${inc.amount}">-</td>
+                                        <td style="font-size:11px; color:#888;">
+                                            <span th:text="${inc.archivedAt != null} ? ${#temporals.format(inc.archivedAt, 'MMM dd, yyyy')} : 'N/A'">-</span>
+                                        </td>
+                                        <td th:if="${currentrole == 'ADMIN'}">
+                                            <a th:href="@{|/finance/income/unarchive/${inc.id}|}"
+                                               class="action-btn approve btn-confirm-nav"
+                                               data-msg="Restore this income record to active?" data-title="Restore Income">
+                                                <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${archivedIncomeList.isEmpty()}">
+                                        <td th:colspan="${currentrole == 'ADMIN'} ? 7 : 6" class="text-center text-muted py-4">
+                                            <i class="bi bi-inbox" style="font-size:24px; display:block; margin-bottom:8px; color:#ccc;"></i>
+                                            No archived income records
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="form-panel">
+                        <div class="form-title"><i class="bi bi-archive"></i> Archived Expense Records</div>
+                        <div class="search-filter">
+                            <input type="text" id="archivedExpenseSearch" class="search-input" placeholder="Search archived expenses...">
+                            <select id="archivedExpenseStatusFilter" class="filter-select">
+                                <option value="">All Statuses</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="APPROVED">Approved</option>
+                            </select>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Archived On</th>
+                                        <th th:if="${currentrole == 'ADMIN'}">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="archivedExpenseTableBody">
+                                    <tr th:each="exp : ${archivedExpenseList}"
+                                        th:attr="data-status=${exp.status.name()}"
+                                        style="background:#fffbea;">
+                                        <td th:text="${exp.expenseDate}">-</td>
+                                        <td th:text="${exp.description}">-</td>
+                                        <td th:text="${exp.expenseType.getDisplayName()}">-</td>
+                                        <td class="amount-negative" th:text="'₱' + ${exp.amount}">-</td>
+                                        <td><span th:classappend="${exp.status.name() == 'PENDING'} ? 'badge-pending' : 'badge-approved'"
+                                                  class="badge-pending" th:text="${exp.status.getDisplayName()}">-</span></td>
+                                        <td style="font-size:11px; color:#888;">
+                                            <span th:text="${exp.archivedAt != null} ? ${#temporals.format(exp.archivedAt, 'MMM dd, yyyy')} : 'N/A'">-</span>
+                                        </td>
+                                        <td th:if="${currentrole == 'ADMIN'}">
+                                            <a th:href="@{|/finance/expenses/unarchive/${exp.id}|}"
+                                               class="action-btn approve btn-confirm-nav"
+                                               data-msg="Restore this expense record to active?" data-title="Restore Expense">
+                                                <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${archivedExpenseList.isEmpty()}">
+                                        <td th:colspan="${currentrole == 'ADMIN'} ? 7 : 6" class="text-center text-muted py-4">
+                                            <i class="bi bi-inbox" style="font-size:24px; display:block; margin-bottom:8px; color:#ccc;"></i>
+                                            No archived expense records
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="budgetModal1" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+                    <div style="background:white; border-radius:16px; padding:32px; width:100%; max-width:400px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+                        <h5 id="budgetModal1Title" style="font-weight:700; color:#2d4a44; margin-bottom:6px;"><i class="bi bi-pencil-fill me-2"></i>Change Budget</h5>
+                        <p style="font-size:13px; color:#888; margin-bottom:20px;">Enter the budget adjustment amount.</p>
+                        <label class="form-label">Adjustment Type</label>
+                        <div style="display:flex; gap:10px; margin-bottom:16px;">
+                            <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; border:1.5px solid #27ae60; border-radius:8px; padding:9px; font-size:13px; font-weight:600; color:#27ae60; cursor:pointer;">
+                                <input type="radio" name="budgetAdjustType" value="increase" checked style="accent-color:#27ae60;"> Increase
+                            </label>
+                            <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; border:1.5px solid #e74c3c; border-radius:8px; padding:9px; font-size:13px; font-weight:600; color:#e74c3c; cursor:pointer;">
+                                <input type="radio" name="budgetAdjustType" value="decrease" style="accent-color:#e74c3c;"> Decrease
+                            </label>
+                        </div>
+                        <label class="form-label">Amount (₱)</label>
+                        <input type="number" id="budgetStep1Input" class="form-control mb-3" placeholder="e.g. 50000" step="0.01" min="0">
+                        <label class="form-label">Reason / Audit Note</label>
+                        <input type="text" id="budgetReasonInput" class="form-control mb-2" placeholder="e.g., Monthly fund allocation">
+                        <div id="budgetReasonError" style="display:none; color:#e74c3c; font-size:12px; margin-bottom:8px;">Please provide a reason.</div>
+                        <div style="display:flex; gap:10px; justify-content:flex-end;">
+                            <button id="btnCloseBudgetModal1" style="background:#f0f2f1; color:#555; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;">Cancel</button>
+                            <button id="budgetModal1NextBtn" style="background:#2d4a44; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;">Next</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="budgetModal2" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+                    <div style="background:white; border-radius:16px; padding:32px; width:100%; max-width:400px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+                        <h5 id="budgetModal2Title" style="font-weight:700; color:#2d4a44; margin-bottom:6px;"><i class="bi bi-shield-check me-2"></i>Confirm Budget</h5>
+                        <p style="font-size:13px; color:#888; margin-bottom:4px;">You entered: <strong id="budgetConfirmDisplay" style="color:#2d4a44;"></strong></p>
+                        <p style="font-size:13px; color:#888; margin-bottom:4px;">Reason: <span id="budgetConfirmReasonDisplay" style="color:#2d4a44;"></span></p>
+                        <p style="font-size:13px; color:#888; margin-bottom:20px;">Please retype the amount to confirm.</p>
+                        <label class="form-label">Retype Amount (₱)</label>
+                        <input type="number" id="budgetStep2Input" class="form-control mb-1" placeholder="Retype amount" step="0.01" min="0">
+                        <div id="budgetMismatchError" style="display:none; color:#e74c3c; font-size:12px; margin-bottom:10px;">Amounts do not match. Please try again.</div>
+                        <div style="margin-bottom:16px;"></div>
+                        <form id="budgetUpdateForm" th:action="@{/finance/budget/update-total}" method="post">
+                            <input type="hidden" name="amount" id="budgetFinalAmount">
+                            <input type="hidden" name="adjustmentAmount" id="budgetAdjustmentAmount">
+                            <input type="hidden" name="adjustmentType" id="budgetAdjustmentType">
+                            <input type="hidden" name="reason" id="budgetAdjustmentReason">
+                            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                                <button type="button" id="btnBackToStep1" style="background:#f0f2f1; color:#555; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;">Back</button>
+                                <button type="button" id="btnSubmitBudget" style="background:#FED734; color:#2d4a44; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;"><i class="bi bi-check-lg"></i> Confirm</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:insert="~{fragments/logout-modal :: logoutModal}"></div>
+
+    <!-- Hidden container to pass server data to JS (CSP compliant) -->
+    <div id="financeDataContainer" style="display:none;"
+         th:attr="data-success=${success},
+                  data-error=${error},
+                  data-income-list=${incomeList},
+                  data-expense-list=${expenseList},
+                  data-month-income=${monthIncome},
+                  data-month-expenses=${monthExpenses},
+                  data-total-income-all=${totalIncomeAll},
+                  data-total-expenses-all=${totalExpensesAll},
+                  data-income-by-type=${incomeByType},
+                  data-expense-by-type=${expenseByType},
+                  data-total-budget=${totalBudget}">
+    </div>
+
+    <script src="/js/finance.js"></script>
+</body>
+</html>

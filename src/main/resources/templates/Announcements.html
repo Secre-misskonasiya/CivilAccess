@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Barangay San Sebastian announcements: manage community announcements.">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">   
+    <link rel="stylesheet" href="/css/announcements.css">
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <title>Announcements</title>
+</head>
+<body>
+
+<script src="/js/notif.js"></script>
+<div class="toast-container" id="toastContainer"></div>
+<div class="layout">
+
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="content">
+        <!-- Top header -->
+        <div class="top-header">
+            <div class="top-header-tab">Announcements</div>
+        </div>
+
+        <!-- Search bar + Create button -->
+        <div class="search-bar-area">
+            <div class="search-input-wrap">
+                <span class="search-icon"><i class="bi bi-search"></i></span>
+                <input type="text" id="announcement-search" placeholder="Search announcements..." aria-label="Search announcements">
+            </div>
+            
+            <!-- Filter Container (replaces the inline Reset button) -->
+            <div id="filterContainer"></div>
+
+            <button class="create-announcement-btn" data-bs-toggle="modal" data-bs-target="#createAnnouncementModal"
+                    th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
+                <i class="bi bi-plus-circle"></i> Create Announcement
+            </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabbar">
+            <div class="tab" th:classappend="${currentTab == 'announcements' ? 'active' : ''}" data-tab="announcements">Announcements</div>
+            <div class="tab" th:classappend="${currentTab == 'archived' ? 'active' : ''}" data-tab="archived">Archived</div>
+        </div>
+
+        <!-- Panel -->
+        <div class="panel" role="main">
+            <div class="panel-inner">
+
+                <!-- Announcements Tab -->
+                <div id="tab-announcements" th:classappend="${currentTab != 'announcements' ? 'd-none' : ''}">
+                    <div class="panel-header">Active Announcements</div>
+                    <div class="panel-content">
+
+                        <div th:if="${not #lists.isEmpty(announcements)}">
+                            <div class="list-header">
+                                <div class="list-header-pin"></div>
+                                <div class="list-header-badge">Priority</div>
+                                <div class="list-header-title">Title</div>
+                                <div class="list-header-sep"></div>
+                                <div class="list-header-snippet">Content Preview</div>
+                                <div class="list-header-date">Date</div>
+                            </div>
+
+                            <div class="announcement-list" id="announcementsGrid">
+                                <div class="announcement-row" th:each="announcement : ${announcements}"
+                                     th:classappend="${announcement.priority == 'HIGH' ? 'pinned' : ''}"
+                                     th:attr="data-id=${announcement.id}">
+
+                                    <div class="row-pin">
+                                        <i class="bi bi-pin-angle-fill pin-icon pin-trigger"
+                                           th:classappend="${announcement.priority == 'HIGH' ? 'active' : ''}"
+                                           th:attr="data-id=${announcement.id}"
+                                           title="Pin"></i>
+                                    </div>
+
+                                    <div class="row-badge">
+                                        <span class="card-category"
+                                              th:classappend="${announcement.priority == 'HIGH' ? 'high' : ''}"
+                                              th:text="${announcement.priority != null ? announcement.priority : 'NORMAL'}">NORMAL</span>
+                                    </div>
+
+                                    <div class="row-title" th:text="${announcement.title}">Free Medical Mission</div>
+                                    <div class="row-sep">—</div>
+                                    <div class="row-snippet" th:text="${announcement.content}">Announcement content goes here.</div>
+                                    <div class="row-date" th:text="${announcement.datePosted != null ? #temporals.format(announcement.datePosted, 'MMM dd, yyyy') : 'N/A'}">Mar 15, 2026</div>
+
+                                    <div class="row-actions">
+                                        <button class="view-btn view-trigger" th:attr="data-id=${announcement.id}">View</button>
+                                        <button class="edit-btn edit-trigger" th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" th:attr="data-id=${announcement.id}">Edit</button>
+                                        <button class="archive-btn archive-trigger" th:if="${currentrole == 'ADMIN'}" th:attr="data-id=${announcement.id}">Archive</button>
+                                        <button class="archive-btn assistance-trigger" th:if="${currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" data-action="archive">Archive</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center p-4" th:if="${#lists.isEmpty(announcements)}">
+                            <p class="text-muted">No announcements found</p>
+                        </div>
+
+                        <div class="table-footer" id="activeFooter">
+                            <span th:text="'Showing ' + ${#lists.size(announcements)} + ' announcements'">Showing 6 announcements</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Archived Tab -->
+                <div id="tab-archived" th:classappend="${currentTab != 'archived' ? 'd-none' : ''}">
+                    <div class="panel-header">Archived Announcements</div>
+                    <div class="panel-content">
+
+                        <div th:if="${not #lists.isEmpty(archivedAnnouncements)}">
+                            <div class="list-header">
+                                <div class="list-header-pin"></div>
+                                <div class="list-header-badge">Priority</div>
+                                <div class="list-header-title">Title</div>
+                                <div class="list-header-sep"></div>
+                                <div class="list-header-snippet">Content Preview</div>
+                                <div class="list-header-date">Date</div>
+                            </div>
+
+                            <div class="announcement-list" id="archivedGrid">
+                                <div class="announcement-row" th:each="announcement : ${archivedAnnouncements}"
+                                     th:attr="data-id=${announcement.id}">
+
+                                    <div class="row-pin"></div>
+                                    <div class="row-badge">
+                                        <span class="card-category" th:text="${announcement.priority != null ? announcement.priority : 'NORMAL'}">NORMAL</span>
+                                    </div>
+                                    <div class="row-title" th:text="${announcement.title}">Dengue Prevention Drive</div>
+                                    <div class="row-sep">—</div>
+                                    <div class="row-snippet" th:text="${announcement.content}">Archived announcement content goes here.</div>
+                                    <div class="row-date" th:text="${announcement.datePosted != null ? #temporals.format(announcement.datePosted, 'MMM dd, yyyy') : 'N/A'}">Feb 20, 2026</div>
+
+                                    <div class="row-actions">
+                                        <button class="view-btn view-trigger" th:attr="data-id=${announcement.id}">View</button>
+                                        <button class="restore-btn restore-trigger" th:if="${currentrole == 'ADMIN'}" th:attr="data-id=${announcement.id}">Restore</button>
+                                        <button class="restore-btn assistance-trigger" th:if="${currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">Restore</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center p-4" th:if="${#lists.isEmpty(archivedAnnouncements)}">
+                            <p class="text-muted">No archived announcements</p>
+                        </div>
+
+                        <div class="table-footer" id="archivedFooter">
+                            <span th:text="'Showing ' + ${#lists.size(archivedAnnouncements)} + ' archived announcements'">Showing 3 archived announcements</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade success-toast-modal" id="successModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0"></div>
+            <div class="modal-body">
+                <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <h5 id="successMessage">Success!</h5>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" id="successOkBtn">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="sys-overlay" id="sysErrorOverlay">
+    <div class="sys-modal-box error">
+        <div class="sys-modal-body">
+            <div class="sys-modal-icon"><i class="bi bi-x-circle-fill text-white"></i></div>
+            <h5 id="sysErrorMessage">An error occurred.</h5>
+        </div>
+        <div class="sys-modal-footer">
+            <button class="sys-btn-ok" id="sysErrorOkBtn">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- View Announcement Modal -->
+<div class="modal fade" id="viewAnnouncementModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Announcement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewModalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Announcement Modal -->
+<div class="modal fade" id="createAnnouncementModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Announcement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createAnnouncementForm">
+                    <label>Title:</label>
+                    <input type="text" class="form-control mb-2" id="title" required>
+                    
+                    <label>Priority:</label>
+                    <select class="form-control mb-2" id="priority">
+                        <option value="NORMAL">Normal</option>
+                        <option value="HIGH">High (Pinned)</option>
+                    </select>
+                    
+                    <label>Content:</label>
+                    <textarea class="form-control mb-2" id="content" rows="5" required></textarea>
+                    
+                    <label>Image (Upload):</label>
+                    <div class="image-upload-area" id="imageUploadArea">
+                        <div class="upload-placeholder" id="uploadPlaceholder">
+                            <i class="bi bi-cloud-upload"></i>
+                            <p>Click or drag &amp; drop an image here</p>
+                        </div>
+                        <img id="imagePreview" class="image-preview-inline" alt="Preview">
+                        <input type="file" id="imageFile" accept="image/*" style="display: none;">
+                        <div class="upload-progress" id="uploadProgress">
+                            <div class="progress-bar"></div>
+                        </div>
+                        <button type="button" class="remove-image-btn" id="removeImageBtn">Remove Image</button>
+                    </div>
+                    <input type="hidden" id="imageUrl" value="">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="createAnnouncementBtn">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Announcement Modal -->
+<div class="modal fade" id="editAnnouncementModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Announcement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editAnnouncementForm">
+                    <input type="hidden" id="editId">
+                    
+                    <label>Title:</label>
+                    <input type="text" class="form-control mb-2" id="editTitle" required>
+                    
+                    <label>Priority:</label>
+                    <select class="form-control mb-2" id="editPriority">
+                        <option value="NORMAL">Normal</option>
+                        <option value="HIGH">High (Pinned)</option>
+                    </select>
+                    
+                    <label>Content:</label>
+                    <textarea class="form-control mb-2" id="editContent" rows="5" required></textarea>
+                    
+                    <label>Image (Upload):</label>
+                    <div class="image-upload-area" id="editImageUploadArea">
+                        <div class="upload-placeholder" id="editUploadPlaceholder">
+                            <i class="bi bi-cloud-upload"></i>
+                            <p>Click or drag &amp; drop an image here</p>
+                        </div>
+                        <img id="editImagePreview" class="image-preview-inline" alt="Preview">
+                        <input type="file" id="editImageFile" accept="image/*" style="display: none;">
+                        <div class="upload-progress" id="editUploadProgress">
+                            <div class="progress-bar"></div>
+                        </div>
+                        <button type="button" class="remove-image-btn" id="editRemoveImageBtn">Remove Image</button>
+                    </div>
+                    <input type="hidden" id="editImageUrl" value="">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="updateAnnouncementBtn">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Modal -->
+<div th:replace="fragments/logout-modal :: logoutModal"></div>
+
+<!-- Hidden container to pass server data to JS (CSP compliant) -->
+<div id="announcementDataContainer" style="display:none;"
+     th:attr="data-current-role=${currentrole},
+              data-current-tab=${currentTab}">
+</div>
+
+<!-- External App JS -->
+<script src="/js/announcements.js"></script>
+
+</body>
+</html>
