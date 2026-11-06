@@ -62,8 +62,8 @@ public class SoSMonitoringController {
             return "redirect:/home"; // Change to your desired redirect URL
         }
 
-        // Allowed roles: ADMIN, SECRETARY, SECRETARIAT STAFF, BARANGAY CAPTAIN
-        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "SECRETARIAT STAFF", "BARANGAY CAPTAIN");
+        // Allowed roles: ADMIN, SECRETARY, SECRETARIAT STAFF, BARANGAY-CAPTAIN
+        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "SECRETARIAT STAFF", "BARANGAY-CAPTAIN");
         if (!allowedRoles.contains(role)) {
             return "redirect:/home";
         }
@@ -74,7 +74,7 @@ public class SoSMonitoringController {
         
         // Add role-based flags for the view
         model.addAttribute("canManage", canManageReports(role));
-        model.addAttribute("isCaptain", "BARANGAY CAPTAIN".equalsIgnoreCase(role));
+        model.addAttribute("isCaptain", "BARANGAY-CAPTAIN".equalsIgnoreCase(role));
 
         int pageSize = 10;
 
