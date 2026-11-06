@@ -1,7 +1,7 @@
 package com.example.demo.config; // ← adjust if needed
 
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
+import java.io.IOException;
+
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +10,14 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
-import java.io.IOException;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 @Configuration
 @EnableWebSecurity
@@ -105,7 +112,9 @@ public class ResidentSecurityConfig {
             "/resident/profile/*",
             "/resident/settings/*",
             "/resident-home/*",
-            "/resident-profile/*"
+            "/resident-profile/*",
+            "/resident/safety-reports",
+            "/resident/safety-reports/*"
         );
 
         registration.setName("residentSessionFilter");

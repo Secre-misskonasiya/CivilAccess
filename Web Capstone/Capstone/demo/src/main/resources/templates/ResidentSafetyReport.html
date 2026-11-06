@@ -13,7 +13,6 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="stylesheet" th:href="@{/css/sidebar2.css}">
 
-
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -28,7 +27,6 @@
       --text-2:      #65676b;
       --text-3:      #9ea3a8;
       --border:      #e4e6eb;
-      --pin-bg:      #fffdf0;
       --radius:      12px;
       --nav-h:       62px;
       --font-h:      'Sora', sans-serif;
@@ -60,7 +58,7 @@
       color: var(--gold); font-size: 18px;
     }
     .nav-name { font-family: var(--font-h); font-weight: 800; font-size: 19px; color: #fff; letter-spacing: -.3px; }
-    .nav-sub  { font-size: 10px; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .7px; }
+    .nav-sub  { font-size: 10px; color: rgba(255,255,255,.8); text-transform: uppercase; letter-spacing: .7px; }
     .live-badge {
       display: flex; align-items: center; gap: 7px;
       background: rgba(255,255,255,.08);
@@ -76,14 +74,12 @@
     }
     @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
 
-    /* widened for desktop/web use instead of a single mobile-width column */
     .page { max-width: 1180px; margin: 0 auto; padding: 32px 28px 64px; }
 
     .page-head { margin-bottom: 22px; animation: fadeDown .45s ease both; }
     .page-head h1 { font-family: var(--font-h); font-size: 26px; font-weight: 800; color: var(--brand-dark); letter-spacing: -.4px; }
     .page-head p  { font-size: 14px; color: var(--text-2); margin-top: 5px; }
 
-    /* toolbar: search + filter chips sit side by side on wide screens */
     .toolbar {
       display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
       margin-bottom: 24px;
@@ -107,9 +103,7 @@
       box-shadow: 0 0 0 3px rgba(56,102,96,.1);
     }
 
-    .chips {
-      display: flex; gap: 8px; flex-wrap: wrap;
-    }
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; }
     .chip {
       padding: 6px 16px; border-radius: 40px;
       border: 1.5px solid var(--border);
@@ -121,7 +115,6 @@
     .chip:hover { border-color: var(--brand-mid); color: var(--brand-mid); }
     .chip.active { background: var(--brand-dark); border-color: var(--brand-dark); color: #fff; }
 
-    /* grid of cards instead of a single mobile-style scrolling column */
     #feed {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -143,14 +136,12 @@
       height: 100%;
     }
     .card:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(0,0,0,.1); }
+    .card[data-mine="true"] { border-color: rgba(68,195,117,.55); }
 
     .card-head {
       display: flex; align-items: center; gap: 10px;
       padding: 14px 16px 8px;
     }
-
-    .card.mine { border-color: var(--brand-light); }
-
     .avatar {
       width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
       background: var(--brand-dark);
@@ -159,23 +150,34 @@
       border: 2px solid rgba(56,102,96,.15);
     }
     .head-meta { flex: 1; min-width: 0; }
-    .sender { font-family: var(--font-h); font-weight: 700; font-size: 14px; }
-    .post-dt { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+    .sender {
+      font-family: var(--font-h); font-weight: 700; font-size: 14px;
+      display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+    }
+    .post-dt { font-size: 12px; color: #5f6368; margin-top: 2px; }
+
+    .mine-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 1px 8px; border-radius: 20px;
+      background: rgba(68,195,117,.15); color: #1e7a46;
+      font-family: var(--font-h); font-size: 10px; font-weight: 800;
+      letter-spacing: .4px; text-transform: uppercase;
+    }
 
     .badge {
       flex-shrink: 0; padding: 3px 11px; border-radius: 40px;
       font-family: var(--font-h); font-size: 10px; font-weight: 800;
       letter-spacing: .5px; text-transform: uppercase;
     }
-    .badge-status-incoming { background: #fff8e1; color: #856404; border: 1px solid var(--gold); }
-    .badge-status-approved { background: #e3f2fd; color: #1976d2; border: 1px solid #bbdef5; }
-    .badge-status-inprogress { background: #e8f5f0; color: #2d7a5f; border: 1px solid #b8ddd0; }
-    .badge-status-resolved { background: #44c37520; color: #2ea05e; border: 1px solid #44c375; }
-    .badge-status-archived { background: #f5f5f5; color: #888; border: 1px solid #ddd; }
+    .badge-status-incoming   { background: #fff8e1; color: #856404; border: 1px solid var(--gold); }
+    .badge-status-approved   { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdef5; }
+    .badge-status-inprogress { background: #e8f5f0; color: #256650; border: 1px solid #b8ddd0; }
+    .badge-status-resolved   { background: #44c37520; color: #1e7a46; border: 1px solid #44c375; }
+    .badge-status-archived   { background: #f5f5f5; color: #666; border: 1px solid #ddd; }
 
-    .priority-high { background: #fff0f0; color: #e74c3c; border: 1px solid #f5c6c6; }
-    .priority-medium { background: #fff8ec; color: #e67e22; border: 1px solid #f5ddb0; }
-    .priority-low { background: #f0fff4; color: #27ae60; border: 1px solid #b0e0c0; }
+    .priority-high   { background: #fff0f0; color: #c0392b; border: 1px solid #f5c6c6; }
+    .priority-medium { background: #fff8ec; color: #b35900; border: 1px solid #f5ddb0; }
+    .priority-low    { background: #f0fff4; color: #1e7a46; border: 1px solid #b0e0c0; }
 
     .card-title {
       font-family: var(--font-h); font-size: 15.5px; font-weight: 700;
@@ -207,13 +209,13 @@
       margin-top: auto;
       gap: 8px;
     }
-    .foot-left { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-3); flex-wrap: wrap; }
+    .foot-left { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #5f6368; flex-wrap: wrap; }
     .location-text { display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
     .view-btn {
       background: none; border: none;
       color: var(--brand-mid); font-family: var(--font-h); font-weight: 700;
       font-size: 12px; cursor: pointer;
-      padding: 4px 10px; border-radius: 6px;
+      padding: 6px 10px; margin: -2px 0; border-radius: 6px;
       transition: background .15s;
       flex-shrink: 0;
     }
@@ -226,7 +228,7 @@
     #feed .card:nth-child(5) { animation-delay:.25s }
     #feed .card:nth-child(n+6){ animation-delay:.30s }
 
-    .empty { text-align: center; padding: 60px 0; color: var(--text-3); }
+    .empty { text-align: center; padding: 60px 0; color: #5f6368; }
     .empty i { font-size: 50px; display: block; margin-bottom: 12px; opacity: .3; }
     .empty p { font-size: 15px; }
 
@@ -283,7 +285,7 @@
       display: flex; align-items: center; justify-content: space-between;
       padding: 12px 16px; border-top: 1px solid var(--border);
     }
-    .m-foot-left { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-3); }
+    .m-foot-left { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #5f6368; }
     .btn-close-m {
       padding: 8px 24px; background: var(--brand-dark); color: #fff;
       border: none; border-radius: 40px;
@@ -296,211 +298,194 @@
     @keyframes fadeUp   { from{opacity:0;transform:translateY(16px)}  to{opacity:1;transform:translateY(0)} }
 
     .resolved-badge {
-      background-color: #44C375;
+      background-color: #1e8449;
       color: white;
       padding: 2px 8px;
       border-radius: 12px;
       font-size: 10px;
       font-weight: 600;
-      margin-left: 8px;
     }
 
     .photo-indicator {
       display: flex; align-items: center; gap: 4px;
-      color: var(--text-3); font-size: 11px;
+      color: #5f6368; font-size: 11px;
+    }
+
+    .layout {
+      display: flex;
+      height: 100vh;
+    }
+    .content {
+      flex: 1;
+      min-width: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
     @media(max-width:900px){
       #feed { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
     }
-
     @media(max-width:600px){
       .page { padding: 20px 14px 50px; }
       .nav-sub { display:none; }
       #feed { grid-template-columns: 1fr; }
       .toolbar { flex-direction: column; align-items: stretch; }
     }
-
- .layout {
-  display: flex;
-  height: 100vh;
- 
-}
-
-.content {
-  flex: 1;          
-  min-width: 0;     
-  overflow-y: auto; 
-  overflow-x: hidden;
-}
-
-/* ── Accessibility: contrast fixes ── */
-.nav-sub { color: rgba(255,255,255,.8); }
-.post-dt, .foot-left, .m-foot-left, .empty, .photo-indicator { color: #5f6368; }
-
-.view-btn { padding: 6px 10px; margin: -2px 0; }
-
-
-.badge-status-approved   { color: #1565c0; }
-.badge-status-inprogress { color: #256650; }
-.badge-status-resolved   { color: #1e7a46; }
-.badge-status-archived   { color: #666; }
-.priority-high   { color: #c0392b; }
-.priority-medium { color: #b35900; }
-.priority-low    { color: #1e7a46; }
-.resolved-badge  { background-color: #1e8449; }
-
   </style>
 </head>
 <body>
 
 <script th:inline="javascript">
-  const CURRENT_RESIDENT_ID = /*[[${currentResidentId}]]*/ null;
+  const CURRENT_RESIDENT_ID = /*[[${currentResidentId}]]*/ "";
 </script>
 
-<div class=" layout">
-<div th:replace="~{fragments/sidebar2 :: sidebar}"></div>
-<div th:replace="~{fragments/sidebar2 :: logoutModal}"></div>
-<div th:replace="~{fragments/sidebar2 :: mobileToggle}"></div>
+<div class="layout">
+  <div th:replace="~{fragments/sidebar2 :: sidebar}"></div>
+  <div th:replace="~{fragments/sidebar2 :: logoutModal}"></div>
+  <div th:replace="~{fragments/sidebar2 :: mobileToggle}"></div>
 
-<div class="content">
+  <div class="content">
 
-<nav class="topnav">
-  <a class="nav-brand" href="#">
-    <div class="nav-icon"><i class="bi bi-building-fill"></i></div>
-    <div>
-      <div class="nav-name">CivilAccess</div>
-      <div class="nav-sub">Barangay Portal</div>
-    </div>
-  </a>
-  <div class="live-badge">
-    <div class="dot"></div>
-    Safety Reports
-  </div>
-</nav>
+    <nav class="topnav">
+      <a class="nav-brand" href="#">
+        <div class="nav-icon"><i class="bi bi-building-fill"></i></div>
+        <div>
+          <div class="nav-name">CivilAccess</div>
+          <div class="nav-sub">Barangay Portal</div>
+        </div>
+      </a>
+      <div class="live-badge">
+        <div class="dot"></div>
+        Safety Reports
+      </div>
+    </nav>
 
-<main class="page">
+    <main class="page">
 
-  <div class="page-head">
-    <h1>Safety Reports</h1>
-    <p>Community safety incidents and emergency reports from your barangay.</p>
-  </div>
+      <div class="page-head">
+        <h1>Safety Reports</h1>
+        <p>Community safety incidents and emergency reports from your barangay.</p>
+      </div>
 
-  <div class="toolbar">
-    <div class="search-wrap">
-      <i class="bi bi-search"></i>
-      <input class="search-input" id="searchInput" type="text" placeholder="Search reports by title, type, or location..." aria-label="Search safety reports">
-    </div>
-
-    <div class="chips">
-      <div class="chip active" data-filter="all">All</div>
-      <div class="chip" data-filter="incoming">For Verification</div>
-      <div class="chip" data-filter="approved">Approved</div>
-      <div class="chip" data-filter="inprogress">In Progress</div>
-      <div class="chip" data-filter="resolved">Resolved</div>
-      <div class="chip" data-filter="mine">My Reports</div>
-    </div>
-  </div>
-
-  <div id="feed">
-
-    <th:block th:each="report : ${reports}">
-     <th:block th:with="isMine=${currentResidentId != null and report.reporterId != null and report.reporterId.toString() == currentResidentId.toString()}">
-      <article th:if="${isMine or (report.status != null and (#strings.toUpperCase(report.status) == 'APPROVED' or #strings.toUpperCase(report.status) == 'IN_PROGRESS' or #strings.toUpperCase(report.status) == 'RESOLVED'))}"
-               th:classappend="${isMine} ? 'mine'"
-               th:id="'report-' + ${report.id}"
-               th:data-id="${report.id}"
-               th:data-reporterid="${isMine ? report.reporterId : ''}"
-               th:data-status="${report.status != null ? #strings.toUpperCase(report.status) : 'INCOMING'}"
-               th:data-type="${report.type}"
-               th:data-title="${report.title}"
-               th:data-description="${report.description}"
-               th:data-date="${report.dateSubmitted}"
-               th:data-location="${report.location}"
-               th:data-latitude="${report.latitude}"
-               th:data-longitude="${report.longitude}"
-               th:data-reporter="${isMine ? 'Your Safety Report' : 'Anonymous'}"
-               th:data-priority="${report.priority != null ? #strings.toUpperCase(report.priority) : 'MEDIUM'}"
-               th:data-resolvedby="${report.resolvedBy}"
-               th:data-resolutionactions="${report.resolutionActions}"
-               th:data-resolutionnotes="${report.resolutionNotes}"
-               th:data-responsetime="${report.resolutionResponseTime}"
-               th:data-imageurl="${report.imageUrl}"
-               class="card">
-
-        <div class="card-head">
-          <div class="avatar"><i class="bi bi-exclamation-triangle-fill"></i></div>
-          <div class="head-meta">
-            <div class="sender" th:text="${isMine ? 'Your Safety Report' : 'Anonymous'}"></div>
-            <div class="post-dt" th:text="${report.dateSubmitted != null ? #temporals.format(report.dateSubmitted, 'MMMM d, yyyy') : 'N/A'}"></div>
-          </div>
-          <span th:class="'badge badge-status-' + (${report.status != null ? #strings.toLowerCase(report.status) : 'incoming'})"
-                th:text="${report.status != null ? report.status : 'INCOMING'}"></span>
+      <div class="toolbar">
+        <div class="search-wrap">
+          <i class="bi bi-search"></i>
+          <input class="search-input" id="searchInput" type="text"
+                 placeholder="Search reports by title, type, or location..."
+                 aria-label="Search safety reports">
         </div>
 
-        <div class="card-title" th:text="${report.title}"></div>
+        <div class="chips">
+          <div class="chip active" data-filter="all">All</div>
+          <div class="chip" data-filter="incoming">For Verification</div>
+          <div class="chip" data-filter="approved">Approved</div>
+          <div class="chip" data-filter="inprogress">In Progress</div>
+          <div class="chip" data-filter="resolved">Resolved</div>
+          <div class="chip" data-filter="mine">My Reports</div>
+        </div>
+      </div>
 
-        <div th:if="${report.description != null and not #strings.isEmpty(report.description)}">
-          <div th:class="${#strings.length(report.description) > 200 ? 'card-body clamped' : 'card-body'}"
-               th:text="${report.description}"></div>
-          <button th:if="${#strings.length(report.description) > 200}"
-                  class="read-more"
-                  th:attr="onclick='openReportModal(' + ${report.id} + ')'">
-            Read more…
-          </button>
+      <div id="feed">
+
+        <th:block th:each="report : ${reports}">
+          <article th:id="'report-' + ${report.id}"
+                   th:data-id="${report.id}"
+                   th:data-mine="${report.mine}"
+                   th:data-reporterid="${report.reporterId}"
+                   th:data-status="${report.status != null ? #strings.toUpperCase(report.status) : 'INCOMING'}"
+                   th:data-type="${report.type}"
+                   th:data-title="${report.title}"
+                   th:data-description="${report.description}"
+                   th:data-date="${report.dateSubmitted}"
+                   th:data-location="${report.location}"
+                   th:data-latitude="${report.latitude}"
+                   th:data-longitude="${report.longitude}"
+                   th:data-reporter="${report.reporterName}"
+                   th:data-priority="${report.priority != null ? #strings.toUpperCase(report.priority) : 'MEDIUM'}"
+                   th:data-resolvedby="${report.resolvedBy}"
+                   th:data-resolutionactions="${report.resolutionActions}"
+                   th:data-resolutionnotes="${report.resolutionNotes}"
+                   th:data-responsetime="${report.resolutionResponseTime}"
+                   th:data-imageurl="${report.imageUrl}"
+                   class="card">
+
+            <div class="card-head">
+              <div class="avatar"><i class="bi bi-exclamation-triangle-fill"></i></div>
+              <div class="head-meta">
+                <div class="sender">
+                  <span th:text="${report.reporterName != null ? report.reporterName : 'Anonymous Resident'}"></span>
+                  <span th:if="${report.mine}" class="mine-badge">
+                    <i class="bi bi-person-fill"></i> Your report
+                  </span>
+                </div>
+                <div class="post-dt"
+                     th:text="${report.dateSubmitted != null ? #temporals.format(report.dateSubmitted, 'MMMM d, yyyy') : 'N/A'}"></div>
+              </div>
+              <span th:class="'badge badge-status-' + (${report.status != null ? #strings.replace(#strings.toLowerCase(report.status), '_', '') : 'incoming'})"
+                    th:text="${report.status != null ? report.status : 'INCOMING'}"></span>
+            </div>
+
+            <div class="card-title" th:text="${report.title}"></div>
+
+            <div th:if="${report.description != null and not #strings.isEmpty(report.description)}">
+              <div th:class="${#strings.length(report.description) > 200 ? 'card-body clamped' : 'card-body'}"
+                   th:text="${report.description}"></div>
+              <button th:if="${#strings.length(report.description) > 200}"
+                      class="read-more"
+                      th:onclick="'openReportModal(\'' + ${report.id} + '\')'">
+                Read more…
+              </button>
+            </div>
+
+            <div class="card-foot">
+              <div class="foot-left">
+                <span class="location-text">
+                  <i class="bi bi-geo-alt-fill" style="color:#e74c3c; font-size: 11px;"></i>
+                  <span th:text="${report.location != null ? report.location : 'No location specified'}"></span>
+                </span>
+                <span th:if="${report.priority != null}"
+                      th:class="'badge ' + (${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')})"
+                      th:text="${report.priority}"></span>
+                <span th:if="${report.status == 'RESOLVED' and report.resolvedBy != null}" class="resolved-badge">
+                  <i class="bi bi-check-circle-fill"></i> Resolved
+                </span>
+                <span th:if="${report.imageUrl != null and not #strings.isEmpty(report.imageUrl)}" class="photo-indicator">
+                  <i class="bi bi-camera-fill"></i> Photo
+                </span>
+              </div>
+              <button class="view-btn" th:onclick="'openReportModal(\'' + ${report.id} + '\')'">
+                View details <i class="bi bi-arrow-right-short"></i>
+              </button>
+            </div>
+
+          </article>
+        </th:block>
+
+        <div class="empty" id="emptyState" style="display:none">
+          <i class="bi bi-shield-exclamation"></i>
+          <p>No safety reports match your search.</p>
         </div>
 
-        <div class="card-foot">
-          <div class="foot-left">
-            <span class="location-text">
-              <i class="bi bi-geo-alt-fill" style="color:#e74c3c; font-size: 11px;"></i>
-              <span th:text="${report.location != null ? report.location : 'No location specified'}"></span>
-            </span>
-            <span th:if="${report.priority != null}" th:class="'badge ' + (${report.priority == 'HIGH' ? 'priority-high' : (report.priority == 'MEDIUM' ? 'priority-medium' : 'priority-low')})"
-                  th:text="${report.priority}"></span>
-            <span th:if="${report.status == 'RESOLVED' and report.resolvedBy != null}" class="resolved-badge">
-              <i class="bi bi-check-circle-fill"></i> Resolved
-            </span>
-            <span th:if="${report.imageUrl != null and not #strings.isEmpty(report.imageUrl)}" class="photo-indicator">
-              <i class="bi bi-camera-fill"></i> Photo
-            </span>
-          </div>
-          <button class="view-btn" th:attr="onclick='openReportModal(' + ${report.id} + ')'">
-            View details <i class="bi bi-arrow-right-short"></i>
-          </button>
+        <div class="empty" th:if="${reports == null or #lists.isEmpty(reports)}">
+          <i class="bi bi-shield-check"></i>
+          <p>No safety reports yet. Your community is safe!</p>
         </div>
 
-      </article>
-     </th:block>
-    </th:block>
+      </div>
 
-    <div class="empty" id="emptyState" style="display:none">
-      <i class="bi bi-shield-exclamation"></i>
-      <p>No safety reports match your search.</p>
-    </div>
+    </main>
 
-    <div class="empty" th:if="${reports == null or #lists.isEmpty(reports)}">
-      <i class="bi bi-shield-check"></i>
-      <p>No safety reports yet. Your community is safe!</p>
+    <div class="overlay" id="overlay" onclick="closeModalOnBg(event)">
+      <div class="modal-box" id="modalBox">
+        <div class="modal-top">
+          <h2>Safety Report</h2>
+          <button class="modal-x" onclick="closeModal()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div id="modalContent"></div>
+      </div>
     </div>
 
   </div>
-
-</main>
-
-<div class="overlay" id="overlay" onclick="closeModalOnBg(event)">
-  <div class="modal-box" id="modalBox">
-    <div class="modal-top">
-      <h2>Safety Report</h2>
-      <button class="modal-x" onclick="closeModal()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
-    </div>
-    <div id="modalContent"></div>
-  </div>
-</div>
-
-
-</div>
-
 </div>
 
 <script src="/js/sidebar2.js"></script>
@@ -509,24 +494,24 @@
   let currentMap = null;
 
   function getStatusBadgeClass(status) {
-    const s = (status || 'INCOMING').toUpperCase();
-    switch(s) {
-      case 'INCOMING': return 'badge-status-incoming';
-      case 'APPROVED': return 'badge-status-approved';
-      case 'IN_PROGRESS': return 'badge-status-inprogress';
-      case 'RESOLVED': return 'badge-status-resolved';
-      case 'ARCHIVED': return 'badge-status-archived';
-      default: return 'badge-status-incoming';
+    const s = (status || 'INCOMING').toUpperCase().replace(/_/g, '');
+    switch (s) {
+      case 'INCOMING':   return 'badge-status-incoming';
+      case 'APPROVED':   return 'badge-status-approved';
+      case 'INPROGRESS': return 'badge-status-inprogress';
+      case 'RESOLVED':   return 'badge-status-resolved';
+      case 'ARCHIVED':   return 'badge-status-archived';
+      default:           return 'badge-status-incoming';
     }
   }
 
   function getPriorityClass(priority) {
     const p = (priority || 'MEDIUM').toUpperCase();
-    switch(p) {
-      case 'HIGH': return 'priority-high';
+    switch (p) {
+      case 'HIGH':   return 'priority-high';
       case 'MEDIUM': return 'priority-medium';
-      case 'LOW': return 'priority-low';
-      default: return 'priority-medium';
+      case 'LOW':    return 'priority-low';
+      default:       return 'priority-medium';
     }
   }
 
@@ -549,6 +534,7 @@
     const resolutionNotes = card.dataset.resolutionnotes || null;
     const responseTime = card.dataset.responsetime || null;
     const imageUrl = card.dataset.imageurl || null;
+    const isMine = card.dataset.mine === 'true';
 
     let dateFormatted = 'N/A';
     if (date) {
@@ -556,7 +542,7 @@
         dateFormatted = new Date(date).toLocaleDateString('en-US', {
           month: 'long', day: 'numeric', year: 'numeric'
         });
-      } catch(e) { dateFormatted = date; }
+      } catch (e) { dateFormatted = date; }
     }
 
     const statusBadgeClass = getStatusBadgeClass(status);
@@ -578,7 +564,8 @@
     }
 
     let mapHtml = '';
-    const hasValidLocation = latitude && longitude && !isNaN(latitude) && !isNaN(longitude) && latitude !== 0 && longitude !== 0;
+    const hasValidLocation = latitude && longitude && !isNaN(latitude) && !isNaN(longitude)
+                             && latitude !== 0 && longitude !== 0;
     if (hasValidLocation) {
       mapHtml = `<div id="modalMap" class="m-map"></div>`;
     }
@@ -602,7 +589,10 @@
           <i class="bi bi-exclamation-triangle-fill"></i>
         </div>
         <div class="head-meta">
-          <div class="sender">${escapeHtml(reporter)}</div>
+          <div class="sender">
+            ${escapeHtml(reporter)}
+            ${isMine ? '<span class="mine-badge"><i class="bi bi-person-fill"></i> Your report</span>' : ''}
+          </div>
           <div class="post-dt">${escapeHtml(dateFormatted)}</div>
         </div>
         <span class="badge ${statusBadgeClass}">${escapeHtml(status)}</span>
@@ -659,10 +649,7 @@
   function closeModal() {
     document.getElementById('overlay').classList.remove('open');
     document.body.style.overflow = '';
-    if (currentMap) {
-      currentMap.remove();
-      currentMap = null;
-    }
+    if (currentMap) { currentMap.remove(); currentMap = null; }
   }
 
   function closeModalOnBg(e) {
@@ -673,8 +660,9 @@
 
   function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;')
-              .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   let currentFilter = 'all';
@@ -689,7 +677,7 @@
     });
   });
 
-  document.getElementById('searchInput').addEventListener('input', function() {
+  document.getElementById('searchInput').addEventListener('input', function () {
     currentSearch = this.value.toLowerCase().trim();
     applyFilters();
   });
@@ -700,24 +688,17 @@
 
     cards.forEach(card => {
       const status = (card.dataset.status || 'INCOMING').toUpperCase();
-      const reporterId = card.dataset.reporterid || '';
-      const isMine = card.classList.contains('mine');
-      const text = ((card.dataset.title || '') + ' ' + (card.dataset.type || '') + ' ' + (card.dataset.location || '')).toLowerCase();
+      const isMine = card.dataset.mine === 'true';
+      const text = ((card.dataset.title || '') + ' ' +
+                    (card.dataset.type || '') + ' ' +
+                    (card.dataset.location || '')).toLowerCase();
 
       let matchesFilter = true;
-      if (currentFilter === 'incoming') {
-        matchesFilter = status === 'INCOMING';
-      } else if (currentFilter === 'approved') {
-        matchesFilter = status === 'APPROVED';
-      } else if (currentFilter === 'inprogress') {
-        matchesFilter = status === 'IN_PROGRESS';
-      } else if (currentFilter === 'resolved') {
-        matchesFilter = status === 'RESOLVED';
-      } else if (currentFilter === 'mine') {
-        matchesFilter = isMine;
-      } else {
-        matchesFilter = true;
-      }
+      if (currentFilter === 'incoming')        matchesFilter = status === 'INCOMING';
+      else if (currentFilter === 'approved')   matchesFilter = status === 'APPROVED';
+      else if (currentFilter === 'inprogress') matchesFilter = status === 'IN_PROGRESS';
+      else if (currentFilter === 'resolved')   matchesFilter = status === 'RESOLVED';
+      else if (currentFilter === 'mine')       matchesFilter = isMine;
 
       const matchesSearch = !currentSearch || text.includes(currentSearch);
       const show = matchesFilter && matchesSearch;
@@ -740,57 +721,52 @@
       if (etag === lastEtag) return;
       lastEtag = etag;
       rebuildFeed(data);
-    } catch(e) { /* silent */ }
-  }
-
-  function isMineReport(r) {
-    return CURRENT_RESIDENT_ID != null && r.reporterId != null
-        && String(r.reporterId) === String(CURRENT_RESIDENT_ID);
-  }
-  function isVisibleReport(r) {
-    const s = (r.status || 'INCOMING').toUpperCase();
-    return isMineReport(r) || ['APPROVED', 'IN_PROGRESS', 'RESOLVED'].includes(s);
+    } catch (e) { /* silent */ }
   }
 
   function rebuildFeed(reports) {
-    document.querySelectorAll('#feed .card:not(.empty)').forEach(c => c.remove());
+    document.querySelectorAll('#feed .card').forEach(c => c.remove());
     const feed = document.getElementById('feed');
     const emptyState = document.getElementById('emptyState');
-    reports.filter(isVisibleReport).forEach(r => feed.insertBefore(buildCard(r), emptyState));
+    reports.forEach(r => feed.insertBefore(buildCard(r), emptyState));
     applyFilters();
   }
 
   function buildCard(r) {
     const status = (r.status || 'INCOMING').toUpperCase();
     const priority = (r.priority || 'MEDIUM').toUpperCase();
-    const priorityClass = priority === 'HIGH' ? 'priority-high' : priority === 'MEDIUM' ? 'priority-medium' : 'priority-low';
-    const statusClass = 'badge-status-' + status.toLowerCase();
+    const priorityClass = priority === 'HIGH' ? 'priority-high'
+                        : priority === 'MEDIUM' ? 'priority-medium'
+                        : 'priority-low';
+    const statusClass = 'badge-status-' + status.toLowerCase().replace(/_/g, '');
     const desc = r.description || '';
     const clamp = desc.length > 200;
+    const isMine = !!r.mine;
 
     let dateStr = 'N/A';
     if (r.dateSubmitted) {
       try {
-        dateStr = new Date(r.dateSubmitted).toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
-      } catch(e) {}
+        dateStr = new Date(r.dateSubmitted).toLocaleDateString('en-US', {
+          month: 'long', day: 'numeric', year: 'numeric'
+        });
+      } catch (e) {}
     }
 
-    const mine = isMineReport(r);
-    const displayName = mine ? 'Your Safety Report' : 'Anonymous';
     const article = document.createElement('article');
     article.id = 'report-' + r.id;
-    article.className = 'card' + (mine ? ' mine' : '');
+    article.className = 'card';
     article.dataset.id = r.id;
-    article.dataset.reporterid = mine ? r.reporterId : '';
+    article.dataset.mine = isMine ? 'true' : 'false';
+    article.dataset.reporterid = r.reporterId || '';
     article.dataset.status = status;
     article.dataset.type = r.type || '';
     article.dataset.title = r.title || '';
     article.dataset.description = desc;
     article.dataset.date = r.dateSubmitted || '';
     article.dataset.location = r.location || '';
-    article.dataset.latitude = r.latitude || '';
-    article.dataset.longitude = r.longitude || '';
-    article.dataset.reporter = displayName;
+    article.dataset.latitude = r.latitude != null ? r.latitude : '';
+    article.dataset.longitude = r.longitude != null ? r.longitude : '';
+    article.dataset.reporter = r.reporterName || '';
     article.dataset.priority = priority;
     article.dataset.resolvedby = r.resolvedBy || '';
     article.dataset.resolutionactions = r.resolutionActions || '';
@@ -802,14 +778,17 @@
       <div class="card-head">
         <div class="avatar"><i class="bi bi-exclamation-triangle-fill"></i></div>
         <div class="head-meta">
-          <div class="sender">${escapeHtml(displayName)}</div>
+          <div class="sender">
+            <span>${escapeHtml(r.reporterName || 'Anonymous Resident')}</span>
+            ${isMine ? '<span class="mine-badge"><i class="bi bi-person-fill"></i> Your report</span>' : ''}
+          </div>
           <div class="post-dt">${escapeHtml(dateStr)}</div>
         </div>
         <span class="badge ${statusClass}">${escapeHtml(status)}</span>
       </div>
       <div class="card-title">${escapeHtml(r.title || 'Untitled Report')}</div>
       ${desc ? `<div class="card-body${clamp ? ' clamped' : ''}">${escapeHtml(desc)}</div>` : ''}
-      ${clamp ? `<button class="read-more" onclick="openReportModal(${r.id})">Read more…</button>` : ''}
+      ${clamp ? `<button class="read-more" onclick="openReportModal('${r.id}')">Read more…</button>` : ''}
       <div class="card-foot">
         <div class="foot-left">
           <span class="location-text"><i class="bi bi-geo-alt-fill" style="color:#e74c3c;"></i> ${escapeHtml(r.location || 'No location')}</span>
@@ -817,7 +796,7 @@
           ${status === 'RESOLVED' ? `<span class="resolved-badge"><i class="bi bi-check-circle-fill"></i> Resolved</span>` : ''}
           ${r.imageUrl ? `<span class="photo-indicator"><i class="bi bi-camera-fill"></i> Photo</span>` : ''}
         </div>
-        <button class="view-btn" onclick="openReportModal(${r.id})">
+        <button class="view-btn" onclick="openReportModal('${r.id}')">
           View details <i class="bi bi-arrow-right-short"></i>
         </button>
       </div>

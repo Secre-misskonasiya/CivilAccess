@@ -1,22 +1,25 @@
+
 package com.example.demo.controller;
 
-import com.example.demo.model.ResidentUser;
-import com.example.demo.dto.SafetyReportView;
-import com.example.demo.model.SafetyReports;
-import com.example.demo.repository.ResidentUserRepository;
-import com.example.demo.repository.SafetyReportRepository;
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.security.Principal;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import com.example.demo.dto.SafetyReportView;
+import com.example.demo.model.SafetyReports;
+import com.example.demo.repository.SafetyReportRepository;
+
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 @RequestMapping("/resident/safety-reports")
@@ -25,88 +28,139 @@ public class ResidentSafetyReportController {
     @Autowired
     private SafetyReportRepository safetyReportRepository;
 
-    @Autowired
-    private ResidentUserRepository residentUserRepository;
-
-    /**
-     * Main page for residents to view safety reports.
-     *
-     * Visibility rules:
-     * - INCOMING ("For Verification") and REJECTED reports are private —
-     *   only visible to the resident who submitted them.
-     * - All other statuses (APPROVED, IN_PROGRESS, RESOLVED) are visible
-     *   to every resident, but the reporter's identity is anonymized
-     *   unless the viewer is the one who submitted it.
-     * - ARCHIVED reports are hidden from residents entirely.
-     */
     @GetMapping
-    public String residentSafetyReports(Model model, Principal principal) {
-        UUID currentResidentId = resolveResidentId(principal);
+    public String residentSafetyReports(Model model, HttpSession session) {
 
-        List<SafetyReportView> visibleReports = safetyReportRepository.findAll()
-                .stream()
-                .filter(r -> isVisibleToResident(r, currentResidentId))
-                .sorted(Comparator
-                        .comparing(SafetyReports::getDateSubmitted, Comparator.nullsLast(Comparator.reverseOrder())))
-                .map(r -> SafetyReportView.from(r, isOwner(r, currentResidentId)))
-                .collect(Collectors.toList());
+        UUID currentResidentId = resolveResidentId(session);
+
+        boolean isAdminAsResident =
+                session.getAttribute("adminAsResidentId") != null;
+
+        if (currentResidentId == null && !isAdminAsResident) {
+            return "redirect:/resident-login";
+        }
+
+        List<SafetyReportView> visibleReports =
+                safetyReportRepository.findAll()
+                        .stream()
+                        .filter(report ->
+                                isVisibleToResident(report, currentResidentId))
+                        .sorted(Comparator.comparing(
+                                SafetyReports::getDateSubmitted,
+                                Comparator.nullsLast(
+                                        Comparator.reverseOrder())))
+                        .map(report -> SafetyReportView.from(
+                                report,
+                                isOwner(report, currentResidentId)))
+                        .collect(Collectors.toList());
 
         model.addAttribute("reports", visibleReports);
         model.addAttribute("currentResidentId", currentResidentId);
+
         return "ResidentSafetyReport";
     }
 
-    /**
-     * JSON polling endpoint for real-time updates. Same rules as the page above.
-     */
     @GetMapping("/api/feed")
     @ResponseBody
-    public List<SafetyReportView> feedApi(Principal principal) {
-        UUID currentResidentId = resolveResidentId(principal);
+    public List<SafetyReportView> feedApi(HttpSession session) {
+
+        UUID currentResidentId = resolveResidentId(session);
+
+        boolean isAdminAsResident =
+                session.getAttribute("adminAsResidentId") != null;
+
+        if (currentResidentId == null && !isAdminAsResident) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Please log in first.");
+        }
 
         return safetyReportRepository.findAll()
                 .stream()
-                .filter(r -> isVisibleToResident(r, currentResidentId))
-                .sorted(Comparator
-                        .comparing(SafetyReports::getDateSubmitted, Comparator.nullsLast(Comparator.reverseOrder())))
-                .map(r -> SafetyReportView.from(r, isOwner(r, currentResidentId)))
+                .filter(report ->
+                        isVisibleToResident(report, currentResidentId))
+                .sorted(Comparator.comparing(
+                        SafetyReports::getDateSubmitted,
+                        Comparator.nullsLast(
+                                Comparator.reverseOrder())))
+                .map(report -> SafetyReportView.from(
+                        report,
+                        isOwner(report, currentResidentId)))
                 .collect(Collectors.toList());
     }
 
-    private UUID resolveResidentId(Principal principal) {
-        if (principal == null) return null;
-        return residentUserRepository.findByEmail(principal.getName())
-                .map(ResidentUser::getId)
-                .orElse(null);
-    }
+    /**
+     * Gets the logged-in resident UUID from the HTTP session.
+     */
+    private UUID resolveResidentId(HttpSession session) {
 
-    private boolean isOwner(SafetyReports report, UUID currentResidentId) {
-        return currentResidentId != null && currentResidentId.equals(report.getReporterId());
+        Object sessionId = session.getAttribute("residentId");
+
+        if (sessionId == null) {
+            System.out.println("No residentId found in session.");
+            return null;
+        }
+
+        try {
+            UUID residentId = UUID.fromString(sessionId.toString());
+
+            System.out.println(
+                    "Resolved Resident UUID from session: " + residentId);
+
+            return residentId;
+
+        } catch (IllegalArgumentException e) {
+            System.out.println(
+                    "Invalid residentId in session: " + sessionId);
+            return null;
+        }
     }
 
     /**
-     * Statuses that are private to the reporting resident. Everything else
-     * is publicly visible (with identity anonymized for non-owners).
+     * Checks whether the logged-in resident owns the report.
      */
-    private boolean isPrivateStatus(String status) {
-        String s = status != null ? status.toUpperCase() : "INCOMING";
-        return s.equals("INCOMING") || s.equals("REJECTED") || s.equals("CANCELLED");
-    }
+    private boolean isOwner(
+            SafetyReports report,
+            UUID currentResidentId) {
 
-    private boolean isVisibleToResident(SafetyReports report, UUID currentResidentId) {
-        String status = report.getStatus() != null ? report.getStatus().toUpperCase() : "INCOMING";
-
-        // Archived reports are hidden from residents entirely
-        if (status.equals("ARCHIVED")) {
+        if (report == null || currentResidentId == null) {
             return false;
         }
 
-        // Private statuses: only the reporter can see their own
-        if (isPrivateStatus(status)) {
+        return currentResidentId.equals(report.getUserId());
+    }
+
+    /**
+     * Matches the React Native visibility rules.
+     */
+    private boolean isVisibleToResident(
+            SafetyReports report,
+            UUID currentResidentId) {
+
+        if (report == null) {
+            return false;
+        }
+
+        String status = report.getStatus() != null
+                ? report.getStatus().toUpperCase().trim()
+                : "";
+
+        // Hidden from residents regardless of ownership.
+        if (status.equals("UNVERIFIED")
+                || status.equals("ARCHIVED_UNRESOLVED")) {
+            return false;
+        }
+
+        // Private reports: owner only.
+        if (status.equals("INCOMING")
+                || status.equals("APPROVED")
+                || status.equals("IN_PROGRESS")) {
             return isOwner(report, currentResidentId);
         }
 
-        // Everything else is public (identity anonymization handled separately)
-        return true;
+        // Public reports.
+        return status.equals("VERIFIED")
+                || status.equals("RESOLVED")
+                || status.equals("ARCHIVED_RESOLVED");
     }
 }

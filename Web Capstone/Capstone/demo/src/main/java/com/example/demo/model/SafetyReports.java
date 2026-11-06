@@ -1,14 +1,25 @@
+
 package com.example.demo.model;
 
-import java.util.UUID;
-import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "safety_reports")
-public class SafetyReports{
+public class SafetyReports {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,16 +36,19 @@ public class SafetyReports{
 
     private String reporterName;
     private String reporterContact;
+
     private LocalDate dateSubmitted;
 
-    @Column(name = "reporter_id")
-    private UUID reporterId;
+    // Supabase Auth UUID stored in database column user_id
+    @Column(name = "user_id")
+    private UUID userId;
 
     private String status;
 
     private String handledByName;
     private String handledByEmployeeId;
     private String handledByRole;
+
     private LocalDateTime dateHandled;
 
     @Column(columnDefinition = "TEXT")
@@ -43,20 +57,17 @@ public class SafetyReports{
     @Column(name = "incident_image", columnDefinition = "TEXT")
     private String imageUrl;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "handled_by_id", referencedColumnName = "id")
     private AdminUser handledBy;
 
-    // Who resolved the report
     private String resolvedBy;
 
-    // Resolution details fields
     @Column(columnDefinition = "TEXT")
     private String resolutionActions;
-    
+
     private String resolutionResponseTime;
-    
+
     @Column(columnDefinition = "TEXT")
     private String resolutionNotes;
 
@@ -66,83 +77,217 @@ public class SafetyReports{
     @Column(name = "time_submitted")
     private LocalTime timeSubmitted;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    // =========================
+    // GETTERS AND SETTERS
+    // =========================
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public String getTitle() {
+        return title;
+    }
 
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public String getPriority() { return priority; }
-    public void setPriority(String priority) { this.priority = priority; }
+    public String getLocation() {
+        return location;
+    }
 
-    public String getReporterName() { return reporterName; }
-    public void setReporterName(String reporterName) { this.reporterName = reporterName; }
+    public void setLocation(String location) {
+        this.location = location;
+    }
 
-    public String getReporterContact() { return reporterContact; }
-    public void setReporterContact(String reporterContact) { this.reporterContact = reporterContact; }
+    public String getDescription() {
+        return description;
+    }
 
-    public LocalDate getDateSubmitted() { return dateSubmitted; }
-    public void setDateSubmitted(LocalDate dateSubmitted) { this.dateSubmitted = dateSubmitted; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public UUID getReporterId() { return reporterId; }
-    public void setReporterId(UUID reporterId) { this.reporterId = reporterId; }
+    public String getType() {
+        return type;
+    }
 
-    public String getImageUrl() { return imageUrl; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public void setType(String type) {
+        this.type = type;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getPriority() {
+        return priority;
+    }
 
-    public String getHandledByName() { return handledByName; }
-    public void setHandledByName(String handledByName) { this.handledByName = handledByName; }
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
 
-    public String getHandledByEmployeeId() { return handledByEmployeeId; }
-    public void setHandledByEmployeeId(String handledByEmployeeId) { this.handledByEmployeeId = handledByEmployeeId; }
+    public String getReporterName() {
+        return reporterName;
+    }
 
-    public String getHandledByRole() { return handledByRole; }
-    public void setHandledByRole(String handledByRole) { this.handledByRole = handledByRole; }
+    public void setReporterName(String reporterName) {
+        this.reporterName = reporterName;
+    }
 
-    public LocalDateTime getDateHandled() { return dateHandled; }
-    public void setDateHandled(LocalDateTime dateHandled) { this.dateHandled = dateHandled; }
+    public String getReporterContact() {
+        return reporterContact;
+    }
 
-    public String getHandlerRemarks() { return handlerRemarks; }
-    public void setHandlerRemarks(String handlerRemarks) { this.handlerRemarks = handlerRemarks; }
+    public void setReporterContact(String reporterContact) {
+        this.reporterContact = reporterContact;
+    }
 
-    public AdminUser getHandledBy() { return handledBy; }
-    public void setHandledBy(AdminUser handledBy) { this.handledBy = handledBy; }
+    public LocalDate getDateSubmitted() {
+        return dateSubmitted;
+    }
 
-    public String getResolvedBy() { return resolvedBy; }
-    public void setResolvedBy(String resolvedBy) { this.resolvedBy = resolvedBy; }
+    public void setDateSubmitted(LocalDate dateSubmitted) {
+        this.dateSubmitted = dateSubmitted;
+    }
 
-    public String getResolutionActions() { return resolutionActions; }
-    public void setResolutionActions(String resolutionActions) { this.resolutionActions = resolutionActions; }
+    public UUID getUserId() {
+        return userId;
+    }
 
-    public String getResolutionResponseTime() { return resolutionResponseTime; }
-    public void setResolutionResponseTime(String resolutionResponseTime) { this.resolutionResponseTime = resolutionResponseTime; }
+    public void setUserId(UUID userId) {
+        this.userId = userId;
+    }
 
-    public String getResolutionNotes() { return resolutionNotes; }
-    public void setResolutionNotes(String resolutionNotes) { this.resolutionNotes = resolutionNotes; }
+    public String getStatus() {
+        return status;
+    }
 
-    public Double getLatitude() { return latitude; }
-    public void setLatitude(Double latitude) { this.latitude = latitude; }
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
-    public Double getLongitude() { return longitude; }
-    public void setLongitude(Double longitude) { this.longitude = longitude; }
+    public String getHandledByName() {
+        return handledByName;
+    }
 
-    public LocalTime getTimeSubmitted() { return timeSubmitted; }
-    public void setTimeSubmitted(LocalTime timeSubmitted) { this.timeSubmitted = timeSubmitted; }
+    public void setHandledByName(String handledByName) {
+        this.handledByName = handledByName;
+    }
+
+    public String getHandledByEmployeeId() {
+        return handledByEmployeeId;
+    }
+
+    public void setHandledByEmployeeId(String handledByEmployeeId) {
+        this.handledByEmployeeId = handledByEmployeeId;
+    }
+
+    public String getHandledByRole() {
+        return handledByRole;
+    }
+
+    public void setHandledByRole(String handledByRole) {
+        this.handledByRole = handledByRole;
+    }
+
+    public LocalDateTime getDateHandled() {
+        return dateHandled;
+    }
+
+    public void setDateHandled(LocalDateTime dateHandled) {
+        this.dateHandled = dateHandled;
+    }
+
+    public String getHandlerRemarks() {
+        return handlerRemarks;
+    }
+
+    public void setHandlerRemarks(String handlerRemarks) {
+        this.handlerRemarks = handlerRemarks;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public AdminUser getHandledBy() {
+        return handledBy;
+    }
+
+    public void setHandledBy(AdminUser handledBy) {
+        this.handledBy = handledBy;
+    }
+
+    public String getResolvedBy() {
+        return resolvedBy;
+    }
+
+    public void setResolvedBy(String resolvedBy) {
+        this.resolvedBy = resolvedBy;
+    }
+
+    public String getResolutionActions() {
+        return resolutionActions;
+    }
+
+    public void setResolutionActions(String resolutionActions) {
+        this.resolutionActions = resolutionActions;
+    }
+
+    public String getResolutionResponseTime() {
+        return resolutionResponseTime;
+    }
+
+    public void setResolutionResponseTime(String resolutionResponseTime) {
+        this.resolutionResponseTime = resolutionResponseTime;
+    }
+
+    public String getResolutionNotes() {
+        return resolutionNotes;
+    }
+
+    public void setResolutionNotes(String resolutionNotes) {
+        this.resolutionNotes = resolutionNotes;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public LocalTime getTimeSubmitted() {
+        return timeSubmitted;
+    }
+
+    public void setTimeSubmitted(LocalTime timeSubmitted) {
+        this.timeSubmitted = timeSubmitted;
+    }
+
+    // =========================
+    // ASSIGN REPORT HANDLER
+    // =========================
 
     @Transient
     public void assignHandler(AdminUser admin) {
+
         this.handledBy = admin;
         this.handledByName = admin.getName();
         this.handledByEmployeeId = admin.getEmployeeId();
