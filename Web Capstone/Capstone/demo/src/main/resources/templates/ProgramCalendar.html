@@ -1130,7 +1130,7 @@
         <div class="card-white upcoming-card">
           <div class="card-title">
             <span><i class="bi bi-calendar-event" style="margin-right:6px;"></i>Upcoming Events</span>
-            <button class="btn-green" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" onclick="openAddEventModal()">
+            <button class="btn-green" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY'}" onclick="openAddEventModal()">
               <i class="bi bi-plus-circle"></i> Add
             </button>
           </div>
@@ -1241,7 +1241,7 @@
                 <div class="no-events">Loading...</div>
             </div>
             <div class="modal-buttons">
-                <button class="btn-green" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY' or currentrole == 'SECRETARIAT STAFF'}" onclick="openAddEventModalWithDate()">
+                <button class="btn-green" th:if="${currentrole == 'ADMIN' or currentrole == 'SECRETARY'}" onclick="openAddEventModalWithDate()">
                     <i class="bi bi-plus-circle"></i> Add Event on this Day
                 </button>
                 <button class="btn-cancel" onclick="closeViewEventsModal()">Close</button>
@@ -1281,7 +1281,7 @@
   let currentDate = new Date();
   currentDate.setDate(1);
     const isAdmin = document.getElementById('dataCurrentRole')?.value === 'ADMIN';
-    const isStaff = ['SECRETARY', 'SECRETARIAT STAFF', 'TREASURER', 'BARANGAY-CAPTAIN'].includes(
+    const isStaff = ['SECRETARY', 'TREASURER', 'BARANGAY-CAPTAIN'].includes(
         document.getElementById('dataCurrentRole')?.value
     );
 

@@ -100,7 +100,7 @@ public class FinancialController {
     @GetMapping
     public String financePage(Model model, Principal principal, HttpSession session) {
         AdminUser admin = (principal != null) ? adminUserService.getAdminByEmail(principal.getName()) : null;
-
+        if (isCaptain(principal)) return "redirect:/home";
         String role = "GUEST";
         String username = "User";
         Long adminId = 0L;
@@ -373,6 +373,11 @@ public class FinancialController {
         if (principal == null) return false;
         AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
         return admin != null && "ADMIN".equalsIgnoreCase(admin.getRole());
+    }
+    private boolean isCaptain(Principal principal) {
+        if (principal == null) return false;
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+        return admin != null && "BARANGAY-CAPTAIN".equalsIgnoreCase(admin.getRole());
     }
 
     @GetMapping("/income/archive/{id}")

@@ -1297,7 +1297,7 @@ public String HomePage(Principal principal, Model model) {
         AdminUser admin = addCurrentAdminToModel(principal, model);
         model.addAttribute("newAdmin", new AdminUser());
 
-        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "BARANGAY-CAPTAIN", "TREASURER", "SECRETARIAT STAFF");
+        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "SECRETARIAT STAFF");
 
         if (!allowedRoles.contains(admin.getRole())) {
             return "redirect:/home";

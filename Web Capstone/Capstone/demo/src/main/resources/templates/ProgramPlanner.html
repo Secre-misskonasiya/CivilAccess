@@ -772,6 +772,7 @@
 <title>Program Planner</title>
 </head>
 <body>
+<input type="hidden" id="dataCurrentRole" th:value="${currentrole}">
 
 <div class="toast-container" id="toastContainer"></div>
 <div class="layout">
@@ -1040,7 +1041,7 @@
         </div>
       </div>
       <div class="modal-foot">
-        <button class="btn-save" onclick="addToCalendarFromView()">
+        <button class="btn-save" th:if="${currentrole != 'SECRETARIAT STAFF'}" onclick="addToCalendarFromView()">
           <i class="bi bi-calendar-plus"></i> Add to Calendar
         </button>
         <button class="btn-gray" onclick="closeViewModal()">Close</button>
@@ -1654,6 +1655,8 @@ function renderPrograms(programs) {
     const list = document.getElementById('suggested-programs-list');
     _savedPrograms = programs || [];  // Store globally
     
+    const canModify = document.getElementById('dataCurrentRole')?.value !== 'SECRETARIAT STAFF';
+
     if (!programs || programs.length === 0) {
         list.innerHTML = `<div class="empty-programs"><i class="bi bi-calendar2-x" style="font-size:24px;display:block;margin-bottom:8px;"></i>No programs yet. Ask AI!</div>`;
         return;
@@ -1672,7 +1675,7 @@ function renderPrograms(programs) {
                 </div>
             </div>
             <button class="view-blue-btn" onclick="viewProgram(${index})">View</button>
-            <button class="remove-red-btn" onclick="removeProgram(${p.id}, this)" aria-label="Remove program"><i class="bi bi-trash"></i></button>
+            ${canModify ? `<button class="remove-red-btn" onclick="removeProgram(${p.id}, this)" aria-label="Remove program"><i class="bi bi-trash"></i></button>` : ''}
         </div>`).join('');
 }
 

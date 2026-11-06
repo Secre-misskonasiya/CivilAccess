@@ -66,7 +66,7 @@
                 <i class="bi bi-chevron-down dropdown-arrow"></i>
             </li>
             <ul class="sub-menu" id="sub-requests">
-                <li onclick="window.location.href='/requests-blotter'">Blotter Reports</li>
+                <li th:if="${currentrole != 'BARANGAY-CAPTAIN'}" onclick="window.location.href='/requests-blotter'">Blotter Reports</li>
                 <li onclick="window.location.href='/requests-document'">Documents</li>
                 <li onclick="window.location.href='/reservations'">Reservations</li>
                 <li onclick="window.location.href='/rentals'">Rentals</li>
@@ -110,7 +110,7 @@
             <li onclick="window.location.href='/program-calendar'">
                 <img src="/icons/calendar.svg" class="icon" width="20" height="20" alt="" decoding="async"> Program Calendar
             </li>
-            <li th:if="${currentrole != 'BARANGAY-CAPTAIN'}" onclick="window.location.href='/program-planner'">
+            <li th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}" onclick="window.location.href='/program-planner'">
                 <img src="/icons/planner.svg" class="icon" width="20" height="20" alt="" decoding="async"> AI Program Planner
             </li>
         </ul>

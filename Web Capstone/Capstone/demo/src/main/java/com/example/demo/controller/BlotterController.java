@@ -1,19 +1,26 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.AdminUser;
-import com.example.demo.model.Blotter;
-import com.example.demo.services.AdminUserServices;
-import com.example.demo.services.BlotterService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.example.demo.model.AdminUser;
+import com.example.demo.model.Blotter;
+import com.example.demo.services.AdminUserServices;
+import com.example.demo.services.BlotterService;
 
 @Controller
 @RequestMapping("/requests-blotter")
@@ -29,6 +36,9 @@ public class BlotterController {
 
     @GetMapping
     public String blotterRequestsPage(Model model, Principal principal) {
+        if (isCaptain(principal)) {
+            return "redirect:/home";
+        }
         if (principal != null) {
             String username = principal.getName();
             AdminUser admin = adminUserService.getAdminByEmail(username);
@@ -58,6 +68,7 @@ public class BlotterController {
     public String updateBlotter(@PathVariable Long id, 
                                @ModelAttribute Blotter updatedBlotter,
                                Principal principal) {
+        if (isCaptain(principal)) return "redirect:/home";
         Blotter existing = service.getBlotterById(id);
         if (existing != null) {
             existing.setComplainantName(updatedBlotter.getComplainantName());
@@ -84,6 +95,7 @@ public class BlotterController {
 
     @PostMapping("/submit")
     public String submitBlotter(@ModelAttribute("newBlotter") Blotter blotter, Principal principal) {
+        if (isCaptain(principal)) return "redirect:/home";
         blotter.setStatus("INCOMING");
         blotter.setCreatedBy(getCurrentUserName(principal));
         blotter.setCreatedAt(LocalDateTime.now());
@@ -113,5 +125,11 @@ public class BlotterController {
             return principal.getName();
         }
         return "System";
+    }
+    
+    private boolean isCaptain(Principal principal) {
+        if (principal == null) return false;
+        AdminUser admin = adminUserService.getAdminByEmail(principal.getName());
+        return admin != null && "BARANGAY-CAPTAIN".equalsIgnoreCase(admin.getRole());
     }
 }
