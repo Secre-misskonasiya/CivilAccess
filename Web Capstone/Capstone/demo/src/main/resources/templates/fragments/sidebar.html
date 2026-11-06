@@ -71,10 +71,10 @@
                 <li onclick="window.location.href='/reservations'">Reservations</li>
                 <li onclick="window.location.href='/rentals'">Rentals</li>
             </ul>
-            <li th:if="${currentrole != 'TREASURER' && currentrole != 'BARANGAY-CAPTAIN'}" onclick="window.location.href='/contact-help'">
+                <li th:if="${currentrole != 'TREASURER'}" onclick="window.location.href='/contact-help'">
                 <img src="/icons/help.svg" class="icon" width="20" height="20" alt="" decoding="async"> Contact Help
             </li>
-            <li th:if="${currentrole != 'TREASURER' && currentrole != 'BARANGAY-CAPTAIN'}" onclick="window.location.href='/facilities'">
+            <li th:if="${currentrole != 'TREASURER'}" onclick="window.location.href='/facilities'">
                 <img src="/icons/facilities.svg" class="icon" width="20" height="20" alt="" decoding="async"> Facilities &amp; Hotlines
             </li>
         </ul>
@@ -82,13 +82,13 @@
 
     <!-- COMMUNITY SAFETY -->
     <button class="section-toggle" onclick="toggleSection(this, 'sec-safety')"
-        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
+        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF' || currentrole == 'BARANGAY-CAPTAIN'}">
         <span class="section-notif-dot" id="dot-safety"></span>
         Community Safety
         <i class="bi bi-chevron-down section-arrow"></i>
     </button>
     <div class="section-body" id="sec-safety"
-        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF'}">
+        th:if="${currentrole == 'ADMIN' || currentrole == 'SECRETARY' || currentrole == 'SECRETARIAT STAFF' || currentrole == 'BARANGAY-CAPTAIN'}">
         <ul class="menu">
             <li onclick="window.location.href='/safety-reports'">
                 <img src="/icons/safety.svg" class="icon" width="20" height="20" alt="" decoding="async"> Reports &amp; Alerts

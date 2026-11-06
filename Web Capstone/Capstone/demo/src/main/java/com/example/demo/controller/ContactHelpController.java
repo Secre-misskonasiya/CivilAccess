@@ -68,7 +68,7 @@ public class ContactHelpController {
         model.addAttribute("currentUser", name);
         model.addAttribute("currentrole", role);
 
-        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "SECRETARIAT STAFF");
+        Set<String> allowedRoles = Set.of("ADMIN", "SECRETARY", "SECRETARIAT STAFF", "BARANGAY-CAPTAIN");
         if (!allowedRoles.contains(role)) return "redirect:/home";
 
         model.addAttribute("incomingCount", service.countByStatus("INCOMING"));
