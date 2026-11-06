@@ -148,6 +148,9 @@
       display: flex; align-items: center; gap: 10px;
       padding: 14px 16px 8px;
     }
+
+    .card.mine { border-color: var(--brand-light); }
+
     .avatar {
       width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
       background: var(--brand-dark);
@@ -402,9 +405,12 @@
   <div id="feed">
 
     <th:block th:each="report : ${reports}">
-      <article th:id="'report-' + ${report.id}"
+     <th:block th:with="isMine=${currentResidentId != null and report.reporterId != null and report.reporterId.toString() == currentResidentId.toString()}">
+      <article th:if="${isMine or (report.status != null and (#strings.toUpperCase(report.status) == 'APPROVED' or #strings.toUpperCase(report.status) == 'IN_PROGRESS' or #strings.toUpperCase(report.status) == 'RESOLVED'))}"
+               th:classappend="${isMine} ? 'mine'"
+               th:id="'report-' + ${report.id}"
                th:data-id="${report.id}"
-               th:data-reporterid="${report.reporterId}"
+               th:data-reporterid="${isMine ? report.reporterId : ''}"
                th:data-status="${report.status != null ? #strings.toUpperCase(report.status) : 'INCOMING'}"
                th:data-type="${report.type}"
                th:data-title="${report.title}"
@@ -413,7 +419,7 @@
                th:data-location="${report.location}"
                th:data-latitude="${report.latitude}"
                th:data-longitude="${report.longitude}"
-               th:data-reporter="${report.reporterName}"
+               th:data-reporter="${isMine ? 'Your Safety Report' : 'Anonymous'}"
                th:data-priority="${report.priority != null ? #strings.toUpperCase(report.priority) : 'MEDIUM'}"
                th:data-resolvedby="${report.resolvedBy}"
                th:data-resolutionactions="${report.resolutionActions}"
@@ -425,7 +431,7 @@
         <div class="card-head">
           <div class="avatar"><i class="bi bi-exclamation-triangle-fill"></i></div>
           <div class="head-meta">
-            <div class="sender" th:text="${report.reporterName != null ? report.reporterName : 'Anonymous Resident'}"></div>
+            <div class="sender" th:text="${isMine ? 'Your Safety Report' : 'Anonymous'}"></div>
             <div class="post-dt" th:text="${report.dateSubmitted != null ? #temporals.format(report.dateSubmitted, 'MMMM d, yyyy') : 'N/A'}"></div>
           </div>
           <span th:class="'badge badge-status-' + (${report.status != null ? #strings.toLowerCase(report.status) : 'incoming'})"
@@ -465,6 +471,7 @@
         </div>
 
       </article>
+     </th:block>
     </th:block>
 
     <div class="empty" id="emptyState" style="display:none">
@@ -694,7 +701,7 @@
     cards.forEach(card => {
       const status = (card.dataset.status || 'INCOMING').toUpperCase();
       const reporterId = card.dataset.reporterid || '';
-      const isMine = CURRENT_RESIDENT_ID && reporterId === CURRENT_RESIDENT_ID;
+      const isMine = card.classList.contains('mine');
       const text = ((card.dataset.title || '') + ' ' + (card.dataset.type || '') + ' ' + (card.dataset.location || '')).toLowerCase();
 
       let matchesFilter = true;
@@ -736,11 +743,20 @@
     } catch(e) { /* silent */ }
   }
 
+  function isMineReport(r) {
+    return CURRENT_RESIDENT_ID != null && r.reporterId != null
+        && String(r.reporterId) === String(CURRENT_RESIDENT_ID);
+  }
+  function isVisibleReport(r) {
+    const s = (r.status || 'INCOMING').toUpperCase();
+    return isMineReport(r) || ['APPROVED', 'IN_PROGRESS', 'RESOLVED'].includes(s);
+  }
+
   function rebuildFeed(reports) {
     document.querySelectorAll('#feed .card:not(.empty)').forEach(c => c.remove());
     const feed = document.getElementById('feed');
     const emptyState = document.getElementById('emptyState');
-    reports.forEach(r => feed.insertBefore(buildCard(r), emptyState));
+    reports.filter(isVisibleReport).forEach(r => feed.insertBefore(buildCard(r), emptyState));
     applyFilters();
   }
 
@@ -759,11 +775,13 @@
       } catch(e) {}
     }
 
+    const mine = isMineReport(r);
+    const displayName = mine ? 'Your Safety Report' : 'Anonymous';
     const article = document.createElement('article');
     article.id = 'report-' + r.id;
-    article.className = 'card';
+    article.className = 'card' + (mine ? ' mine' : '');
     article.dataset.id = r.id;
-    article.dataset.reporterid = r.reporterId || '';
+    article.dataset.reporterid = mine ? r.reporterId : '';
     article.dataset.status = status;
     article.dataset.type = r.type || '';
     article.dataset.title = r.title || '';
@@ -772,7 +790,7 @@
     article.dataset.location = r.location || '';
     article.dataset.latitude = r.latitude || '';
     article.dataset.longitude = r.longitude || '';
-    article.dataset.reporter = r.reporterName || '';
+    article.dataset.reporter = displayName;
     article.dataset.priority = priority;
     article.dataset.resolvedby = r.resolvedBy || '';
     article.dataset.resolutionactions = r.resolutionActions || '';
@@ -784,7 +802,7 @@
       <div class="card-head">
         <div class="avatar"><i class="bi bi-exclamation-triangle-fill"></i></div>
         <div class="head-meta">
-          <div class="sender">${escapeHtml(r.reporterName || 'Anonymous Resident')}</div>
+          <div class="sender">${escapeHtml(displayName)}</div>
           <div class="post-dt">${escapeHtml(dateStr)}</div>
         </div>
         <span class="badge ${statusClass}">${escapeHtml(status)}</span>
